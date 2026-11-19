@@ -39,7 +39,11 @@ const floorExampleSources = [
   },
 ];
 
-test("pins the exact workbook versions used by the floor examples", () => {
+test("pins the exact workbook versions used by the floor examples", {
+  skip: process.env.V2_SKIP_PRIVATE_SOURCE_CORPUS === "true"
+    ? "Private customer workbooks are not provisioned in this CI checkout."
+    : false,
+}, () => {
   for (const source of floorExampleSources) {
     const workbook = readFileSync(new URL(source.path, import.meta.url));
     const sha256 = createHash("sha256").update(workbook).digest("hex");

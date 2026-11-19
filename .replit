@@ -3,6 +3,8 @@ modules = ["nodejs-24", "python-3.11", "postgresql-16"]
 [deployment]
 router = "application"
 deploymentTarget = "gce"
+build = ["pnpm", "--filter", "@workspace/lucia-v2", "run", "build"]
+run = ["bash", "scripts/start-v2.sh"]
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
@@ -18,251 +20,19 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "test"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "test:client"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "test:rules"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "test:inventory-math"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "test:spec-reconcile"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "test:scheduled-recipe-check"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "test:spec-export"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "test:corpus"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "test:gemini"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "check-model-bump"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "operational-skill-evidence"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "typecheck"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "security:prod"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "evidence:release"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "release:standard"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "release:full"
+args = "V2 Production Assistant"
 
 [[workflows.workflow]]
-name = "test"
+name = "V2 Production Assistant"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "pnpm --filter @workspace/api-server run test"
+args = "V2_USE_PROJECT_DATABASE=true NODE_ENV=development bash scripts/start-v2.sh"
+waitForPort = 5000
 
 [workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow]]
-name = "test:client"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/run-calculator run test"
-
-[[workflows.workflow]]
-name = "test:rules"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/production-rules run test"
-
-[[workflows.workflow]]
-name = "test:inventory-math"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/inventory-math run test"
-
-[[workflows.workflow]]
-name = "test:spec-reconcile"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/spec-reconcile run test"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow]]
-name = "test:scheduled-recipe-check"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/scheduled-recipe-check run test"
-
-[[workflows.workflow]]
-name = "test:spec-export"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/spec-export run test"
-
-[[workflows.workflow]]
-name = "test:corpus"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/corpus-harness run test"
-
-[[workflows.workflow]]
-name = "test:gemini"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python3 scripts/test_gemini_skill_trigger_benchmark.py"
-
-[[workflows.workflow]]
-name = "check-model-bump"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/scripts run check-model-bump"
-
-[[workflows.workflow]]
-name = "operational-skill-evidence"
-author = "agent"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/scripts run check-operational-skill-evidence"
-
-[[workflows.workflow]]
-name = "check:clean-start"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "CLEAN_START_API_PORT=18081 CLEAN_START_WEB_PORT=18082 CLEAN_START_MOCKUP_PORT=18180 pnpm run check:clean-start"
-
-[[workflows.workflow]]
-name = "typecheck"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm run typecheck"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow]]
-name = "security:prod"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm run audit:prod"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow]]
-name = "evidence:release"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/scripts run check:release-evidence"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow]]
-name = "release:standard"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm run release:check"
-
-[workflows.workflow.metadata]
-isValidation = true
-
-[[workflows.workflow]]
-name = "release:full"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm run release:check:full"
-
-[workflows.workflow.metadata]
-isValidation = true
+outputType = "webview"
 
 [agent]
 stack = "BEST_EFFORT_FALLBACK"
@@ -275,11 +45,8 @@ timeoutMs = 300000
 
 [nix]
 channel = "stable-25_05"
+packages = ["process-compose", "shellcheck", "libgbm", "wayland", "libxkbcommon", "libxml2", "libuuid", "libpulseaudio", "freetype", "fontconfig", "expat", "dbus", "alsa-lib", "mesa", "xorg.libxshmfence", "xorg.libxkbfile", "xorg.libxcb", "xorg.libXrandr", "xorg.libXfixes", "xorg.libXext", "xorg.libXdamage", "xorg.libXcomposite", "xorg.libX11", "cairo", "pango", "gtk3", "libdrm", "cups", "at-spi2-atk", "atk", "nspr", "nss", "glib", "chromium"]
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5173
-externalPort = 5173

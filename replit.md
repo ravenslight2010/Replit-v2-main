@@ -1,3 +1,22 @@
+# Current runtime: V2
+
+- The current application is under `v2/`, with its own server, worker, web UI,
+  SQL, and API contract. The older artifact and shared-library code below is
+  retained as V1 reference, not the default application.
+- Start the configured **V2 Production Assistant** workflow. It supervises the
+  API and leased worker through `scripts/start-v2.sh`; the public web port is 5000.
+- Focused source checks: `pnpm run build:v2` and `pnpm run test:v2`.
+  `bash v2/db/run-local-tests.sh` rehearses SQL against disposable PostgreSQL.
+- Real-workbook tests require the private `attached_assets/source-library`
+  corpus. CI explicitly reports those two cases skipped and still runs the
+  synthetic import cases and required Chromium/WebKit journeys. Do not publish
+  the private corpus just to satisfy CI.
+- Current recovery evidence is in
+  `docs/recovery/v2-restoration-2026-11-19.md`. Restored historical pilot/readiness
+  documents are not proof of the current deployment state.
+
+# Legacy V1 reference
+
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)

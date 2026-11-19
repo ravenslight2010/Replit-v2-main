@@ -159,3 +159,4 @@
 - [Browser fixture seeding](browser-fixture-seeding.md) — reloads can replace browser-only master-data seeds during server hydration; seed through server fixtures or use stable built-ins.
 - [Shell lint inventory](shell-lint-inventory.md) — scripts/src shell files stay explicitly listed in check:shell; only documented fixture/generated files are excluded.
 - [V2 product boundaries](v2-product-boundaries.md) — upgraded successor, one facility with multiple warehouses, server-owned shared state, offline read-only, and fresh V2 sessions.
+- [Configuration recovery scope](configuration-recovery-scope.md) — environment recovery can replace current startup wiring; verify its scope and the installer's chosen Nix representation.

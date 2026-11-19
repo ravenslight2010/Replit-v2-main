@@ -62,6 +62,10 @@ database migration, account import, data reset, or publication was performed.
   shared workspace dependencies. Its web/API workflows are not V2's run target.
 - The anonymous preview renders V2 sign-in. A session probe returning 401 before
   sign-in is expected and is not evidence of a failed login.
+- Configuration recovery subsequently created preserved recovery checkpoints,
+  restored V1 workflows, and removed the standalone Nix file. V2 startup was
+  reapplied without reverting application source. The supported package tool
+  restored required packages inline under `[nix]` in `.replit`.
 
 ## Verification ledger
 
@@ -84,6 +88,12 @@ database migration, account import, data reset, or publication was performed.
 - The focused GitHub workflow installs supported Chromium/WebKit runtimes on
   Ubuntu and requires WebKit rather than allowing that coverage to disappear.
   CI results must be recorded before calling the WebKit outcome restored.
+- The first GitHub attempt exposed an extra external port mapping and two
+  tests depending on private, untracked customer workbooks. The mapping was
+  removed. CI now explicitly skips those two corpus-only cases; the workspace
+  still runs all 156 cases, including the real corpus, with no skips. Synthetic
+  workbook import tests remain required in CI. No customer workbooks were
+  uploaded to the public repository.
 - Recovery-audit file evidence is separate from executable test evidence.
 - Root typecheck, generated API contract checks and the ten-entry recovery
   audit passed. Shell syntax and the focused workflow YAML were also checked.
@@ -112,7 +122,12 @@ behavior is therefore labelled as reconstruction, not byte-for-byte recovery.
    rerun initial migrations, bootstrap accounts, or rely on Publish to copy
    functions, triggers, roles or grants.
 3. Finish the separately owned security and feature work before release review.
-4. Confirm the normal GitHub push's exact remote revision.
+4. Repeat exact remote-revision verification after the final evidence update.
+
+The first recovery commit and baseline tag were pushed normally to
+`ravenslight2010/Replit-v2-main`. Remote `main` was verified as
+`654a615441ef7fa19630a33639acb9e38d4e4e72` at that point; no history rewrite or
+force push was used.
 
 The source-recovery task must not be called fully restored while a required
 merged outcome remains unverified. Publishing and physical-device acceptance

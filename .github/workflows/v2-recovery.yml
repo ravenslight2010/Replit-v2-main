@@ -49,7 +49,12 @@ jobs:
           echo "CHROMIUM_PATH=$(pnpm --filter @workspace/lucia-v2 exec node --input-type=module -e 'import { chromium } from "playwright"; console.log(chromium.executablePath())')" >> "$GITHUB_ENV"
           echo "/usr/lib/postgresql/16/bin" >> "$GITHUB_PATH"
       - run: pnpm run build:v2
-      - run: pnpm run test:v2
+      - name: Unit checks with synthetic fixtures
+        env:
+          # Real customer workbooks are intentionally not published in Git.
+          # Both corpus-dependent cases are separately verified in the workspace.
+          V2_SKIP_PRIVATE_SOURCE_CORPUS: "true"
+        run: pnpm run test:v2
       - name: Chromium and required WebKit operational journeys
         env:
           V2_REQUIRE_WEBKIT: "true"

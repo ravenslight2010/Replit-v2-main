@@ -115,7 +115,11 @@ test("manager links resolve only unmatched rows and retain the active product's 
   )[0].productCode, null);
 });
 
-test("parses every local dough procedure and the approved shipping guide", async () => {
+test("parses every local dough procedure and the approved shipping guide", {
+  skip: process.env.V2_SKIP_PRIVATE_SOURCE_CORPUS === "true"
+    ? "Private customer workbooks are not provisioned in this CI checkout."
+    : false,
+}, async () => {
   const doughDirectory = new URL("../../attached_assets/source-library/dough/", import.meta.url);
   const shippingDirectory = new URL("../../attached_assets/source-library/shipping/", import.meta.url);
   const doughFiles = (await readdir(doughDirectory)).filter((name) => /\.xlsx$/iu.test(name));
