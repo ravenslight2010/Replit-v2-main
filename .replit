@@ -2,7 +2,7 @@ modules = ["nodejs-24", "python-3.11", "postgresql-16"]
 
 [deployment]
 router = "application"
-deploymentTarget = "gce"
+deploymentTarget = "vm"
 build = ["pnpm", "--filter", "@workspace/lucia-v2", "run", "build"]
 run = ["bash", "scripts/start-v2.sh"]
 

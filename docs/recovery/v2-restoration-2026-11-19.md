@@ -35,10 +35,10 @@ database migration, account import, data reset, or publication was performed.
 | Run-to-inventory snapshots and exact-once completion consumption | Recovered source SQL and services | Per-batch/per-case consumption, shortages, replay and concurrent stock tests |
 | Additional setup catalogs and six source workbook families | Recovered source, contracts and fixtures | CSV/source parser checks; reviewed import browser tests; setup SQL apply/undo/isolation tests |
 | Imported production-rule enforcement | Reconstructed; later merged commit unavailable | New `0008` source SQL; atomic prepare/start triggers; flexible warnings, strict block, unknown, imported bypass, facility isolation, immutable accepted audit and retry checks |
-| Safari/WebKit setup-import and responsive coverage | Reconstructed test expansion; later commit unavailable | Chromium widths passed; WebKit verification is blocked locally by unsupported shared-library runtime; required-WebKit CI gate added |
+| Safari/WebKit setup-import and responsive coverage | Reconstructed test expansion; later commit unavailable | Supported Ubuntu CI passed all 13 browser cases, including both required WebKit imports; no browser cases skipped |
 | Installed-shell offline/reconnect and old V1 cache migration | Recovered and checked; shell cache generation advanced for recovered JS | Offline read-only/reconnect browser check; targeted legacy-cache test passed after activation/claim synchronization was corrected |
 | Runtime-safety reconciliation | Reconstructed from current observations | API and leased worker started; ports/role/runtime recorded below; managed schema differences remain explicitly pending |
-| Current GitHub backup | Normal non-forced push required after verification | Exact remote revision must be confirmed; do not infer it from a local commit |
+| Current GitHub backup | Normal non-forced pushes and protected baseline tag | Verified remote source revision `fb1b549c09f74df5b3d27e6501e78fe02c106222`; final metadata revision is checked again after this report |
 
 ## Current runtime observations
 
@@ -87,7 +87,12 @@ database migration, account import, data reset, or publication was performed.
   passed** and no physical-device result is claimed.
 - The focused GitHub workflow installs supported Chromium/WebKit runtimes on
   Ubuntu and requires WebKit rather than allowing that coverage to disappear.
-  CI results must be recorded before calling the WebKit outcome restored.
+  [Supported-runtime run](https://github.com/ravenslight2010/Replit-v2-main/actions/runs/44451695638)
+  passed at source revision `fb1b549c09f74df5b3d27e6501e78fe02c106222`:
+  **154 unit cases passed, two private-corpus cases explicitly skipped;
+  13 browser cases passed, zero browser skips; disposable PostgreSQL checks
+  passed**. The two private-corpus cases passed locally as part of all 156.
+  Environment-configuration changes also trigger this workflow.
 - The first GitHub attempt exposed an extra external port mapping and two
   tests depending on private, untracked customer workbooks. The mapping was
   removed. CI now explicitly skips those two corpus-only cases; the workspace
@@ -114,21 +119,20 @@ The production-rule, WebKit and runtime-safety merged commit identifiers did
 not resolve from the available repositories or local objects. Reconstructed
 behavior is therefore labelled as reconstruction, not byte-for-byte recovery.
 
-## Remaining gates
+## Remaining activation and release work
 
-1. Obtain a passing required-WebKit result in a supported runtime.
-2. Compare restored SQL with the managed database and prepare a separately
+1. Compare restored SQL with the managed database and prepare a separately
    approved, data-preserving schema/permission reconciliation. Do not blindly
    rerun initial migrations, bootstrap accounts, or rely on Publish to copy
    functions, triggers, roles or grants.
-3. Finish the separately owned security and feature work before release review.
-4. Repeat exact remote-revision verification after the final evidence update.
+2. Finish the separately owned security and feature work before release review.
+3. Complete the separately owned operational/physical-device acceptance work.
 
 The first recovery commit and baseline tag were pushed normally to
 `ravenslight2010/Replit-v2-main`. Remote `main` was verified as
 `654a615441ef7fa19630a33639acb9e38d4e4e72` at that point; no history rewrite or
 force push was used.
 
-The source-recovery task must not be called fully restored while a required
-merged outcome remains unverified. Publishing and physical-device acceptance
-remain separate decisions.
+The required source-recovery outcomes are now verified. This does not activate
+new SQL in either managed database or authorize publishing. Physical-device
+acceptance and a production readiness decision remain separate.
