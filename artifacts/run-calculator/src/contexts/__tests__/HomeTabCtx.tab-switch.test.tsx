@@ -1,0 +1,2396 @@
+// @vitest-environment jsdom
+//
+// Structural guarantee: the five Live*TabContent components (Packaging,
+// Frontline, Dough, SetupRecipes, Summary) subscribe to the narrow
+// `HomeTabCtx` rather than the full HomeCtx.  Two invariants must hold:
+//
+//  1. PROPAGATION — when production data changes (e.g. a form value like
+//     `casesNeeded` is updated), the subscribed tab component receives the
+//     fresh value immediately regardless of which tab is "active".
+//
+//  2. ISOLATION — when manage-dialog / merge / import state changes (state
+//     that is intentionally OMITTED from homeTabCtxValue's useMemo deps),
+//     the tab component does NOT re-render.  This is the "dialog open does
+//     not freeze tab" guarantee: opening a dialog and switching to Dough or
+//     Packaging renders the tab without a spurious re-render.
+//
+// These tests import the REAL HomeTabCtx and useHomeTabCtx from their
+// extracted module (src/contexts/HomeTabCtx.ts), so any regression that
+// changes the context object identity, renames the hook, or breaks its
+// Provider/consumer link will fail here.
+//
+// Because the Live*TabContent components are defined inside home.tsx and
+// cannot be imported directly, subscriber behaviour is validated through a
+// minimal React.memo consumer that calls useHomeTabCtx() — the same hook
+// the real tab components call — wrapped in a controlled provider that
+// mirrors the homeTabCtxValue useMemo pattern (production deps in, dialog
+// state out).
+//
+// Six describe blocks covering all five Live*TabContent tab types:
+//
+//  Block 1–3: Dough/Packaging slice (casesNeeded, runStatus)
+//    1. PROPAGATION    — form value change reaches the tab subscriber.
+//    2. ISOLATION      — dialog open does not trigger a tab re-render.
+//    3. COMBINED       — form change propagates; subsequent dialog open adds no renders.
+//    REGRESSION GUARD  — a deliberately broken provider (manageCounter in deps)
+//                        proves the ISOLATION test would catch the regression.
+//
+//  Block 4: LiveFrontlineTabContent slice (app1Type — applicator form value)
+//    PROPAGATION + ISOLATION
+//
+//  Block 5: LiveSetupRecipesTabContent slice (isSupervisor — role gate)
+//    PROPAGATION + ISOLATION
+//
+//  Block 6: LiveSummaryTabContent slice (runCount derived from dayState.runs)
+//    PROPAGATION + ISOLATION
+
+// ── AUDIT: useAutoTrack / useNotifications mock status ───────────────────────
+//
+// Neither useAutoTrack nor useNotifications is mocked in this file, and that is
+// intentional.  Every test here wires controlled providers directly to the real
+// HomeTabCtx.Provider — LiveRunProvider is NEVER mounted.  Because those two
+// hooks are only called inside LiveRunProvider, they are never invoked by any
+// test in this file.
+//
+// IF A FUTURE CHANGE mounts LiveRunProvider here (or imports a component that
+// pulls it in transitively), you MUST add closure-level vi.mock factories for
+// both hooks before the first test — exactly as LiveTabMemo.snappy.test.tsx
+// does.  Inline vi.fn() / object literals inside the mock factory body would
+// produce a new reference on every call, making LiveRunProvider's liveSlice
+// useMemo deps unstable and silently defeating memo() isolation.  See the
+// STABILITY CONTRACT block at the top of LiveTabMemo.snappy.test.tsx for the
+// authoritative pattern.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { describe, it, expect, afterEach } from "vitest";
+import { useMemo, memo, type ReactNode } from "react";
+import { render, act, cleanup } from "@testing-library/react";
+import { SetupRecipesRoleGate } from "../../components/SetupRecipesRoleGate";
+import { LineSetupRoleGate } from "../../components/LineSetupRoleGate";
+import { DoughRoleGate } from "../../components/DoughRoleGate";
+
+// Import the REAL HomeTabCtx and useHomeTabCtx — not a replica.
+// Any refactor that breaks these exports or changes the context identity
+// will cause the tests below to fail, catching regressions at their source.
+import { HomeTabCtx, useHomeTabCtx } from "../HomeTabCtx";
+
+// ── Controlled provider that mirrors the homeTabCtxValue pattern ──────────────
+//
+// home.tsx does:
+//   const homeTabCtxValue = useMemo(
+//     () => homeCtxValueRef.current,
+//     [dayState, v, ve, …runState,   ← production deps
+//      /* showManageDialog intentionally omitted */]
+//   )
+//   <HomeTabCtx.Provider value={homeTabCtxValue}>…</HomeTabCtx.Provider>
+//
+// We can't mount the full Home component in a unit test, so we replicate the
+// provider shape while using the SAME HomeTabCtx object from production code.
+// casesNeeded/runStatus stand in for production deps (v, dayState);
+// manageCounter stands in for showManageDialog (intentionally excluded).
+
+function TabProvider({
+  casesNeeded,
+  runStatus,
+  children,
+}: {
+  casesNeeded: number;
+  runStatus: string;
+  manageCounter: number; // received but intentionally excluded from deps
+  children: ReactNode;
+}) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const value = useMemo(
+    () => ({ casesNeeded, runStatus }),
+    [casesNeeded, runStatus],
+    // manageCounter intentionally omitted — mirrors homeTabCtxValue's omission
+    // of showManageDialog / importState / merge state.
+  );
+  // Use the REAL HomeTabCtx.Provider from production code.
+  return <HomeTabCtx.Provider value={value}>{children}</HomeTabCtx.Provider>;
+}
+
+// ── BrokenTabProvider ─────────────────────────────────────────────────────────
+// Intentionally includes `manageCounter` in useMemo deps, simulating the
+// regression where a dialog field leaks into the Dough/Packaging context slice.
+// Used only in the REGRESSION GUARD test below to prove the guard is real.
+function BrokenTabProvider({
+  casesNeeded,
+  runStatus,
+  manageCounter,
+  children,
+}: {
+  casesNeeded: number;
+  runStatus: string;
+  manageCounter: number;
+  children: ReactNode;
+}) {
+  const value = useMemo(
+    () => ({ casesNeeded, runStatus }),
+    [casesNeeded, runStatus, manageCounter], // BUG: manageCounter should NOT be here
+  );
+  return <HomeTabCtx.Provider value={value}>{children}</HomeTabCtx.Provider>;
+}
+
+// ── PACKAGING_COMBINED_PIN ────────────────────────────────────────────────────
+// Invariant: mount(1) + form-change(1) + status-change(1) + dialog-open(0) = 3.
+//
+// This constant is the single source of truth for the Block 1–3 COMBINED test's
+// exact render-count pin.  The REGRESSION GUARD (COMBINED counter-proof) below
+// MUST assert `PACKAGING_COMBINED_PIN + 1` after the dialog-open step (and
+// `PACKAGING_COMBINED_PIN + 2` after the second dialog change) — never a
+// literal 4 or 5 — so the two tests stay in lockstep:
+//
+//   COMBINED pin after dialog-open:        PACKAGING_COMBINED_PIN     (= 3)
+//   Counter-proof pin after dialog-open:   PACKAGING_COMBINED_PIN + 1 (= 4)
+//
+// If the COMBINED test's pin changes (e.g. a third form-change step is added),
+// bump this constant; the counter-proof pins will follow automatically.
+const PACKAGING_COMBINED_PIN = 3;
+
+// ── Subscriber component (mirrors Live*TabContent) ────────────────────────────
+// Uses the REAL useHomeTabCtx() hook, wrapped in React.memo.
+// In production, LiveDoughTabContent / LivePackagingTabContent call exactly
+// this: const hx = useHomeTabCtx();
+let renderCount = 0;
+
+const TabSubscriber = memo(function TabSubscriberInner() {
+  renderCount++;
+  // REAL hook — same call the production tab components make.
+  const { casesNeeded, runStatus } = useHomeTabCtx();
+  return (
+    <div>
+      <span data-testid="cases-needed">{casesNeeded}</span>
+      <span data-testid="run-status">{runStatus}</span>
+    </div>
+  );
+});
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+afterEach(() => {
+  cleanup();
+  renderCount = 0;
+});
+
+describe("HomeTabCtx — tab-switch propagation and dialog isolation", () => {
+  // ─── Test 1: PROPAGATION ──────────────────────────────────────────────────
+  // Simulates: user edits casesNeeded on the Run tab, then switches to Dough.
+  // The Dough tab subscriber must reflect the new value immediately.
+  it("tab subscriber sees updated form value after production data changes", async () => {
+    const { rerender, getByTestId } = render(
+      <TabProvider casesNeeded={100} runStatus="running" manageCounter={0}>
+        <TabSubscriber />
+      </TabProvider>,
+    );
+
+    // Initial render
+    expect(renderCount).toBe(1);
+    expect(getByTestId("cases-needed").textContent).toBe("100");
+    expect(getByTestId("run-status").textContent).toBe("running");
+
+    // Simulate user changing casesNeeded (form value update on Run tab)
+    await act(async () => {
+      rerender(
+        <TabProvider casesNeeded={200} runStatus="running" manageCounter={0}>
+          <TabSubscriber />
+        </TabProvider>,
+      );
+    });
+
+    // The useMemo dep (casesNeeded) changed → new ctx ref → subscriber re-renders
+    expect(renderCount).toBe(2);
+    expect(getByTestId("cases-needed").textContent).toBe("200");
+
+    // Verify again with a second production data change (runStatus)
+    await act(async () => {
+      rerender(
+        <TabProvider casesNeeded={200} runStatus="paused" manageCounter={0}>
+          <TabSubscriber />
+        </TabProvider>,
+      );
+    });
+
+    expect(renderCount).toBe(3);
+    expect(getByTestId("run-status").textContent).toBe("paused");
+  });
+
+  // ─── Test 2: ISOLATION ────────────────────────────────────────────────────
+  // Simulates: manage dialog opens (showManageDialog flips) while user is on
+  // the Dough or Packaging tab.  The tab must NOT re-render.
+  it("tab subscriber does NOT re-render when dialog/manage state changes", async () => {
+    const { rerender } = render(
+      <TabProvider casesNeeded={150} runStatus="running" manageCounter={0}>
+        <TabSubscriber />
+      </TabProvider>,
+    );
+
+    expect(renderCount).toBe(1);
+
+    // Simulate manage dialog opening — only manageCounter changes;
+    // casesNeeded and runStatus (the actual production deps) stay the same.
+    await act(async () => {
+      rerender(
+        <TabProvider casesNeeded={150} runStatus="running" manageCounter={1}>
+          <TabSubscriber />
+        </TabProvider>,
+      );
+    });
+
+    // useMemo deps unchanged → same ctx ref → React.memo skips re-render.
+    expect(renderCount).toBe(1);
+
+    // Simulate dialog closing / import progress ticking (multiple non-run changes)
+    await act(async () => {
+      rerender(
+        <TabProvider casesNeeded={150} runStatus="running" manageCounter={99}>
+          <TabSubscriber />
+        </TabProvider>,
+      );
+    });
+
+    expect(renderCount).toBe(1);
+  });
+
+  // ─── Test 3: COMBINED ────────────────────────────────────────────────────
+  // Simulates the full scenario from the task spec:
+  //   1. Form value changes (casesNeeded updated on Run tab)  → exactly 1 new render
+  //   2. Manage dialog opens                                  → exactly 0 new renders
+  //   3. User switches to Dough/Packaging tab                 → tab already current
+  //
+  // Exact render counts are pinned at every step so that any weakening of the
+  // isolation check (e.g. making the assertion relative rather than absolute)
+  // is caught immediately.
+  it("form value change propagates; subsequent dialog open adds no extra renders", async () => {
+    const { rerender, getByTestId } = render(
+      <TabProvider casesNeeded={50} runStatus="running" manageCounter={0}>
+        <TabSubscriber />
+      </TabProvider>,
+    );
+
+    // PROPAGATION step 0 — initial mount: exactly 1 render.
+    expect(renderCount).toBe(1);
+    expect(getByTestId("cases-needed").textContent).toBe("50");
+
+    // PROPAGATION step 1 — casesNeeded changes: exactly 1 additional render
+    // (production dep updated → new ctx ref → React.memo allows re-render).
+    await act(async () => {
+      rerender(
+        <TabProvider casesNeeded={75} runStatus="running" manageCounter={0}>
+          <TabSubscriber />
+        </TabProvider>,
+      );
+    });
+
+    expect(renderCount).toBe(2); // exact: mount(1) + form-change(1)
+    expect(getByTestId("cases-needed").textContent).toBe("75");
+
+    // PROPAGATION step 2 — runStatus also changes: exactly 1 more render.
+    await act(async () => {
+      rerender(
+        <TabProvider casesNeeded={75} runStatus="paused" manageCounter={0}>
+          <TabSubscriber />
+        </TabProvider>,
+      );
+    });
+
+    // DRIFT GUARD: this assertion pins renderCount to PACKAGING_COMBINED_PIN
+    // immediately before the dialog-open step.  If a third form-change step is
+    // ever added to this COMBINED test without bumping PACKAGING_COMBINED_PIN,
+    // this line will fail (count N+1 vs expected N) → the constant must be
+    // bumped first.  The counter-proof's PACKAGING_COMBINED_PIN + 1 and + 2
+    // assertions then follow automatically, keeping the two tests in lockstep
+    // without any further edits.
+    expect(renderCount).toBe(PACKAGING_COMBINED_PIN); // exact: mount(1) + form-change(1) + status-change(1)
+    expect(getByTestId("run-status").textContent).toBe("paused");
+
+    // DIALOG step — manage dialog opens (manageCounter: 0→1).
+    // Production deps (casesNeeded, runStatus) are unchanged.
+    // The ctx ref must NOT change → React.memo must skip → zero new renders.
+    await act(async () => {
+      rerender(
+        <TabProvider casesNeeded={75} runStatus="paused" manageCounter={1}>
+          <TabSubscriber />
+        </TabProvider>,
+      );
+    });
+
+    // Exact guard: renderCount must still be PACKAGING_COMBINED_PIN (3).  Any
+    // spurious re-render caused by a dialog field leaking into the context deps
+    // will bump this to PACKAGING_COMBINED_PIN+1 — which is exactly what the
+    // COMBINED counter-proof below asserts for the broken provider.
+    expect(renderCount).toBe(PACKAGING_COMBINED_PIN); // exact: no extra render from dialog open
+
+    // Repeat with a second dialog state change to rule out a lucky no-op.
+    await act(async () => {
+      rerender(
+        <TabProvider casesNeeded={75} runStatus="paused" manageCounter={99}>
+          <TabSubscriber />
+        </TabProvider>,
+      );
+    });
+
+    expect(renderCount).toBe(PACKAGING_COMBINED_PIN); // exact: still no extra render from further dialog changes
+
+    // SWITCH step — user navigates to Dough/Packaging tab.
+    // The tab already holds the current values; no re-render is needed.
+    expect(getByTestId("cases-needed").textContent).toBe("75");
+    expect(getByTestId("run-status").textContent).toBe("paused");
+  });
+
+  // ─── REGRESSION GUARD ────────────────────────────────────────────────────
+  // This test uses BrokenTabProvider — which intentionally includes
+  // `manageCounter` in its useMemo deps — to prove that the ISOLATION test
+  // above is a real guard: if someone accidentally adds a dialog field to the
+  // Dough/Packaging context slice's deps, the subscriber WILL re-render on
+  // every dialog state change (freezing the tab while a dialog is open).
+  //
+  // If this test starts FAILING (broken provider no longer causes re-renders),
+  // the isolation test above has become a false green and the guard is gone.
+  it("REGRESSION GUARD: broken provider (manageCounter in deps) causes spurious Dough/Packaging re-renders", async () => {
+    const { rerender } = render(
+      <BrokenTabProvider casesNeeded={100} runStatus="running" manageCounter={0}>
+        <TabSubscriber />
+      </BrokenTabProvider>,
+    );
+
+    expect(renderCount).toBe(1);
+
+    // Simulate dialog open — only manageCounter changes; casesNeeded and
+    // runStatus are stable.
+    // With the BROKEN provider, this produces a new ctx ref → spurious re-render.
+    await act(async () => {
+      rerender(
+        <BrokenTabProvider casesNeeded={100} runStatus="running" manageCounter={1}>
+          <TabSubscriber />
+        </BrokenTabProvider>,
+      );
+    });
+
+    // BROKEN provider leaks manageCounter into deps → subscriber re-renders.
+    // The real TabProvider must keep this count at 1 (see ISOLATION test).
+    expect(renderCount).toBe(2);
+
+    await act(async () => {
+      rerender(
+        <BrokenTabProvider casesNeeded={100} runStatus="running" manageCounter={42}>
+          <TabSubscriber />
+        </BrokenTabProvider>,
+      );
+    });
+
+    expect(renderCount).toBe(3);
+  });
+
+  // ─── REGRESSION GUARD — COMBINED counter-proof ────────────────────────────
+  // Drives BrokenTabProvider through the SAME mount → form-change →
+  // status-change → dialog-open sequence as the COMBINED test above, proving
+  // that the exact render-count pin of PACKAGING_COMBINED_PIN (3) after the
+  // dialog-open step is a real assertion.
+  //
+  // With the correct TabProvider the COMBINED test expects:
+  //   mount(1) + form-change(1) + status-change(1) + dialog-open(0) = 3
+  //
+  // With BrokenTabProvider the dialog-open step produces an extra render,
+  // pushing the count to 4.  This means the COMBINED pin "toBe(PACKAGING_COMBINED_PIN)"
+  // WOULD FAIL under the broken provider — i.e. the COMBINED test is a real
+  // guard, not a false green.
+  //
+  // If THIS test starts FAILING (broken provider no longer bumps the count past
+  // PACKAGING_COMBINED_PIN during the dialog-open step), the COMBINED test's
+  // exact-count assertion has become untestable and should be re-examined.
+  it("REGRESSION GUARD (COMBINED counter-proof): broken provider causes extra render during dialog-open after form changes", async () => {
+    const { rerender, getByTestId } = render(
+      <BrokenTabProvider casesNeeded={50} runStatus="running" manageCounter={0}>
+        <TabSubscriber />
+      </BrokenTabProvider>,
+    );
+
+    // Step 0 — initial mount.
+    expect(renderCount).toBe(1);
+    expect(getByTestId("cases-needed").textContent).toBe("50");
+
+    // Step 1 — form-change: casesNeeded changes.
+    // Both the correct and broken providers yield a new ctx ref here → render.
+    await act(async () => {
+      rerender(
+        <BrokenTabProvider casesNeeded={75} runStatus="running" manageCounter={0}>
+          <TabSubscriber />
+        </BrokenTabProvider>,
+      );
+    });
+
+    expect(renderCount).toBe(2); // mount(1) + form-change(1)
+    expect(getByTestId("cases-needed").textContent).toBe("75");
+
+    // Step 2 — status-change: runStatus also changes.
+    await act(async () => {
+      rerender(
+        <BrokenTabProvider casesNeeded={75} runStatus="paused" manageCounter={0}>
+          <TabSubscriber />
+        </BrokenTabProvider>,
+      );
+    });
+
+    // Lockstep with COMBINED: using PACKAGING_COMBINED_PIN here (not a literal)
+    // means that if the constant is bumped (e.g. a 3rd form-change step is added),
+    // this assertion automatically requires adding that 3rd step here too —
+    // keeping the counter-proof scenario identical to the COMBINED test.
+    expect(renderCount).toBe(PACKAGING_COMBINED_PIN); // = 3; mount(1) + form-change(1) + status-change(1)
+    expect(getByTestId("run-status").textContent).toBe("paused");
+
+    // Step 3 — dialog-open: only manageCounter changes (0→1); production deps stable.
+    // CORRECT provider: ctx ref unchanged → React.memo skips → count stays at PACKAGING_COMBINED_PIN.
+    // BROKEN provider:  manageCounter in deps → new ctx ref → spurious re-render
+    //                   → count becomes PACKAGING_COMBINED_PIN + 1.
+    // This step is the heart of the counter-proof: it shows the COMBINED test's
+    // "toBe(PACKAGING_COMBINED_PIN)" assertion is NOT vacuously true — the broken
+    // provider violates it.
+    await act(async () => {
+      rerender(
+        <BrokenTabProvider casesNeeded={75} runStatus="paused" manageCounter={1}>
+          <TabSubscriber />
+        </BrokenTabProvider>,
+      );
+    });
+
+    // BROKEN provider leaked manageCounter into deps → subscriber re-rendered.
+    // The real TabProvider must keep the count at PACKAGING_COMBINED_PIN (3)
+    // after this step (see the COMBINED test above).  Here it MUST be
+    // PACKAGING_COMBINED_PIN + 1 — proving the COMBINED test's pin is a real
+    // assertion that the broken provider would violate.
+    expect(renderCount).toBe(PACKAGING_COMBINED_PIN + 1); // = 4; extra render proves the COMBINED pin is real
+
+    // One more dialog change confirms it keeps firing — not a one-time no-op.
+    await act(async () => {
+      rerender(
+        <BrokenTabProvider casesNeeded={75} runStatus="paused" manageCounter={99}>
+          <TabSubscriber />
+        </BrokenTabProvider>,
+      );
+    });
+
+    expect(renderCount).toBe(PACKAGING_COMBINED_PIN + 2); // = 5; symmetric with Block 4's counter-proof
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 4 — LiveFrontlineTabContent slice
+//
+// The Frontline tab reads `v` (form values) from homeTabCtxValue — specifically
+// applicator fields such as `app1Type`.  Changing `app1Type` must propagate;
+// opening a manage dialog must not cause a re-render.
+//
+// Four tests:
+//   PROPAGATION    — form value change reaches the Frontline subscriber.
+//   ISOLATION      — dialog open does NOT re-render the Frontline subscriber.
+//   COMBINED       — form change propagates; subsequent dialog open adds no renders.
+//                    Exact render counts pinned at every step (mount → form-change
+//                    → dialog-open) so any weakening of the isolation check is
+//                    caught immediately.
+//   REGRESSION GUARD — a deliberately broken provider (manageCounter in deps)
+//                      proves the ISOLATION test would catch the regression:
+//                      the broken provider causes a re-render on every dialog
+//                      state change, which the real (correct) provider must not.
+// ══════════════════════════════════════════════════════════════════════════════
+
+function FrontlineProvider({
+  app1Type,
+  children,
+}: {
+  app1Type: string;
+  manageCounter: number; // received but intentionally excluded from deps
+  children: ReactNode;
+}) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const value = useMemo(() => ({ v: { app1Type } }), [app1Type]);
+  return <HomeTabCtx.Provider value={value}>{children}</HomeTabCtx.Provider>;
+}
+
+// ── BrokenFrontlineProvider ────────────────────────────────────────────────
+// Intentionally includes `manageCounter` in useMemo deps, simulating the
+// regression where a dialog field leaks into the Frontline context slice.
+// Used only in the REGRESSION GUARD test below to prove the guard is real.
+function BrokenFrontlineProvider({
+  app1Type,
+  manageCounter,
+  children,
+}: {
+  app1Type: string;
+  manageCounter: number;
+  children: ReactNode;
+}) {
+  const value = useMemo(
+    () => ({ v: { app1Type } }),
+    [app1Type, manageCounter], // BUG: manageCounter should NOT be here
+  );
+  return <HomeTabCtx.Provider value={value}>{children}</HomeTabCtx.Provider>;
+}
+
+// ── FRONTLINE_COMBINED_PIN ────────────────────────────────────────────────────
+// Invariant: mount(1) + form-change(1) + form-change(1) + dialog-open(0) = 3.
+//
+// This constant is the single source of truth for the COMBINED test's exact
+// render-count pin.  The REGRESSION GUARD (COMBINED counter-proof) below MUST
+// assert `FRONTLINE_COMBINED_PIN + 1` after the dialog-open step (and
+// `FRONTLINE_COMBINED_PIN + 2` after the second dialog change) — never a
+// literal 4 or 5 — so the two tests stay in lockstep:
+//
+//   COMBINED pin after dialog-open:        FRONTLINE_COMBINED_PIN     (= 3)
+//   Counter-proof pin after dialog-open:   FRONTLINE_COMBINED_PIN + 1 (= 4)
+//
+// If the COMBINED test's pin changes (e.g. a third form-change step is added),
+// bump this constant; the counter-proof pins will follow automatically.
+const FRONTLINE_COMBINED_PIN = 3;
+
+let frontlineRenderCount = 0;
+
+const FrontlineSubscriber = memo(function FrontlineSubscriberInner() {
+  frontlineRenderCount++;
+  const { v } = useHomeTabCtx();
+  return <span data-testid="app1-type">{(v as any).app1Type}</span>;
+});
+
+afterEach(() => {
+  frontlineRenderCount = 0;
+});
+
+describe("HomeTabCtx — LiveFrontlineTabContent slice (app1Type)", () => {
+  // ─── PROPAGATION ──────────────────────────────────────────────────────────
+  // Simulates: operator changes the Applicator 1 type on the Setup tab.
+  // The Frontline tab subscriber must reflect the new value.
+  it("Frontline subscriber sees updated app1Type when form value changes", async () => {
+    const { rerender, getByTestId } = render(
+      <FrontlineProvider app1Type="cheese" manageCounter={0}>
+        <FrontlineSubscriber />
+      </FrontlineProvider>,
+    );
+
+    expect(frontlineRenderCount).toBe(1);
+    expect(getByTestId("app1-type").textContent).toBe("cheese");
+
+    await act(async () => {
+      rerender(
+        <FrontlineProvider app1Type="sauce" manageCounter={0}>
+          <FrontlineSubscriber />
+        </FrontlineProvider>,
+      );
+    });
+
+    expect(frontlineRenderCount).toBe(2);
+    expect(getByTestId("app1-type").textContent).toBe("sauce");
+  });
+
+  // ─── ISOLATION ────────────────────────────────────────────────────────────
+  // Simulates: manage dialog opens while the user is on the Frontline tab.
+  // Only manageCounter changes; app1Type is stable — no re-render expected.
+  it("Frontline subscriber does NOT re-render when only dialog state changes", async () => {
+    const { rerender } = render(
+      <FrontlineProvider app1Type="cheese" manageCounter={0}>
+        <FrontlineSubscriber />
+      </FrontlineProvider>,
+    );
+
+    expect(frontlineRenderCount).toBe(1);
+
+    await act(async () => {
+      rerender(
+        <FrontlineProvider app1Type="cheese" manageCounter={1}>
+          <FrontlineSubscriber />
+        </FrontlineProvider>,
+      );
+    });
+
+    expect(frontlineRenderCount).toBe(1);
+
+    await act(async () => {
+      rerender(
+        <FrontlineProvider app1Type="cheese" manageCounter={42}>
+          <FrontlineSubscriber />
+        </FrontlineProvider>,
+      );
+    });
+
+    expect(frontlineRenderCount).toBe(1);
+  });
+
+  // ─── COMBINED ─────────────────────────────────────────────────────────────
+  // Simulates the full scenario:
+  //   1. app1Type changes (form value updated on Setup tab)  → exactly 1 new render
+  //   2. A second app1Type change                            → exactly 1 new render
+  //   3. Manage dialog opens (manageCounter: 0→1)            → exactly 0 new renders
+  //   4. Further dialog state changes (manageCounter: 1→99)  → exactly 0 new renders
+  //
+  // Exact render counts are pinned at every step so that any weakening of the
+  // isolation check (e.g. making the assertion relative rather than absolute,
+  // or accidentally including manageCounter in the provider deps) is caught
+  // immediately — even if the ISOLATION test is softened later.
+  it("COMBINED: app1Type changes propagate; subsequent dialog open adds no extra renders", async () => {
+    const { rerender, getByTestId } = render(
+      <FrontlineProvider app1Type="cheese" manageCounter={0}>
+        <FrontlineSubscriber />
+      </FrontlineProvider>,
+    );
+
+    // PROPAGATION step 0 — initial mount: exactly 1 render.
+    expect(frontlineRenderCount).toBe(1);
+    expect(getByTestId("app1-type").textContent).toBe("cheese");
+
+    // PROPAGATION step 1 — app1Type changes: exactly 1 additional render
+    // (production dep updated → new ctx ref → React.memo allows re-render).
+    await act(async () => {
+      rerender(
+        <FrontlineProvider app1Type="sauce" manageCounter={0}>
+          <FrontlineSubscriber />
+        </FrontlineProvider>,
+      );
+    });
+
+    expect(frontlineRenderCount).toBe(2); // exact: mount(1) + form-change(1)
+    expect(getByTestId("app1-type").textContent).toBe("sauce");
+
+    // PROPAGATION step 2 — app1Type changes again: exactly 1 more render.
+    await act(async () => {
+      rerender(
+        <FrontlineProvider app1Type="pepperoni" manageCounter={0}>
+          <FrontlineSubscriber />
+        </FrontlineProvider>,
+      );
+    });
+
+    // DRIFT GUARD: this assertion pins frontlineRenderCount to FRONTLINE_COMBINED_PIN
+    // immediately before the dialog-open step.  If a third form-change step is ever
+    // added to this COMBINED test without bumping FRONTLINE_COMBINED_PIN, this line
+    // will fail (count N+1 vs expected N) → the constant must be bumped first.
+    // The counter-proof's FRONTLINE_COMBINED_PIN + 1 and + 2 assertions then follow
+    // automatically, keeping the two tests in lockstep without any further edits.
+    expect(frontlineRenderCount).toBe(FRONTLINE_COMBINED_PIN); // exact: mount(1) + form-change(1) + form-change(1)
+    expect(getByTestId("app1-type").textContent).toBe("pepperoni");
+
+    // DIALOG step — manage dialog opens (manageCounter: 0→1).
+    // Production dep (app1Type) is unchanged.
+    // The ctx ref must NOT change → React.memo must skip → zero new renders.
+    await act(async () => {
+      rerender(
+        <FrontlineProvider app1Type="pepperoni" manageCounter={1}>
+          <FrontlineSubscriber />
+        </FrontlineProvider>,
+      );
+    });
+
+    // Exact guard: frontlineRenderCount must still be FRONTLINE_COMBINED_PIN (3).
+    // Any spurious re-render caused by a dialog field leaking into the context
+    // deps will bump this to FRONTLINE_COMBINED_PIN+1 — which is exactly what
+    // the COMBINED counter-proof below asserts for the broken provider.
+    expect(frontlineRenderCount).toBe(FRONTLINE_COMBINED_PIN); // exact: no extra render from dialog open
+
+    // Repeat with a second dialog state change to rule out a lucky no-op.
+    await act(async () => {
+      rerender(
+        <FrontlineProvider app1Type="pepperoni" manageCounter={99}>
+          <FrontlineSubscriber />
+        </FrontlineProvider>,
+      );
+    });
+
+    expect(frontlineRenderCount).toBe(FRONTLINE_COMBINED_PIN); // exact: still no extra render from further dialog changes
+
+    // SWITCH step — user navigates to Frontline tab.
+    // The tab already holds the current value; no re-render is needed.
+    expect(getByTestId("app1-type").textContent).toBe("pepperoni");
+  });
+
+  // ─── REGRESSION GUARD ─────────────────────────────────────────────────────
+  // This test uses BrokenFrontlineProvider — which intentionally includes
+  // `manageCounter` in its useMemo deps — to prove that the ISOLATION test
+  // above is a real guard: if someone accidentally adds a dialog field to the
+  // Frontline context slice's deps, the subscriber WILL re-render on every
+  // dialog state change.
+  //
+  // If this test starts FAILING (broken provider no longer causes re-renders),
+  // the isolation test above has become a false green and the guard is gone.
+  it("REGRESSION GUARD: broken provider (manageCounter in deps) causes spurious Frontline re-renders", async () => {
+    const { rerender } = render(
+      <BrokenFrontlineProvider app1Type="cheese" manageCounter={0}>
+        <FrontlineSubscriber />
+      </BrokenFrontlineProvider>,
+    );
+
+    expect(frontlineRenderCount).toBe(1);
+
+    // Simulate dialog open — only manageCounter changes; app1Type is stable.
+    // With the BROKEN provider, this produces a new ctx ref → spurious re-render.
+    await act(async () => {
+      rerender(
+        <BrokenFrontlineProvider app1Type="cheese" manageCounter={1}>
+          <FrontlineSubscriber />
+        </BrokenFrontlineProvider>,
+      );
+    });
+
+    // BROKEN provider leaks manageCounter into deps → subscriber re-renders.
+    // The real FrontlineProvider must keep this count at 1 (see ISOLATION test).
+    expect(frontlineRenderCount).toBe(2);
+
+    await act(async () => {
+      rerender(
+        <BrokenFrontlineProvider app1Type="cheese" manageCounter={42}>
+          <FrontlineSubscriber />
+        </BrokenFrontlineProvider>,
+      );
+    });
+
+    expect(frontlineRenderCount).toBe(3);
+  });
+
+  // ─── REGRESSION GUARD — COMBINED counter-proof ────────────────────────────
+  // Drives BrokenFrontlineProvider through the SAME mount → form-change →
+  // dialog-open sequence as the COMBINED test above, proving that the exact
+  // render-count pin of 3 after the dialog-open step is a real assertion.
+  //
+  // With the correct FrontlineProvider the COMBINED test expects:
+  //   mount(1) + form-change(1) + form-change(1) + dialog-open(0) = 3
+  //
+  // With BrokenFrontlineProvider the dialog-open step produces an extra render,
+  // pushing the count to 4.  This means the COMBINED pin "toBe(3)" WOULD FAIL
+  // under the broken provider — i.e. the COMBINED test is a real guard, not a
+  // false green.
+  //
+  // If THIS test starts FAILING (broken provider no longer bumps the count past
+  // 3 during the dialog-open step), the COMBINED test's exact-count assertion
+  // has become untestable and should be re-examined.
+  it("REGRESSION GUARD (COMBINED counter-proof): broken provider causes extra render during dialog-open after form changes", async () => {
+    const { rerender, getByTestId } = render(
+      <BrokenFrontlineProvider app1Type="cheese" manageCounter={0}>
+        <FrontlineSubscriber />
+      </BrokenFrontlineProvider>,
+    );
+
+    // Step 0 — initial mount.
+    expect(frontlineRenderCount).toBe(1);
+    expect(getByTestId("app1-type").textContent).toBe("cheese");
+
+    // Step 1 — form-change: app1Type changes (sauce).
+    // Both the correct and broken providers yield a new ctx ref here → render.
+    await act(async () => {
+      rerender(
+        <BrokenFrontlineProvider app1Type="sauce" manageCounter={0}>
+          <FrontlineSubscriber />
+        </BrokenFrontlineProvider>,
+      );
+    });
+
+    expect(frontlineRenderCount).toBe(2); // mount(1) + form-change(1)
+    expect(getByTestId("app1-type").textContent).toBe("sauce");
+
+    // Step 2 — form-change: app1Type changes again (pepperoni).
+    await act(async () => {
+      rerender(
+        <BrokenFrontlineProvider app1Type="pepperoni" manageCounter={0}>
+          <FrontlineSubscriber />
+        </BrokenFrontlineProvider>,
+      );
+    });
+
+    // Lockstep with COMBINED: using FRONTLINE_COMBINED_PIN here (not a literal)
+    // means that if the constant is bumped (e.g. a 3rd form-change step is added),
+    // this assertion automatically requires adding that 3rd form-change step here
+    // too — keeping the counter-proof scenario identical to the COMBINED test.
+    expect(frontlineRenderCount).toBe(FRONTLINE_COMBINED_PIN); // = 3; mount(1) + form-change(1) + form-change(1)
+    expect(getByTestId("app1-type").textContent).toBe("pepperoni");
+
+    // Step 3 — dialog-open: only manageCounter changes (0→1); app1Type is stable.
+    // CORRECT provider: ctx ref unchanged → React.memo skips → count stays at FRONTLINE_COMBINED_PIN.
+    // BROKEN provider:  manageCounter in deps → new ctx ref → spurious re-render
+    //                   → count becomes FRONTLINE_COMBINED_PIN + 1.
+    // This step is the heart of the counter-proof: it shows the COMBINED test's
+    // "toBe(FRONTLINE_COMBINED_PIN)" assertion is NOT vacuously true — the broken provider violates it.
+    await act(async () => {
+      rerender(
+        <BrokenFrontlineProvider app1Type="pepperoni" manageCounter={1}>
+          <FrontlineSubscriber />
+        </BrokenFrontlineProvider>,
+      );
+    });
+
+    // BROKEN provider leaked manageCounter into deps → subscriber re-rendered.
+    // The real FrontlineProvider must keep the count at FRONTLINE_COMBINED_PIN (3)
+    // after this step (see the COMBINED test above).  Here it MUST be
+    // FRONTLINE_COMBINED_PIN + 1 — proving the COMBINED test's "toBe(3)" is a
+    // real assertion that the broken provider would violate.
+    expect(frontlineRenderCount).toBe(FRONTLINE_COMBINED_PIN + 1); // = 4; extra render proves the COMBINED pin is real
+
+    // One more dialog change confirms it keeps firing — not a one-time no-op.
+    await act(async () => {
+      rerender(
+        <BrokenFrontlineProvider app1Type="pepperoni" manageCounter={99}>
+          <FrontlineSubscriber />
+        </BrokenFrontlineProvider>,
+      );
+    });
+
+    expect(frontlineRenderCount).toBe(FRONTLINE_COMBINED_PIN + 2); // = 5; symmetric with Block 1-3's REGRESSION GUARD
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 5 — LiveSetupRecipesTabContent slice
+//
+// The SetupRecipes tab reads `isSupervisor` from homeTabCtxValue to gate
+// whether the recipe fieldset is editable.  A role change (isSupervisor flip)
+// must propagate; a dialog open must not cause a re-render.
+//
+// Five tests:
+//   PROPAGATION    — role change reaches the SetupRecipes subscriber.
+//   ISOLATION      — dialog open does NOT re-render the SetupRecipes subscriber.
+//   COMBINED       — role changes propagate; subsequent dialog open adds no renders.
+//                    Exact render counts pinned at every step (mount → role-change
+//                    → role-change → dialog-open) so any weakening of the isolation
+//                    check is caught immediately.
+//   REGRESSION GUARD — a deliberately broken provider (manageCounter in deps)
+//                      proves the ISOLATION test would catch the regression:
+//                      the broken provider causes a re-render on every dialog
+//                      state change, which the real (correct) provider must not.
+//   REGRESSION GUARD (COMBINED counter-proof) — drives BrokenSetupRecipesProvider
+//                      through the same mount → role-change → role-change →
+//                      dialog-open sequence as the COMBINED test, proving that the
+//                      exact pin of SETUP_COMBINED_PIN (3) is a real assertion.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── SETUP_COMBINED_PIN ────────────────────────────────────────────────────────
+// Invariant: mount(1) + role-change(1) + role-change(1) + dialog-open(0) = 3.
+//
+// This constant is the single source of truth for the Block 5 COMBINED test's
+// exact render-count pin.  The REGRESSION GUARD (COMBINED counter-proof) below
+// MUST assert `SETUP_COMBINED_PIN + 1` after the dialog-open step — never a
+// literal 4 — so the two tests stay in lockstep:
+//
+//   COMBINED pin after dialog-open:        SETUP_COMBINED_PIN     (= 3)
+//   Counter-proof pin after dialog-open:   SETUP_COMBINED_PIN + 1 (= 4)
+//
+// If the COMBINED test's pin changes (e.g. a third role-change step is added),
+// bump this constant; the counter-proof pins will follow automatically.
+const SETUP_COMBINED_PIN = 3;
+
+function SetupRecipesProvider({
+  isSupervisor,
+  children,
+}: {
+  isSupervisor: boolean;
+  manageCounter: number; // received but intentionally excluded from deps
+  children: ReactNode;
+}) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const value = useMemo(() => ({ isSupervisor }), [isSupervisor]);
+  return <HomeTabCtx.Provider value={value}>{children}</HomeTabCtx.Provider>;
+}
+
+// ── BrokenSetupRecipesProvider ─────────────────────────────────────────────
+// Intentionally includes `manageCounter` in useMemo deps, simulating the
+// regression where a dialog field leaks into the SetupRecipes context slice.
+// Used only in the REGRESSION GUARD test below to prove the guard is real.
+function BrokenSetupRecipesProvider({
+  isSupervisor,
+  manageCounter,
+  children,
+}: {
+  isSupervisor: boolean;
+  manageCounter: number;
+  children: ReactNode;
+}) {
+  const value = useMemo(
+    () => ({ isSupervisor }),
+    [isSupervisor, manageCounter], // BUG: manageCounter should NOT be here
+  );
+  return <HomeTabCtx.Provider value={value}>{children}</HomeTabCtx.Provider>;
+}
+
+let setupRenderCount = 0;
+
+const SetupRecipesSubscriber = memo(function SetupRecipesSubscriberInner() {
+  setupRenderCount++;
+  const { isSupervisor } = useHomeTabCtx();
+  return (
+    <span data-testid="is-supervisor">
+      {(isSupervisor as any) ? "yes" : "no"}
+    </span>
+  );
+});
+
+afterEach(() => {
+  setupRenderCount = 0;
+});
+
+describe("HomeTabCtx — LiveSetupRecipesTabContent slice (isSupervisor)", () => {
+  // ─── PROPAGATION ──────────────────────────────────────────────────────────
+  // Simulates: user's role changes to supervisor mid-session (e.g. a manager
+  // grants them supervisor access).  The SetupRecipes tab must update.
+  it("SetupRecipes subscriber sees updated isSupervisor when role changes", async () => {
+    const { rerender, getByTestId } = render(
+      <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+        <SetupRecipesSubscriber />
+      </SetupRecipesProvider>,
+    );
+
+    expect(setupRenderCount).toBe(1);
+    expect(getByTestId("is-supervisor").textContent).toBe("no");
+
+    await act(async () => {
+      rerender(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <SetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+    });
+
+    expect(setupRenderCount).toBe(2);
+    expect(getByTestId("is-supervisor").textContent).toBe("yes");
+  });
+
+  // ─── ISOLATION ────────────────────────────────────────────────────────────
+  // Simulates: manage dialog opens while the user is on the SetupRecipes tab.
+  // isSupervisor is stable — subscriber must NOT re-render.
+  it("SetupRecipes subscriber does NOT re-render when only dialog state changes", async () => {
+    const { rerender } = render(
+      <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+        <SetupRecipesSubscriber />
+      </SetupRecipesProvider>,
+    );
+
+    expect(setupRenderCount).toBe(1);
+
+    await act(async () => {
+      rerender(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={1}>
+          <SetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+    });
+
+    expect(setupRenderCount).toBe(1);
+
+    await act(async () => {
+      rerender(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={99}>
+          <SetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+    });
+
+    expect(setupRenderCount).toBe(1);
+  });
+
+  // ─── COMBINED ─────────────────────────────────────────────────────────────
+  // Simulates the full scenario:
+  //   1. Role changes false→true (isSupervisor updated)   → exactly 1 new render
+  //   2. Role changes true→false (second role change)     → exactly 1 new render
+  //   3. Manage dialog opens                              → exactly 0 new renders
+  //
+  // Exact render counts are pinned at every step so that any weakening of the
+  // isolation check (e.g. making the assertion relative rather than absolute)
+  // is caught immediately.
+  it("role changes propagate; subsequent dialog open adds no extra renders", async () => {
+    const { rerender, getByTestId } = render(
+      <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+        <SetupRecipesSubscriber />
+      </SetupRecipesProvider>,
+    );
+
+    // PROPAGATION step 0 — initial mount: exactly 1 render.
+    expect(setupRenderCount).toBe(1);
+    expect(getByTestId("is-supervisor").textContent).toBe("no");
+
+    // PROPAGATION step 1 — isSupervisor changes false→true: 1 additional render.
+    await act(async () => {
+      rerender(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <SetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+    });
+
+    expect(setupRenderCount).toBe(2); // exact: mount(1) + role-change(1)
+    expect(getByTestId("is-supervisor").textContent).toBe("yes");
+
+    // PROPAGATION step 2 — isSupervisor changes true→false: 1 more render.
+    await act(async () => {
+      rerender(
+        <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+          <SetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+    });
+
+    // DRIFT GUARD: pins renderCount to SETUP_COMBINED_PIN immediately before the
+    // dialog-open step.  If a third role-change step is ever added without bumping
+    // SETUP_COMBINED_PIN, this line will fail, forcing the constant to be bumped
+    // first.  The counter-proof's SETUP_COMBINED_PIN + 1 assertion then follows
+    // automatically.
+    expect(setupRenderCount).toBe(SETUP_COMBINED_PIN); // exact: mount(1) + role-change(1) + role-change(1)
+    expect(getByTestId("is-supervisor").textContent).toBe("no");
+
+    // DIALOG step — manage dialog opens (manageCounter: 0→1).
+    // isSupervisor is unchanged.  The ctx ref must NOT change → React.memo skips.
+    await act(async () => {
+      rerender(
+        <SetupRecipesProvider isSupervisor={false} manageCounter={1}>
+          <SetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+    });
+
+    // Exact guard: renderCount must still be SETUP_COMBINED_PIN (3).
+    expect(setupRenderCount).toBe(SETUP_COMBINED_PIN); // exact: no extra render from dialog open
+
+    // Repeat with a second dialog state change to rule out a lucky no-op.
+    await act(async () => {
+      rerender(
+        <SetupRecipesProvider isSupervisor={false} manageCounter={99}>
+          <SetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+    });
+
+    expect(setupRenderCount).toBe(SETUP_COMBINED_PIN); // exact: still no extra render from further dialog changes
+    expect(getByTestId("is-supervisor").textContent).toBe("no");
+  });
+
+  // ─── REGRESSION GUARD ─────────────────────────────────────────────────────
+  // This test uses BrokenSetupRecipesProvider — which intentionally includes
+  // `manageCounter` in its useMemo deps — to prove that the ISOLATION test
+  // above is a real guard: if someone accidentally adds a dialog field to the
+  // SetupRecipes context slice's deps, the subscriber WILL re-render on every
+  // dialog state change (freezing the tab while a dialog is open).
+  //
+  // If this test starts FAILING (broken provider no longer causes re-renders),
+  // the isolation test above has become a false green and the guard is gone.
+  it("REGRESSION GUARD: broken provider (manageCounter in deps) causes spurious SetupRecipes re-renders", async () => {
+    const { rerender } = render(
+      <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={0}>
+        <SetupRecipesSubscriber />
+      </BrokenSetupRecipesProvider>,
+    );
+
+    expect(setupRenderCount).toBe(1);
+
+    // Simulate dialog open — only manageCounter changes; isSupervisor is stable.
+    // With the BROKEN provider, this produces a new ctx ref → spurious re-render.
+    await act(async () => {
+      rerender(
+        <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={1}>
+          <SetupRecipesSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+    });
+
+    // BROKEN provider leaks manageCounter into deps → subscriber re-renders.
+    // The real SetupRecipesProvider must keep this count at 1 (see ISOLATION test).
+    expect(setupRenderCount).toBe(2);
+
+    await act(async () => {
+      rerender(
+        <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={99}>
+          <SetupRecipesSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+    });
+
+    expect(setupRenderCount).toBe(3);
+  });
+
+  // ─── REGRESSION GUARD — COMBINED counter-proof ────────────────────────────
+  // Drives BrokenSetupRecipesProvider through the SAME mount → role-change →
+  // role-change → dialog-open sequence as the COMBINED test above, proving that
+  // the exact render-count pin of SETUP_COMBINED_PIN (3) after the dialog-open
+  // step is a real assertion.
+  //
+  // With the correct SetupRecipesProvider the COMBINED test expects:
+  //   mount(1) + role-change(1) + role-change(1) + dialog-open(0) = 3
+  //
+  // With BrokenSetupRecipesProvider the dialog-open step produces an extra
+  // render, pushing the count to 4.  This means the COMBINED pin
+  // "toBe(SETUP_COMBINED_PIN)" WOULD FAIL under the broken provider — i.e.
+  // the COMBINED test is a real guard, not a false green.
+  //
+  // If THIS test starts FAILING (broken provider no longer bumps the count past
+  // SETUP_COMBINED_PIN during the dialog-open step), the COMBINED test's
+  // exact-count assertion has become untestable and should be re-examined.
+  it("REGRESSION GUARD (COMBINED counter-proof): broken provider causes extra render during dialog-open after role changes", async () => {
+    const { rerender, getByTestId } = render(
+      <BrokenSetupRecipesProvider isSupervisor={false} manageCounter={0}>
+        <SetupRecipesSubscriber />
+      </BrokenSetupRecipesProvider>,
+    );
+
+    // Step 0 — initial mount.
+    expect(setupRenderCount).toBe(1);
+    expect(getByTestId("is-supervisor").textContent).toBe("no");
+
+    // Step 1 — role-change: isSupervisor changes false→true.
+    // Both the correct and broken providers yield a new ctx ref here → render.
+    await act(async () => {
+      rerender(
+        <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <SetupRecipesSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+    });
+
+    expect(setupRenderCount).toBe(2); // mount(1) + role-change(1)
+    expect(getByTestId("is-supervisor").textContent).toBe("yes");
+
+    // Step 2 — role-change: isSupervisor changes true→false.
+    await act(async () => {
+      rerender(
+        <BrokenSetupRecipesProvider isSupervisor={false} manageCounter={0}>
+          <SetupRecipesSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+    });
+
+    // Lockstep with COMBINED: using SETUP_COMBINED_PIN here (not a literal)
+    // means that if the constant is bumped (e.g. a 3rd role-change step is
+    // added), this assertion automatically requires adding that 3rd step here
+    // too — keeping the counter-proof scenario identical to the COMBINED test.
+    expect(setupRenderCount).toBe(SETUP_COMBINED_PIN); // = 3; mount(1) + role-change(1) + role-change(1)
+    expect(getByTestId("is-supervisor").textContent).toBe("no");
+
+    // Step 3 — dialog-open: only manageCounter changes (0→1); isSupervisor stable.
+    // CORRECT provider: ctx ref unchanged → React.memo skips → count stays at SETUP_COMBINED_PIN.
+    // BROKEN provider:  manageCounter in deps → new ctx ref → spurious re-render
+    //                   → count becomes SETUP_COMBINED_PIN + 1.
+    // This step is the heart of the counter-proof: it shows the COMBINED test's
+    // "toBe(SETUP_COMBINED_PIN)" assertion is NOT vacuously true — the broken
+    // provider violates it.
+    await act(async () => {
+      rerender(
+        <BrokenSetupRecipesProvider isSupervisor={false} manageCounter={1}>
+          <SetupRecipesSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+    });
+
+    // BROKEN provider leaked manageCounter into deps → subscriber re-rendered.
+    // The real SetupRecipesProvider must keep the count at SETUP_COMBINED_PIN (3)
+    // after this step (see the COMBINED test above).  Here it MUST be
+    // SETUP_COMBINED_PIN + 1 — proving the COMBINED test's pin is a real
+    // assertion that the broken provider would violate.
+    expect(setupRenderCount).toBe(SETUP_COMBINED_PIN + 1); // = 4; extra render proves the COMBINED pin is real
+
+    // One more dialog change confirms it keeps firing — not a one-time no-op.
+    await act(async () => {
+      rerender(
+        <BrokenSetupRecipesProvider isSupervisor={false} manageCounter={99}>
+          <SetupRecipesSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+    });
+
+    expect(setupRenderCount).toBe(SETUP_COMBINED_PIN + 2); // = 5; symmetric with other blocks' counter-proofs
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 5b — LiveSetupRecipesTabContent fieldset disabled attribute
+//
+// The prior block confirms the context value propagates.  This block goes one
+// layer deeper: it mounts the REAL SetupRecipesRoleGate component (the
+// production component that LiveSetupRecipesTabContent uses) and asserts that
+// its <fieldset disabled> attribute flips when isSupervisor changes.
+//
+// Because SetupRecipesRoleGate is the actual production code, any future
+// refactor that removes or moves the disabled gate will fail here, catching
+// the regression before it ships.
+//
+// Four tests:
+//   disabled → enabled        — fieldset becomes enabled when role is granted.
+//   enabled → disabled        — fieldset becomes disabled when role is revoked.
+//   dialog open is isolated   — dialog open does NOT re-render the subscriber
+//                               or flip the fieldset disabled state.
+//   COMBINED                  — role change propagates (with correct disabled
+//                               state); subsequent dialog open adds no renders.
+//                               Exact render counts pinned at every step
+//                               (mount → role-change → dialog-open) so any
+//                               weakening of the isolation check is caught.
+//   REGRESSION GUARD          — BrokenSetupRecipesProvider drives the same
+//   (COMBINED counter-proof)    mount → role-change → dialog-open sequence,
+//                               proving the COMBINED pin is a real assertion.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── SETUP_5B_COMBINED_PIN ─────────────────────────────────────────────────────
+// Invariant: mount(1) + role-change(1) + dialog-open(0) = 2.
+//
+// This constant is the single source of truth for the Block 5b COMBINED test's
+// exact render-count pin.  The REGRESSION GUARD (COMBINED counter-proof) below
+// MUST assert `SETUP_5B_COMBINED_PIN + 1` after the dialog-open step — never a
+// literal 3 — so the two tests stay in lockstep:
+//
+//   COMBINED pin after dialog-open:        SETUP_5B_COMBINED_PIN     (= 2)
+//   Counter-proof pin after dialog-open:   SETUP_5B_COMBINED_PIN + 1 (= 3)
+//
+// If the COMBINED test's pin changes (e.g. a second role-change step is added),
+// bump this constant; the counter-proof pins will follow automatically.
+const SETUP_5B_COMBINED_PIN = 2;
+
+// Subscriber that reads isSupervisor from context and passes it to the REAL
+// SetupRecipesRoleGate component — the same path LiveSetupRecipesTabContent
+// takes in production.
+const RealSetupRecipesSubscriber = memo(
+  function RealSetupRecipesSubscriberInner() {
+    setupRenderCount++;
+    const hx = useHomeTabCtx();
+    const isSupervisor = Boolean((hx as Record<string, unknown>).isSupervisor);
+    return (
+      <SetupRecipesRoleGate isSupervisor={isSupervisor}>
+        <input data-testid="recipe-input" defaultValue="test" />
+      </SetupRecipesRoleGate>
+    );
+  },
+);
+
+describe(
+  "HomeTabCtx — LiveSetupRecipesTabContent fieldset disabled attribute",
+  () => {
+    // ─── disabled → enabled ──────────────────────────────────────────────────
+    // Starts with isSupervisor=false (fieldset disabled), then grants supervisor
+    // access and confirms the real SetupRecipesRoleGate fieldset becomes enabled.
+    // This is the primary regression guard: if the disabled attribute is removed
+    // from the production SetupRecipesRoleGate component, this test fails.
+    it("fieldset is disabled when isSupervisor=false and enabled when isSupervisor=true", async () => {
+      const { rerender, getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+
+      // Initially not a supervisor → real SetupRecipesRoleGate fieldset is disabled
+      const fieldset = getByTestId("setup-recipes-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(true);
+      // One render on mount; a provider regression that causes extra renders
+      // even before isSupervisor changes would be caught here.
+      expect(setupRenderCount).toBe(1);
+
+      // Manager grants supervisor role mid-session
+      await act(async () => {
+        rerender(
+          <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+            <RealSetupRecipesSubscriber />
+          </SetupRecipesProvider>,
+        );
+      });
+
+      // isSupervisor is now true → fieldset must be enabled
+      expect(fieldset.disabled).toBe(false);
+      // Exactly one new render for the isSupervisor change — no extra renders.
+      expect(setupRenderCount).toBe(2);
+    });
+
+    // ─── enabled → disabled ──────────────────────────────────────────────────
+    // Role revoked mid-session: starts enabled, supervisor access removed.
+    it("fieldset becomes disabled when isSupervisor is revoked mid-session", async () => {
+      const { rerender, getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+
+      const fieldset = getByTestId("setup-recipes-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(false);
+      // One render on mount; a provider regression that causes extra renders
+      // even before isSupervisor changes would be caught here.
+      expect(setupRenderCount).toBe(1);
+
+      await act(async () => {
+        rerender(
+          <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+            <RealSetupRecipesSubscriber />
+          </SetupRecipesProvider>,
+        );
+      });
+
+      expect(fieldset.disabled).toBe(true);
+      // Exactly one new render for the isSupervisor revocation — no extra renders.
+      expect(setupRenderCount).toBe(2);
+    });
+
+    // ─── dialog open does not flip disabled ───────────────────────────────────
+    // Confirms that opening a manage dialog (only manageCounter changes) does
+    // not accidentally re-gate the fieldset when isSupervisor is stable.
+    it("fieldset disabled state is unaffected by dialog state changes", async () => {
+      const { rerender, getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+
+      const fieldset = getByTestId("setup-recipes-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(false);
+      // Subscriber must have rendered exactly once on mount; a broken provider
+      // that leaks manageCounter into context deps would already inflate this.
+      expect(setupRenderCount).toBe(1);
+
+      // Simulate several dialog open/close cycles
+      for (const counter of [1, 2, 99]) {
+        await act(async () => {
+          rerender(
+            <SetupRecipesProvider isSupervisor={true} manageCounter={counter}>
+              <RealSetupRecipesSubscriber />
+            </SetupRecipesProvider>,
+          );
+        });
+        // fieldset must remain enabled throughout
+        expect(fieldset.disabled).toBe(false);
+        // isSupervisor is unchanged, so the memo'd subscriber must NOT re-render;
+        // the count must stay pinned at 1 for every dialog cycle.
+        expect(setupRenderCount).toBe(1);
+      }
+    });
+
+    // ─── COMBINED ─────────────────────────────────────────────────────────────
+    // Drives the real SetupRecipesRoleGate through a role-change followed
+    // immediately by a dialog-open, verifying:
+    //   1. The role-change renders exactly once and flips the fieldset.
+    //   2. The subsequent dialog-open adds zero renders and leaves the fieldset
+    //      disabled state unchanged.
+    //
+    // Exact render counts are pinned at every step using SETUP_5B_COMBINED_PIN
+    // so that any weakening of the dialog-open isolation check (e.g. softening
+    // "toBe(SETUP_5B_COMBINED_PIN)" to "toBeGreaterThanOrEqual") is caught by
+    // the REGRESSION GUARD (COMBINED counter-proof) below.
+    it("COMBINED: role change propagates to fieldset; subsequent dialog open adds no extra renders", async () => {
+      const { rerender, getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+
+      const fieldset = getByTestId("setup-recipes-fieldset") as HTMLFieldSetElement;
+
+      // PROPAGATION step 0 — initial mount: fieldset disabled, exactly 1 render.
+      expect(fieldset.disabled).toBe(true);
+      expect(setupRenderCount).toBe(1);
+
+      // PROPAGATION step 1 — role granted (isSupervisor false→true): fieldset
+      // must become enabled and exactly 1 new render must occur.
+      await act(async () => {
+        rerender(
+          <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+            <RealSetupRecipesSubscriber />
+          </SetupRecipesProvider>,
+        );
+      });
+
+      expect(fieldset.disabled).toBe(false);
+      // DRIFT GUARD: pins renderCount to SETUP_5B_COMBINED_PIN immediately
+      // before the dialog-open step.  If a second role-change step is ever
+      // added without bumping SETUP_5B_COMBINED_PIN, this line fails, forcing
+      // the constant to be bumped first.  The counter-proof's
+      // SETUP_5B_COMBINED_PIN + 1 assertion then follows automatically.
+      expect(setupRenderCount).toBe(SETUP_5B_COMBINED_PIN); // exact: mount(1) + role-change(1)
+
+      // DIALOG step — manage dialog opens (manageCounter: 0→1).
+      // isSupervisor is unchanged.  The ctx ref must NOT change → React.memo
+      // skips → zero new renders → fieldset stays enabled.
+      await act(async () => {
+        rerender(
+          <SetupRecipesProvider isSupervisor={true} manageCounter={1}>
+            <RealSetupRecipesSubscriber />
+          </SetupRecipesProvider>,
+        );
+      });
+
+      // Exact guard: renderCount must still be SETUP_5B_COMBINED_PIN (2).  Any
+      // spurious re-render caused by a dialog field leaking into the context deps
+      // will bump this to SETUP_5B_COMBINED_PIN+1 — which is exactly what the
+      // COMBINED counter-proof below asserts for the broken provider.
+      expect(fieldset.disabled).toBe(false);
+      expect(setupRenderCount).toBe(SETUP_5B_COMBINED_PIN); // exact: no extra render from dialog open
+
+      // Repeat with a second dialog state change to rule out a lucky no-op.
+      await act(async () => {
+        rerender(
+          <SetupRecipesProvider isSupervisor={true} manageCounter={99}>
+            <RealSetupRecipesSubscriber />
+          </SetupRecipesProvider>,
+        );
+      });
+
+      expect(fieldset.disabled).toBe(false);
+      expect(setupRenderCount).toBe(SETUP_5B_COMBINED_PIN); // exact: still no extra render from further dialog changes
+    });
+
+    // ─── REGRESSION GUARD — COMBINED counter-proof ────────────────────────────
+    // Drives BrokenSetupRecipesProvider through the SAME mount → role-change →
+    // dialog-open sequence as the COMBINED test above, proving that the exact
+    // render-count pin of SETUP_5B_COMBINED_PIN (2) after the dialog-open step
+    // is a real assertion.
+    //
+    // With the correct SetupRecipesProvider the COMBINED test expects:
+    //   mount(1) + role-change(1) + dialog-open(0) = 2
+    //
+    // With BrokenSetupRecipesProvider the dialog-open step produces an extra
+    // render, pushing the count to 3.  This means the COMBINED pin
+    // "toBe(SETUP_5B_COMBINED_PIN)" WOULD FAIL under the broken provider —
+    // i.e. the COMBINED test is a real guard, not a false green.
+    //
+    // If THIS test starts FAILING (broken provider no longer bumps the count
+    // past SETUP_5B_COMBINED_PIN during the dialog-open step), the COMBINED
+    // test's exact-count assertion has become untestable and should be
+    // re-examined.
+    it("REGRESSION GUARD (COMBINED counter-proof): broken provider causes extra render during dialog-open after role change", async () => {
+      const { rerender, getByTestId } = render(
+        <BrokenSetupRecipesProvider isSupervisor={false} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+
+      const fieldset = getByTestId("setup-recipes-fieldset") as HTMLFieldSetElement;
+
+      // Step 0 — initial mount.
+      expect(fieldset.disabled).toBe(true);
+      expect(setupRenderCount).toBe(1);
+
+      // Step 1 — role-change: isSupervisor changes false→true.
+      // Both the correct and broken providers yield a new ctx ref here → render.
+      await act(async () => {
+        rerender(
+          <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={0}>
+            <RealSetupRecipesSubscriber />
+          </BrokenSetupRecipesProvider>,
+        );
+      });
+
+      expect(fieldset.disabled).toBe(false);
+      // Lockstep with COMBINED: using SETUP_5B_COMBINED_PIN here (not a literal)
+      // means that if the constant is bumped (e.g. a 2nd role-change step is
+      // added), this assertion automatically requires adding that step here too —
+      // keeping the counter-proof scenario identical to the COMBINED test.
+      expect(setupRenderCount).toBe(SETUP_5B_COMBINED_PIN); // = 2; mount(1) + role-change(1)
+
+      // Step 2 — dialog-open: only manageCounter changes (0→1); isSupervisor stable.
+      // CORRECT provider: ctx ref unchanged → React.memo skips → count stays at SETUP_5B_COMBINED_PIN.
+      // BROKEN provider:  manageCounter in deps → new ctx ref → spurious re-render
+      //                   → count becomes SETUP_5B_COMBINED_PIN + 1.
+      // This step is the heart of the counter-proof: it shows the COMBINED test's
+      // "toBe(SETUP_5B_COMBINED_PIN)" assertion is NOT vacuously true — the broken
+      // provider violates it.
+      await act(async () => {
+        rerender(
+          <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={1}>
+            <RealSetupRecipesSubscriber />
+          </BrokenSetupRecipesProvider>,
+        );
+      });
+
+      // BROKEN provider leaked manageCounter into deps → subscriber re-rendered.
+      // The real SetupRecipesProvider must keep the count at SETUP_5B_COMBINED_PIN (2)
+      // after this step (see the COMBINED test above).  Here it MUST be
+      // SETUP_5B_COMBINED_PIN + 1 — proving the COMBINED test's pin is a real
+      // assertion that the broken provider would violate.
+      expect(fieldset.disabled).toBe(false); // fieldset value itself is correct — the issue is the extra render
+      expect(setupRenderCount).toBe(SETUP_5B_COMBINED_PIN + 1); // = 3; extra render proves the COMBINED pin is real
+
+      // One more dialog change confirms it keeps firing — not a one-time no-op.
+      await act(async () => {
+        rerender(
+          <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={99}>
+            <RealSetupRecipesSubscriber />
+          </BrokenSetupRecipesProvider>,
+        );
+      });
+
+      expect(setupRenderCount).toBe(SETUP_5B_COMBINED_PIN + 2); // = 4; symmetric with other blocks' counter-proofs
+    });
+  },
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 5c — LiveSetupRecipesTabContent lock banner presence
+//
+// The fieldset gate (Block 5b) catches a removed `disabled` attribute, but a
+// future refactor could drop or decouple the lock banner div (the user-facing
+// "Supervisor access required" message) without touching the fieldset.  This
+// block guards the banner independently: it mounts the REAL
+// SetupRecipesRoleGate and asserts that the element with
+// data-testid="setup-recipes-lock-banner" is present when isSupervisor=false
+// and absent when isSupervisor=true.
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe(
+  "HomeTabCtx — LiveSetupRecipesTabContent lock banner presence",
+  () => {
+    // ─── banner visible when locked ──────────────────────────────────────────
+    it("lock banner is present when isSupervisor=false", () => {
+      const { getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+      expect(getByTestId("setup-recipes-lock-banner")).toBeTruthy();
+    });
+
+    // ─── banner hidden when unlocked ─────────────────────────────────────────
+    it("lock banner is absent when isSupervisor=true", () => {
+      const { queryByTestId } = render(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+      expect(queryByTestId("setup-recipes-lock-banner")).toBeNull();
+    });
+
+    // ─── banner appears when role is revoked mid-session ─────────────────────
+    it("lock banner appears when isSupervisor is revoked mid-session", async () => {
+      const { rerender, queryByTestId, getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+
+      expect(queryByTestId("setup-recipes-lock-banner")).toBeNull();
+
+      await act(async () => {
+        rerender(
+          <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+            <RealSetupRecipesSubscriber />
+          </SetupRecipesProvider>,
+        );
+      });
+
+      expect(getByTestId("setup-recipes-lock-banner")).toBeTruthy();
+    });
+
+    // ─── banner disappears when role is granted mid-session ──────────────────
+    it("lock banner disappears when isSupervisor is granted mid-session", async () => {
+      const { rerender, queryByTestId, getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={false} manageCounter={0}>
+          <RealSetupRecipesSubscriber />
+        </SetupRecipesProvider>,
+      );
+
+      expect(getByTestId("setup-recipes-lock-banner")).toBeTruthy();
+
+      await act(async () => {
+        rerender(
+          <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+            <RealSetupRecipesSubscriber />
+          </SetupRecipesProvider>,
+        );
+      });
+
+      expect(queryByTestId("setup-recipes-lock-banner")).toBeNull();
+    });
+  },
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 6 — LiveSummaryTabContent slice
+//
+// The Summary tab reads `dayState.runs` from homeTabCtxValue to display the
+// shift summary.  Adding a run (run count changes) must propagate; a dialog
+// open must not cause a re-render.
+//
+// Five tests:
+//   PROPAGATION    — run count change reaches the Summary subscriber.
+//   ISOLATION      — dialog open does NOT re-render the Summary subscriber.
+//   COMBINED       — run count changes propagate; subsequent dialog open adds no
+//                    renders.  Exact render counts pinned at every step (mount →
+//                    run-change → run-change → dialog-open) so any weakening of
+//                    the isolation check is caught immediately.
+//   REGRESSION GUARD — a deliberately broken provider (manageCounter in deps)
+//                      proves the ISOLATION test would catch the regression:
+//                      the broken provider causes a re-render on every dialog
+//                      state change, which the real (correct) provider must not.
+//   REGRESSION GUARD (COMBINED counter-proof) — drives BrokenSummaryProvider
+//                      through the same mount → run-change → run-change →
+//                      dialog-open sequence as the COMBINED test, proving that
+//                      the exact pin of SUMMARY_COMBINED_PIN (3) is a real
+//                      assertion.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── SUMMARY_COMBINED_PIN ──────────────────────────────────────────────────────
+// Invariant: mount(1) + run-change(1) + run-change(1) + dialog-open(0) = 3.
+//
+// This constant is the single source of truth for the Block 6 COMBINED test's
+// exact render-count pin.  The REGRESSION GUARD (COMBINED counter-proof) below
+// MUST assert `SUMMARY_COMBINED_PIN + 1` after the dialog-open step — never a
+// literal 4 — so the two tests stay in lockstep:
+//
+//   COMBINED pin after dialog-open:        SUMMARY_COMBINED_PIN     (= 3)
+//   Counter-proof pin after dialog-open:   SUMMARY_COMBINED_PIN + 1 (= 4)
+//
+// If the COMBINED test's pin changes (e.g. a third run-change step is added),
+// bump this constant; the counter-proof pins will follow automatically.
+const SUMMARY_COMBINED_PIN = 3;
+
+function SummaryProvider({
+  runCount,
+  children,
+}: {
+  runCount: number;
+  manageCounter: number; // received but intentionally excluded from deps
+  children: ReactNode;
+}) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const value = useMemo(
+    () => ({ dayState: { runs: Array.from({ length: runCount }, (_, i) => ({ id: `run-${i}` })) } }),
+    [runCount],
+  );
+  return <HomeTabCtx.Provider value={value}>{children}</HomeTabCtx.Provider>;
+}
+
+// ── BrokenSummaryProvider ──────────────────────────────────────────────────
+// Intentionally includes `manageCounter` in useMemo deps, simulating the
+// regression where a dialog field leaks into the Summary context slice.
+// Used only in the REGRESSION GUARD test below to prove the guard is real.
+function BrokenSummaryProvider({
+  runCount,
+  manageCounter,
+  children,
+}: {
+  runCount: number;
+  manageCounter: number;
+  children: ReactNode;
+}) {
+  const value = useMemo(
+    () => ({ dayState: { runs: Array.from({ length: runCount }, (_, i) => ({ id: `run-${i}` })) } }),
+    [runCount, manageCounter], // BUG: manageCounter should NOT be here
+  );
+  return <HomeTabCtx.Provider value={value}>{children}</HomeTabCtx.Provider>;
+}
+
+let summaryRenderCount = 0;
+
+const SummarySubscriber = memo(function SummarySubscriberInner() {
+  summaryRenderCount++;
+  const { dayState } = useHomeTabCtx();
+  return (
+    <span data-testid="run-count">{(dayState as any).runs.length}</span>
+  );
+});
+
+afterEach(() => {
+  summaryRenderCount = 0;
+});
+
+describe("HomeTabCtx — LiveSummaryTabContent slice (dayState.runs)", () => {
+  // ─── PROPAGATION ──────────────────────────────────────────────────────────
+  // Simulates: a second run is added to the day (e.g. imported from the
+  // schedule).  The Summary tab subscriber must see the updated run count.
+  it("Summary subscriber sees updated run count when dayState.runs changes", async () => {
+    const { rerender, getByTestId } = render(
+      <SummaryProvider runCount={1} manageCounter={0}>
+        <SummarySubscriber />
+      </SummaryProvider>,
+    );
+
+    expect(summaryRenderCount).toBe(1);
+    expect(getByTestId("run-count").textContent).toBe("1");
+
+    await act(async () => {
+      rerender(
+        <SummaryProvider runCount={2} manageCounter={0}>
+          <SummarySubscriber />
+        </SummaryProvider>,
+      );
+    });
+
+    expect(summaryRenderCount).toBe(2);
+    expect(getByTestId("run-count").textContent).toBe("2");
+  });
+
+  // ─── ISOLATION ────────────────────────────────────────────────────────────
+  // Simulates: manage dialog opens while the user is on the Summary tab.
+  // runCount is stable — subscriber must NOT re-render.
+  it("Summary subscriber does NOT re-render when only dialog state changes", async () => {
+    const { rerender } = render(
+      <SummaryProvider runCount={3} manageCounter={0}>
+        <SummarySubscriber />
+      </SummaryProvider>,
+    );
+
+    expect(summaryRenderCount).toBe(1);
+
+    await act(async () => {
+      rerender(
+        <SummaryProvider runCount={3} manageCounter={1}>
+          <SummarySubscriber />
+        </SummaryProvider>,
+      );
+    });
+
+    expect(summaryRenderCount).toBe(1);
+
+    await act(async () => {
+      rerender(
+        <SummaryProvider runCount={3} manageCounter={77}>
+          <SummarySubscriber />
+        </SummaryProvider>,
+      );
+    });
+
+    expect(summaryRenderCount).toBe(1);
+  });
+
+  // ─── COMBINED ─────────────────────────────────────────────────────────────
+  // Simulates the full scenario:
+  //   1. Run count changes 1→2 (runCount updated)  → exactly 1 new render
+  //   2. Run count changes 2→3 (second run added)  → exactly 1 new render
+  //   3. Manage dialog opens                       → exactly 0 new renders
+  //
+  // Exact render counts are pinned at every step so that any weakening of the
+  // isolation check (e.g. making the assertion relative rather than absolute)
+  // is caught immediately.
+  it("run count changes propagate; subsequent dialog open adds no extra renders", async () => {
+    const { rerender, getByTestId } = render(
+      <SummaryProvider runCount={1} manageCounter={0}>
+        <SummarySubscriber />
+      </SummaryProvider>,
+    );
+
+    // PROPAGATION step 0 — initial mount: exactly 1 render.
+    expect(summaryRenderCount).toBe(1);
+    expect(getByTestId("run-count").textContent).toBe("1");
+
+    // PROPAGATION step 1 — runCount changes 1→2: 1 additional render.
+    await act(async () => {
+      rerender(
+        <SummaryProvider runCount={2} manageCounter={0}>
+          <SummarySubscriber />
+        </SummaryProvider>,
+      );
+    });
+
+    expect(summaryRenderCount).toBe(2); // exact: mount(1) + run-change(1)
+    expect(getByTestId("run-count").textContent).toBe("2");
+
+    // PROPAGATION step 2 — runCount changes 2→3: 1 more render.
+    await act(async () => {
+      rerender(
+        <SummaryProvider runCount={3} manageCounter={0}>
+          <SummarySubscriber />
+        </SummaryProvider>,
+      );
+    });
+
+    // DRIFT GUARD: pins renderCount to SUMMARY_COMBINED_PIN immediately before
+    // the dialog-open step.  If a third run-change step is ever added without
+    // bumping SUMMARY_COMBINED_PIN, this line will fail, forcing the constant
+    // to be bumped first.  The counter-proof's SUMMARY_COMBINED_PIN + 1
+    // assertion then follows automatically.
+    expect(summaryRenderCount).toBe(SUMMARY_COMBINED_PIN); // exact: mount(1) + run-change(1) + run-change(1)
+    expect(getByTestId("run-count").textContent).toBe("3");
+
+    // DIALOG step — manage dialog opens (manageCounter: 0→1).
+    // runCount is unchanged.  The ctx ref must NOT change → React.memo skips.
+    await act(async () => {
+      rerender(
+        <SummaryProvider runCount={3} manageCounter={1}>
+          <SummarySubscriber />
+        </SummaryProvider>,
+      );
+    });
+
+    // Exact guard: renderCount must still be SUMMARY_COMBINED_PIN (3).
+    expect(summaryRenderCount).toBe(SUMMARY_COMBINED_PIN); // exact: no extra render from dialog open
+
+    // Repeat with a second dialog state change to rule out a lucky no-op.
+    await act(async () => {
+      rerender(
+        <SummaryProvider runCount={3} manageCounter={99}>
+          <SummarySubscriber />
+        </SummaryProvider>,
+      );
+    });
+
+    expect(summaryRenderCount).toBe(SUMMARY_COMBINED_PIN); // exact: still no extra render from further dialog changes
+    expect(getByTestId("run-count").textContent).toBe("3");
+  });
+
+  // ─── REGRESSION GUARD ─────────────────────────────────────────────────────
+  // This test uses BrokenSummaryProvider — which intentionally includes
+  // `manageCounter` in its useMemo deps — to prove that the ISOLATION test
+  // above is a real guard: if someone accidentally adds a dialog field to the
+  // Summary context slice's deps, the subscriber WILL re-render on every
+  // dialog state change (freezing the tab while a dialog is open).
+  //
+  // If this test starts FAILING (broken provider no longer causes re-renders),
+  // the isolation test above has become a false green and the guard is gone.
+  it("REGRESSION GUARD: broken provider (manageCounter in deps) causes spurious Summary re-renders", async () => {
+    const { rerender } = render(
+      <BrokenSummaryProvider runCount={2} manageCounter={0}>
+        <SummarySubscriber />
+      </BrokenSummaryProvider>,
+    );
+
+    expect(summaryRenderCount).toBe(1);
+
+    // Simulate dialog open — only manageCounter changes; runCount is stable.
+    // With the BROKEN provider, this produces a new ctx ref → spurious re-render.
+    await act(async () => {
+      rerender(
+        <BrokenSummaryProvider runCount={2} manageCounter={1}>
+          <SummarySubscriber />
+        </BrokenSummaryProvider>,
+      );
+    });
+
+    // BROKEN provider leaks manageCounter into deps → subscriber re-renders.
+    // The real SummaryProvider must keep this count at 1 (see ISOLATION test).
+    expect(summaryRenderCount).toBe(2);
+
+    await act(async () => {
+      rerender(
+        <BrokenSummaryProvider runCount={2} manageCounter={77}>
+          <SummarySubscriber />
+        </BrokenSummaryProvider>,
+      );
+    });
+
+    expect(summaryRenderCount).toBe(3);
+  });
+
+  // ─── REGRESSION GUARD — COMBINED counter-proof ────────────────────────────
+  // Drives BrokenSummaryProvider through the SAME mount → run-change →
+  // run-change → dialog-open sequence as the COMBINED test above, proving that
+  // the exact render-count pin of SUMMARY_COMBINED_PIN (3) after the
+  // dialog-open step is a real assertion.
+  //
+  // With the correct SummaryProvider the COMBINED test expects:
+  //   mount(1) + run-change(1) + run-change(1) + dialog-open(0) = 3
+  //
+  // With BrokenSummaryProvider the dialog-open step produces an extra render,
+  // pushing the count to 4.  This means the COMBINED pin
+  // "toBe(SUMMARY_COMBINED_PIN)" WOULD FAIL under the broken provider — i.e.
+  // the COMBINED test is a real guard, not a false green.
+  //
+  // If THIS test starts FAILING (broken provider no longer bumps the count past
+  // SUMMARY_COMBINED_PIN during the dialog-open step), the COMBINED test's
+  // exact-count assertion has become untestable and should be re-examined.
+  it("REGRESSION GUARD (COMBINED counter-proof): broken provider causes extra render during dialog-open after run changes", async () => {
+    const { rerender, getByTestId } = render(
+      <BrokenSummaryProvider runCount={1} manageCounter={0}>
+        <SummarySubscriber />
+      </BrokenSummaryProvider>,
+    );
+
+    // Step 0 — initial mount.
+    expect(summaryRenderCount).toBe(1);
+    expect(getByTestId("run-count").textContent).toBe("1");
+
+    // Step 1 — run-change: runCount changes 1→2.
+    // Both the correct and broken providers yield a new ctx ref here → render.
+    await act(async () => {
+      rerender(
+        <BrokenSummaryProvider runCount={2} manageCounter={0}>
+          <SummarySubscriber />
+        </BrokenSummaryProvider>,
+      );
+    });
+
+    expect(summaryRenderCount).toBe(2); // mount(1) + run-change(1)
+    expect(getByTestId("run-count").textContent).toBe("2");
+
+    // Step 2 — run-change: runCount changes 2→3.
+    await act(async () => {
+      rerender(
+        <BrokenSummaryProvider runCount={3} manageCounter={0}>
+          <SummarySubscriber />
+        </BrokenSummaryProvider>,
+      );
+    });
+
+    // Lockstep with COMBINED: using SUMMARY_COMBINED_PIN here (not a literal)
+    // means that if the constant is bumped (e.g. a 3rd run-change step is
+    // added), this assertion automatically requires adding that 3rd step here
+    // too — keeping the counter-proof scenario identical to the COMBINED test.
+    expect(summaryRenderCount).toBe(SUMMARY_COMBINED_PIN); // = 3; mount(1) + run-change(1) + run-change(1)
+    expect(getByTestId("run-count").textContent).toBe("3");
+
+    // Step 3 — dialog-open: only manageCounter changes (0→1); runCount stable.
+    // CORRECT provider: ctx ref unchanged → React.memo skips → count stays at SUMMARY_COMBINED_PIN.
+    // BROKEN provider:  manageCounter in deps → new ctx ref → spurious re-render
+    //                   → count becomes SUMMARY_COMBINED_PIN + 1.
+    // This step is the heart of the counter-proof: it shows the COMBINED test's
+    // "toBe(SUMMARY_COMBINED_PIN)" assertion is NOT vacuously true — the broken
+    // provider violates it.
+    await act(async () => {
+      rerender(
+        <BrokenSummaryProvider runCount={3} manageCounter={1}>
+          <SummarySubscriber />
+        </BrokenSummaryProvider>,
+      );
+    });
+
+    // BROKEN provider leaked manageCounter into deps → subscriber re-rendered.
+    // The real SummaryProvider must keep the count at SUMMARY_COMBINED_PIN (3)
+    // after this step (see the COMBINED test above).  Here it MUST be
+    // SUMMARY_COMBINED_PIN + 1 — proving the COMBINED test's pin is a real
+    // assertion that the broken provider would violate.
+    expect(summaryRenderCount).toBe(SUMMARY_COMBINED_PIN + 1); // = 4; extra render proves the COMBINED pin is real
+
+    // One more dialog change confirms it keeps firing — not a one-time no-op.
+    await act(async () => {
+      rerender(
+        <BrokenSummaryProvider runCount={3} manageCounter={99}>
+          <SummarySubscriber />
+        </BrokenSummaryProvider>,
+      );
+    });
+
+    expect(summaryRenderCount).toBe(SUMMARY_COMBINED_PIN + 2); // = 5; symmetric with other blocks' counter-proofs
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 7 — LineSetupRoleGate lock banner presence (Run tab "Line Setup")
+//
+// The LiveRunTabContent "Line Setup" section (Run tab) gates its content with
+// LineSetupRoleGate, which renders a data-testid="line-setup-lock-banner" div
+// when isSupervisor=false.  A future refactor could drop that banner without
+// touching the fieldset.  This block guards the banner independently by
+// mounting the REAL LineSetupRoleGate component and asserting on the banner.
+//
+// If either test starts failing because the banner div or its testid was
+// removed from LineSetupRoleGate, the regression is caught before it ships.
+// ══════════════════════════════════════════════════════════════════════════════
+
+const RealLineSetupSubscriber = memo(
+  function RealLineSetupSubscriberInner({ isSupervisor }: { isSupervisor: boolean }) {
+    return (
+      <LineSetupRoleGate isSupervisor={isSupervisor}>
+        <input data-testid="line-setup-input" defaultValue="test" />
+      </LineSetupRoleGate>
+    );
+  },
+);
+
+describe("LineSetupRoleGate — lock banner presence (Run tab Line Setup section)", () => {
+  // ─── banner visible when locked ──────────────────────────────────────────
+  it("lock banner is present when isSupervisor=false", () => {
+    const { getByTestId } = render(<RealLineSetupSubscriber isSupervisor={false} />);
+    expect(getByTestId("line-setup-lock-banner")).toBeTruthy();
+  });
+
+  // ─── banner hidden when unlocked ─────────────────────────────────────────
+  it("lock banner is absent when isSupervisor=true", () => {
+    const { queryByTestId } = render(<RealLineSetupSubscriber isSupervisor={true} />);
+    expect(queryByTestId("line-setup-lock-banner")).toBeNull();
+  });
+
+  // ─── banner appears when role is revoked mid-session ─────────────────────
+  it("lock banner appears when isSupervisor is revoked mid-session", async () => {
+    const { rerender, queryByTestId, getByTestId } = render(
+      <RealLineSetupSubscriber isSupervisor={true} />,
+    );
+
+    expect(queryByTestId("line-setup-lock-banner")).toBeNull();
+
+    await act(async () => {
+      rerender(<RealLineSetupSubscriber isSupervisor={false} />);
+    });
+
+    expect(getByTestId("line-setup-lock-banner")).toBeTruthy();
+  });
+
+  // ─── banner disappears when role is granted mid-session ──────────────────
+  it("lock banner disappears when isSupervisor is granted mid-session", async () => {
+    const { rerender, queryByTestId, getByTestId } = render(
+      <RealLineSetupSubscriber isSupervisor={false} />,
+    );
+
+    expect(getByTestId("line-setup-lock-banner")).toBeTruthy();
+
+    await act(async () => {
+      rerender(<RealLineSetupSubscriber isSupervisor={true} />);
+    });
+
+    expect(queryByTestId("line-setup-lock-banner")).toBeNull();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 8 — DoughRoleGate lock banner presence (Dough tab recipe section)
+//
+// The LiveDoughTabContent recipe/settings section uses DoughRoleGate, which
+// renders a data-testid="dough-lock-banner" div when isSupervisor=false.  A
+// future refactor could drop that banner without touching the fieldset.  This
+// block guards the banner independently by mounting the REAL DoughRoleGate
+// component and asserting on the banner.
+//
+// If either test starts failing because the banner div or its testid was
+// removed from DoughRoleGate, the regression is caught before it ships.
+// ══════════════════════════════════════════════════════════════════════════════
+
+const RealDoughSubscriber = memo(
+  function RealDoughSubscriberInner({ isSupervisor }: { isSupervisor: boolean }) {
+    return (
+      <DoughRoleGate isSupervisor={isSupervisor}>
+        <input data-testid="dough-input" defaultValue="test" />
+      </DoughRoleGate>
+    );
+  },
+);
+
+describe("DoughRoleGate — lock banner presence (Dough tab recipe section)", () => {
+  // ─── banner visible when locked ──────────────────────────────────────────
+  it("lock banner is present when isSupervisor=false", () => {
+    const { getByTestId } = render(<RealDoughSubscriber isSupervisor={false} />);
+    expect(getByTestId("dough-lock-banner")).toBeTruthy();
+  });
+
+  // ─── banner hidden when unlocked ─────────────────────────────────────────
+  it("lock banner is absent when isSupervisor=true", () => {
+    const { queryByTestId } = render(<RealDoughSubscriber isSupervisor={true} />);
+    expect(queryByTestId("dough-lock-banner")).toBeNull();
+  });
+
+  // ─── banner appears when role is revoked mid-session ─────────────────────
+  it("lock banner appears when isSupervisor is revoked mid-session", async () => {
+    const { rerender, queryByTestId, getByTestId } = render(
+      <RealDoughSubscriber isSupervisor={true} />,
+    );
+
+    expect(queryByTestId("dough-lock-banner")).toBeNull();
+
+    await act(async () => {
+      rerender(<RealDoughSubscriber isSupervisor={false} />);
+    });
+
+    expect(getByTestId("dough-lock-banner")).toBeTruthy();
+  });
+
+  // ─── banner disappears when role is granted mid-session ──────────────────
+  it("lock banner disappears when isSupervisor is granted mid-session", async () => {
+    const { rerender, queryByTestId, getByTestId } = render(
+      <RealDoughSubscriber isSupervisor={false} />,
+    );
+
+    expect(getByTestId("dough-lock-banner")).toBeTruthy();
+
+    await act(async () => {
+      rerender(<RealDoughSubscriber isSupervisor={true} />);
+    });
+
+    expect(queryByTestId("dough-lock-banner")).toBeNull();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 7b — LineSetupRoleGate fieldset disabled attribute (Run tab Line Setup)
+//
+// Block 7 guards the lock banner.  This block goes one layer deeper: it mounts
+// the REAL LineSetupRoleGate component and asserts that its
+// <fieldset data-testid="line-setup-role-gate-fieldset"> has the correct
+// `disabled` attribute when isSupervisor changes.
+//
+// Because LineSetupRoleGate is the actual production component, any future
+// refactor that removes or moves the `disabled={!isSupervisor}` attribute will
+// fail here, catching the regression before it ships.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Context-reading subscriber for LineSetupRoleGate — used in the dialog-
+// stability test below so that isSupervisor is supplied via SetupRecipesProvider
+// (mirroring the Block 5b pattern exactly).
+let lineSetupCtxRenderCount = 0;
+
+const RealLineSetupCtxSubscriber = memo(
+  function RealLineSetupCtxSubscriberInner() {
+    lineSetupCtxRenderCount++;
+    const hx = useHomeTabCtx();
+    const isSupervisor = Boolean((hx as Record<string, unknown>).isSupervisor);
+    return (
+      <LineSetupRoleGate isSupervisor={isSupervisor}>
+        <input data-testid="line-setup-input" defaultValue="test" />
+      </LineSetupRoleGate>
+    );
+  },
+);
+
+afterEach(() => {
+  lineSetupCtxRenderCount = 0;
+});
+
+describe(
+  "LineSetupRoleGate — fieldset disabled attribute (Run tab Line Setup section)",
+  () => {
+    // ─── disabled → enabled ──────────────────────────────────────────────────
+    // Primary regression guard: if the disabled attribute is removed from the
+    // production LineSetupRoleGate component, this test fails.
+    it("fieldset is disabled when isSupervisor=false and enabled when isSupervisor=true", async () => {
+      const { rerender, getByTestId } = render(
+        <RealLineSetupSubscriber isSupervisor={false} />,
+      );
+
+      const fieldset = getByTestId("line-setup-role-gate-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(true);
+
+      await act(async () => {
+        rerender(<RealLineSetupSubscriber isSupervisor={true} />);
+      });
+
+      expect(fieldset.disabled).toBe(false);
+    });
+
+    // ─── enabled → disabled ──────────────────────────────────────────────────
+    it("fieldset becomes disabled when isSupervisor is revoked mid-session", async () => {
+      const { rerender, getByTestId } = render(
+        <RealLineSetupSubscriber isSupervisor={true} />,
+      );
+
+      const fieldset = getByTestId("line-setup-role-gate-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(false);
+
+      await act(async () => {
+        rerender(<RealLineSetupSubscriber isSupervisor={false} />);
+      });
+
+      expect(fieldset.disabled).toBe(true);
+    });
+
+    // ─── dialog open does not flip disabled ───────────────────────────────────
+    // Confirms that opening a manage dialog (only manageCounter changes) does
+    // not accidentally re-gate the LineSetupRoleGate fieldset when isSupervisor
+    // is stable.  Uses SetupRecipesProvider (manageCounter excluded from deps)
+    // to mirror the Block 5b pattern exactly.
+    //
+    // Meta-guard: lineSetupCtxRenderCount is pinned to exactly 1 after every
+    // dialog cycle.  This ensures the dialog-stability property is enforced via
+    // an absolute render-count assertion, not just the fieldset.disabled value
+    // check — analogous to Block 3's COMBINED test pinning exact counts at every
+    // step.  If someone weakens the check to a relative render-count form (e.g.
+    // renderCount <= n), this exact pin will catch the regression.
+    it("fieldset disabled state is unaffected by dialog state changes", async () => {
+      const { rerender, getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <RealLineSetupCtxSubscriber />
+        </SetupRecipesProvider>,
+      );
+
+      const fieldset = getByTestId("line-setup-role-gate-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(false);
+      // Exact pin: initial mount = exactly 1 render.
+      expect(lineSetupCtxRenderCount).toBe(1);
+
+      // Simulate several dialog open/close cycles
+      for (const counter of [1, 2, 99]) {
+        await act(async () => {
+          rerender(
+            <SetupRecipesProvider isSupervisor={true} manageCounter={counter}>
+              <RealLineSetupCtxSubscriber />
+            </SetupRecipesProvider>,
+          );
+        });
+        // fieldset must remain enabled throughout
+        expect(fieldset.disabled).toBe(false);
+        // Exact pin: dialog cycle must NOT cause a re-render — count stays at 1.
+        // Any dialog field leaking into context deps will bump this above 1.
+        expect(lineSetupCtxRenderCount).toBe(1);
+      }
+    });
+
+    // ─── REGRESSION GUARD ─────────────────────────────────────────────────────
+    // This test uses BrokenSetupRecipesProvider — which intentionally includes
+    // `manageCounter` in its useMemo deps — to prove that the dialog-stability
+    // test above is a real guard: if someone accidentally adds a dialog field to
+    // the context slice's deps, RealLineSetupCtxSubscriber WILL re-render on
+    // every dialog state change.
+    //
+    // If this test starts FAILING (broken provider no longer causes re-renders),
+    // the dialog-stability test above has become a false green and the guard is
+    // gone.
+    it("REGRESSION GUARD: broken provider (manageCounter in deps) causes spurious RealLineSetupCtxSubscriber re-renders", async () => {
+      const { rerender } = render(
+        <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <RealLineSetupCtxSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+
+      expect(lineSetupCtxRenderCount).toBe(1);
+
+      // Simulate dialog open — only manageCounter changes; isSupervisor is stable.
+      // With the BROKEN provider, this produces a new ctx ref → spurious re-render.
+      await act(async () => {
+        rerender(
+          <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={1}>
+            <RealLineSetupCtxSubscriber />
+          </BrokenSetupRecipesProvider>,
+        );
+      });
+
+      // BROKEN provider leaks manageCounter into deps → subscriber re-renders.
+      // The real SetupRecipesProvider must keep this count at 1 (see dialog-
+      // stability test above).
+      expect(lineSetupCtxRenderCount).toBe(2);
+
+      await act(async () => {
+        rerender(
+          <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={99}>
+            <RealLineSetupCtxSubscriber />
+          </BrokenSetupRecipesProvider>,
+        );
+      });
+
+      expect(lineSetupCtxRenderCount).toBe(3);
+    });
+  },
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Block 8b — DoughRoleGate fieldset disabled attribute (Dough tab)
+//
+// Block 8 guards the lock banner.  This block goes one layer deeper: it mounts
+// the REAL DoughRoleGate component and asserts that its
+// <fieldset data-testid="dough-role-gate-fieldset"> has the correct `disabled`
+// attribute when isSupervisor changes.
+//
+// Because DoughRoleGate is the actual production component, any future refactor
+// that removes or moves the `disabled={!isSupervisor}` attribute will fail
+// here, catching the regression before it ships.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Context-reading subscriber for DoughRoleGate — used in the dialog-stability
+// test below so that isSupervisor is supplied via SetupRecipesProvider
+// (mirroring the Block 5b pattern exactly).
+let doughCtxRenderCount = 0;
+
+const RealDoughCtxSubscriber = memo(
+  function RealDoughCtxSubscriberInner() {
+    doughCtxRenderCount++;
+    const hx = useHomeTabCtx();
+    const isSupervisor = Boolean((hx as Record<string, unknown>).isSupervisor);
+    return (
+      <DoughRoleGate isSupervisor={isSupervisor}>
+        <input data-testid="dough-input" defaultValue="test" />
+      </DoughRoleGate>
+    );
+  },
+);
+
+afterEach(() => {
+  doughCtxRenderCount = 0;
+});
+
+describe(
+  "DoughRoleGate — fieldset disabled attribute (Dough tab recipe section)",
+  () => {
+    // ─── disabled → enabled ──────────────────────────────────────────────────
+    // Primary regression guard: if the disabled attribute is removed from the
+    // production DoughRoleGate component, this test fails.
+    it("fieldset is disabled when isSupervisor=false and enabled when isSupervisor=true", async () => {
+      const { rerender, getByTestId } = render(
+        <RealDoughSubscriber isSupervisor={false} />,
+      );
+
+      const fieldset = getByTestId("dough-role-gate-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(true);
+
+      await act(async () => {
+        rerender(<RealDoughSubscriber isSupervisor={true} />);
+      });
+
+      expect(fieldset.disabled).toBe(false);
+    });
+
+    // ─── enabled → disabled ──────────────────────────────────────────────────
+    it("fieldset becomes disabled when isSupervisor is revoked mid-session", async () => {
+      const { rerender, getByTestId } = render(
+        <RealDoughSubscriber isSupervisor={true} />,
+      );
+
+      const fieldset = getByTestId("dough-role-gate-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(false);
+
+      await act(async () => {
+        rerender(<RealDoughSubscriber isSupervisor={false} />);
+      });
+
+      expect(fieldset.disabled).toBe(true);
+    });
+
+    // ─── dialog open does not flip disabled ───────────────────────────────────
+    // Confirms that opening a manage dialog (only manageCounter changes) does
+    // not accidentally re-gate the DoughRoleGate fieldset when isSupervisor is
+    // stable.  Uses SetupRecipesProvider (manageCounter excluded from deps) to
+    // mirror the Block 5b pattern exactly.
+    //
+    // Meta-guard: doughCtxRenderCount is pinned to exactly 1 after every dialog
+    // cycle.  This ensures the dialog-stability property is enforced via an
+    // absolute render-count assertion, not just the fieldset.disabled value
+    // check — analogous to Block 3's COMBINED test pinning exact counts at every
+    // step.  If someone weakens the check to a relative render-count form (e.g.
+    // renderCount <= n), this exact pin will catch the regression.
+    it("fieldset disabled state is unaffected by dialog state changes", async () => {
+      const { rerender, getByTestId } = render(
+        <SetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <RealDoughCtxSubscriber />
+        </SetupRecipesProvider>,
+      );
+
+      const fieldset = getByTestId("dough-role-gate-fieldset") as HTMLFieldSetElement;
+      expect(fieldset.disabled).toBe(false);
+      // Exact pin: initial mount = exactly 1 render.
+      expect(doughCtxRenderCount).toBe(1);
+
+      // Simulate several dialog open/close cycles
+      for (const counter of [1, 2, 99]) {
+        await act(async () => {
+          rerender(
+            <SetupRecipesProvider isSupervisor={true} manageCounter={counter}>
+              <RealDoughCtxSubscriber />
+            </SetupRecipesProvider>,
+          );
+        });
+        // fieldset must remain enabled throughout
+        expect(fieldset.disabled).toBe(false);
+        // Exact pin: dialog cycle must NOT cause a re-render — count stays at 1.
+        // Any dialog field leaking into context deps will bump this above 1.
+        expect(doughCtxRenderCount).toBe(1);
+      }
+    });
+
+    // ─── REGRESSION GUARD ─────────────────────────────────────────────────────
+    // This test uses BrokenSetupRecipesProvider — which intentionally includes
+    // `manageCounter` in its useMemo deps — to prove that the dialog-stability
+    // test above is a real guard: if someone accidentally adds a dialog field to
+    // the context slice's deps, RealDoughCtxSubscriber WILL re-render on every
+    // dialog state change.
+    //
+    // If this test starts FAILING (broken provider no longer causes re-renders),
+    // the dialog-stability test above has become a false green and the guard is
+    // gone.
+    it("REGRESSION GUARD: broken provider (manageCounter in deps) causes spurious RealDoughCtxSubscriber re-renders", async () => {
+      const { rerender } = render(
+        <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={0}>
+          <RealDoughCtxSubscriber />
+        </BrokenSetupRecipesProvider>,
+      );
+
+      expect(doughCtxRenderCount).toBe(1);
+
+      // Simulate dialog open — only manageCounter changes; isSupervisor is stable.
+      // With the BROKEN provider, this produces a new ctx ref → spurious re-render.
+      await act(async () => {
+        rerender(
+          <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={1}>
+            <RealDoughCtxSubscriber />
+          </BrokenSetupRecipesProvider>,
+        );
+      });
+
+      // BROKEN provider leaks manageCounter into deps → subscriber re-renders.
+      // The real SetupRecipesProvider must keep this count at 1 (see dialog-
+      // stability test above).
+      expect(doughCtxRenderCount).toBe(2);
+
+      await act(async () => {
+        rerender(
+          <BrokenSetupRecipesProvider isSupervisor={true} manageCounter={99}>
+            <RealDoughCtxSubscriber />
+          </BrokenSetupRecipesProvider>,
+        );
+      });
+
+      expect(doughCtxRenderCount).toBe(3);
+    });
+  },
+);

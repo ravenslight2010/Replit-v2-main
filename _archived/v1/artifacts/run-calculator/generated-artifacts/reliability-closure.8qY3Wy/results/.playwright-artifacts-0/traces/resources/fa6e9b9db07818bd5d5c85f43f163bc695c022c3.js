@@ -1,0 +1,1 @@
+import{r as e}from"./rolldown-runtime-XKyaHtl9.js";import{t}from"./react-DvmTo5tZ.js";var n=e(t(),1),r=`__runCalcAuthContext__`;function i(){{let e=globalThis,t=e[r];if(t)return t;let i=(0,n.createContext)(null);return e[r]=i,i}}var a=i();function o(){let e=(0,n.useContext)(a);if(!e)throw Error(`useAuth must be used within an AuthProvider`);return e}export{o as n,a as t};

@@ -1,0 +1,98 @@
+uploads = []
+
+[[generated]]
+id = "18MIO8--IrFdcR33-o4tE"
+uri = "file://artifacts/run-calculator-mobile/assets/images/icon.png"
+type = "image"
+title = "pizza-run-calculator-icon"
+
+[[outputs]]
+id = "k2_SMMJCh7lzNEC9dfbdc"
+uri = "file://attached_assets/source-library/AUDIT-REPORT-2026-07-18.md"
+type = "text"
+title = "Full Audit: Source Workbooks vs Live App (July 18, 2026)"
+logical_id = "02479868-aa9d-4c6e-9a4c-ab91938fdedd"
+
+[[outputs]]
+id = "Kz9dak9UvWDclWhZKO2rZ"
+uri = "file://artifacts/run-calculator/test-results/department-workflow-naviga-a1e94--connected-after-navigation-desktop-chromium/01-production-running.png"
+type = "image"
+title = "Department journey — production before handoff"
+description = "Authenticated manager fixture with the unique Department / Navigation run active before cross-department navigation."
+logical_id = "7ba4bb60-9fa4-4c05-a010-298ad71e2165"
+content_hash = "sha256:d1262d94944cb229ead2e540d5b9ff2b4830d3c8c27d2cab1d920aabed41d144"
+size = 112086
+mtime_ms = 1787519362768
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:de4fa38f-10e1-481d-ab62-4ad238a33ebf/7ba4bb60-9fa4-4c05-a010-298ad71e2165/27f39f1d-fd31-4932-b2bf-e63e81f17b44"
+storage_version_token = "1787519390966166"
+content_type = "image/png"
+
+[[outputs]]
+id = "xltBpCTlvtWsV9SG37kI2"
+uri = "file://artifacts/run-calculator/test-results/department-workflow-naviga-a1e94--connected-after-navigation-desktop-chromium/05-production-after-reload.png"
+type = "image"
+title = "Department journey — production after reload"
+description = "The same active Department / Navigation run remains selected with PAUSE RUN visible after returning from Management and reloading."
+logical_id = "98edc87f-d2e2-49d1-ab2b-b5723ad09b68"
+content_hash = "sha256:24e52e076c486cb349460d42c89eb2ec0c4d27ce5ebb1abb2944c7646eaf6af5"
+size = 100624
+mtime_ms = 1787519367532
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:de4fa38f-10e1-481d-ab62-4ad238a33ebf/98edc87f-d2e2-49d1-ab2b-b5723ad09b68/e7a22236-dc66-4c9b-8846-b4ce583d09aa"
+storage_version_token = "1787519391560894"
+content_type = "image/png"
+
+[[outputs]]
+id = "c-2hBTSxO7Gh39pCtPEP0"
+uri = "file://artifacts/run-calculator/playwright-report/full/index.html"
+type = "text"
+title = "Full Playwright browser report"
+description = "HTML report from the full browser run against a disposable PostgreSQL database."
+logical_id = "8c815840-c938-44cf-9504-f0afce7efdfa"
+content_hash = "sha256:3d419915d414babfbfc646b9d93086cafb88e38813688a894f3399b4aa5f8cad"
+size = 862794
+mtime_ms = 1787543532796
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:de4fa38f-10e1-481d-ab62-4ad238a33ebf/8c815840-c938-44cf-9504-f0afce7efdfa/e3fc4f62-c5ae-444c-9d15-928c1b25facf"
+storage_version_token = "1787543643113502"
+content_type = "text/html"
+
+[[outputs]]
+id = "hfHYJ3UhdLOx0z-JpOYgO"
+uri = "file://artifacts/run-calculator/playwright-report/full/playwright-report-full.tar.gz"
+type = "unspecified"
+title = "Full Playwright HTML report archive"
+description = "HTML report archive from the disposable PostgreSQL full browser run."
+logical_id = "80be7912-e437-46a9-aa31-0d7b6a026259"
+content_hash = "sha256:9568a0e2be3bc3235f0d36ace5399d1f8b35ebe5903349bbe3c7dab1df6991ef"
+size = 91886805
+mtime_ms = 1787543667131
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:de4fa38f-10e1-481d-ab62-4ad238a33ebf/80be7912-e437-46a9-aa31-0d7b6a026259/8e061fca-1d7d-4a70-9fa7-46f216ee6c38"
+storage_version_token = "1787543679782031"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "WvYVze_8VdjtwF_rrn_zj"
+uri = "file://artifacts/run-calculator/test-results/full/test-results-full.tar.gz.part-aa"
+type = "unspecified"
+title = "Full Playwright test results archive"
+description = "Retained test-results archive from the disposable PostgreSQL full browser run."
+logical_id = "fe4d9ba7-52e1-4ad5-bd4e-cbf908d33cff"
+content_hash = "sha256:4bd3c8bb1f1392634de105f49ee09d9d46a7e7b446753d1793992596188f3413"
+size = 92320196
+mtime_ms = 1787543669405
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:de4fa38f-10e1-481d-ab62-4ad238a33ebf/fe4d9ba7-52e1-4ad5-bd4e-cbf908d33cff/0b8ffc53-a0ad-49d1-be0c-1e12e0f8418e"
+storage_version_token = "1787543681661691"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "-zL8AXd5cvbk17AvmGJgd"
+uri = "file://artifacts/run-calculator/release-evidence/preview-home.jpg"
+type = "image"
+title = "Release preview home screenshot"
+description = "Fresh desktop preview screenshot captured from the running Production Run Calculator web workflow."
+logical_id = "9d797b4d-3969-437b-b085-05bc6e224317"
+content_hash = "sha256:4e3a4bc27e6d7cf24381668eaf622a4efce67c01900e4cc6a3e6e431f2b40370"
+size = 26620
+mtime_ms = 1787607714737
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:de4fa38f-10e1-481d-ab62-4ad238a33ebf/9d797b4d-3969-437b-b085-05bc6e224317/5cbbc215-9659-4868-b27a-27a488ea43cf"
+storage_version_token = "1787607734009640"
+content_type = "image/jpeg"

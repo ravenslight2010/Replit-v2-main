@@ -1,0 +1,80 @@
+---
+name: AI incident diagnosis & manager alerts
+description: How report-an-issue + crash capture, server incidents, AI diagnosis, and manager review fit together across web+mobile.
+---
+
+# AI incident diagnosis & manager alerts
+
+Any authed user reports an issue (or an uncaught crash is auto-captured) → a server
+"incident" is persisted → OpenAI returns a plain-language diagnosis + safe workaround
+shown back to the reporter → managers see an incident list + an unreviewed-count nav
+badge and can mark reviewed.
+
+**Source of truth / where things live:**
+- DB: `incidents` table in lib/db.
+- Contract: OpenAPI `ReportIncidentInput`, `IncidentDiagnosis`, `Incident`,
+  `IncidentContext`, `UnreviewedCount`; paths POST/GET `/incidents`,
+  GET `/incidents/{id}`, POST `/incidents/{id}/review`, POST `/incidents/{id}/resolve`,
+  GET `/incidents/unreviewed-count`.
+- Server: src/lib/incidents.ts (CRUD), routes/incidentsAi.ts (prompt + sanitize),
+  routes/incidents.ts (mount + auth/rate-limit).
+
+**Status model (new → reviewed → resolved):** status is `new` | `reviewed` | `resolved`.
+`resolved` IMPLIES reviewed — resolving sets `resolvedAt` AND backfills `reviewedAt`
+(`existing ?? now`) so the unreviewed-count drops even when resolving a still-`new`
+incident. Don't let a later "review" downgrade a resolved incident (review guard is
+`if status !== "new" return`). Filtering (status/platform/source) is CLIENT-SIDE in both
+tab components — no server query params. Keep web (IncidentsTab.tsx) + mobile
+(incidents.tsx) filters and resolve buttons at parity.
+
+**Auth rules (don't regress):**
+- Reporting (POST /incidents) is open to ALL authed users — gated `requireRole` *operator*
+  + a per-user rate limit. Auto-crash capture also posts here.
+- Manager endpoints (list / get / review / unreviewed-count) are `requireRole` *manager*.
+
+**The AI cannot edit code.** "Fix" = explanation + safe-recovery steps only
+(e.g. restart). Out of scope: email/SMS/push, third-party monitoring.
+
+**Crash capture:** both apps wrap the root in an ErrorBoundary whose `onError(error,
+stackTrace)` fires a fire-and-forget `reportIncident({source:"auto_crash", ...})`.
+A failed report must never mask the original crash — always `.catch(() => {})`.
+
+**Parity:** web (artifacts/run-calculator: ReportIssueDialog, IncidentsTab,
+ErrorBoundary, useUnreviewedIncidentCount) mirrors mobile (run-calculator-mobile:
+ReportIssueModal, app/(tabs)/incidents.tsx, ErrorBoundary, useUnreviewedIncidentCount).
+The mobile nav badge sums pending-reset + unreviewed-incident counts; the manager
+"Reported issues" menu item is gated by `useMe().isManager`.
+
+**Mobile gotcha:** expo-constants is NOT installed, so the mobile report path sends no
+app version — don't reintroduce a `Constants`/appVersion import.
+
+**Integration-test gotcha:** the POST /incidents per-user report rate limit uses an
+in-memory store SHARED across the whole vitest file (non-prod), so accumulated
+`seedIncident(OPERATOR)` calls eventually 429 → order-dependent failures. In new test
+blocks seed via direct `db.insert(incidentsTable)` rather than the rate-limited POST.
+For tests that MUST go through the rate-limited POST, mint a fresh disposable user
+per test (insert user+role, clearUserValidityCache) so each one's single POST lands
+within its own budget.
+
+**History-aware diagnosis (grounding + write-back):** each report's diagnosis is now
+grounded in recent SIMILAR past incidents pulled from shared facility memory
+(domain `"incidents"`), and every diagnosed incident is written BACK to that memory.
+- Matching is signature-based, NOT free-text: `incidentSignature` = `platform|screen|<sorted-deduped-content-tokens>`; tokens drop stopwords + len<3. So "does"/"the"/"when" never appear in a signature — a seeded memory key must use the *real* signature (e.g. `web|run|button-nothing-save-tap`, not `...button-does-nothing...`) to be an EXACT match. Similarity uses jaccard over signature tokens with `SIMILARITY_THRESHOLD` (~0.34), top `MAX_SIMILAR_INCIDENTS` (3).
+- Recurrence surfaced to reporter + manager: `IncidentRecurrence {count, lastWorkaround}`. `count` = priorExactCount+1 on an exact-key hit, else similar-match count; null when nothing matched. Lives on the Incident DTO + a nullable `recurrence` jsonb column (oneOf w/ `type:"null"` in OpenAPI for both `IncidentDiagnosis` + `Incident`).
+- Write-back is best-effort `recordFacilityKnowledge` (key=signature, source `"incident-diagnosis"`, `.catch` warn) — fire-and-forget, NOT awaited.
+- The general facility-memory block passed to the prompt EXCLUDES the `incidents`
+  domain; that domain is injected separately as a focused "SIMILAR PAST INCIDENTS"
+  history block so prior incidents don't double-appear. This exclusion is now
+  enforced centrally in `aiMemoryContext.ts` (`UNTRUSTED_FREEFORM_DOMAINS`, applied
+  whenever `appendFacilityMemoryBlock`/`groundPromptWithMemory` is called without an
+  explicit `domains` list) rather than per-callsite — it's a security boundary, not
+  just de-duplication: the incident fact embeds up to 200 chars of a reporter's own
+  free text, so folding it into the generic "treat as trusted fact" block used by
+  every OTHER AI route (ask/optimize/forecast/anomalies/schedule-optimize) would let
+  any signed-in user plant prompt-injection text into unrelated AI features. Any
+  future untrusted-freeform domain should be added to that same set.
+- **Test isolation trap:** because write-back is async + unawaited, a prior test's
+  write can land AFTER the next test's `beforeEach` truncate and leak a matching
+  memory row. Don't assert "facility table empty before" or rely on a shared report
+  body for a "no precedent" test — give that test a UNIQUE description (unique tokens →
+  unique signature) so no other test's write-back can match it.

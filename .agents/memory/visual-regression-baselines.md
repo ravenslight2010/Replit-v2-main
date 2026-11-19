@@ -1,0 +1,27 @@
+---
+name: Visual regression baselines
+description: Playwright screenshot coverage must use an isolated config and explicit snapshot updates.
+---
+
+Visual snapshots should run through a dedicated Playwright config that avoids
+destructive global setup, uses unique disposable accounts, masks changing
+content, and never enables snapshot updates implicitly.
+
+**Why:** The main browser suite resets shared live-day state, while visual
+comparisons need repeatable layout fixtures and a deliberate review step for
+baseline changes.
+
+**How to apply:** Keep visual config/test data isolated from behavioral E2E
+fixtures; document the exact update command and inspect diff artifacts before
+accepting regenerated images.
+
+Full-page screenshots of large live Summary surfaces can consume substantial
+browser time and memory; prefer viewport-scoped captures when the assertion is
+about visible layout rather than the entire document.
+
+**Why:** A release browser run once spent its remaining budget capturing a
+large live surface even though the visual contract only covered the viewport.
+
+**How to apply:** Scope screenshots to the intended viewport or component
+region in visual and release evidence tests, while retaining full-page
+captures only when document extent is itself the behavior under test.

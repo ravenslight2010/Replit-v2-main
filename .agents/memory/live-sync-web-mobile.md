@@ -1,0 +1,118 @@
+---
+name: Web+mobile live sync
+description: How the Expo mobile app joins the web app's real-time /api/sync day-state sync, and the rules that keep neither platform clobbering the other.
+---
+
+# Web + mobile live sync
+
+Both `artifacts/run-calculator` (web) and `artifacts/run-calculator-mobile` (Expo)
+live-sync "today's" working state through the same api-server endpoints
+(`PUT/GET /api/sync/today`, SSE `GET /api/sync/events`). The jsonb `SyncPayload`
+contract is owned by web + db and is untyped on the server. Mobile mirrors it in
+`context/sync/payloadTypes.ts` and maps to/from its local AppState in
+`context/sync/mapping.ts` (pure fns); transport + clientId live in
+`context/sync/client.ts`; orchestration is in `context/RunContext.tsx`.
+
+## Non-clobber rules (the whole point — easy to regress)
+- **Top-level web-only fields** (templates, history, presets, profiles,
+  ingredientTypes, crustProfiles, etc.) are preserved by spreading `lastRaw`
+  FIRST in `appStateToPayload`, then overlaying mobile-owned fields.
+- **Per-run web-only RunMeta fields** (`pausedAt`, `actualCases`, `wasteLbs`,
+  `gapType`, `gapNote`) are preserved by `runToMeta(run, rawMeta)`: it spreads the
+  prior remote meta for that run id first, then overrides mobile-owned fields.
+  `appStateToPayload` builds a Map of `lastRaw.dayState.runs` by id for this.
+  **Why:** mobile doesn't model these; without the per-run merge a mobile write
+  drops them and desyncs web (notably paused state).
+- **Mobile-only fields** (doughBatchLbs, stopReasons, supervisorPin, autoTrack,
+  mixRecipePresets, scheduled) stay local; never serialized.
+- Field renames: `lineSpeedPPM`↔`approxLineSpeed`,
+  `doughballWeightOz`↔`targetDoughballWeight`. Mobile `run.progress.*` folds INTO
+  web FormValues; `subTab` lives in RunMeta. Stoppage `type` enums differ — mapped
+  both ways, never copied raw.
+
+## Loop / lost-update guards
+- **Echo guard:** ignore SSE messages whose `senderId === our clientId`; also a
+  `lastSyncSigRef` deterministic-JSON signature compare skips no-op re-pushes and
+  echoes of just-applied remote state.
+- **Outgoing pushes MUST be signature-gated on BOTH platforms.** Each client
+  re-pushes its full state on a 30s timer + on every SSE reconnect. If those
+  pushes are unconditional, a second idle tab/device keeps broadcasting its
+  STALE copy and clobbers the other tab's live edits after the edit-quiet
+  window → user sees "app keeps resetting / loses changes". Gate every push:
+  skip when the payload signature equals the last *successfully pushed* one.
+  Set the synced signature only in the PUT success path (never before/on
+  failure, or a failed push is marked synced and never retries = silent lost
+  update). Web previously lacked this gate while mobile had it — a parity trap.
+- **Residual lost-update (RESOLVED):** signature gating stops the repeating
+  clobber, but a one-shot echo race could still drop a concurrent edit. Closed by
+  per-run edit timestamps `SyncPayload.runValuesUpdatedAt` (run id → ms). On apply
+  a remote run's values are REJECTED only when `localTs > remoteTs` STRICTLY
+  (both 0 = unedited/imported still adopts remote, so prior behavior is intact);
+  on reject set a `rejectedStale` flag and force a re-push (clear `lastSyncSigRef`
+  → schedulePush) so peers converge. Timestamps merge to per-id max. Server is
+  untyped jsonb passthrough → NO server/codegen change.
+  - **Web** writes via localStorage (`run-calc-runvalues-updated`,
+    load/save/markRunValuesUpdated); autosave stamps the edited run directly.
+  - **Mobile** keeps the map IN-MEMORY (refs `runValuesUpdatedAtRef` +
+    `lastRunValsRef` + `editAttribPrimedRef`) — documented platform asymmetry;
+    protection only needs to cover live-session edits. Attribution is by a
+    per-run value diff in the change-watcher via pure `diffStampRunEdits`.
+  - **Attribution priming pitfall (mobile):** the first snapshot after load must
+    only SEED the baseline (no stamping) or every loaded/imported run looks like a
+    fresh local edit; once primed, any new-or-changed run id stamps `now`. Also
+    reseed the baseline in `commitRemote` so a remote-adopted value isn't
+    mis-stamped as a local edit on the next watcher tick.
+  - **Sig stays map-less:** `appStateToPayload`'s timestamp arg defaults to `{}`
+    and is passed ONLY when building the payload to PUT — never in the
+    signature/echo path, or timestamps would perturb no-op detection.
+- **Push reliability:** `putToday` throws on non-OK; `doPush` records the synced
+  signature ONLY after a successful PUT, else marks offline + retries
+  (`PUSH_RETRY_MS`). **Why:** recording the signature before/ignoring failures
+  marks a failed push as synced and the signature guard then blocks any retry =
+  silently lost update.
+- **Edit-quiet defer:** incoming remote payloads are held while the user is
+  actively editing (`EDIT_QUIET_MS` since last local edit) so a live update can't
+  overwrite the field being typed in.
+- **Reset guard:** accept a remote day only if `remoteDate === today` &&
+  `remoteResetAt >= localResetAt` (mirrors web). Master-data lists union-merge
+  unconditionally.
+- **Runs converge additively, exactly like substitutions/stagedItems — they are
+  NOT adopted remote-wholesale during same-day editing.** Rebuilding the runs list
+  from the remote payload alone drops a run just added on THIS device that hasn't
+  pushed yet ("I was adding a new run and it disappeared"). Invariant: same-day
+  (`!isReset`) union runs by id keeping local-only ones; on a true reset
+  (`remoteResetAt > localResetAt`) adopt remote wholesale (even an empty list — no
+  ≥1-run fallback on reset, or web/mobile diverge). Deletes are NOT a
+  removal-doesn't-cross-devices exception here; they get a real tombstone instead.
+- **Run deletions use the `"runs"` namespace of the standard `deletedItems`
+  tombstone map** (same infra as brands/ingredients — see deletion-tombstones.md):
+  delete writes a tombstone, the union strips tombstoned ids so a peer can't
+  resurrect a deleted run. **These tombstones are per-day** — clear the `"runs"`
+  namespace on EVERY reset (the sync-apply reset path AND every local
+  midnight/rollover reset) or yesterday's deleted ids accumulate forever (they can
+  never match fresh run ids anyway).
+
+## Gotchas
+- **Taxonomy migrations must be enforced on the inbound sync path, not just on-load.**
+  Renaming/retiring master-data values (e.g. pep-type renames, dropping a value)
+  only in `normalizeState`/on-load migration is NOT enough: a legacy peer re-adds
+  the old value through `applyPayloadToState` (mobile `unionList`) or the web sync
+  `mergeList`/setters. Apply the same rename+drop-retired cleanup to incoming
+  payload lists AND to incoming run/settings refs (mobile `formValuesToSettings`,
+  web `cleanedRemotePep`), or the value resurrects and propagates back out. This
+  covers BOTH pep-type renames AND ingredient/app-type renames (cheeseIngredients +
+  ingredientTypes lists, app*Type fields, recipe-row ingredients): mobile routes
+  ingredient ingress through `renameIngredientSettings`/`renameIngredientList`, web
+  through `INGREDIENT_RENAMES` on the cheese/ingredient list merges. Web run-value
+  ingredient names self-heal via read-path `normalizePepFields`→`normalizeIngredientFields`.
+- **Web sync setState must be change-guarded.** The outgoing payload echoes
+  loadHistory()/master lists every SSE cycle (~10s); calling setState/`setHistory`/
+  `setDayState`/`setBrands`/etc. unconditionally on each inbound echo causes a
+  re-render storm that resets open-menu scroll position. Guard every sync setter
+  with an equality check (arraysEqual / JSON.stringify) and return prev when equal.
+- `getApiBaseUrl()` builds from `process.env.EXPO_PUBLIC_DOMAIN` → `https://<domain>`.
+- SSE transport branches on `Platform.OS`: web uses global `EventSource`, native
+  uses `react-native-sse`.
+- mapping.ts imports DEFAULT_SETTINGS/DEFAULT_PROGRESS/todayStr from RunContext —
+  circular but safe (only referenced inside fns, live bindings). DEFAULT_PROGRESS
+  had to be exported for this.

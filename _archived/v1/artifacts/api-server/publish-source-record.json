@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "kind": "prepared-build-source",
+  "appBuildId": "app-build:7a59c9d0-5fc1-46ff-8a61-8303248974d1",
+  "sourcePolicy": "production-source-v4",
+  "sourceFingerprintSha256": "32509cccfa3e130e9f841d8c1338d5693926286625fa941caf2a9f0d2e497f89",
+  "gitRevision": null,
+  "gitBinding": "unavailable",
+  "preparedAt": "2026-11-17T01:04:57.288Z",
+  "mode": "publish"
+}

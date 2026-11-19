@@ -1,0 +1,18 @@
+{
+  "verifier": "report-key-rotation-preflight",
+  "environment": "development",
+  "revision": "test-sha256:673cdbfdcbfb54c74190f74081ea95f79b23895bbdc7f9a5aa56f0e32921062a",
+  "status": "blocked",
+  "canRotate": false,
+  "failure": "audit-unavailable",
+  "remediation": "The target database could not be audited. Restore database connectivity and rerun this preflight before rotating keys.",
+  "activeKeyId": null,
+  "storedKeyIds": [],
+  "missingKeyIds": [],
+  "scan": {
+    "limit": 100,
+    "checkedDistinctKeyIds": 0,
+    "truncated": false,
+    "complete": false
+  }
+}

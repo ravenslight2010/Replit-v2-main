@@ -1,0 +1,1 @@
+{"importType":"sauce","sourceLabel":"a11y-invalid.docx","status":"failed","summary":{"phases":{"parse":"not completed","linking":"not started","commit":"not started"},"source":{"files":1},"warnings":["Not a valid ZIP/docx file."],"followUp":["Retry the original source file. Nothing was applied."]},"operationId":"import-430ce0d5-ebb8-48bb-8065-e282ec23ff93"}

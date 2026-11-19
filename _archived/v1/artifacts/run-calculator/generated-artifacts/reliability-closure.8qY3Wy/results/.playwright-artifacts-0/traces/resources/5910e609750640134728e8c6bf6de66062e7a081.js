@@ -1,0 +1,1 @@
+import{$ as e}from"./inventoryShared-CUBNBwNK.js";import{n as t}from"./fetchWithTimeout-DFuBd5Ou.js";async function n(n){let r=await t(`/api/ai/match-import`,{method:`POST`,headers:{"Content-Type":`application/json`,"x-client-id":e()},body:JSON.stringify(n)},12e4);if(!r.ok)throw Error(`Match-import request failed (${r.status})`);return await r.json()}export{n as t};

@@ -1,0 +1,273 @@
+{
+  "config": {
+    "argv": [
+      "/nix/store/503mh0fj8j1cfvrxcavr76szbn4dk2r7-nodejs-slim-24.21.0/bin/node",
+      "/home/runner/workspace/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=playwright.release-debug.config.ts",
+      "manager-attention.spec.ts",
+      "--grep",
+      "manager\\ can\\ review\\ and\\ resolve\\ an\\ incident\\ with\\ Enter\\ and\\ Space|manager\\ can\\ keyboard\\-open\\ each\\ Manager\\ attention\\ workflow\\ and\\ retain\\ useful\\ focus|manager\\ attention\\ remains\\ stable\\ across\\ dialog\\ and\\ destination\\ transitions|manager\\ setup\\ stays\\ usable\\ when\\ recipe\\ names\\ are\\ incomplete",
+      "--reporter=line,json",
+      "--output=/home/runner/workspace/artifacts/run-calculator/generated-artifacts/manager-attention-followup.ocFcFl/results"
+    ],
+    "configFile": "/home/runner/workspace/artifacts/run-calculator/playwright.release-debug.config.ts",
+    "rootDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/home/runner/workspace/artifacts/run-calculator/e2e/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": {},
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/manager-attention-followup.ocFcFl/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": {},
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/manager-attention-followup.ocFcFl/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "snapshotDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts"
+        ],
+        "testMatch": "**/*.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:49977",
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "video": "off",
+          "launchOptions": {
+            "executablePath": "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium"
+          },
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "manager-attention.spec.ts",
+      "file": "manager-attention.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "manager can keyboard-open each Manager attention workflow and retain useful focus",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10445,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T17:44:05.086Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-bbd885f74d0f1104fda0",
+          "file": "manager-attention.spec.ts",
+          "line": 319,
+          "column": 1
+        },
+        {
+          "title": "manager setup stays usable when recipe names are incomplete",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12368,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T17:44:32.412Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-0a0677f9fd2b18e4018a",
+          "file": "manager-attention.spec.ts",
+          "line": 627,
+          "column": 1
+        },
+        {
+          "title": "manager attention remains stable across dialog and destination transitions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9383,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T17:44:44.816Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-fa2f079c6e91eec6b360",
+          "file": "manager-attention.spec.ts",
+          "line": 1028,
+          "column": 1
+        },
+        {
+          "title": "manager can review and resolve an incident with Enter and Space",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3351,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T17:44:54.219Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-6af68d825434b97b4948",
+          "file": "manager-attention.spec.ts",
+          "line": 1249,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T17:43:26.652Z",
+    "duration": 91169.654,
+    "expected": 4,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

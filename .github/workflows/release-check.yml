@@ -1,0 +1,197 @@
+name: Release check
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_full:
+        description: Run the full browser release suite and retain full evidence
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  release-check-standard:
+    name: Release gates and retained standard evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: read
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: release_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d release_check"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/release_check
+      SESSION_SECRET: release-check-ci-session
+      STAFF_SIGNUP_CODE: release-check-ci
+      NODE_ENV: test
+      E2E_TEST_DB: "1"
+      E2E_APPROVED_DESTRUCTIVE_MODE: "1"
+      RELEASE_EVIDENCE_DIR: release-evidence
+      RELEASE_CHECK_MAX_CONCURRENCY: "4"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Remove stale evidence
+        run: rm -rf release-evidence && mkdir -p release-evidence
+
+      - name: Apply schema to disposable database
+        run: pnpm --filter @workspace/db run push-force
+
+      - name: Run release check
+        run: pnpm run release:check
+
+      - name: Verify release evidence allowlist
+        if: always()
+        run: pnpm --filter @workspace/scripts run check:release-evidence
+
+      - name: Upload standard release evidence
+        if: always()
+        id: upload-standard-release-evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-evidence-standard-${{ github.run_id }}
+          path: release-evidence
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Summarize stopped standard release check
+        if: always()
+        env:
+          CHECKPOINT_DIR: release-evidence
+          CHECKPOINT_ARTIFACT_URL: ${{ steps.upload-standard-release-evidence.outputs.artifact-url }}
+          CHECKPOINT_ARTIFACT_NAME: release-evidence-standard-${{ github.run_id }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_BASE_REPOSITORY: ${{ github.repository }}
+          RELEASE_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          RELEASE_MODE: standard
+          VERIFY_CHECKPOINT_ARTIFACT_LINK: "1"
+          RESUME_COMMAND: pnpm run release:check -- --resume
+          REGENERATE_COMMAND: pnpm run release:check
+        run: |
+          bash scripts/src/release-stopped-summary.sh
+
+  release-check-full:
+    name: Release gates and retained full evidence
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_full }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: release_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d release_check"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/release_check
+      SESSION_SECRET: release-check-ci-session
+      STAFF_SIGNUP_CODE: release-check-ci
+      NODE_ENV: test
+      E2E_TEST_DB: "1"
+      E2E_APPROVED_DESTRUCTIVE_MODE: "1"
+      RELEASE_EVIDENCE_DIR: release-evidence-full
+      RELEASE_CHECK_MAX_CONCURRENCY: "4"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Remove stale full evidence
+        run: rm -rf release-evidence-full && mkdir -p release-evidence-full
+
+      - name: Apply schema to disposable database
+        run: pnpm --filter @workspace/db run push-force
+
+      - name: Run full release check
+        run: pnpm run release:check:full
+
+      - name: Verify full release evidence allowlist
+        if: always()
+        run: pnpm run release:check:full -- --verify-evidence
+
+      - name: Upload full release evidence
+        if: always()
+        id: upload-full-release-evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-evidence-full-${{ github.run_id }}
+          path: release-evidence-full
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Summarize stopped full release check
+        if: always()
+        env:
+          CHECKPOINT_DIR: release-evidence-full
+          CHECKPOINT_ARTIFACT_URL: ${{ steps.upload-full-release-evidence.outputs.artifact-url }}
+          CHECKPOINT_ARTIFACT_NAME: release-evidence-full-${{ github.run_id }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_BASE_REPOSITORY: ${{ github.repository }}
+          RELEASE_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          RELEASE_MODE: full
+          VERIFY_CHECKPOINT_ARTIFACT_LINK: "1"
+          RESUME_COMMAND: pnpm run release:check:full -- --resume
+          REGENERATE_COMMAND: pnpm run release:check:full
+        run: |
+          bash scripts/src/release-stopped-summary.sh

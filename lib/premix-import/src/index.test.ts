@@ -1,0 +1,1136 @@
+import { describe, it, expect } from "vitest";
+import {
+  parsePremixWorkbook,
+  groundPremix,
+  splitPremixName,
+  premixMatchName,
+  matchFlavorBySubsequence,
+  premixId,
+  premixToMix,
+  specMixDraftToMix,
+  sanitizePremixMatches,
+  applyPremixMatches,
+  summarizePremixImport,
+  buildPremixCandidates,
+  rematchPremixCandidate,
+  redirectPremixCandidate,
+  suggestPremixRedirects,
+  mergePremixIntoMixes,
+  collectPremixFreezerPulls,
+  collectPremixPrepItems,
+  PREMIX_PREP_RE,
+  isPrepOnlyPremix,
+  type PremixKnown,
+  type SheetGrid,
+} from "./index";
+import {
+  collectSpecImportMixes,
+  type ParsedRecipe,
+  type ParsedSpecImport,
+} from "@workspace/spec-import";
+import type { Mix } from "@workspace/mixes";
+
+// Single-block tab modeled on the real "Bobos Deluxe" sheet (ingredient col 0).
+const BOBOS: SheetGrid = {
+  name: "Bobos Deluxe",
+  rows: [
+    ["Bobo's Deluxe Veggie Mix", "", "", "# OF MIXES"],
+    ["", "Per Pizza", "Per Batch", "1"],
+    ["Red Onion, FR Strips", "0.4", "20.7"],
+    ["Red Peppers", "0.82", "42.435"],
+    ["Green Peppers", "0.82", "42.435"],
+    ["1/8 Green Pepper", "", "10"],
+    ["Basil", "0.06", "3.105"],
+    ["Bacon", "0.75", "38.8125"],
+    ["TOTAL", "2.85", "147.4875"],
+    ["Max Batches at a time", "", "1.69"],
+    ["TOTAL CASES NEEDED", "60"],
+  ],
+};
+
+// Two horizontal blocks on one tab, modeled on "Hannaford Tikka Masala Mix".
+// Note the "Pert Pizza" typo in the second block's header.
+const HANNAFORD: SheetGrid = {
+  name: "Hannaford Tikka Masala Mix",
+  rows: [
+    ["", "Hannaford White Fajita Mix", "", "", "# OF MIXES", "", "Hannaford Chicken Masala Mix", "", "", "#OF MIXES"],
+    ["", "", "Per Pizza", "Per Batch", "9", "", "", "Pert Pizza", "Per Batch", "9"],
+    ["", "White Onion Strips, Blanched", "0.375", "15.525", "", "", "Chicken, Diced\r\nc&f - 001mpdc40", "2", "82.8"],
+    ["", "1/8 onion", "", "5", "", "", "Masala Sauce", "0.07", "2.898"],
+    ["", "Green Pepper Strips, Blanched", "0.375", "15.525", "", "", "Total", "2.07", "85.698"],
+    ["", "1/8 green pepper", "", "5"],
+    ["", "Red Pepper Strips, Blanched", "0.375", "15.525"],
+    ["", "Yellow Pepper Strips, Blanched", "0.375", "15.525"],
+    ["", "Total", "1.5", "62.0999"],
+  ],
+};
+
+// Name + pull-note share one cell (real "Bobos Breakfast" shape).
+const BREAKFAST: SheetGrid = {
+  name: "Bobos Breakfast",
+  rows: [
+    ["***Pull 3 Days Early***\r\nScrambled Egg Mix", "", "", "# OF MIXES"],
+    ["", "Per Pizza", "Per Batch", "1"],
+    ["Egg", "0.5", "25"],
+    ["TOTAL", "0.5", "25"],
+  ],
+};
+
+// "PULL OLD MIX 2 DAYS PRIOR" note in its own cell below the table.
+const SPINACH: SheetGrid = {
+  name: "Lowes Spinach",
+  rows: [
+    ["Lowes Spinach Mix", "", "", ""],
+    ["", "Per Pizza", "Per Batch", ""],
+    ["Spinach", "0.3", "12"],
+    ["Total", "0.3", "12"],
+    ["***PULL OLD MIX 2 DAYS PRIOR***", "", ""],
+  ],
+};
+
+describe("parsePremixWorkbook", () => {
+  it("parses a single-block tab with sheet-exact quantities", () => {
+    const [mix, ...rest] = parsePremixWorkbook([BOBOS]);
+    expect(rest).toHaveLength(0);
+    expect(mix.name).toBe("Bobo's Deluxe Veggie Mix");
+    expect(mix.sheetName).toBe("Bobos Deluxe");
+    expect(mix.batchSize).toBe(147.4875);
+    expect(mix.components).toHaveLength(6);
+    const onion = mix.components.find((c) => c.ingredient === "Red Onion, FR Strips");
+    expect(onion?.perPizza).toBe(0.4);
+    expect(onion?.perBatch).toBe(20.7);
+    // A blank "Per Pizza" flat add keeps perPizza 0 but is still listed.
+    const flat = mix.components.find((c) => c.ingredient === "1/8 Green Pepper");
+    expect(flat?.perPizza).toBe(0);
+    expect(flat?.perBatch).toBe(10);
+  });
+
+  it("parses two horizontal blocks on one tab (incl. the 'Pert Pizza' typo)", () => {
+    const mixes = parsePremixWorkbook([HANNAFORD]);
+    expect(mixes.map((m) => m.name)).toEqual([
+      "Hannaford White Fajita Mix",
+      "Hannaford Chicken Masala Mix",
+    ]);
+    const fajita = mixes[0];
+    expect(fajita.batchSize).toBe(62.0999);
+    expect(fajita.components).toHaveLength(6);
+
+    const masala = mixes[1];
+    expect(masala.batchSize).toBe(85.698);
+    expect(masala.components).toHaveLength(2);
+    // Multi-line ingredient cell collapses to its first line.
+    expect(masala.components[0].ingredient).toBe("Chicken, Diced");
+    expect(masala.components[0].perPizza).toBe(2);
+  });
+
+  it("extracts a days-early note that shares the name cell", () => {
+    const [mix] = parsePremixWorkbook([BREAKFAST]);
+    expect(mix.name).toBe("Scrambled Egg Mix");
+    expect(mix.daysEarly).toBe(3);
+    expect(mix.notes).toBe("Pull 3 Days Early");
+  });
+
+  it("extracts a 'DAYS PRIOR' note in its own cell", () => {
+    const [mix] = parsePremixWorkbook([SPINACH]);
+    expect(mix.daysEarly).toBe(2);
+    expect(mix.notes).toBe("PULL OLD MIX 2 DAYS PRIOR");
+  });
+
+  it("defaults days-early to 0 when there is no note", () => {
+    const [mix] = parsePremixWorkbook([BOBOS]);
+    expect(mix.daysEarly).toBe(0);
+    expect(mix.notes).toBeUndefined();
+    expect(mix.pullIngredients).toEqual([]);
+  });
+
+  it("flags the ingredient whose own cell carries the pull note (and keeps its name clean)", () => {
+    const grid: SheetGrid = {
+      name: "Bobos Buffalo",
+      rows: [
+        ["Bobo's Buffalo Chicken Mix", "", "", "# OF MIXES"],
+        ["", "Per Pizza", "Per Batch", "1"],
+        ["***Pull 3 Days Early***\r\nScrambled Egg", "0.5", "25"],
+        ["Buffalo Sauce", "0.1", "5"],
+        ["TOTAL", "0.6", "30"],
+      ],
+    };
+    const [mix] = parsePremixWorkbook([grid]);
+    expect(mix.daysEarly).toBe(3);
+    // The decorative note line must NOT leak into the ingredient name.
+    expect(mix.components.map((c) => c.ingredient)).toEqual([
+      "Scrambled Egg",
+      "Buffalo Sauce",
+    ]);
+    expect(mix.pullIngredients).toEqual(["Scrambled Egg"]);
+  });
+
+  it("a standalone note above the header flags the block's first ingredient", () => {
+    const [mix] = parsePremixWorkbook([BREAKFAST]);
+    expect(mix.daysEarly).toBe(3);
+    expect(mix.pullIngredients).toEqual(["Egg"]);
+  });
+
+  it("a far-away 'PULL OLD MIX' footer note stays mix-level (no ingredient flagged)", () => {
+    const [mix] = parsePremixWorkbook([SPINACH]);
+    expect(mix.daysEarly).toBe(2);
+    expect(mix.pullIngredients).toEqual([]);
+  });
+
+  // Some sheets carry a pull ANNOTATION mini-table beside/below the real mix:
+  // a standalone "***Pull N Days Early***" note where a name would sit, then a
+  // "Per Pizza | Per Skid | Total Needed" header and one ingredient row. These
+  // must fold into the real mix as a pull, never become a phantom second mix.
+  it("folds a pull annotation mini-table into the closest real mix (no phantom mix)", () => {
+    const grid: SheetGrid = {
+      name: "Lowes Red Hot",
+      rows: [
+        ["Chicken Mix", "", "", "# OF MIXES", "", "Jalapeno Mix", "", "", "# OF MIXES"],
+        ["", "Per Pizza", "Per Batch", "1", "", "", "Per Pizza", "Per Batch", "1.5"],
+        ["Hot Sauce", "0.07", "2.90", "", "", "Jalapenos", "0.25", "10.35", ""],
+        ["Chicken", "2.43", "100.60", "", "", "Bacon", "0.50", "20.70", ""],
+        ["TOTAL", "2.50", "103.50", "", "", "Total", "0.75", "20.70", ""],
+        [],
+        ["TOTAL AMOUNT NEEDED", "103.50", "", "", "", "AMOUNT NEEDED", "31.05", "", ""],
+        ["Amount already made", "0", "", "", "", "Amount already made", "0", "", ""],
+        ["TOTAL AMOUNT BEING MIXED", "103.50", "", "", "", "AMOUNT BEING MIXED", "31.05", "", ""],
+        [],
+        ["PULL FOR MIX", "", "", "", "", "***Pull 3 Days Early***", "", "", ""],
+        ["Jalapenos", "15.52", "POUNDS", "", "", "", "Per Pizza", "Per Skid", "Total Needed"],
+        ["Hot Sauce", "2.90", "POUNDS", "", "", "Garlic sauce", "2", "90.00", "2 Buckets"],
+      ],
+    };
+    const parsed = parsePremixWorkbook([grid]);
+    expect(parsed.map((p) => p.name)).toEqual(["Chicken Mix", "Jalapeno Mix"]);
+    const jal = parsed[1];
+    // The annotation attaches to the SAME-column mix, not the left one.
+    expect(jal.pullIngredients).toEqual(["Garlic sauce"]);
+    expect(jal.pullDaysEarly).toBe(3);
+    expect(parsed[0].pullIngredients).toEqual([]);
+    // The annotation must never steal a footer label as a phantom mix name.
+    expect(parsed.some((p) => /amount being/i.test(p.name))).toBe(false);
+  });
+
+  it("keeps an annotation-only sheet as a carrier mix (no real block to fold into)", () => {
+    const grid: SheetGrid = {
+      name: "Corner Booth Pep & Jal",
+      rows: [
+        ["***Pull 3 Days Early***", "", "", ""],
+        ["", "Per Pizza", "Per Skid", "Total Needed"],
+        ["Garlic sauce", "4", "180.00", "3 Buckets"],
+        [],
+        ["Total Cases Needed", "48", "", ""],
+      ],
+    };
+    const parsed = parsePremixWorkbook([grid]);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].daysEarly).toBe(3);
+    expect(parsed[0].pullIngredients).toEqual(["Garlic sauce"]);
+  });
+
+  it("pull annotation lead time wins over the mix's own daysEarly in the pull list", () => {
+    const grid: SheetGrid = {
+      name: "Bratwurst",
+      rows: [
+        ["Veggie Mix", "", "", "# OF MIXES", "", "***Pull 2 Days Early***", "", "", ""],
+        ["", "Per Pizza", "Per Batch", "1", "", "", "Per Pizza", "Per Batch", "Total Needed"],
+        ["Sauerkraut", "1.30", "60.55", "", "", "Bratwurst", "3.00", "139.73", "140 Pounds"],
+        ["Total", "1.30", "60.55", "", "", "", "", "", ""],
+      ],
+    };
+    const parsed = parsePremixWorkbook([grid]);
+    expect(parsed.map((p) => p.name)).toEqual(["Veggie Mix"]);
+    expect(parsed[0].pullIngredients).toEqual(["Bratwurst"]);
+    expect(parsed[0].pullDaysEarly).toBe(2);
+    const pulls = collectPremixFreezerPulls(parsed);
+    expect(Object.values(pulls)[0]).toEqual([{ ingredient: "Bratwurst", daysEarly: 2 }]);
+  });
+});
+
+const KNOWN: PremixKnown = {
+  brands: ["Bobo's", "Hannaford"],
+  flavorsByBrand: { "Bobo's": ["Deluxe"], Hannaford: ["White Fajita"] },
+  ingredients: ["Red Onion, FR Strips", "Bacon"],
+};
+
+describe("name grounding", () => {
+  it("splits a name on the longest known brand prefix and strips the Mix suffix", () => {
+    expect(splitPremixName("Bobo's Deluxe Veggie Mix", "Bobos Deluxe", KNOWN.brands)).toEqual({
+      brand: "Bobo's",
+      flavor: "Deluxe",
+    });
+  });
+
+  it("matches brands despite apostrophe/punctuation differences in the tab name", () => {
+    expect(splitPremixName("Veggie Mix", "Lucias Craft Tikka Masala", ["Lucia's Craft"])).toEqual({
+      brand: "Lucia's Craft",
+      flavor: "Tikka Masala",
+    });
+    expect(splitPremixName("Cheese Mix", "Bobos Deluxe", ["Bobo's"])).toEqual({
+      brand: "Bobo's",
+      flavor: "Deluxe",
+    });
+  });
+
+  it("unifies inch-mark spellings when matching a sized brand", () => {
+    expect(splitPremixName("Veggie Mix", "Basha 11' Hawaiian", ["Basha 11in"])).toEqual({
+      brand: "Basha 11in",
+      flavor: "Hawaiian",
+    });
+    expect(splitPremixName("Mix", "Lowes 7in Red Fajita", ["Lowes 7\""])).toEqual({
+      brand: "Lowes 7\"",
+      flavor: "Red Fajita",
+    });
+  });
+
+  it("tolerates a one-letter typo in a brand word", () => {
+    expect(
+      splitPremixName("Mix", "Lucias Morming Melts Americano", ["Lucia's Morning Melts"]),
+    ).toEqual({ brand: "Lucia's Morning Melts", flavor: "Americano" });
+  });
+
+  it("does not fuzz short or numeric brand words", () => {
+    expect(splitPremixName("Mix", "Lowes 8in Supreme", ["Lowe's 7in"]).brand).toBe("");
+    expect(splitPremixName("Mix", "SOB Supreme", ["SMD"]).brand).toBe("");
+  });
+
+  it("ignores a trailing ' (N)' tab-dedupe suffix when grounding the flavor", () => {
+    // Our exporter unique-ifies duplicate product tabs as "Bobo's Deluxe (2)".
+    expect(splitPremixName("Bobo's Deluxe Mix", "Bobo's Deluxe (2)", ["Bobo's"])).toEqual({
+      brand: "Bobo's",
+      flavor: "Deluxe",
+    });
+  });
+
+  it("prefers the longest (most-word) brand when several prefix-match", () => {
+    expect(
+      splitPremixName("Mix", "Lowes 7in Red Fajita", ["Lowes", "Lowes 7in"]),
+    ).toEqual({ brand: "Lowes 7in", flavor: "Red Fajita" });
+  });
+
+  it("returns empty brand when nothing matches (goes to AI)", () => {
+    const r = splitPremixName("Mystery Topping Mix", "Mystery", []);
+    expect(r.brand).toBe("");
+    expect(r.flavor).toBe("Mystery");
+  });
+
+  it("prefers the sheet tab over a conflicting block label", () => {
+    // Real workbooks copy block templates between products — the tab is truth.
+    expect(
+      splitPremixName("Corner Booth Hawaiian", "Bobos Deluxe", ["Bobo's", "Corner Booth"]),
+    ).toEqual({ brand: "Bobo's", flavor: "Deluxe" });
+  });
+
+  it("premixMatchName sends the tab to the AI matcher unless it looks generic", () => {
+    expect(premixMatchName({ name: "Corner Booth Hawaiian", sheetName: "Basha 11' Hawaiian" })).toBe(
+      "Basha 11' Hawaiian",
+    );
+    expect(premixMatchName({ name: "Bobo's Deluxe Veggie Mix", sheetName: "Sheet1" })).toBe(
+      "Bobo's Deluxe Veggie Mix",
+    );
+    expect(premixMatchName({ name: "Pepperoni Blend", sheetName: "" })).toBe("Pepperoni Blend");
+  });
+
+  it("applyPremixMatches with onlyNames leaves mixes outside the sent set untouched", () => {
+    const resolved = {
+      name: "Bobo's Deluxe",
+      sheetName: "Bobo's Deluxe",
+      brand: "Bobo's",
+      flavor: "Deluxe",
+      rows: [],
+    } as never;
+    const unresolved = {
+      name: "Mystery Mix",
+      sheetName: "Mystery Mix",
+      brand: "",
+      flavor: "Mystery Mix",
+      rows: [],
+    } as never;
+    const matches = [
+      { name: "Bobo's Deluxe", brand: "WRONG", flavor: "WRONG" },
+      { name: "Mystery Mix", brand: "Lucia's", flavor: "Supreme" },
+    ];
+    const out = applyPremixMatches([resolved, unresolved], matches, ["Mystery Mix"]);
+    expect(out[0]).toMatchObject({ brand: "Bobo's", flavor: "Deluxe" });
+    expect(out[1]).toMatchObject({ brand: "Lucia's", flavor: "Supreme" });
+    // Without onlyNames the legacy behavior still applies everywhere.
+    const legacy = applyPremixMatches([resolved, unresolved], matches);
+    expect(legacy[0]).toMatchObject({ brand: "WRONG", flavor: "WRONG" });
+  });
+
+  it("matchFlavorBySubsequence picks a unique word-subsequence flavor, else nothing", () => {
+    expect(matchFlavorBySubsequence("Red Hot", ["RED HOT CHICKEN", "SUPREME"])).toBe(
+      "RED HOT CHICKEN",
+    );
+    expect(matchFlavorBySubsequence("Club", ["CHICKEN BACON CLUB"])).toBe("CHICKEN BACON CLUB");
+    // Ambiguous → no guess.
+    expect(matchFlavorBySubsequence("Chicken", ["BBQ CHICKEN", "RED HOT CHICKEN"])).toBe("");
+    expect(matchFlavorBySubsequence("Hawaiian", ["SUPREME"])).toBe("");
+  });
+
+  it("grounds brand/flavor against known lists", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    const g = groundPremix(parsed, KNOWN, []);
+    expect(g.mix.brand).toBe("Bobo's");
+    expect(g.mix.flavor).toBe("Deluxe");
+    expect(g.productResolved).toBe(true);
+  });
+
+  it("marks unresolved products for the AI matcher", () => {
+    const parsed = parsePremixWorkbook([SPINACH])[0];
+    const g = groundPremix(parsed, KNOWN, []);
+    expect(g.productResolved).toBe(false);
+  });
+
+  // Tab-name brand fallback: when the mix name has no brand prefix but the
+  // tab name IS a known brand, groundPremix must use the tab brand.
+  it("uses the tab name as brand when mix name has no brand prefix", () => {
+    const grid: SheetGrid = {
+      name: "Bobo's",
+      rows: [
+        ["Herb Mix", "", "", "# OF MIXES"],
+        ["", "Per Pizza", "Per Batch", "1"],
+        ["Spinach", "0.3", "12"],
+        ["Total", "0.3", "12"],
+      ],
+    };
+    const [parsed] = parsePremixWorkbook([grid]);
+    expect(parsed.sheetName).toBe("Bobo's");
+    // "Herb Mix" has no brand prefix — fallback must use the tab name.
+    const g = groundPremix(parsed, KNOWN, []);
+    expect(g.mix.brand).toBe("Bobo's");
+  });
+
+  it("resolves a brand-renamed tab via learned aliases when the old name is no longer in known.brands", () => {
+    // Simulate: "OldCo" was renamed to "Bobo's". The alias map carries this
+    // mapping but KNOWN.brands no longer lists "OldCo". The tab still says
+    // "OldCo" (stale workbook). groundPremix must alias-resolve it to "Bobo's".
+    const grid: SheetGrid = {
+      name: "OldCo",
+      rows: [
+        ["Supreme Mix", "", "", "# OF MIXES"],
+        ["", "Per Pizza", "Per Batch", "1"],
+        ["Basil", "0.1", "4"],
+        ["Total", "0.1", "4"],
+      ],
+    };
+    const [parsed] = parsePremixWorkbook([grid]);
+    const aliases = [
+      { kind: "brand" as const, externalName: "OldCo", canonicalName: "Bobo's", context: null },
+    ];
+    const g = groundPremix(parsed, KNOWN, aliases);
+    expect(g.mix.brand).toBe("Bobo's");
+  });
+});
+
+describe("AI match sanitizer", () => {
+  it("keeps known brands and drops hallucinated ones", () => {
+    const raw = {
+      matches: [
+        { name: "Bobo's Deluxe Veggie Mix", brand: "Bobo's", flavor: "Deluxe" },
+        { name: "Ghost Mix", brand: "Totally Made Up Brand XYZ", flavor: "Nope" },
+      ],
+    };
+    const out = sanitizePremixMatches(raw, KNOWN);
+    expect(out).toEqual([{ name: "Bobo's Deluxe Veggie Mix", brand: "Bobo's", flavor: "Deluxe" }]);
+  });
+
+  it("never throws on garbage input", () => {
+    expect(sanitizePremixMatches(null, KNOWN)).toEqual([]);
+    expect(sanitizePremixMatches({ matches: "nope" }, KNOWN)).toEqual([]);
+  });
+
+  it("applies matches onto parsed mixes by name", () => {
+    const parsed = parsePremixWorkbook([SPINACH]);
+    const applied = applyPremixMatches(parsed, [
+      { name: "Lowes Spinach Mix", brand: "Lowes", flavor: "Spinach" },
+    ]);
+    expect(applied[0].brand).toBe("Lowes");
+    expect(applied[0].flavor).toBe("Spinach");
+  });
+});
+
+describe("conversion + summary", () => {
+  it("produces a stable deterministic id for re-import upserts", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    const g = groundPremix(parsed, KNOWN, []);
+    const a = premixId(g.mix);
+    const b = premixId(g.mix);
+    expect(a).toBe(b);
+    expect(a).toBe("premix-bobo-s-deluxe-bobo-s-deluxe-veggie-mix");
+  });
+
+  it("converts to a normalized Mix carrying per-pizza weights", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    const mix = premixToMix(groundPremix(parsed, KNOWN, []).mix)!;
+    expect(mix).not.toBeNull();
+    expect(mix.batchSize).toBe(147.4875);
+    expect(mix.components.find((c) => c.ingredient === "Bacon")?.perPizza).toBe(0.75);
+    expect(mix.enabled).toBe(true);
+    // Default keeps the per-batch-only flat add ("1/8 Green Pepper", perPizza 0).
+    expect(mix.components.some((c) => c.ingredient === "1/8 Green Pepper")).toBe(true);
+  });
+
+  it("carries the sheet's per-batch pounds into the reference lbs/batch column", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    const mix = premixToMix(groundPremix(parsed, KNOWN, []).mix, { perPizzaOnly: true })!;
+    // The premix workbook is the only source for these pounds.
+    const onion = mix.components.find((c) => c.ingredient === "Red Onion, FR Strips");
+    expect(onion?.perBatchLbs).toBe(20.7);
+    // Every included component with a positive Per Batch cell keeps it.
+    expect(mix.components.every((c) => (c.perBatchLbs ?? 0) > 0)).toBe(true);
+  });
+
+  it("perPizzaOnly drops the per-batch-only prep rows from the mix", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    const mix = premixToMix(groundPremix(parsed, KNOWN, []).mix, { perPizzaOnly: true })!;
+    // The flat per-batch add is split out; only real per-pizza rows remain.
+    expect(mix.components.some((c) => c.ingredient === "1/8 Green Pepper")).toBe(false);
+    expect(mix.components.every((c) => c.perPizza > 0)).toBe(true);
+    expect(mix.components.find((c) => c.ingredient === "Bacon")?.perPizza).toBe(0.75);
+  });
+
+  it("collectPremixPrepItems surfaces the per-batch-only rows with context", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    const prep = collectPremixPrepItems([parsed]);
+    const gp = prep.find((p) => p.ingredient === "1/8 Green Pepper");
+    expect(gp).toBeTruthy();
+    expect(gp!.perBatch).toBe(10);
+    expect(gp!.mixName).toBe("Bobo's Deluxe Veggie Mix");
+    // Ordinary per-pizza ingredients are never reported as prep.
+    expect(prep.some((p) => p.ingredient === "Bacon")).toBe(false);
+  });
+
+  it("surfaces a per-pizza ingredient that needs prep by name (e.g. drained pineapple)", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    // A real per-pizza ingredient whose NAME says it needs run-day prep.
+    const withPineapple = {
+      ...parsed,
+      components: [
+        ...parsed.components,
+        { ingredient: "Pineapple - Drained", perPizza: 2, perBatch: 82.8 },
+      ],
+    };
+    const prep = collectPremixPrepItems([withPineapple]);
+    const pineapple = prep.find((p) => p.ingredient === "Pineapple - Drained");
+    expect(pineapple).toBeTruthy();
+    // Flagged as staying in the mix (a prep reminder, not a split-out row).
+    expect(pineapple!.alsoInMix).toBe(true);
+    expect(pineapple!.perBatch).toBe(82.8);
+    // Per-batch-only rows carry no alsoInMix flag.
+    const gp = prep.find((p) => p.ingredient === "1/8 Green Pepper");
+    expect(gp!.alsoInMix).toBeUndefined();
+    // The pineapple row is a real per-pizza ingredient, so it STILL belongs in
+    // the mix even with perPizzaOnly on.
+    const mix = premixToMix(
+      { ...withPineapple, brand: "", flavor: "", components: withPineapple.components },
+      { perPizzaOnly: true },
+    )!;
+    expect(mix.components.some((c) => c.ingredient === "Pineapple - Drained")).toBe(true);
+  });
+
+  it("PREMIX_PREP_RE matches pineapple / drained but not ordinary names", () => {
+    expect(PREMIX_PREP_RE.test("Pineapple - Drained")).toBe(true);
+    expect(PREMIX_PREP_RE.test("Pineapple")).toBe(true);
+    expect(PREMIX_PREP_RE.test("Diced Tomatoes - Drained")).toBe(true);
+    expect(PREMIX_PREP_RE.test("Bacon")).toBe(false);
+    expect(PREMIX_PREP_RE.test("Whole Milk Mozzarella")).toBe(false);
+  });
+
+  it("isPrepOnlyPremix flags blocks that have no per-pizza ingredient", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    expect(isPrepOnlyPremix(parsed)).toBe(false);
+    const prepOnly = {
+      ...parsed,
+      components: parsed.components.map((c) => ({ ...c, perPizza: 0 })),
+    };
+    expect(isPrepOnlyPremix(prepOnly)).toBe(true);
+  });
+
+  it("counts new vs updated and merges by id", () => {
+    const mixes = parsePremixWorkbook([HANNAFORD]).map(
+      (p) => premixToMix(groundPremix(p, KNOWN, []).mix)!,
+    );
+    const existingIds = new Set([mixes[0].id]);
+    const summary = summarizePremixImport(mixes, (id) => existingIds.has(id));
+    expect(summary).toEqual({ total: 2, created: 1, updated: 1 });
+
+    const merged = mergePremixIntoMixes([mixes[0]], mixes);
+    expect(merged).toHaveLength(2);
+  });
+
+  it("merge keeps on-hand amount, enabled flag, and custom notes the sheet cannot carry", () => {
+    const mixes = parsePremixWorkbook([HANNAFORD]).map(
+      (p) => premixToMix(groundPremix(p, KNOWN, []).mix)!,
+    );
+    const existing = {
+      ...mixes[0],
+      amountAlreadyMade: 75.5,
+      enabled: false,
+      notes: "Mix cold\nPull 9 Days Early", // stale pull line + custom note
+    };
+    const merged = mergePremixIntoMixes([existing], mixes);
+    const updated = merged.find((m) => m.id === mixes[0].id)!;
+    // Sheet-less fields survive the re-import...
+    expect(updated.amountAlreadyMade).toBe(75.5);
+    expect(updated.enabled).toBe(false);
+    // ...custom note lines are kept, while the pull-note line follows the
+    // IMPORT (stale "9 days" line replaced by whatever the sheet now says).
+    const importedPull = (mixes[0].notes ?? "").trim();
+    expect(updated.notes).toBe(
+      importedPull ? `Mix cold\n${importedPull}` : "Mix cold",
+    );
+    // Sheet-carried fields still come from the import.
+    expect(updated.batchSize).toBe(mixes[0].batchSize);
+    expect(updated.components).toEqual(mixes[0].components);
+  });
+
+  it("builds per-mix review candidates tagged new vs update", () => {
+    const mixes = parsePremixWorkbook([HANNAFORD]).map(
+      (p) => premixToMix(groundPremix(p, KNOWN, []).mix)!,
+    );
+    const existingIds = new Set([mixes[0].id]);
+    const candidates = buildPremixCandidates(mixes, (id) => existingIds.has(id));
+    expect(candidates).toHaveLength(2);
+    expect(candidates[0]).toEqual({ mix: mixes[0], status: "update" });
+    expect(candidates[1]).toEqual({ mix: mixes[1], status: "new" });
+  });
+
+  it("re-matches a candidate to a new product, rebuilding id + status", () => {
+    const [parsed] = parsePremixWorkbook([BOBOS]);
+    const mix = premixToMix(groundPremix(parsed, KNOWN, []).mix)!;
+    const candidate = { mix, status: "new" as const };
+
+    // Re-point to a known brand+flavor; id is rebuilt and quantities untouched.
+    const expectedId = premixId({ brand: "Bobos", flavor: "Deluxe", name: mix.name });
+    const rematched = rematchPremixCandidate(candidate, "Bobos", "Deluxe", (id) =>
+      id === expectedId,
+    );
+    expect(rematched.mix.brand).toBe("Bobos");
+    expect(rematched.mix.flavor).toBe("Deluxe");
+    expect(rematched.mix.id).toBe(expectedId);
+    expect(rematched.mix.batchSize).toBe(mix.batchSize);
+    expect(rematched.mix.components).toEqual(mix.components);
+    // The rebuilt id now matches an existing mix → flips to "update".
+    expect(rematched.status).toBe("update");
+
+    // Re-pointing to an unknown id stays "new".
+    const stillNew = rematchPremixCandidate(candidate, "Bobos", "Deluxe", () => false);
+    expect(stillNew.status).toBe("new");
+  });
+});
+
+describe("redirect onto an existing mix", () => {
+  function mkMix(over: Partial<Mix> & { id: string; name: string }): Mix {
+    return {
+      brand: "",
+      flavor: "",
+      batchSize: 0,
+      daysEarly: 0,
+      amountAlreadyMade: 0,
+      components: [],
+      enabled: true,
+      ...over,
+    };
+  }
+
+  const savedA = mkMix({
+    id: "saved-a",
+    name: "Deluxe Veggie Mix",
+    brand: "Bobos",
+    flavor: "Deluxe",
+  });
+  const savedB = mkMix({ id: "saved-b", name: "Buffalo Mix", brand: "Hannaford" });
+
+  it("redirectPremixCandidate takes the target identity, keeps parsed quantities", () => {
+    const parsedMix = mkMix({
+      id: "sheet-id",
+      name: "Deluxe Veg Blend",
+      brand: "Bobos",
+      flavor: "Deluxe",
+      batchSize: 42,
+      components: [{ ingredient: "Onion", perPizza: 0.5 }],
+      notes: "Pull 2 Days Early",
+    });
+    const redirected = redirectPremixCandidate(
+      { mix: parsedMix, status: "new" },
+      savedA,
+      (id) => id === savedA.id,
+    );
+    expect(redirected.mix.id).toBe("saved-a");
+    expect(redirected.mix.name).toBe("Deluxe Veggie Mix");
+    expect(redirected.mix.brand).toBe("Bobos");
+    expect(redirected.mix.flavor).toBe("Deluxe");
+    expect(redirected.mix.batchSize).toBe(42);
+    expect(redirected.mix.components).toEqual([{ ingredient: "Onion", perPizza: 0.5 }]);
+    expect(redirected.status).toBe("update");
+  });
+
+  it("suggestPremixRedirects fires on a learned appType alias with a unique target", () => {
+    const candidate = {
+      mix: mkMix({ id: "sheet-id", name: "Deluxe Veg Blend", brand: "Bobos" }),
+      status: "new" as const,
+    };
+    const out = suggestPremixRedirects(
+      [candidate],
+      [savedA, savedB],
+      [
+        {
+          kind: "appType",
+          externalName: "Deluxe Veg Blend",
+          canonicalName: "Deluxe Veggie Mix",
+          context: null,
+        },
+      ],
+    );
+    expect(out).toEqual({ "sheet-id": "saved-a" });
+  });
+
+  it("skips candidates already updating by exact id and ignores scoped/non-appType aliases", () => {
+    const exactUpdate = { mix: savedA, status: "update" as const };
+    const other = {
+      mix: mkMix({ id: "sheet-2", name: "Buff Blend" }),
+      status: "new" as const,
+    };
+    const out = suggestPremixRedirects(
+      [exactUpdate, other],
+      [savedA, savedB],
+      [
+        { kind: "appType", externalName: "Deluxe Veggie Mix", canonicalName: "Buffalo Mix", context: null },
+        { kind: "appType", externalName: "Buff Blend", canonicalName: "Buffalo Mix", context: "scoped" },
+        { kind: "brand", externalName: "Buff Blend", canonicalName: "Buffalo Mix" },
+      ],
+    );
+    expect(out).toEqual({});
+  });
+
+  it("keeps a suggestion even when the target's own block is an exact-id update", () => {
+    // Merge-learned alias scenario: the survivor's own block re-imports as an
+    // exact-id update AND the merged-away block aliases onto it. The suggestion
+    // must survive (shown in review to accept/clear) or the merged-away mix
+    // silently resurrects as "new" on every re-import of the same workbook.
+    const exactUpdate = { mix: savedB, status: "update" as const };
+    const aliased = {
+      mix: mkMix({ id: "sheet-3", name: "Buff Blend" }),
+      status: "new" as const,
+    };
+    const out = suggestPremixRedirects(
+      [exactUpdate, aliased],
+      [savedA, savedB],
+      [
+        { kind: "appType", externalName: "Buff Blend", canonicalName: "Buffalo Mix", context: null },
+      ],
+    );
+    expect(out).toEqual({ "sheet-3": "saved-b" });
+  });
+
+  it("drops a suggestion when two candidates alias onto the same target", () => {
+    const a = { mix: mkMix({ id: "s1", name: "Blend One" }), status: "new" as const };
+    const b = { mix: mkMix({ id: "s2", name: "Blend Two" }), status: "new" as const };
+    const out = suggestPremixRedirects(
+      [a, b],
+      [savedB],
+      [
+        { kind: "appType", externalName: "Blend One", canonicalName: "Buffalo Mix", context: null },
+        { kind: "appType", externalName: "Blend Two", canonicalName: "Buffalo Mix", context: null },
+      ],
+    );
+    expect(out).toEqual({});
+  });
+
+  it("drops a suggestion when the canonical name matches two existing mixes", () => {
+    const dupe = mkMix({ id: "saved-c", name: "Buffalo Mix", brand: "Other" });
+    const a = { mix: mkMix({ id: "s1", name: "Buff Blend" }), status: "new" as const };
+    const out = suggestPremixRedirects(
+      [a],
+      [savedB, dupe],
+      [
+        { kind: "appType", externalName: "Buff Blend", canonicalName: "Buffalo Mix", context: null },
+      ],
+    );
+    expect(out).toEqual({});
+  });
+});
+
+describe("re-import always updates components via mergePremixIntoMixes", () => {
+  function mkMix(over: Partial<Mix> & { id: string; name: string }): Mix {
+    return {
+      brand: "",
+      flavor: "",
+      batchSize: 0,
+      daysEarly: 0,
+      amountAlreadyMade: 0,
+      components: [],
+      enabled: true,
+      ...over,
+    };
+  }
+
+  it("a redirect onto an existing mix updates components while preserving amountAlreadyMade, enabled, and notes", () => {
+    const existing = mkMix({
+      id: "saved-corner-booth",
+      name: "Corner Booth House Mix",
+      brand: "Corner Booth",
+      components: [{ ingredient: "OldSauce", perPizza: 0.1 }],
+      amountAlreadyMade: 42,
+      enabled: false,
+      notes: "Mix cold\nPull 3 Days Early",
+    });
+
+    // Sheet parses to a different id/name but the manager has a learned redirect.
+    const fromSheet = mkMix({
+      id: "premix-corner-booth-house-blend",
+      name: "Corner Booth House Blend",
+      brand: "Corner Booth",
+      batchSize: 80,
+      components: [
+        { ingredient: "NewSauce", perPizza: 0.15 },
+        { ingredient: "Garlic", perPizza: 0.05 },
+      ],
+    });
+
+    // redirectPremixCandidate maps the sheet mix onto the existing id.
+    const redirected = redirectPremixCandidate(
+      { mix: fromSheet, status: "new" },
+      existing,
+      (id) => id === existing.id,
+    );
+    expect(redirected.mix.id).toBe("saved-corner-booth");
+    // Sheet quantities preserved through the redirect.
+    expect(redirected.mix.batchSize).toBe(80);
+    expect(redirected.mix.components).toEqual([
+      { ingredient: "NewSauce", perPizza: 0.15 },
+      { ingredient: "Garlic", perPizza: 0.05 },
+    ]);
+
+    // mergePremixIntoMixes applies the redirected mix, updating content while
+    // preserving amountAlreadyMade, enabled, and manager-custom notes.
+    const merged = mergePremixIntoMixes([existing], [redirected.mix]);
+    expect(merged).toHaveLength(1);
+    const updated = merged[0];
+    // Sheet-carried fields come from the import.
+    expect(updated.batchSize).toBe(80);
+    expect(updated.components).toEqual([
+      { ingredient: "NewSauce", perPizza: 0.15 },
+      { ingredient: "Garlic", perPizza: 0.05 },
+    ]);
+    // Manager-only fields preserved.
+    expect(updated.amountAlreadyMade).toBe(42);
+    expect(updated.enabled).toBe(false);
+    // Custom notes line preserved; pull note follows import (absent in new import).
+    expect(updated.notes).toBe("Mix cold");
+  });
+
+  it("retains existing cellulose when a premix workbook omits it", () => {
+    const existing = mkMix({
+      id: "saved-basha",
+      name: "Basha's Red Fajita Mix",
+      components: [
+        { ingredient: "Red Pepper", perPizza: 1.2 },
+        { ingredient: "Cellulose", perPizza: 0.03 },
+      ],
+    });
+    const imported = mkMix({
+      id: "saved-basha",
+      name: "Basha's Red Fajita Mix",
+      components: [{ ingredient: "Red Pepper", perPizza: 1.4 }],
+    });
+
+    const [merged] = mergePremixIntoMixes([existing], [imported]);
+
+    expect(merged.components).toEqual([
+      { ingredient: "Red Pepper", perPizza: 1.4 },
+      { ingredient: "Cellulose", perPizza: 0.03 },
+    ]);
+  });
+
+  it("an exact-id re-import (no redirect needed) also updates components", () => {
+    const existing = mkMix({
+      id: "premix-bobo-s-deluxe-bobo-s-deluxe-veggie-mix",
+      name: "Bobo's Deluxe Veggie Mix",
+      brand: "Bobo's",
+      components: [{ ingredient: "OldOnion", perPizza: 0.3 }],
+      amountAlreadyMade: 15,
+    });
+    const freshImport = mkMix({
+      id: "premix-bobo-s-deluxe-bobo-s-deluxe-veggie-mix",
+      name: "Bobo's Deluxe Veggie Mix",
+      brand: "Bobo's",
+      batchSize: 147,
+      components: [
+        { ingredient: "Red Onion, FR Strips", perPizza: 0.4 },
+        { ingredient: "Bacon", perPizza: 0.75 },
+      ],
+    });
+    const merged = mergePremixIntoMixes([existing], [freshImport]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].components).toEqual([
+      { ingredient: "Red Onion, FR Strips", perPizza: 0.4 },
+      { ingredient: "Bacon", perPizza: 0.75 },
+    ]);
+    expect(merged[0].batchSize).toBe(147);
+    // amountAlreadyMade preserved.
+    expect(merged[0].amountAlreadyMade).toBe(15);
+  });
+
+  it("mixes absent from the import are left entirely alone", () => {
+    const unrelated = mkMix({
+      id: "other-mix",
+      name: "Other Mix",
+      components: [{ ingredient: "Spinach", perPizza: 0.3 }],
+    });
+    const imported = mkMix({
+      id: "premix-bobo-s-supreme",
+      name: "Supreme Mix",
+      components: [{ ingredient: "Basil", perPizza: 0.1 }],
+    });
+    const merged = mergePremixIntoMixes([unrelated], [imported]);
+    expect(merged).toHaveLength(2);
+    const untouched = merged.find((m) => m.id === "other-mix")!;
+    expect(untouched.components).toEqual([{ ingredient: "Spinach", perPizza: 0.3 }]);
+  });
+});
+
+describe("collectPremixFreezerPulls", () => {
+  it("collects flagged ingredients keyed by the mix's deterministic id", () => {
+    const parsed = parsePremixWorkbook([BREAKFAST]);
+    const grounded = parsed.map((p) => groundPremix(p, KNOWN, []).mix);
+    const pulls = collectPremixFreezerPulls(grounded);
+    const key = premixId(grounded[0]);
+    expect(pulls).toEqual({ [key]: [{ ingredient: "Egg", daysEarly: 3 }] });
+  });
+
+  it("canonicalizes the flagged ingredient against the known ingredient list", () => {
+    const grid: SheetGrid = {
+      name: "Bobos Deluxe 2",
+      rows: [
+        ["Bobo's Deluxe Veggie Mix", "", "", "# OF MIXES"],
+        ["", "Per Pizza", "Per Batch", "1"],
+        ["***Pull 2 Days Early***\r\nbacon", "0.75", "38.8"],
+        ["TOTAL", "0.75", "38.8"],
+      ],
+    };
+    const [parsed] = parsePremixWorkbook([grid]);
+    const grounded = groundPremix(parsed, KNOWN, []).mix;
+    const pulls = collectPremixFreezerPulls([grounded]);
+    // "bacon" grounds to the known "Bacon" so the freezer setting matches the app.
+    expect(Object.values(pulls)[0]).toEqual([{ ingredient: "Bacon", daysEarly: 2 }]);
+  });
+
+  it("skips mixes with a note but no specific ingredient, and mixes with no note", () => {
+    const parsed = parsePremixWorkbook([SPINACH, BOBOS]);
+    expect(collectPremixFreezerPulls(parsed)).toEqual({});
+  });
+});
+
+// ── Spec-import → Mixes routing ──────────────────────────────────────────────
+
+function specRecipe(r: Partial<ParsedRecipe>): ParsedRecipe {
+  return { kind: "cheese", name: "", rows: [], ...r };
+}
+
+function specParse(recipes: ParsedRecipe[]): ParsedSpecImport {
+  return { profiles: [], recipes };
+}
+
+describe("collectSpecImportMixes", () => {
+  it("routes a 2+ ingredient cheese recipe named like a mix, carrying names + scope", () => {
+    const parsed = specParse([
+      specRecipe({
+        name: "White Fajita Mix",
+        brand: "Hannaford",
+        flavor: "Fajita",
+        rows: [
+          { ingredient: "Mozzarella", lbs: 3 },
+          { ingredient: "Cheddar", lbs: 1 },
+        ],
+      }),
+    ]);
+    const mixes = collectSpecImportMixes(parsed, new Set());
+    expect(mixes).toHaveLength(1);
+    expect(mixes[0]).toMatchObject({
+      name: "White Fajita Mix",
+      brand: "Hannaford",
+      flavor: "Fajita",
+      components: [
+        { ingredient: "Mozzarella", perPizza: 3 },
+        { ingredient: "Cheddar", perPizza: 1 },
+      ],
+    });
+  });
+
+  it("does NOT route a plain cheese recipe or a single-ingredient 'mix'", () => {
+    const parsed = specParse([
+      specRecipe({ name: "Mozzarella", rows: [{ ingredient: "Mozzarella", lbs: 4 }] }),
+      specRecipe({ name: "Blend Mix", rows: [{ ingredient: "Cheddar", lbs: 4 }] }),
+      specRecipe({ name: "Cheese Mix", rows: [
+        { ingredient: "A", lbs: 1 },
+        { ingredient: "B", lbs: 1 },
+      ] }),
+    ]);
+    expect(collectSpecImportMixes(parsed, new Set())).toEqual([]);
+  });
+
+  it("recognizes a recipe named like a mix the user already keeps", () => {
+    // Cheesy components, no mix/blend word: only the "named like a mix the
+    // user already keeps" rule can route this (the non-cheesy-components
+    // default-to-mix rule must not fire).
+    const parsed = specParse([
+      specRecipe({ name: "Secret Topping", rows: [
+        { ingredient: "Mozzarella", lbs: 1 },
+        { ingredient: "Cheddar", lbs: 1 },
+      ] }),
+    ]);
+    expect(collectSpecImportMixes(parsed, new Set())).toEqual([]);
+    const mixes = collectSpecImportMixes(parsed, new Set(["secret topping"]));
+    expect(mixes).toHaveLength(1);
+    expect(mixes[0].name).toBe("Secret Topping");
+  });
+
+  it("honors the review-time forcedCategory override both ways", () => {
+    const parsed = specParse([
+      specRecipe({ name: "Force In", forcedCategory: "mix", rows: [{ ingredient: "A", lbs: 1 }] }),
+      specRecipe({ name: "Fajita Mix", forcedCategory: "cheese", rows: [
+        { ingredient: "A", lbs: 1 },
+        { ingredient: "B", lbs: 1 },
+      ] }),
+    ]);
+    const mixes = collectSpecImportMixes(parsed, new Set());
+    expect(mixes.map((m) => m.name)).toEqual(["Force In"]);
+  });
+
+  it("de-dupes by name and drops duplicate ingredient rows", () => {
+    const parsed = specParse([
+      specRecipe({ name: "Buffalo Mix", rows: [
+        { ingredient: "Sauce", lbs: 1 },
+        { ingredient: "sauce", lbs: 2 },
+      ] }),
+      specRecipe({ name: "buffalo mix", rows: [{ ingredient: "X", lbs: 1 }, { ingredient: "Y", lbs: 1 }] }),
+    ]);
+    const mixes = collectSpecImportMixes(parsed, new Set());
+    expect(mixes).toHaveLength(1);
+    expect(mixes[0].components.map((c) => c.ingredient)).toEqual(["Sauce"]);
+  });
+
+  it("skips all-zero amounts so a name-only spec cannot create a mix stub", () => {
+    const parsed = specParse([
+      specRecipe({
+        name: "Awaiting Premix Workbook",
+        rows: [
+          { ingredient: "Sauce", lbs: 0 },
+          { ingredient: "Seasoning", lbs: 0 },
+        ],
+      }),
+    ]);
+
+    expect(collectSpecImportMixes(parsed, new Set())).toEqual([]);
+  });
+});
+
+describe("specMixDraftToMix", () => {
+  it("builds a normalized Mix carrying ingredient names and per-pizza oz from spec", () => {
+    const mix = specMixDraftToMix({
+      name: "White Fajita Mix",
+      brand: "Hannaford",
+      flavor: "Fajita",
+      components: [
+        { ingredient: "Mozzarella", perPizza: 2.5 },
+        { ingredient: "Cheddar", perPizza: 1.5 },
+      ],
+    });
+    expect(mix).not.toBeNull();
+    expect(mix).toMatchObject({
+      name: "White Fajita Mix",
+      brand: "Hannaford",
+      flavor: "Fajita",
+      batchSize: 0,
+      components: [
+        { ingredient: "Mozzarella", perPizza: 2.5 },
+        { ingredient: "Cheddar", perPizza: 1.5 },
+      ],
+    });
+  });
+
+  it("preserves perPizza 0 when the spec sheet had no amount for an ingredient", () => {
+    const mix = specMixDraftToMix({
+      name: "Buffalo Mix",
+      brand: "",
+      flavor: "",
+      components: [{ ingredient: "Sauce", perPizza: 0 }],
+    });
+    expect(mix?.components[0].perPizza).toBe(0);
+  });
+
+  it("shares premixId so a spec mix and a premix of the same product converge", () => {
+    const draft = { name: "Buffalo Mix", brand: "Bob", flavor: "Buffalo", components: [{ ingredient: "A", perPizza: 1 }] };
+    const mix = specMixDraftToMix(draft);
+    expect(mix!.id).toBe(premixId({ brand: "Bob", flavor: "Buffalo", name: "Buffalo Mix" }));
+  });
+
+  it("returns null for a blank name", () => {
+    expect(specMixDraftToMix({ name: "  ", brand: "", flavor: "", components: [] })).toBeNull();
+  });
+});
+
+describe("suggestPremixRedirects brand scope", () => {
+  function pMix(over: Partial<Mix> & { id: string; name: string }): Mix {
+    return {
+      brand: "",
+      flavor: "",
+      batchSize: 0,
+      daysEarly: 0,
+      amountAlreadyMade: 0,
+      components: [],
+      enabled: true,
+      ...over,
+    };
+  }
+  const luciaTaco = pMix({ id: "lucia-taco", name: "Taco Mix", brand: "Lucia's" });
+  const marcoTaco = pMix({ id: "marco-taco", name: "Taco Mix", brand: "Marco's" });
+
+  it("a brand-scoped alias only fires for that brand's candidates", () => {
+    const aliases = [
+      { kind: "appType", externalName: "Taco Blend", canonicalName: "Taco Mix", context: "Lucia's" },
+    ];
+    const lucia = suggestPremixRedirects(
+      [{ mix: pMix({ id: "s1", name: "Taco Blend", brand: "Lucia's" }), status: "new" as const }],
+      [luciaTaco, marcoTaco],
+      aliases,
+    );
+    expect(lucia).toEqual({ s1: "lucia-taco" });
+    const marco = suggestPremixRedirects(
+      [{ mix: pMix({ id: "s2", name: "Taco Blend", brand: "Marco's" }), status: "new" as const }],
+      [luciaTaco, marcoTaco],
+      aliases,
+    );
+    expect(marco).toEqual({});
+  });
+
+  it("a brand-scoped alias beats the context-free one", () => {
+    const other = pMix({ id: "lucia-other", name: "House Blend", brand: "Lucia's" });
+    const out = suggestPremixRedirects(
+      [{ mix: pMix({ id: "s1", name: "Shorthand", brand: "Lucia's" }), status: "new" as const }],
+      [luciaTaco, other],
+      [
+        { kind: "appType", externalName: "Shorthand", canonicalName: "Taco Mix", context: null },
+        { kind: "appType", externalName: "Shorthand", canonicalName: "House Blend", context: "Lucia's" },
+      ],
+    );
+    expect(out).toEqual({ s1: "lucia-other" });
+  });
+
+  it("ambiguous canonical name resolves to the candidate's own brand, never another brand's mix", () => {
+    const out = suggestPremixRedirects(
+      [{ mix: pMix({ id: "s1", name: "Taco Blend", brand: "Marco's" }), status: "new" as const }],
+      [luciaTaco, marcoTaco],
+      [{ kind: "appType", externalName: "Taco Blend", canonicalName: "Taco Mix", context: null }],
+    );
+    expect(out).toEqual({ s1: "marco-taco" });
+    // Unknown third brand → ambiguous, no suggestion.
+    const none = suggestPremixRedirects(
+      [{ mix: pMix({ id: "s2", name: "Taco Blend", brand: "Bobos" }), status: "new" as const }],
+      [luciaTaco, marcoTaco],
+      [{ kind: "appType", externalName: "Taco Blend", canonicalName: "Taco Mix", context: null }],
+    );
+    expect(none).toEqual({});
+  });
+});

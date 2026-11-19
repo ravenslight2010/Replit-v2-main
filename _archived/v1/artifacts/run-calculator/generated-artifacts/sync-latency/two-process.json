@@ -1,0 +1,67 @@
+{
+  "environment": "isolated-two-process",
+  "network": "loopback-unthrottled",
+  "capturedAt": "2026-11-06T23:09:57.170Z",
+  "samples": [
+    {
+      "ackMs": 11,
+      "peerMs": 14,
+      "bytes": 772,
+      "serverTiming": "sync_acquire;dur=0.4, sync_lock_read;dur=1.3, sync_transaction;dur=5.2, sync_handler;dur=8.2"
+    },
+    {
+      "ackMs": 9,
+      "peerMs": 12,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.5, sync_lock_read;dur=1.0, sync_transaction;dur=4.4, sync_handler;dur=7.3"
+    },
+    {
+      "ackMs": 10,
+      "peerMs": 12,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.3, sync_lock_read;dur=2.6, sync_transaction;dur=5.7, sync_handler;dur=8.1"
+    },
+    {
+      "ackMs": 10,
+      "peerMs": 13,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.4, sync_lock_read;dur=1.3, sync_transaction;dur=4.4, sync_handler;dur=8.0"
+    },
+    {
+      "ackMs": 11,
+      "peerMs": 14,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.9, sync_lock_read;dur=1.6, sync_transaction;dur=6.3, sync_handler;dur=8.9"
+    },
+    {
+      "ackMs": 9,
+      "peerMs": 12,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.3, sync_lock_read;dur=1.3, sync_transaction;dur=4.4, sync_handler;dur=7.3"
+    },
+    {
+      "ackMs": 10,
+      "peerMs": 13,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.3, sync_lock_read;dur=1.0, sync_transaction;dur=3.9, sync_handler;dur=7.5"
+    },
+    {
+      "ackMs": 8,
+      "peerMs": 11,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.3, sync_lock_read;dur=1.1, sync_transaction;dur=3.7, sync_handler;dur=6.5"
+    },
+    {
+      "ackMs": 8,
+      "peerMs": 9,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.3, sync_lock_read;dur=1.1, sync_transaction;dur=3.7, sync_handler;dur=6.2"
+    },
+    {
+      "ackMs": 7,
+      "peerMs": 11,
+      "bytes": 801,
+      "serverTiming": "sync_acquire;dur=0.2, sync_lock_read;dur=0.9, sync_transaction;dur=3.4, sync_handler;dur=5.7"
+    }
+  ]
+}

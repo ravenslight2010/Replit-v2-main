@@ -1,0 +1,2820 @@
+// Excel spec-sheet importer — web orchestration glue.
+//
+// Pipeline: read the .xlsx into a SheetGrid[] → flatten to compact prompt text →
+// call the read-only AI parse endpoint → canonicalize the returned names against
+// the app's known lists (learned aliases first, then exact, then confident
+// fuzzy) → summarize new-vs-updated → on confirm, write profiles + recipe
+// presets (overwrite existing, add new) and persist any newly learned aliases.
+//
+// All pure logic lives in @workspace/spec-import; storage writes live in
+// storage.ts. This module only sequences them. Mirrors the mobile glue in
+// artifacts/run-calculator-mobile/context/specImport.ts (replit.md parity).
+
+import * as XLSX from "xlsx";
+import {
+  applyNameMatches,
+  blendLinkSuggestionKey,
+  crossFamilyRoutingSuggestionKey,
+  canonicalize,
+  collectMatchCandidates,
+  collectSpecAliases,
+  collectSpecImportMixes,
+  collectSpecImportMixesByBrandScope,
+  collectSpecImportCheeseLinkSuggestions,
+  collectSpecImportCheeseRecipes,
+  applySpecImportBlendNameAliases,
+  canonicalizeSpecImportCheeseRecipeNames,
+  canonicalizeSpecImportNamedRecipeNames,
+  cleanSpecCheeseRecipeName,
+  dedupeSpecImportCheeseRecipes,
+  sanitizeSpecAliases,
+  pickAlias,
+  linkSpecImportCheeseToExisting,
+  linkSpecImportNamedRecipesToExisting,
+  specImportDoughFamilyHintFromFileName,
+  linkSpecImportDieTypesToExisting,
+  crossFillSpecImport,
+  fillSpecCheeseTargetsFromProfiles,
+  findOverflowColumnRows,
+  findTruncatedCells,
+  extractEmbeddedApplicatorBlends,
+  formatOverflowColumnsNote,
+  formatTruncatedCellsNote,
+  gridSanityIssue,
+  gridsToPromptText,
+  mergeParsedSpecImports,
+  mergePruneSnapshots,
+  partitionTombstonedParse,
+  pruneSpecImportAgainstSnapshot,
+  recipeLinkSuggestionKey,
+  recipeTargets,
+  resolveRetriedParsePass,
+  shouldRetryParsePass,
+  specImportNameMatchKey,
+  specImportNamedRecipeNamesEqual,
+  splitGridsForPrompt,
+  summarizeSpecImport,
+  updateRecipePoolComponents,
+  countUsableRecipeRows,
+  type CanonicalResult,
+  type ExtraNameMatches,
+  type NameMatch,
+  type ParsedProfile,
+  type ParsedRecipe,
+  type ParsedRecipeTarget,
+  type ParsedSpecImport,
+  type ScopedNameMatch,
+  type SheetGrid,
+  type SpecAliasKind,
+  type SpecImportAlias,
+  type SpecImportLinkSuggestion,
+  type SpecImportSkipped,
+  type SpecImportSummary,
+  type SpecMatchKnown,
+  type OverflowColumnRow,
+  type TruncatedCell,
+  type ImportMergeAlias,
+  type ImportMergeAliasMap,
+  resolveImportName,
+} from "@workspace/spec-import";
+import {
+  buildImportReview,
+  reconcileSpecWithRecipes,
+  toReconcileRecipes,
+  type Discrepancy,
+  type ImportReview,
+  type ReconcileRecipe,
+} from "@workspace/spec-reconcile";
+import {
+  loadSpecImportKnown,
+  profileExistsForImport,
+  recipeExistsForImport,
+  importProfileIsTombstoned,
+  recipeNameIsTombstoned,
+  applySpecImport,
+  loadCurrentFormulaRecipes,
+  isNameDeleted,
+  flavorNamespace,
+  type SpecImportServerPoolRecipe,
+  type SpecImportNameCorrection,
+} from "./storage";
+import { fetchSpecImportAliases, saveSpecImportAliases, deleteSpecImportAliases } from "./specImportAliases";
+import {
+  canonicalProfileKey,
+  flushProfileQueueStrict,
+  markProfileForceEdited,
+} from "./profileServerSync";
+import {
+  saveSpecSheet,
+  fetchSavedSpecSheets,
+  buildSpecSheetLabel,
+  deriveSourceKey,
+  selectPruneSnapshots,
+  selectReusableSnapshot,
+  type SavedSpecSheet,
+  loadCurrentReconcileRecipes,
+} from "./savedSpecSheets";
+import {
+  requestParseSpecSheet,
+  makeParseCallPacer,
+  ParseSpecRateLimitError,
+  PARSE_RATE_WINDOW_MS,
+} from "./parseSpecSheet";
+import { requestMatchImport } from "./matchImport";
+import { fetchMergeAliases } from "./mergeSuggest";
+import { saveAiCorrections } from "./aiCorrections";
+import { fetchMixes, saveMixes } from "./mixes";
+import { fetchCheeseRecipes, saveCheeseRecipes } from "./cheeseRecipes";
+import { addNamedRecipesToServerIfAbsent, fetchNamedRecipes, saveNamedRecipes } from "./namedRecipes";
+import { fetchDieLineDefaults, toOverridesMap } from "./dieLineDefaultsServer";
+import type { DieLineDefaultsOverrides } from "./dieDefaults";
+import { parseDoughCustomerSection, parseDoughVariantTable, SPEC_STATIC_CUSTOMER_ASSIGNMENTS, type NamedRecipe as PoolNamedRecipe, type DoughCustomerAssignment, type DoughVariantTableEntry } from "@workspace/named-recipes";
+import { specMixDraftToMix } from "@workspace/premix-import";
+import { addSpecMixesIfAbsent, applyMixPerPizza, applyNewMixComponents, detectNewMixComponents, fillSpecMixTags, type Mix, type MixComponent } from "@workspace/mixes";
+import {
+  specCheeseDraftToRecipe,
+  addCheeseRecipesIfAbsentByName,
+  fillCheeseRecipeTags,
+  type CheeseRecipe,
+} from "@workspace/cheese-recipes";
+import type { ReviewVerdict } from "@workspace/ai-review";
+import {
+  classifyFormulaChanges,
+  type FormulaChange,
+  type FormulaRecipe,
+} from "@workspace/formula-guard";
+
+export type SpecFlaggedItem = { label: string; review: ReviewVerdict };
+
+export class ImportReviewReconfirmationError extends Error {
+  constructor(readonly importReview: ImportReview) {
+    super("The live recipe library changed this import's review. Please review the updated changes and confirm again.");
+    this.name = "ImportReviewReconfirmationError";
+  }
+}
+
+export function importReviewSignature(review: ImportReview): string {
+  return JSON.stringify({
+    changes: review.changes.map(({ kind, entity, before, after, requiresConfirmation, message }) => ({
+      kind, entity, before, after, requiresConfirmation: !!requiresConfirmation, message,
+    })),
+    counts: review.counts,
+    requiresExplicitConfirmation: review.requiresExplicitConfirmation,
+    confirmationReasons: review.confirmationReasons,
+  });
+}
+
+function assertNamedRecipeWriteLanded(
+  saved: ReadonlyArray<{ name: string; components?: ReadonlyArray<{ ingredient: string; lbs: number }> }>,
+  updates: ReadonlyArray<{ name: string; rows: ReadonlyArray<{ ingredient: string; lbs: number }> }>,
+): void {
+  if (!Array.isArray(saved)) return;
+  for (const update of updates) {
+    const landed = saved.find(
+      (recipe) => recipe.name.trim().toLowerCase() === update.name.trim().toLowerCase(),
+    );
+    if (!landed || countUsableRecipeRows(landed.components) < countUsableRecipeRows(update.rows)) {
+      throw new Error(
+        `Import incomplete: recipe "${update.name}" landed with fewer components than the normalized source.`,
+      );
+    }
+  }
+}
+
+export type SpecImportPrepared = {
+  /** Canonicalized, ready-to-apply parse result. */
+  parsed: ParsedSpecImport;
+  summary: SpecImportSummary;
+  /** New label→canonical mappings learned this import (persisted on confirm). */
+  newAliases: SpecImportAlias[];
+  /** Reviewer-AI flags on parsed profiles/recipes (warn/reject only; advisory). */
+  flagged: SpecFlaggedItem[];
+  /**
+   * Deterministic diff of the incoming spec recipes against the CURRENT recipe
+   * library — i.e. exactly what applying this import would change. Advisory; no
+   * AI involved.
+   */
+  discrepancies: Discrepancy[];
+  /** Ingredient-level formula changes, with batch/per-pizza semantics retained. */
+  formulaChanges?: FormulaChange[];
+  /** Complete deterministic manifest of the additions/removals this import can make. */
+  importReview: ImportReview;
+  destructiveChangesAcknowledged?: boolean;
+  destructiveReviewSignature?: string;
+  profilesMarkedForRemoval?: Array<{ brand: string; flavor: string }>;
+  /**
+   * Factory ingredient-merge history captured during preparation. The review
+   * dialog reuses it when edited rows are reconciled synchronously, so a current
+   * legacy ingredient and its canonical sheet name compare as the same item.
+   * Omitted when the alias request is unavailable; reconciliation then keeps its
+   * prior exact-name behavior and never suppresses a real warning.
+   */
+  ingredientMergeAliases?: ReadonlyArray<ImportMergeAlias>;
+  /**
+   * Profiles/recipes this import would have re-created but the user previously
+   * merged or deleted away. Excluded from `parsed` (so the merge sticks), but
+   * surfaced in the review so the user can knowingly re-include one if they meant
+   * to bring it back.
+   */
+  skipped: SpecImportSkipped;
+  /** Known brands + flavors-by-brand for the review's product-match pickers. */
+  brands: string[];
+  flavorsByBrand: Record<string, string[]>;
+  /** Uploaded filename(s) for this import — used for per-file snapshot retention. */
+  sourceNames?: string[];
+  /**
+   * SHA-256 content fingerprint of the uploaded file bytes (per-file hashes
+   * sorted + re-hashed for multi-file imports). Saved with the snapshot so a
+   * later re-import of the EXACT same file reuses the stored parse instead of
+   * re-running the AI (whose read of the same sheet can drift between calls).
+   */
+  sourceHash?: string;
+  /**
+   * Previously learned "use existing recipe" picks (sheet blend/mix name →
+   * existing saved recipe name, lower-cased key). The review dialog uses these
+   * to PRE-SELECT the "Use existing" picker for cheese/mix recipes so a
+   * re-import of a known sheet recommends linking instead of "create new".
+   * Advisory only — the user can still clear or change the pick.
+   */
+  aliasLinkSuggestions?: Record<string, string>;
+  /**
+   * Pizza profiles (brand+flavor) present in the PREVIOUS saved snapshot for
+   * this file but absent from the new parse — likely renamed or removed from
+   * the customer's workbook. Surfaced in the review dialog as an unchecked
+   * "No longer in this workbook" section; checking one and confirming removes
+   * it through the normal profile-tombstone path. Only populated when a
+   * previous snapshot exists for the same file. Empty on reused-parse imports
+   * (unchanged file → no profiles can have been removed).
+   */
+  profilesRemovedFromWorkbook?: Array<{brand: string; flavor: string}>;
+  note?: string;
+  /**
+   * New ingredient rows the spec sheet added to EXISTING mixes — components
+   * present in the import but missing from the saved mix. Populated during
+   * prepare (best-effort; absent when offline or no existing mixes). The
+   * manager accepts or skips per mix in the review dialog; only the accepted
+   * entries are appended during commit. Absent = nothing new detected.
+   */
+  newMixIngredients?: Array<{ mixName: string; brand: string; newComponents: MixComponent[] }>;
+  /**
+   * Customer assignments parsed deterministically from dough mixing procedure
+   * sheet header rows (format: "{Brand [qualifier]}: {flavor, …}"). Populated
+   * on fresh parses of workbooks that contain such a section; omitted for
+   * sauce/spec-only imports. Applied at commit time to populate `customers` on
+   * doughball variants so matchDoughballVariant can auto-pick the right weight
+   * from brand+flavor alone (e.g. "Lucia's Craft BBQ Chicken → Basha's Ultra
+   * Thin variant"), without needing a die-type entry on the profile.
+   */
+  doughCustomerAssignments?: DoughCustomerAssignment[];
+  /**
+   * Doughball variant rows parsed deterministically from the yield table in the
+   * dough mixing procedure workbook (the "OZ / LBS / YIELD / PER TRAY" table).
+   * Supplements the AI-parsed recipes: on workbooks that cover multiple product
+   * families in one batch formula (e.g. "BRAND & CORKY'S DOUGH MIXING
+   * PROCEDURE"), the AI may omit variant rows whose label name doesn't match
+   * the main family (e.g. it drops "CORKY'S 7" DOUGH" from a Brand+Corky's
+   * shared-formula workbook). At commit time these entries are folded into the
+   * doughVariants map under whichever family name the AI-collapsed recipes
+   * landed on, ensuring every row in the yield table appears in the pool.
+   */
+  doughVariantsFromTable?: DoughVariantTableEntry[];
+};
+
+/**
+ * Build the review's link suggestions from the saved learned aliases. Cheese
+ * blend / mix name links are stored under the "appType" kind (the applicator /
+ * blend-name namespace) — the same pool the user's confirmed "Use existing"
+ * picks are written back to on Apply.
+ */
+export function buildAliasLinkSuggestions(aliases: SpecImportAlias[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  // Sanitize FIRST: poisoned rows (generic "Mix"/"cheese" names, digit
+  // mismatches, cycles) must never become pre-selected "Use existing" picks —
+  // a generic-name suggestion links every blend to one garbage pool record
+  // AND gets re-learned on Apply, making the poison self-perpetuating.
+  for (const a of sanitizeSpecAliases(aliases)) {
+    const canon = a.canonicalName.trim();
+    if (a.kind === "appType") {
+      const ext = a.externalName.trim().toLowerCase();
+      if (!ext || !canon || ext === canon.toLowerCase()) continue;
+      const brandCtx = (a.context ?? "").trim();
+      // Brand-scoped rows (saved alongside the context-free row since picks
+      // became brand-aware) go under a brand-scoped key so two brands using
+      // the same generic blend name each keep their OWN remembered pick;
+      // context-free rows keep the legacy plain-name key (the cross-brand
+      // fallback).
+      if (brandCtx) out[blendLinkSuggestionKey(brandCtx, ext)] = canon;
+      else out[ext] = canon;
+    } else if (a.kind === "recipeName") {
+      // Dough/sauce "use existing" picks, scoped by kind via context so a
+      // dough link never pre-selects on a sauce row (or vice versa).
+      const ext = a.externalName.trim();
+      const kindCtx = (a.context ?? "").trim();
+      if (!ext || !canon || !kindCtx) continue;
+      if (ext.toLowerCase() === canon.toLowerCase()) continue;
+      out[recipeLinkSuggestionKey(kindCtx, ext)] = canon;
+    } else if (a.kind === "crossFamilyRouting") {
+      // Cross-family routing hints: a recipe the AI routed to one display
+      // kind (cheese/mix) that the user manually reclassified to the other.
+      // Encoded as "targetKind:linkedRecipeName" so the review dialog can
+      // restore both pieces from a single suggestion-map entry.
+      const ext = a.externalName.trim();
+      const linkName = canon; // canonicalName = linked recipe name
+      const targetKind = (a.context ?? "").trim(); // "cheese" or "mix"
+      if (!ext || !linkName || (targetKind !== "cheese" && targetKind !== "mix")) continue;
+      out[crossFamilyRoutingSuggestionKey(ext)] = `${targetKind}:${linkName}`;
+    }
+  }
+  return out;
+}
+
+// Map a learned spec-import alias kind to a shared-corrections domain.
+function aliasKindToDomain(kind: SpecAliasKind): string {
+  if (kind === "brand") return "brand";
+  if (kind === "flavor") return "flavor";
+  if (kind === "appType" || kind === "pepType" || kind === "recipeName") return "item";
+  // dough/sauce/cheese ingredient kinds
+  return "ingredient";
+}
+
+/** Read an .xlsx File/Blob into flat sheet grids (string cells). */
+export async function readWorkbookGrids(data: ArrayBuffer): Promise<SheetGrid[]> {
+  const wb = XLSX.read(data, { type: "array" });
+  const grids: SheetGrid[] = [];
+  for (const name of wb.SheetNames) {
+    const ws = wb.Sheets[name];
+    if (!ws) continue;
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, {
+      header: 1,
+      defval: "",
+      blankrows: false,
+    });
+    grids.push({
+      name,
+      rows: rows.map(r => (Array.isArray(r) ? r.map(c => (c == null ? "" : String(c))) : [])),
+    });
+  }
+  return grids;
+}
+
+function recipeKindToAliasKind(kind: "dough" | "sauce" | "cheese"): SpecAliasKind {
+  if (kind === "dough") return "doughIngredient";
+  if (kind === "sauce") return "sauceIngredient";
+  return "cheeseIngredient";
+}
+
+function ingredientKnownForKind(
+  kind: "dough" | "sauce" | "cheese",
+  known: ReturnType<typeof loadSpecImportKnown>,
+): string[] {
+  if (kind === "cheese") return known.cheeseIngredients;
+  if (kind === "dough") return known.doughIngredients;
+  return known.sauceIngredients; // sauce recipes ground against the frontline/sauce ingredient pool
+}
+
+/**
+ * Alias-only rename/merge remap for the saved-parse REUSE path. A fresh parse
+ * runs full canonicalizeParsed, but a reused snapshot keeps every name as it
+ * was when first imported — if a brand/flavor/ingredient/type was later merged
+ * or renamed, the old name would either be DROPPED by the tombstone partition
+ * or resurrected under the dead name. Applying ALL the learned rename aliases
+ * (recorded on merges/renames) first remaps them onto the current names so the
+ * re-import updates them instead:
+ *   • brand/flavor on profiles, recipes, targets, and warnings
+ *   • applicator types (appType) and pepperoni types (pepType) on profiles
+ *   • recipe-row ingredients (dough/sauce/cheeseIngredient by recipe kind)
+ * Applicator types that name a cheese RECIPE parsed from this same sheet are
+ * kept verbatim — same guard as canonicalizeParsed: the slot resolvers
+ * loose-match those types against the import's recipe names, and renaming
+ * them here would disconnect the slot from its recipe.
+ * Alias-only on purpose: no exact/fuzzy re-snapping of a parse the user
+ * already reviewed. Pure given its inputs.
+ */
+function applyBrandFlavorAliasesToParse(
+  parsed: ParsedSpecImport,
+  aliases: SpecImportAlias[],
+): ParsedSpecImport {
+  const usable = sanitizeSpecAliases(aliases);
+  const mapBrand = (b: string): string => pickAlias(usable, "brand", b) ?? b;
+  const mapFlavor = (f: string, brand: string): string =>
+    pickAlias(usable, "flavor", f, brand) ?? f;
+
+  // Same-sheet cheese blend names: applicator types matching them must stay
+  // verbatim (see doc comment above / canonicalizeParsed's blendTypeKeys).
+  const blendTypeKeys = new Set<string>();
+  for (const r of parsed.recipes) {
+    if (r.kind !== "cheese") continue;
+    const key = specImportNameMatchKey(cleanSpecCheeseRecipeName(r.name ?? ""));
+    if (key) blendTypeKeys.add(key);
+  }
+  const isBlendNamedType = (type: string): boolean => {
+    const key = specImportNameMatchKey(cleanSpecCheeseRecipeName(type));
+    return !!key && blendTypeKeys.has(key);
+  };
+  const mapAppType = (t: string): string =>
+    isBlendNamedType(t) ? t : pickAlias(usable, "appType", t) ?? t;
+  const mapPepType = (t: string): string => pickAlias(usable, "pepType", t) ?? t;
+  const mapDieType = (d: string | undefined): string | undefined => {
+    const raw = (d ?? "").trim();
+    if (!raw) return d;
+    return pickAlias(usable, "dieType", raw) ?? d;
+  };
+
+  const profiles = parsed.profiles.map(p => {
+    const brand = mapBrand(p.brand);
+    const flavor = mapFlavor(p.flavor, brand);
+    const dieType = mapDieType(p.dieType);
+    const applicators = p.applicators.map(a => {
+      const type = mapAppType(a.type);
+      return type === a.type ? a : { ...a, type };
+    });
+    const pepperonis = p.pepperonis.map(pep => {
+      const type = mapPepType(pep.type);
+      return type === pep.type ? pep : { ...pep, type };
+    });
+    if (
+      brand === p.brand &&
+      flavor === p.flavor &&
+      dieType === p.dieType &&
+      applicators.every((a, i) => a === p.applicators[i]) &&
+      pepperonis.every((pep, i) => pep === p.pepperonis[i])
+    ) {
+      return p;
+    }
+    return {
+      ...p,
+      brand,
+      flavor,
+      applicators,
+      pepperonis,
+      ...(dieType !== undefined ? { dieType } : {}),
+    };
+  });
+  const recipes = parsed.recipes.map(r => {
+    const brand = r.brand ? mapBrand(r.brand) : r.brand;
+    const flavor = r.flavor && brand ? mapFlavor(r.flavor, brand) : r.flavor;
+    const targets = r.targets?.map((t): ParsedRecipeTarget => {
+      const tb = mapBrand(t.brand);
+      return { brand: tb, flavor: mapFlavor(t.flavor, tb) };
+    });
+    const ingredientKind = recipeKindToAliasKind(r.kind);
+    const rows = r.rows.map(row => {
+      const ingredient = pickAlias(usable, ingredientKind, row.ingredient) ?? row.ingredient;
+      return ingredient === row.ingredient ? row : { ...row, ingredient };
+    });
+    if (
+      brand === r.brand &&
+      flavor === r.flavor &&
+      rows.every((row, i) => row === r.rows[i]) &&
+      (!targets || targets.every((t, i) => t.brand === r.targets![i].brand && t.flavor === r.targets![i].flavor))
+    ) {
+      return r;
+    }
+    return {
+      ...r,
+      rows,
+      ...(brand !== undefined ? { brand } : {}),
+      ...(flavor !== undefined ? { flavor } : {}),
+      ...(targets ? { targets } : {}),
+    };
+  });
+  const warnings = parsed.warnings?.map(w => {
+    const brand = mapBrand(w.brand);
+    return { ...w, brand, flavor: mapFlavor(w.flavor, brand) };
+  });
+  return { ...parsed, profiles, recipes, ...(warnings ? { warnings } : {}) };
+}
+
+/**
+ * Canonicalize every name in the AI result against the app's known lists +
+ * learned aliases, returning a clean ParsedSpecImport plus the alias pairs worth
+ * remembering. Pure given its inputs.
+ */
+function canonicalizeParsed(
+  raw: ParsedSpecImport,
+  known: ReturnType<typeof loadSpecImportKnown>,
+  aliases: SpecImportAlias[],
+): { parsed: ParsedSpecImport; resolved: { kind: SpecAliasKind; result: CanonicalResult; context?: string | null }[] } {
+  const resolved: { kind: SpecAliasKind; result: CanonicalResult; context?: string | null }[] = [];
+  const track = (kind: SpecAliasKind, result: CanonicalResult, context: string | null = null) => {
+    resolved.push({ kind, result, context });
+    return result.value;
+  };
+
+  // Applicator slots whose grid cell names a cheese/mix RECIPE parsed from this
+  // same sheet must keep the sheet's blend name VERBATIM: applySpecImport's
+  // slot resolvers (resolveCheeseApplicatorSlots / resolveMixApplicatorSlots)
+  // re-type those slots to the generic "cheese"/"Mix" card by loose-matching the
+  // applicator type against the import's recipe names. Letting an appType alias
+  // (the blend-name namespace — learned from "Use existing recipe" picks) or a
+  // fuzzy appType match rename the type here silently disconnects the slot from
+  // its recipe (e.g. the user declines the suggested link and creates new), and
+  // the blend leaks into the raw applicator Type dropdown instead of the
+  // cheese/mix slot. Link decisions are the review dialog's job, never a
+  // prepare-time rename.
+  const blendTypeKeys = new Set<string>();
+  for (const r of raw.recipes) {
+    if (r.kind !== "cheese") continue;
+    const key = specImportNameMatchKey(cleanSpecCheeseRecipeName(r.name ?? ""));
+    if (key) blendTypeKeys.add(key);
+  }
+  const isBlendNamedType = (type: string): boolean => {
+    const key = specImportNameMatchKey(cleanSpecCheeseRecipeName(type));
+    return !!key && blendTypeKeys.has(key);
+  };
+
+  // Profile-level dough/sauce TYPE assignments honor learned "recipeName"
+  // aliases (the user's prior review-time renames / "use existing" picks for
+  // dough & sauce recipes) so a re-import applies the user's reassignment
+  // instead of resurrecting the raw sheet name — even when the recipe itself
+  // isn't in this sheet. Alias-only on purpose: exact/fuzzy snapping to the
+  // saved pools is the link pass's job (it has stronger near-dup guards).
+  const usableAliases = sanitizeSpecAliases(aliases);
+  const aliasNamedRecipe = (
+    nm: string | undefined,
+    kindCtx: "dough" | "sauce",
+  ): string | undefined => {
+    const raw = (nm ?? "").trim();
+    if (!raw) return undefined;
+    return pickAlias(usableAliases, "recipeName", raw, kindCtx) ?? undefined;
+  };
+
+  const profiles = raw.profiles.map(p => {
+    const brand = track("brand", canonicalize(p.brand, known.brands, aliases, "brand"));
+    const knownFlavors = known.flavorsByBrand[brand] ?? [];
+    const flavor = track("flavor", canonicalize(p.flavor, knownFlavors, aliases, "flavor", brand), brand);
+    const doughAlias = aliasNamedRecipe(p.doughName, "dough");
+    const sauceAlias = aliasNamedRecipe(p.sauceName, "sauce");
+    // Die-type renames learned in Manage Lists: alias-only remap (no exact/
+    // fuzzy — the deterministic die link pass handles loose-key snapping) so
+    // a re-import lands on the renamed die instead of resurrecting the old
+    // picklist name.
+    const dieRaw = (p.dieType ?? "").trim();
+    const dieAlias = dieRaw ? pickAlias(usableAliases, "dieType", dieRaw) : null;
+    return {
+      ...p,
+      brand,
+      flavor,
+      ...(doughAlias ? { doughName: doughAlias } : {}),
+      ...(sauceAlias ? { sauceName: sauceAlias } : {}),
+      ...(dieAlias ? { dieType: dieAlias } : {}),
+      applicators: p.applicators.map(a =>
+        isBlendNamedType(a.type ?? "")
+          ? { ...a }
+          : {
+              ...a,
+              type: track("appType", canonicalize(a.type, known.appTypes, aliases, "appType")),
+            },
+      ),
+      pepperonis: p.pepperonis.map(pp => ({
+        ...pp,
+        type: track("pepType", canonicalize(pp.type, known.pepTypes, aliases, "pepType")),
+      })),
+    };
+  });
+
+  const recipes = raw.recipes.map(r => {
+    const aliasKind = recipeKindToAliasKind(r.kind);
+    const ingKnown = ingredientKnownForKind(r.kind, known);
+    const out = {
+      ...r,
+      rows: r.rows.map(row => ({
+        ...row,
+        ingredient: track(aliasKind, canonicalize(row.ingredient, ingKnown, aliases, aliasKind)),
+      })),
+    };
+    if (r.brand) {
+      out.brand = track("brand", canonicalize(r.brand, known.brands, aliases, "brand"));
+      if (r.flavor) {
+        const kf = known.flavorsByBrand[out.brand] ?? [];
+        out.flavor = track("flavor", canonicalize(r.flavor, kf, aliases, "flavor", out.brand), out.brand);
+      }
+    }
+    if (r.targets && r.targets.length) {
+      out.targets = r.targets.map((t): ParsedRecipeTarget => {
+        const brand = track("brand", canonicalize(t.brand, known.brands, aliases, "brand"));
+        const kf = known.flavorsByBrand[brand] ?? [];
+        const flavor = track("flavor", canonicalize(t.flavor, kf, aliases, "flavor", brand), brand);
+        return { brand, flavor };
+      });
+    }
+    return out;
+  });
+
+  // Canonicalize grounding-warning brand/flavor the same way (WITHOUT alias
+  // tracking — warnings aren't new names to learn) so each warning still keys to
+  // its profile row after canonicalization renames.
+  const warnings = (raw.warnings ?? []).map(w => {
+    const brand = canonicalize(w.brand, known.brands, aliases, "brand").value;
+    const kf = known.flavorsByBrand[brand] ?? [];
+    const flavor = canonicalize(w.flavor, kf, aliases, "flavor", brand).value;
+    return { ...w, brand, flavor };
+  });
+
+  return {
+    parsed: {
+      profiles,
+      recipes,
+      ...(raw.note ? { note: raw.note } : {}),
+      ...(warnings.length ? { warnings } : {}),
+    },
+    resolved,
+  };
+}
+
+type ParseCore = {
+  parsed: ParsedSpecImport;
+  resolved: ReturnType<typeof canonicalizeParsed>["resolved"];
+  flagged: SpecFlaggedItem[];
+  /** Rows dropped because the workbook was too large to chunk fully. */
+  droppedRows: number;
+  /** Cells whose tails were cut by the per-cell prompt clamp (AI never saw them). */
+  truncatedCells: TruncatedCell[];
+  /** Rows with non-empty cells past the column cap (dropped entirely, AI never saw them). */
+  overflowRows: OverflowColumnRow[];
+};
+
+/**
+ * Read one workbook → AI parse → canonicalize, returning the canonicalized
+ * parse, the resolved alias pairs, and the reviewer-AI flags for that single
+ * file. A workbook too large for one prompt is split into chunks and parsed in
+ * several calls (full ingestion instead of silent truncation); the per-chunk
+ * raw parses are merged before canonicalizing. Throws on a hard failure (empty
+ * workbook, AI unavailable/forbidden). Shared by the single- and multi-file
+ * prepare paths so they stay identical.
+ */
+async function parseWorkbookCore(
+  grids: SheetGrid[],
+  known: ReturnType<typeof loadSpecImportKnown>,
+  aliases: SpecImportAlias[],
+  signal?: AbortSignal,
+): Promise<ParseCore> {
+  if (signal?.aborted) throw signal.reason ?? new DOMException("Import cancelled", "AbortError");
+  // Cheap pre-AI guard: the xlsx reader does NOT throw on garbage bytes (a
+  // renamed PDF/image "reads" as one junk sheet), so reject empty or
+  // binary-junk grids BEFORE burning an AI parse call. In the multi-file path
+  // this throw becomes the per-file "could not be read … skipped" note.
+  const sanity = gridSanityIssue(grids);
+  if (sanity) {
+    throw new Error(sanity);
+  }
+  const { chunks, droppedRows } = splitGridsForPrompt(grids);
+  if (!chunks.length) {
+    throw new Error("That workbook looks empty — nothing to import.");
+  }
+  // Cells longer than the per-cell prompt clamp lose their tails before the AI
+  // reads them — detect these up front so the review can warn the user.
+  const truncatedCells = findTruncatedCells(grids);
+  // Sibling silent-loss path: rows wider than the column cap lose those extra
+  // cells ENTIRELY (not just their tails) — warn about those too.
+  const overflowRows = findOverflowColumnRows(grids);
+
+  const knownInput = {
+    brands: known.brands,
+    flavorsByBrand: known.flavorsByBrand,
+    appTypes: known.appTypes,
+    pepTypes: known.pepTypes,
+    cheeseIngredients: known.cheeseIngredients,
+    doughIngredients: known.doughIngredients,
+    sauceIngredients: known.sauceIngredients,
+    sauceNames: known.sauceNames,
+    dieTypes: known.dieTypes,
+    doughRecipes: known.doughRecipes,
+    sauceRecipes: known.sauceRecipes,
+    cheeseRecipes: known.cheeseRecipes,
+  };
+
+  // Rate-limit-safe pacing: the server permits 10 req/min per user.  Large
+  // imports with DEFAULT_MAX_PROMPT_CHUNKS chunks would hit the cap without
+  // pacing.  The pacer sleeps before each call when PARSE_PACE_SAFE_MAX calls
+  // have already been issued in the current window, leaving headroom for one
+  // automatic retry per chunk.
+  const pace = makeParseCallPacer({ signal });
+
+  const rawList: ParsedSpecImport[] = [];
+  const flagged: SpecFlaggedItem[] = [];
+  for (const chunk of chunks) {
+    if (signal?.aborted) throw signal.reason ?? new DOMException("Import cancelled", "AbortError");
+    const workbookText = gridsToPromptText(chunk);
+    if (!workbookText.trim()) continue;
+    await pace();
+    let ai: Awaited<ReturnType<typeof requestParseSpecSheet>>;
+    try {
+      ai = await requestParseSpecSheet({ workbookText, known: knownInput, aliases }, signal);
+    } catch (err) {
+      if (err instanceof ParseSpecRateLimitError) {
+        // Unexpected 429 despite pacing (e.g. concurrent imports by the same
+        // user).  Wait out the full window and retry once with a clean slate.
+        await new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(resolve, PARSE_RATE_WINDOW_MS);
+          const onAbort = () => {
+            clearTimeout(timer);
+            reject(signal?.reason ?? new DOMException("Import cancelled", "AbortError"));
+          };
+          signal?.addEventListener("abort", onAbort, { once: true });
+        });
+        await pace();
+        ai = await requestParseSpecSheet({ workbookText, known: knownInput, aliases }, signal);
+      } else {
+        throw err;
+      }
+    }
+    // One automatic retry for a failed pass on a non-trivial chunk: the model
+    // occasionally returns an empty/cut-off response for a single chunk, and
+    // without a retry the user's only recourse is re-running (and re-billing)
+    // the WHOLE import. Fail-safe: if the retry itself throws, keep the
+    // first (noted) result instead of failing the whole import.
+    if (shouldRetryParsePass(ai, workbookText)) {
+      try {
+        await pace();
+        const retry = await requestParseSpecSheet({ workbookText, known: knownInput, aliases });
+        ai = resolveRetriedParsePass(ai, retry);
+      } catch {
+        // Keep the original result (empty + note) — the note still surfaces.
+      }
+    }
+    rawList.push({
+      profiles: ai.profiles,
+      recipes: ai.recipes,
+      ...(ai.note ? { note: ai.note } : {}),
+      ...(ai.warnings?.length ? { warnings: ai.warnings } : {}),
+    });
+    // Reviewer-AI flags ride on the raw AI profiles/recipes (warn/reject only).
+    for (const p of ai.profiles) {
+      if (p.review && p.review.status !== "ok") {
+        flagged.push({ label: `${p.brand} / ${p.flavor}`.trim(), review: p.review });
+      }
+    }
+    for (const r of ai.recipes) {
+      if (r.review && r.review.status !== "ok") {
+        const tgts = recipeTargets(r);
+        const ctx = tgts.length
+          ? ` — ${tgts[0].brand}/${tgts[0].flavor}${tgts.length > 1 ? ` +${tgts.length - 1} more` : ""}`
+          : "";
+        flagged.push({ label: `${r.kind} recipe${ctx}`, review: r.review });
+      }
+    }
+  }
+
+  if (!rawList.length) {
+    throw new Error("That workbook looks empty — nothing to import.");
+  }
+
+  // Deterministic safety net over the MERGED workbook: unpack any blend
+  // composition the AI left embedded in an applicator cell (clean name → type,
+  // number+ingredient pairs → ONE cheese recipe). Must run post-merge, never
+  // per chunk — see extractEmbeddedApplicatorBlends.
+  const rawMerged = extractEmbeddedApplicatorBlends(
+    // Chunks of ONE workbook: union same-profile applicator/pepperoni lists —
+    // a chunk boundary can split a product's spec block, so the chunks'
+    // lists are complementary; the default wholesale replace would silently
+    // drop the earlier chunk's applicator weights.
+    rawList.length === 1 ? rawList[0] : mergeParsedSpecImports(rawList, { profileSlots: "union" }),
+  );
+  const { parsed, resolved } = canonicalizeParsed(rawMerged, known, aliases);
+
+  return { parsed, resolved, flagged, droppedRows, truncatedCells, overflowRows };
+}
+
+/**
+ * Second linking pass over a canonicalized parse: ask the AI matcher to fold any
+ * brand/flavor that canonicalized as "new" onto an existing saved one (so we
+ * update instead of duplicating), then conservatively cross-fill blank
+ * dieType/sauceOzPerPizza from agreeing same-brand siblings. Fail-safe: any AI
+ * error leaves the parse exactly as canonicalized. Returns the linked parse plus
+ * the brand/flavor aliases worth remembering.
+ */
+async function linkParsed(
+  parsed: ParsedSpecImport,
+  known: ReturnType<typeof loadSpecImportKnown>,
+  sourceNames?: ReadonlyArray<string>,
+): Promise<{
+  parsed: ParsedSpecImport;
+  matchAliases: SpecImportAlias[];
+  linkSuggestions: SpecImportLinkSuggestion[];
+}> {
+  let working = parsed;
+  const aliasByKey = new Map<string, SpecImportAlias>();
+  const recordAliases = (aliases: SpecImportAlias[]) => {
+    for (const a of aliases) aliasByKey.set(specMatchAliasKey(a), a);
+  };
+
+  const matchKnown: SpecMatchKnown = {
+    brands: known.brands,
+    flavorsByBrand: known.flavorsByBrand,
+    doughIngredients: known.doughIngredients,
+    sauceIngredients: known.sauceIngredients,
+    cheeseIngredients: known.cheeseIngredients,
+    appTypes: known.appTypes,
+    pepTypes: known.pepTypes,
+  };
+  // Known ingredients keyed by recipe kind for the match request's known pool.
+  const knownIngredientsInput = {
+    dough: known.doughIngredients,
+    sauce: known.sauceIngredients,
+    cheese: known.cheeseIngredients,
+  };
+
+  // One automatic retry for a failed match request, mirroring the parse-chunk
+  // retry: a transient hiccup (network blip, 429/502) would otherwise silently
+  // no-op the WHOLE match pass and the import would duplicate brands/flavors
+  // instead of updating existing ones. linkParsed makes at most 2 match calls,
+  // so with one retry each we stay well under the server's 10/min rate limit.
+  // If the retry throws too, the error propagates to the outer catch and the
+  // pass stays fail-safe (canonicalized parse kept as-is).
+  const requestMatchImportWithRetry = async (
+    input: Parameters<typeof requestMatchImport>[0],
+  ): Promise<Awaited<ReturnType<typeof requestMatchImport>>> => {
+    try {
+      return await requestMatchImport(input);
+    } catch {
+      return await requestMatchImport(input);
+    }
+  };
+
+  try {
+    // Pass 1: brands + flavors-under-known-brands + ingredients/applicators/pepperonis.
+    const c1 = collectMatchCandidates(working, matchKnown);
+    const askedFlavorKeys = new Set(
+      c1.flavors.map((f) => `${f.brand.trim().toLowerCase()}\u0000${f.flavor.trim().toLowerCase()}`),
+    );
+    if (
+      c1.brands.length ||
+      c1.flavors.length ||
+      c1.ingredients.length ||
+      c1.appTypes.length ||
+      c1.pepTypes.length
+    ) {
+      const result = await requestMatchImportWithRetry({
+        brands: known.brands,
+        brandFlavors: known.flavorsByBrand,
+        unmatchedBrands: c1.brands,
+        unmatchedFlavors: c1.flavors,
+        knownIngredients: knownIngredientsInput,
+        knownAppTypes: known.appTypes,
+        knownPepTypes: known.pepTypes,
+        unmatchedIngredients: c1.ingredients,
+        unmatchedAppTypes: c1.appTypes,
+        unmatchedPepTypes: c1.pepTypes,
+      });
+      const brandMatches: NameMatch[] = result.brandMatches.map((m) => ({
+        candidate: m.candidate,
+        match: m.match,
+      }));
+      const flavorMatches: ScopedNameMatch[] = result.flavorMatches.map((m) => ({
+        brand: m.brand,
+        candidate: m.candidate,
+        match: m.match,
+      }));
+      const extra: ExtraNameMatches = {
+        ingredientMatches: (result.ingredientMatches ?? []).map((m) => ({
+          kind: m.kind,
+          candidate: m.candidate,
+          match: m.match,
+        })),
+        appTypeMatches: (result.appTypeMatches ?? []).map((m) => ({
+          candidate: m.candidate,
+          match: m.match,
+        })),
+        pepTypeMatches: (result.pepTypeMatches ?? []).map((m) => ({
+          candidate: m.candidate,
+          match: m.match,
+        })),
+      };
+      const applied = applyNameMatches(working, brandMatches, flavorMatches, extra);
+      working = applied.parsed;
+      recordAliases(applied.aliases);
+
+      // Pass 2: brand matches may have moved a flavor under a now-known brand.
+      // Re-collect ONLY new flavor candidates (not asked in pass 1) and match them.
+      const c2 = collectMatchCandidates(working, matchKnown);
+      const newFlavors = c2.flavors.filter(
+        (f) =>
+          !askedFlavorKeys.has(
+            `${f.brand.trim().toLowerCase()}\u0000${f.flavor.trim().toLowerCase()}`,
+          ),
+      );
+      if (newFlavors.length) {
+        const r2 = await requestMatchImportWithRetry({
+          brands: known.brands,
+          brandFlavors: known.flavorsByBrand,
+          unmatchedBrands: [],
+          unmatchedFlavors: newFlavors,
+        });
+        const flavorMatches2: ScopedNameMatch[] = r2.flavorMatches.map((m) => ({
+          brand: m.brand,
+          candidate: m.candidate,
+          match: m.match,
+        }));
+        if (flavorMatches2.length) {
+          const applied2 = applyNameMatches(working, [], flavorMatches2);
+          working = applied2.parsed;
+          recordAliases(applied2.aliases);
+        }
+      }
+    }
+  } catch {
+    // Fail-safe: keep the canonicalized parse exactly as-is.
+  }
+
+  working = crossFillSpecImport(working).parsed;
+  // Deterministic backstop to the AI match pass above: snap imported die types
+  // and dough/sauce recipe names onto the factory's EXISTING lists by a loose
+  // key (case/punctuation/spacing) so an import links to what the user already
+  // has instead of creating a disconnected duplicate. Mirrors mobile (parity).
+  working = linkSpecImportDieTypesToExisting(working, known.dieTypes ?? []);
+  // Strip spec-sheet packaging noise off dough/sauce names — "(made in house)"
+  // qualifiers and "Parbake crust (… Dies)" wrapping — BEFORE the link pass so
+  // the cleaned generic name is what snaps onto the existing pool. Recipes and
+  // the profiles referencing them are renamed in lockstep.
+  working = canonicalizeSpecImportNamedRecipeNames(working);
+  // Dough matches against local presets UNIONED with the server pool: dough is
+  // server-backed master data now, and the base family recipe ("CRB Dough")
+  // the variant names must collapse onto may exist only in the pool.
+  let doughUniverse = known.doughRecipes ?? [];
+  let doughPoolRecipes: Array<{
+    name: string;
+    rows?: Array<{ ingredient?: string | null }>;
+  }> = [];
+  try {
+    const pool = await fetchNamedRecipes("dough");
+    doughUniverse = [...new Set([...doughUniverse, ...pool.map((r) => r.name)])];
+    doughPoolRecipes = pool.map((r) => ({
+      name: r.name,
+      rows: (r.components ?? []).map((c) => ({ ingredient: c.ingredient })),
+    }));
+  } catch {
+    // Best-effort (offline) — local names still match.
+  }
+  // Beyond-exact matches (word reorder, single typo, family folds) are NOT
+  // applied silently — they collect here and surface in the review dialog as
+  // pre-selected but declinable "Use existing" picks.
+  const linkSuggestions: SpecImportLinkSuggestion[] = [];
+  working = linkSpecImportNamedRecipesToExisting(working, "dough", doughUniverse, {
+    doughFamilyHint: doughFamilyHintFromSourceNames(sourceNames),
+    existingRecipes: doughPoolRecipes,
+    suggestions: linkSuggestions,
+  });
+  // Sauce matches against the server pool too — the family recipe ("Lucia
+  // Pizza Sauce") a variant reference ("Lucia's Sauce") must snap onto may
+  // exist only in the pool, not in the local preset list. Pool rows feed the
+  // formula-conflict guard (same as dough) so a same-family NAME over a
+  // different formula never even suggests a link.
+  let sauceUniverse = known.sauceRecipes ?? [];
+  let saucePoolRecipes: Array<{
+    name: string;
+    rows?: Array<{ ingredient?: string | null }>;
+  }> = [];
+  try {
+    const pool = await fetchNamedRecipes("sauce");
+    sauceUniverse = [...new Set([...sauceUniverse, ...pool.map((r) => r.name)])];
+    saucePoolRecipes = pool.map((r) => ({
+      name: r.name,
+      rows: (r.components ?? []).map((c) => ({ ingredient: c.ingredient })),
+    }));
+  } catch {
+    // Best-effort (offline) — local names still match.
+  }
+  working = linkSpecImportNamedRecipesToExisting(working, "sauce", sauceUniverse, {
+    existingRecipes: saucePoolRecipes,
+    suggestions: linkSuggestions,
+  });
+  return { parsed: working, matchAliases: [...aliasByKey.values()], linkSuggestions };
+}
+
+/**
+ * Convert the heuristic beyond-exact link suggestions into the review
+ * dialog's suggestion-map keys: dough/sauce under recipeLinkSuggestionKey,
+ * cheese under the plain lowercased blend name (the dialog's cross-brand
+ * fallback key). Learned aliases are merged OVER these by callers, so a
+ * user's remembered pick always outranks a fresh heuristic guess.
+ */
+function heuristicLinkSuggestionMap(
+  suggestions: ReadonlyArray<SpecImportLinkSuggestion>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const s of suggestions) {
+    const imported = s.importedName.trim();
+    const existing = s.existingName.trim();
+    if (!imported || !existing) continue;
+    if (s.kind === "cheese") out[imported.toLowerCase()] = existing;
+    else out[recipeLinkSuggestionKey(s.kind, imported)] = existing;
+  }
+  return out;
+}
+
+/**
+ * Cheese pool names for the prepare-time suggestion scan, best-effort:
+ * offline just means no cheese suggestions this import.
+ */
+async function fetchCheesePoolNamesBestEffort(): Promise<string[]> {
+  try {
+    return (await fetchCheeseRecipes()).map((r) => r.name);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * First dough family hint derivable from this import's workbook file names
+ * ("CRB Dough Mixing Procedure - 38.xlsx" → "CRB Dough"). Anchors the dough
+ * sibling collapse when the pool has no base recipe to snap onto.
+ */
+export function doughFamilyHintFromSourceNames(
+  sourceNames?: ReadonlyArray<string>,
+): string | null {
+  // A hint only anchors the collapse when it is UNAMBIGUOUS: if two files in
+  // the batch carry DIFFERENT family hints ("Aldo's Dough Mixing…" + "Brand
+  // Dough Mixing…"), the first file's hint must never be applied to the whole
+  // merged parse — it would rename the OTHER file's recipe group onto the
+  // wrong family. Multi-file batches handle per-file hints before merging.
+  let hint: string | null = null;
+  for (const n of sourceNames ?? []) {
+    const h = specImportDoughFamilyHintFromFileName(n);
+    if (!h) continue;
+    if (hint === null) hint = h;
+    else if (h.trim().toLowerCase() !== hint.trim().toLowerCase()) return null;
+  }
+  return hint;
+}
+
+/**
+ * Carry the FULL-parse relink's dough/sauce renames onto the (pruned) parse
+ * about to be applied. The relink must see the whole parse (the family
+ * collapse needs the complete row-identical sibling group), but the prune
+ * must compare ORIGINAL names against the snapshot — so the renames are
+ * computed on the full parse and adopted here per recipe BY INDEX (the prune
+ * maps recipes in place — same length and order — so index identity is exact
+ * and immune to loose-key collisions between near-identical original names)
+ * and per profile (doughName/sauceName by brand+flavor). Pure.
+ */
+function adoptRelinkedNames(
+  prunedParsed: ParsedSpecImport,
+  original: ParsedSpecImport,
+  relinked: ParsedSpecImport,
+): ParsedSpecImport {
+  if (relinked === original) return prunedParsed;
+  const origRecipes = original.recipes ?? [];
+  const relRecipes = relinked.recipes ?? [];
+  const prunedRecipes = prunedParsed.recipes ?? [];
+  const profileKey = (p: { brand?: string; flavor?: string }) =>
+    `${(p.brand ?? "").trim().toLowerCase()}\u0000${(p.flavor ?? "").trim().toLowerCase()}`;
+  const profileFields = new Map<string, { doughName?: string; sauceName?: string }>();
+  for (const p of relinked.profiles ?? []) profileFields.set(profileKey(p), { doughName: p.doughName, sauceName: p.sauceName });
+  // Pre-relink profile names — used to detect whether the relink actually
+  // renamed a profile's doughName/sauceName vs it was always that value.
+  // Without this, a pruned-empty doughName (stripped as "unchanged from
+  // snapshot") would silently lose a rename that the auto-link applied.
+  const origProfileFields = new Map<string, { doughName?: string; sauceName?: string }>();
+  for (const p of original.profiles ?? []) origProfileFields.set(profileKey(p), { doughName: p.doughName, sauceName: p.sauceName });
+  let changed = false;
+  const recipes = prunedRecipes.map((r, i) => {
+    // Index alignment sanity: the prune never reorders/removes recipes, but
+    // fail safe if the arrays ever diverge.
+    if (prunedRecipes.length !== origRecipes.length || origRecipes.length !== relRecipes.length) {
+      return r;
+    }
+    const o = origRecipes[i];
+    const rel = relRecipes[i];
+    if (!o || !rel || r.kind !== rel.kind) return r;
+    const name = (r.name ?? "").trim();
+    const oName = (o.name ?? "").trim();
+    const relName = (rel.name ?? "").trim();
+    // Only adopt when the pruned recipe still carries the original name this
+    // slot had — otherwise leave it alone.
+    if (!name || !relName || name !== oName || relName === name) return r;
+    changed = true;
+    return r.variantLabel
+      ? { ...r, name: relName }
+      : { ...r, name: relName, variantLabel: rel.variantLabel ?? name };
+  });
+  const profiles = (prunedParsed.profiles ?? []).map((p) => {
+    const key = profileKey(p);
+    const rel = profileFields.get(key);
+    if (!rel) return p;
+    const orig = origProfileFields.get(key);
+    let out = p;
+    if (rel.doughName && rel.doughName !== p.doughName) {
+      // Adopt when the pruned profile already has a doughName that differs
+      // (straightforward update), OR when the pruned profile has no doughName
+      // (it was stripped by the prune as "unchanged") but an auto-link rename
+      // actually occurred (original doughName ≠ relinked doughName). Without
+      // the second branch a re-import with a typo dough name that the pool
+      // relink auto-corrects silently loses the correction: the prune sees the
+      // typo unchanged and strips it, and adoptRelinkedNames can't fix it.
+      // Guard: if original and relinked are identical, no rename happened — do
+      // not propagate over a pruned-empty value (that would overwrite a user's
+      // manual clear with a value they didn't change).
+      const wasRenamed = orig?.doughName && orig.doughName !== rel.doughName;
+      if (p.doughName?.trim() || wasRenamed) {
+        out = { ...out, doughName: rel.doughName };
+        changed = true;
+      }
+    }
+    if (rel.sauceName && rel.sauceName !== p.sauceName) {
+      const wasRenamed = orig?.sauceName && orig.sauceName !== rel.sauceName;
+      if (p.sauceName?.trim() || wasRenamed) {
+        out = { ...out, sauceName: rel.sauceName };
+        changed = true;
+      }
+    }
+    return out;
+  });
+  return changed ? { ...prunedParsed, recipes, profiles } : prunedParsed;
+}
+
+/**
+ * Re-add dough/sauce recipes the re-import prune stripped as "unchanged"
+ * when their (relinked) name is MISSING from the live server pool: the user
+ * deleted the pool recipe since the last import, and an unchanged sheet must
+ * still be able to recreate it (delete-the-junk-then-re-import recovery).
+ * Identity is kind + loose name + variant label so every variant of a
+ * collapsed family rides along. Pools that could not be fetched (offline)
+ * keep the prune's decision untouched. Pure.
+ */
+function readdPoolMissingRecipes(
+  prunedParsed: ParsedSpecImport,
+  relinked: ParsedSpecImport,
+  poolNamesByKind: { dough?: string[]; sauce?: string[] },
+): ParsedSpecImport {
+  const keyOf = (r: { kind: string; name?: string; variantLabel?: string }) =>
+    `${r.kind}\u0000${specImportNameMatchKey(r.name ?? "")}\u0000${(r.variantLabel ?? "").trim().toLowerCase()}`;
+  const relinkedByKey = new Map<string, ParsedRecipe>();
+  for (const r of relinked.recipes ?? []) {
+    if ((r.kind === "dough" || r.kind === "sauce") && !r.referenceOnly) {
+      relinkedByKey.set(keyOf(r), r);
+    }
+  }
+  const poolMissing = (kind: "dough" | "sauce", name: string): boolean => {
+    const poolNames = poolNamesByKind[kind];
+    if (!poolNames || !name) return false;
+    return !poolNames.some((n) => specImportNamedRecipeNamesEqual(n, name));
+  };
+  let changed = false;
+  // Promote: the prune demotes unchanged recipes to referenceOnly (it does
+  // not remove them). A demoted dough/sauce recipe whose name is gone from
+  // the pool must be applied again — swap in the full relinked counterpart.
+  const recipes = (prunedParsed.recipes ?? []).map((r) => {
+    if (r.kind !== "dough" && r.kind !== "sauce") return r;
+    if (!r.referenceOnly) return r;
+    const name = (r.name ?? "").trim();
+    if (!poolMissing(r.kind, name)) return r;
+    const full = relinkedByKey.get(keyOf(r));
+    if (!full) return r;
+    changed = true;
+    return full;
+  });
+  // Re-add: safety net for any pool-missing recipe absent from the pruned
+  // parse entirely.
+  const present = new Set(recipes.map(keyOf));
+  const extras = [...relinkedByKey.values()].filter((r) => {
+    const name = (r.name ?? "").trim();
+    if (!name || present.has(keyOf(r))) return false;
+    return poolMissing(r.kind as "dough" | "sauce", name);
+  });
+  if (extras.length) changed = true;
+  return changed
+    ? { ...prunedParsed, recipes: [...recipes, ...extras] }
+    : prunedParsed;
+}
+
+/** Stable dedupe key for a learned alias (kind + external name + optional context). */
+function specMatchAliasKey(a: SpecImportAlias): string {
+  return `${a.kind}\u0000${a.externalName.trim().toLowerCase()}\u0000${(a.context ?? "").trim().toLowerCase()}`;
+}
+
+/**
+ * Best-effort ingredient merge history for review reconciliation. Keep this in
+ * the asynchronous preparation boundary: the dialog's edited-review diff stays
+ * synchronous and a failed request falls back to the prior exact-name behavior.
+ */
+async function fetchIngredientMergeAliasesBestEffort(): Promise<
+  ReadonlyArray<ImportMergeAlias> | undefined
+> {
+  try {
+    return await fetchMergeAliases("ingredient");
+  } catch {
+    return undefined;
+  }
+}
+
+/** Resolve ingredient rows only; recipe/profile names remain untouched. */
+function normalizeReconcileIngredientAliases(
+  recipes: ReconcileRecipe[],
+  ingredientMergeAliases?: ReadonlyArray<ImportMergeAlias>,
+): ReconcileRecipe[] {
+  if (!ingredientMergeAliases?.length) return recipes;
+  const mergeAliases: ImportMergeAliasMap = { ingredient: ingredientMergeAliases };
+  return recipes.map((recipe) => ({
+    ...recipe,
+    rows: recipe.rows.map((row) => {
+      const ingredient = resolveImportName(row.ingredient, "ingredient", mergeAliases);
+      return ingredient === row.ingredient ? row : { ...row, ingredient };
+    }),
+  }));
+}
+
+/** Build the "what will change" diff of the incoming spec vs current recipes. */
+export function buildDiscrepancies(
+  parsed: ParsedSpecImport,
+  ingredientMergeAliases?: ReadonlyArray<ImportMergeAlias>,
+): Discrepancy[] {
+  try {
+    return reconcileSpecWithRecipes({
+      specRecipes: normalizeReconcileIngredientAliases(
+        toReconcileRecipes(parsed.recipes),
+        ingredientMergeAliases,
+      ),
+      currentRecipes: normalizeReconcileIngredientAliases(
+        loadCurrentReconcileRecipes(),
+        ingredientMergeAliases,
+      ),
+    });
+  } catch {
+    return [];
+  }
+}
+
+function allDoughCustomerAssignments(parsed: ParsedSpecImport, workbook: DoughCustomerAssignment[]): DoughCustomerAssignment[] {
+  const staticAssignments = parsed.recipes.flatMap((recipe) =>
+    recipe.kind === "dough"
+      ? [...(SPEC_STATIC_CUSTOMER_ASSIGNMENTS.get(recipe.name.trim().toLowerCase()) ?? [])]
+      : [],
+  );
+  return [...workbook, ...staticAssignments];
+}
+
+export function buildSpecImportReview(
+  parsed: ParsedSpecImport,
+  removedProfiles: Array<{ brand: string; flavor: string }> = [],
+  customerAssignments: DoughCustomerAssignment[] = [],
+  currentRecipes: ReconcileRecipe[] = loadCurrentReconcileRecipes(),
+): ImportReview {
+  const review = buildImportReview({
+    incomingRecipes: toReconcileRecipes(parsed.recipes),
+    currentRecipes,
+    removedProfiles,
+    customerMappings: allDoughCustomerAssignments(parsed, customerAssignments).map((assignment) => ({
+      brand: assignment.brand,
+      qualifier: assignment.qualifierKey,
+      flavors: assignment.flavors,
+    })),
+    familyCollapses: parsed.recipes
+      .filter((recipe) => recipe.kind === "dough" && !!recipe.variantLabel && recipe.variantLabel !== recipe.name)
+      .map((recipe) => ({ family: recipe.name, variant: recipe.variantLabel! })),
+  });
+  // Mixes use per-pizza quantities and live outside the recipe-pool reconcile
+  // contract. Surface formula-guard changes here so a spec-wins mix update
+  // participates in the same signed acknowledgement as every other import.
+  const mixFormulaChanges = buildFormulaChanges(parsed)
+    .filter((change) => change.kind === "mix" && change.requiresConfirmation)
+    .map((change) => ({
+      kind: change.type === "removed" ? ("removed" as const) : ("quantity-changed" as const),
+      entity: `mix "${change.recipeName}"`,
+      before: change.previousAmount == null ? undefined : `${change.ingredient ?? "formula"}: ${change.previousAmount} oz/pizza`,
+      after: change.nextAmount == null ? undefined : `${change.ingredient ?? "formula"}: ${change.nextAmount} oz/pizza`,
+      requiresConfirmation: true,
+      message: change.type === "removed"
+        ? `Removes "${change.ingredient ?? "a component"}" from mix "${change.recipeName}".`
+        : `Changes "${change.ingredient ?? "a component"}" in mix "${change.recipeName}" using per-pizza quantities.`,
+    }));
+  if (!mixFormulaChanges.length) return review;
+  const changes = [...review.changes, ...mixFormulaChanges];
+  const counts = { ...review.counts };
+  for (const change of mixFormulaChanges) counts[change.kind] += 1;
+  return {
+    ...review,
+    changes,
+    counts,
+    requiresExplicitConfirmation: true,
+    confirmationReasons: [...review.confirmationReasons, ...mixFormulaChanges.map((change) => change.message)],
+  };
+}
+
+/** Build the import safety diff against the current local master-data pools. */
+export function buildFormulaChanges(
+  parsed: ParsedSpecImport,
+  ingredientMergeAliases?: ReadonlyArray<ImportMergeAlias>,
+): FormulaChange[] {
+  try {
+    const aliases: ImportMergeAliasMap = { ingredient: ingredientMergeAliases ?? [] };
+    const incoming: FormulaRecipe[] = parsed.recipes.map((recipe) => ({
+      kind: recipe.forcedCategory === "mix" ? "mix" : recipe.kind,
+      unit: recipe.forcedCategory === "mix" ? "perPizza" as const : "batch" as const,
+      name: recipe.name,
+      rows: (recipe.rows ?? []).map((row) => ({
+        ingredient: resolveImportName(row.ingredient, "ingredient", aliases),
+        amount: Number(row.lbs),
+      })),
+    }));
+    return classifyFormulaChanges(
+      loadCurrentFormulaRecipes().map((recipe) => ({
+        ...recipe,
+        rows: recipe.rows.map((row) => ({
+          ingredient: resolveImportName(row.ingredient, "ingredient", { ingredient: ingredientMergeAliases ?? [] }),
+          amount: row.amount,
+        })),
+      })),
+      incoming,
+    ).changes;
+  } catch {
+    return [];
+  }
+}
+/** Append a "rows dropped" advisory to a parse note when a workbook was too big. */
+function appendDroppedNote(note: string | undefined, droppedRows: number): string | undefined {
+  if (droppedRows <= 0) return note;
+  const msg = `Part of the workbook was too large to read fully — ${droppedRows} row${droppedRows === 1 ? "" : "s"} were skipped.`;
+  return note ? `${note}\n${msg}` : msg;
+}
+
+/** Append the shortened-cells advisory to a parse note when some workbook cells
+ * were longer than the per-cell prompt clamp (their tails never reached the AI). */
+function appendTruncatedNote(
+  note: string | undefined,
+  truncatedCells: ReadonlyArray<TruncatedCell>,
+): string | undefined {
+  const msg = formatTruncatedCellsNote(truncatedCells);
+  if (!msg) return note;
+  return note ? `${note}\n${msg}` : msg;
+}
+
+/** Append the dropped-columns advisory to a parse note when some rows had
+ * non-empty cells past the column cap — those cells never reached the AI. */
+function appendOverflowNote(
+  note: string | undefined,
+  overflowRows: ReadonlyArray<OverflowColumnRow>,
+): string | undefined {
+  const msg = formatOverflowColumnsNote(overflowRows);
+  if (!msg) return note;
+  return note ? `${note}\n${msg}` : msg;
+}
+
+/** SHA-256 hex of one buffer via WebCrypto (throws when unavailable). */
+async function sha256Hex(bytes: ArrayBuffer | Uint8Array): Promise<string> {
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) throw new Error("WebCrypto unavailable");
+  // Copy into a fresh Uint8Array so TS sees a plain ArrayBuffer-backed view.
+  const view = bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes);
+  const digest = await subtle.digest("SHA-256", view);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Parse-pipeline version mixed into the source fingerprint. Bump this whenever
+ * the AI parse prompt or the parse/merge pipeline changes in a way that should
+ * produce a BETTER read of the same bytes: old snapshots' hashes stop matching,
+ * so a re-import of an unchanged file re-runs the (improved) AI parse instead
+ * of resurrecting a stale parse made by the old pipeline. Without this, hash
+ * reuse pins users to whatever the parser produced when the file was first
+ * imported — prompt fixes silently never take effect on re-imports.
+ * v2: duplicate-applicator prompt hardening (per-station entries, tolerance
+ * values never emitted as a second applicator).
+ * v3: dough sheets now parse "doughballs per tray" (doughballsPerTray).
+ * v4: applicator station slots are now mandatory whenever a profile has pep
+ * rows (before pep = 1/2, after pep = 3/4 in listed order).
+ * v5: deleted brands/flavors are excluded from the match universe and stale
+ * aliases targeting deleted names are ignored — saved v4 parses have renamed
+ * sheets' flavors grounded onto deleted old names baked in, so they must not
+ * be reused.
+ * v7: cheese-kind recipe rows are exempt from the oz→lbs conversion (their
+ * lbs field carries per-pizza OUNCES by contract) — v6 parses baked in ÷16'd
+ * mix/cheese amounts, so they must not be reused.
+ * v8: parse prompt now calls out parenthesized crust-row dough names
+ * ("Parbake Crust (CRB Recipe - 12\" Dies)") — v7 parses omitted `doughName`
+ * on such sheets, leaving profiles with no dough selected.
+ * v9: saved-snapshot recipes were stripped to kind/name/rows by the server's
+ * generated Zod (doughballOz / variantLabel / targets lost), so v8 snapshots
+ * poison exact-file reuse — dough variants never reach the pool. The save
+ * schema is free-form now; old stripped snapshots must not be reused.
+ * v10: parse prompt now forbids grouping doughball/yield-table rows — v9
+ * parses merged several customers' rows into combined variants (e.g.
+ * "Hannaford, Lowe's, & SMD CRB") and dropped the rest, so only a subset of
+ * variants reached the pool; those parses must not be reused.
+ * v11: parse prompt now explicitly forbids "sample"/representative/abbreviated
+ * extractions of any table — a production v10 parse returned an "extracted
+ * sample of yield rows" (4 of 19 dough variants); such parses must not be
+ * reused.
+ * v12→v13: parse prompt now handles product-code-only block headers (e.g.
+ * "BRAND PIZZAS | MR12CH14"): the code becomes the flavor verbatim. v12
+ * parses invented the same descriptive flavor (e.g. "Cheese") for every code
+ * block, collapsing distinct products into one profile; those parses must not
+ * be reused.
+ * v14→v15: snap-to-existing link passes no longer silently rename imported
+ * recipes onto merely SIMILAR pool names (word reorder / single typo / family
+ * fold) — those become declinable review suggestions; only exact loose-key
+ * matches auto-apply. v14-and-earlier saved parses can embed the silently
+ * cross-linked names (prod evidence: Basha's Ultra Thin 5 Cheese mix saved as
+ * "Lowe's/Hannaford 5Cheese Mix"); those parses must not be reused.
+ */
+export const SPEC_PARSE_VERSION = "33";
+
+/**
+ * Content fingerprint for an import's uploaded file bytes: the per-file
+ * SHA-256 hashes are SORTED (order-independent, matching deriveSourceKey's
+ * sorted filename join), joined with the parse-pipeline version salt, then
+ * re-hashed into one digest. Returns undefined when hashing isn't possible —
+ * callers then simply skip parse reuse (fail-safe, never block an import).
+ */
+export async function hashSpecImportSource(
+  buffers: ReadonlyArray<ArrayBuffer>,
+): Promise<string | undefined> {
+  try {
+    if (!buffers.length) return undefined;
+    const hashes: string[] = [];
+    for (const b of buffers) hashes.push(await sha256Hex(b));
+    hashes.sort();
+    return await sha256Hex(
+      new TextEncoder().encode(`v${SPEC_PARSE_VERSION}|${hashes.join("|")}`),
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Look for a saved snapshot whose parse can be reused for this import: the
+ * EXACT same file set (identical sourceKey) with identical bytes (matching
+ * sourceHash). Reusing the stored parse instead of re-running the AI keeps a
+ * re-import of an unchanged file byte-for-byte identical to the previous
+ * import — the AI's read of the same sheet can drift between calls (values
+ * swapping between rows, a weight misread), and the re-import prune would
+ * treat that drift as real spec changes and clobber the user's data with it.
+ * Best-effort: any failure returns just the hash so the normal AI parse runs.
+ */
+async function findReusableParse(
+  names: ReadonlyArray<string>,
+  buffers: ReadonlyArray<ArrayBuffer>,
+): Promise<{ sourceHash?: string; snapshot?: SavedSpecSheet }> {
+  const sourceHash = await hashSpecImportSource(buffers);
+  if (!sourceHash) return {};
+  const sourceKey = deriveSourceKey(names);
+  if (!sourceKey) return { sourceHash };
+  try {
+    const sheets = await fetchSavedSpecSheets();
+    const snapshot = selectReusableSnapshot(sheets, sourceKey, sourceHash);
+    if (
+      snapshot?.data &&
+      ((snapshot.data.profiles?.length ?? 0) > 0 || (snapshot.data.recipes?.length ?? 0) > 0)
+    ) {
+      return { sourceHash, snapshot };
+    }
+  } catch {
+    // Best-effort — fall back to a fresh AI parse.
+  }
+  return { sourceHash };
+}
+
+/**
+ * Build the prepared review from a reused snapshot parse: same post-parse
+ * hygiene as a fresh parse (current tombstones still respected, cheese-name
+ * canonicalize + dedupe, summary/discrepancies against CURRENT data) minus the
+ * AI passes — the snapshot data was already canonicalized and linked when it
+ * was first imported. newAliases/flagged stay empty: nothing new was learned
+ * and any reviewer flags were already surfaced on the original import.
+ */
+async function buildReusedPrepared(
+  snapshotData: ParsedSpecImport,
+  known: ReturnType<typeof loadSpecImportKnown>,
+  aliases: SpecImportAlias[],
+  sourceHash: string | undefined,
+  ingredientMergeAliases?: ReadonlyArray<ImportMergeAlias>,
+): Promise<SpecImportPrepared> {
+  // Remap merged/renamed-away brand+flavor names through the learned aliases
+  // FIRST — a snapshot saved before a merge/rename still carries the old name,
+  // which is now tombstoned and would otherwise be silently dropped (or, with
+  // no tombstone, resurrected) instead of updating the current name.
+  const { kept, skipped } = partitionTombstonedParse(
+    applyBrandFlavorAliasesToParse(snapshotData, aliases),
+    importProfileIsTombstoned,
+    recipeNameIsTombstoned,
+  );
+  // Apply blend-name aliases and standard canonicalization so a reused parse
+  // sees the same name normalization as a fresh parse.
+  let working = dedupeSpecImportCheeseRecipes(
+    applySpecImportBlendNameAliases(
+      canonicalizeSpecImportCheeseRecipeNames(
+        canonicalizeSpecImportNamedRecipeNames(kept),
+      ),
+      aliases,
+    ),
+  );
+
+  // Re-run the DETERMINISTIC snap-to-existing passes against the CURRENT DB
+  // state (Step 6: dedup/link always fires, even on cached parses). The AI
+  // match pass is intentionally skipped — it ran on the original import and
+  // re-running it risks drift on unchanged data. The deterministic passes are
+  // safe to repeat: they only rename/link when the match is exact or
+  // near-exact by loose key, they never change quantities.
+  working = crossFillSpecImport(working).parsed;
+  working = linkSpecImportDieTypesToExisting(working, known.dieTypes ?? []);
+  working = canonicalizeSpecImportNamedRecipeNames(working);
+  const linkSuggestions: SpecImportLinkSuggestion[] = [];
+  let doughUniverse = known.doughRecipes ?? [];
+  let doughPoolRecipes: Array<{ name: string; rows?: Array<{ ingredient?: string | null }> }> = [];
+  try {
+    const pool = await fetchNamedRecipes("dough");
+    doughUniverse = [...new Set([...doughUniverse, ...pool.map((r) => r.name)])];
+    doughPoolRecipes = pool.map((r) => ({
+      name: r.name,
+      rows: (r.components ?? []).map((c) => ({ ingredient: c.ingredient })),
+    }));
+  } catch {
+    // Best-effort (offline) — local names still match.
+  }
+  working = linkSpecImportNamedRecipesToExisting(working, "dough", doughUniverse, {
+    existingRecipes: doughPoolRecipes,
+    suggestions: linkSuggestions,
+  });
+  let sauceUniverse = known.sauceRecipes ?? [];
+  let saucePoolRecipes: Array<{ name: string; rows?: Array<{ ingredient?: string | null }> }> = [];
+  try {
+    const pool = await fetchNamedRecipes("sauce");
+    sauceUniverse = [...new Set([...sauceUniverse, ...pool.map((r) => r.name)])];
+    saucePoolRecipes = pool.map((r) => ({
+      name: r.name,
+      rows: (r.components ?? []).map((c) => ({ ingredient: c.ingredient })),
+    }));
+  } catch {
+    // Best-effort (offline) — local names still match.
+  }
+  working = linkSpecImportNamedRecipesToExisting(working, "sauce", sauceUniverse, {
+    existingRecipes: saucePoolRecipes,
+    suggestions: linkSuggestions,
+  });
+
+  const summary = summarizeSpecImport(working, profileExistsForImport, recipeExistsForImport);
+  const discrepancies = buildDiscrepancies(working, ingredientMergeAliases);
+  const reuseNote =
+    "This exact file was imported before — reused the earlier read (no new AI parse), so unchanged values stay identical to the previous import.";
+  const note = working.note ? `${working.note}\n${reuseNote}` : reuseNote;
+  // Reused parse = same file bytes as before → no profiles can have been
+  // removed from an unchanged workbook. Skip the snapshot comparison.
+  return {
+    parsed: working,
+    summary,
+    newAliases: [],
+    flagged: [],
+    discrepancies,
+    formulaChanges: buildFormulaChanges(working, ingredientMergeAliases),
+    importReview: buildSpecImportReview(working),
+    ...(ingredientMergeAliases ? { ingredientMergeAliases } : {}),
+    skipped,
+    brands: known.brands,
+    flavorsByBrand: known.flavorsByBrand,
+    aliasLinkSuggestions: {
+      ...heuristicLinkSuggestionMap(linkSuggestions),
+      ...buildAliasLinkSuggestions(aliases),
+    },
+    ...(sourceHash ? { sourceHash } : {}),
+    note,
+  };
+}
+
+/**
+ * Best-effort: fetch existing mixes and compute which incoming spec mix
+ * components are brand-scope-matched to an existing mix but not yet present
+ * in it. Returns an empty array when offline, 403, or no candidates.
+ *
+ * Mirrors the full commit-time pipeline so detection sees the same effective
+ * mix scope:
+ *  1. fillSpecCheeseTargetsFromProfiles — brand-fills candidate recipes whose
+ *     brand comes from a profile applicator slot (not a direct recipe target).
+ *  2. fillSpecMixTags — assigns the candidate's brand to any previously
+ *     unbranded existing mix that the candidate name-matches.
+ *
+ * Without step 3, detectNewMixComponents's strict same-brand check rejects a
+ * branded candidate vs an unbranded existing mix even when addSpecMixesIfAbsent
+ * + fillSpecMixTags would merge them at commit time — leaving newly added
+ * ingredients invisible in the review dialog for those mixes.
+ */
+/**
+ * Best-effort: fetch existing mixes and compute which incoming spec mix
+ * components are brand-scope-matched to an existing mix but not yet present
+ * in it. Returns an empty array when offline, 403, or no candidates.
+ *
+ * Uses `collectSpecImportMixesByBrandScope` (compound brand+name de-dup) so
+ * same-named mixes under different brands both produce candidates — unlike
+ * `collectSpecImportMixes` which de-dupes by name alone and takes the first
+ * brand, which would silently drop the second brand-scoped candidate.
+ *
+ * Then mirrors the full commit pipeline:
+ *  1. fillSpecCheeseTargetsFromProfiles — brand-fills recipes referenced via
+ *     profile applicators (not direct recipe targets).
+ *  2. fillSpecMixTags — assigns the candidate's brand to any previously
+ *     unbranded existing mix that name-matches, matching commit's scope.
+ *
+ * Deliberately do NOT run addSpecMixesIfAbsent here: it now applies the
+ * spec-wins component replacement used during commit. Detection needs the
+ * pre-update component snapshot in order to identify ingredient rows the
+ * review dialog should surface.
+ *
+ * Exported for unit testing; callers outside specImport.ts should treat this
+ * as an implementation detail (it is async and touches the network).
+ */
+export async function computeNewMixIngredients(
+  parsed: ParsedSpecImport,
+): Promise<Array<{ mixName: string; brand: string; newComponents: MixComponent[] }>> {
+  try {
+    const existingMixes = await fetchMixes();
+    if (!existingMixes.length) return [];
+    // Step 1: mirror commit's profile-derived brand fill.
+    const scopedParsed = fillSpecCheeseTargetsFromProfiles(parsed);
+    const mixNamesLower = new Set(existingMixes.map((m) => m.name.trim().toLowerCase()));
+    // Use brand-scope-aware collection so same-named mixes under different
+    // brands each get a candidate (collectSpecImportMixes de-dupes by name only).
+    const candidates = collectSpecImportMixesByBrandScope(scopedParsed, mixNamesLower)
+      .map((d) => specMixDraftToMix(d))
+      .filter((m): m is Mix => m != null);
+    if (!candidates.length) return [];
+    // Apply only commit's scope tag-backfill. Keep existing components intact
+    // so detectNewMixComponents can compare incoming rows against the saved
+    // snapshot rather than the spec-wins replacement.
+    const { next: taggedMixes } = fillSpecMixTags(existingMixes, candidates);
+    return detectNewMixComponents(taggedMixes, candidates);
+  } catch {
+    return [];
+  }
+}
+
+/** Load the known lists + learned aliases shared by every file in an import. */
+async function loadSpecImportContext(): Promise<{
+  known: ReturnType<typeof loadSpecImportKnown>;
+  aliases: SpecImportAlias[];
+}> {
+  const known = loadSpecImportKnown();
+  // Learned aliases are best-effort; proceed without them if the fetch fails.
+  let aliases: SpecImportAlias[] = [];
+  try {
+    aliases = await fetchSpecImportAliases();
+  } catch {
+    aliases = [];
+  }
+  // Drop aliases whose canonical target the user has since DELETED. Aliases
+  // outrank exact/fuzzy matching, so a stale learned rename (e.g.
+  // "HOUSE DLUX" → deleted "House Special") would silently pull a renamed
+  // sheet's flavor back onto a tombstoned name the user can no longer see.
+  aliases = aliases.filter((a) => {
+    if (a.kind === "brand") return !isNameDeleted("brands", a.canonicalName);
+    if (a.kind === "flavor") {
+      const brand = (a.context ?? "").trim();
+      if (!brand) return true;
+      if (isNameDeleted("brands", brand)) return false;
+      return !isNameDeleted(flavorNamespace(brand), a.canonicalName);
+    }
+    return true;
+  });
+  return { known, aliases };
+}
+
+/**
+ * Compute the list of brand+flavor profiles that were in the PREVIOUS saved
+ * snapshot for these source files but are absent from the current parse.
+ * Best-effort — returns [] if snapshots can't be loaded or no source key is
+ * derivable. Already-tombstoned profiles are excluded (user already removed
+ * them). Alias remapping is applied to previous-snapshot names so a renamed
+ * profile doesn't falsely appear as "removed from the workbook".
+ */
+export async function computeProfilesRemovedFromWorkbook(
+  names: string[],
+  aliases: SpecImportAlias[],
+  currentProfiles: ParsedProfile[],
+): Promise<Array<{brand: string; flavor: string}>> {
+  const sourceKey = deriveSourceKey(names);
+  if (!sourceKey) return [];
+  try {
+    const sheets = await fetchSavedSpecSheets();
+    // EXACT file-set match only: a profile is only "removed from the workbook"
+    // when the previous snapshot covered exactly the same set of files as this
+    // import. Intersection matching (selectPruneSnapshots) is correct for the
+    // re-import prune (it must find a batch snapshot to avoid clobbering edits),
+    // but wrong here — it would attribute ALL profiles from an "A|B|C" batch
+    // snapshot to a later single-file "A" import, falsely reporting B's and C's
+    // profiles as removed. Safe failure mode is [] (no false positives).
+    const candidates = sheets
+      .filter((s) => (s.sourceKey ?? "").trim() === sourceKey && s.data)
+      .sort((a, b) => b.createdAt - a.createdAt || b.id - a.id);
+    if (candidates.length === 0) return [];
+    const previous = mergePruneSnapshots(candidates.map((s) => s.data));
+    const previousProfiles = previous.profiles ?? [];
+    if (previousProfiles.length === 0) return [];
+
+    const profileKey = (brand: string, flavor: string) =>
+      `${specImportNameMatchKey(brand ?? "")}|${specImportNameMatchKey(flavor ?? "")}`;
+    const currentKeys = new Set(
+      currentProfiles.map((p) => profileKey(p.brand ?? "", p.flavor ?? "")),
+    );
+
+    const usable = sanitizeSpecAliases(aliases);
+    const seen = new Set<string>();
+    const result: Array<{brand: string; flavor: string}> = [];
+    for (const p of previousProfiles) {
+      const rawBrand = p.brand ?? "";
+      const rawFlavor = p.flavor ?? "";
+      const brand = (pickAlias(usable, "brand", rawBrand) ?? rawBrand).trim();
+      const flavor = (pickAlias(usable, "flavor", rawFlavor, brand) ?? rawFlavor).trim();
+      if (!brand && !flavor) continue;
+      const k = profileKey(brand, flavor);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      // Still present in the new parse — not removed.
+      if (currentKeys.has(k)) continue;
+      // Already tombstoned/deleted by the user — don't surface again.
+      if (importProfileIsTombstoned(brand, flavor)) continue;
+      result.push({ brand, flavor });
+    }
+    return result.sort(
+      (a, b) => a.brand.localeCompare(b.brand) || a.flavor.localeCompare(b.flavor),
+    );
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Collect dough customer assignments from a set of sheet grids. Multiple
+ * sheets (or multiple files in a multi-file import) are merged: duplicate
+ * brand+qualifier entries have their flavor lists unioned. Mutates in place for
+ * efficiency; the caller owns the returned array.
+ */
+function parseDoughCustomerAssignmentsFromGrids(
+  grids: SheetGrid[],
+): DoughCustomerAssignment[] {
+  const all: DoughCustomerAssignment[] = [];
+  for (const grid of grids) {
+    for (const a of parseDoughCustomerSection(grid.rows)) {
+      const dup = all.find(
+        (e) =>
+          e.brand.toLowerCase() === a.brand.toLowerCase() &&
+          e.qualifierKey === a.qualifierKey,
+      );
+      if (dup) {
+        for (const f of a.flavors) {
+          if (!dup.flavors.some((ef) => ef.toLowerCase() === f.toLowerCase())) {
+            dup.flavors.push(f);
+          }
+        }
+      } else {
+        all.push({ ...a, flavors: [...a.flavors] });
+      }
+    }
+  }
+  return all;
+}
+
+/**
+ * Collect doughball variant rows from the yield table in every sheet of the
+ * given grids. Dedups by label (case-insensitive). Pure — no AI, no side effects.
+ */
+function parseDoughVariantTableFromGrids(grids: SheetGrid[]): DoughVariantTableEntry[] {
+  const all: DoughVariantTableEntry[] = [];
+  const seen = new Set<string>();
+  for (const grid of grids) {
+    for (const v of parseDoughVariantTable(grid.rows)) {
+      const key = v.label.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        all.push(v);
+      }
+    }
+  }
+  return all;
+}
+
+/**
+ * Full read → AI → canonicalize → summarize step. Throws on a hard failure
+ * (e.g. unreadable workbook, AI unavailable/forbidden) so the UI can show why.
+ */
+export async function prepareSpecImport(
+  data: ArrayBuffer,
+  name?: string,
+  signal?: AbortSignal,
+): Promise<SpecImportPrepared> {
+  if (signal?.aborted) throw signal.reason ?? new DOMException("Import cancelled", "AbortError");
+  const ingredientMergeAliasesPromise = fetchIngredientMergeAliasesBestEffort();
+  const { known, aliases } = await loadSpecImportContext();
+
+  // Exact re-import of an unchanged file: reuse the previous import's stored
+  // parse instead of asking the AI to re-read it (AI re-reads of the same
+  // sheet can drift, and the prune would apply that drift as "changes").
+  const { sourceHash, snapshot } = await findReusableParse(name ? [name] : [], [data]);
+  // Always read grids for the deterministic parses (customer section, variant
+  // table) even when reusing a cached AI parse. Both are cheap (no AI calls)
+  // and must reflect the raw workbook content, not the possibly-stale snapshot.
+  const grids = await readWorkbookGrids(data);
+  const doughCustomerAssignments = parseDoughCustomerAssignmentsFromGrids(grids);
+  const doughVariantsFromTable = parseDoughVariantTableFromGrids(grids);
+  if (snapshot) {
+    const reused = await buildReusedPrepared(
+      snapshot.data,
+      known,
+      aliases,
+      sourceHash,
+      await ingredientMergeAliasesPromise,
+    );
+    // Detect new mix ingredients even on a reused parse — the mixes pool may
+    // have changed since the snapshot was taken (manager added a mix).
+    const newMixIngredients = await computeNewMixIngredients(reused.parsed);
+    return {
+      ...reused,
+      ...(newMixIngredients.length > 0 ? { newMixIngredients } : {}),
+      ...(doughCustomerAssignments.length > 0 ? { doughCustomerAssignments } : {}),
+      ...(doughVariantsFromTable.length > 0 ? { doughVariantsFromTable } : {}),
+    };
+  }
+  const { parsed: rawParsed, resolved, flagged, droppedRows, truncatedCells, overflowRows } =
+    await parseWorkbookCore(grids, known, aliases, signal);
+
+  // Fold "new" names onto existing saved ones (no dupes) + conservative cross-fill.
+  const { parsed: linked, matchAliases, linkSuggestions } = await linkParsed(
+    rawParsed,
+    known,
+    name ? [name] : [],
+  );
+
+  // Respect the user's prior merges/deletions: an import must not resurrect a
+  // brand/flavor or recipe name they tombstoned. Skipped items are surfaced (not
+  // silently dropped) so they can be knowingly re-included in review.
+  const { kept, skipped } = partitionTombstonedParse(
+    linked,
+    importProfileIsTombstoned,
+    recipeNameIsTombstoned,
+  );
+
+  // Collapse per-weight cheese-blend name variants and merge the resulting
+  // duplicate cheese recipes into one (unioning their profile targets) so the
+  // review shows a single "Aldo's Cheese Mix" attaching to every flavor instead
+  // of one numbered recipe per applicator weight. Learned blend-name aliases
+  // (prior review links/renames) are then applied to recipe + slots in
+  // lockstep so a re-import remembers the user's reassignment. Mirrors mobile
+  // (parity paused — web only for now).
+  const parsed = dedupeSpecImportCheeseRecipes(
+    applySpecImportBlendNameAliases(
+      canonicalizeSpecImportCheeseRecipeNames(kept),
+      aliases,
+    ),
+  );
+
+  const summary = summarizeSpecImport(parsed, profileExistsForImport, recipeExistsForImport);
+  const newAliases = [...collectSpecAliases(resolved), ...matchAliases];
+  const ingredientMergeAliases = await ingredientMergeAliasesPromise;
+  const discrepancies = buildDiscrepancies(parsed, ingredientMergeAliases);
+  const note = appendOverflowNote(
+    appendTruncatedNote(appendDroppedNote(parsed.note, droppedRows), truncatedCells),
+    overflowRows,
+  );
+
+  // Beyond-exact cheese pool near-dups scan on the FINAL (canonicalized +
+  // deduped) recipe names so the suggestion keys line up with what the review
+  // dialog displays. Learned aliases merge OVER heuristics — a remembered
+  // user pick always wins.
+  const cheeseSuggestions = collectSpecImportCheeseLinkSuggestions(
+    parsed,
+    await fetchCheesePoolNamesBestEffort(),
+  );
+
+  // Profiles from the previous snapshot for this file that are absent from the
+  // new parse — manager can choose to tombstone them in the review dialog.
+  const profilesRemovedFromWorkbook = name
+    ? await computeProfilesRemovedFromWorkbook([name], aliases, parsed.profiles)
+    : [];
+  const importReview = buildSpecImportReview(parsed, profilesRemovedFromWorkbook, doughCustomerAssignments);
+
+  // Detect new ingredient rows on existing mixes — best-effort, after all
+  // other work so it doesn't slow the AI parse path.
+  const newMixIngredients = await computeNewMixIngredients(parsed);
+
+  return {
+    parsed,
+    summary,
+    newAliases,
+    flagged,
+    discrepancies,
+    formulaChanges: buildFormulaChanges(parsed, ingredientMergeAliases),
+    importReview,
+    ...(ingredientMergeAliases ? { ingredientMergeAliases } : {}),
+    skipped,
+    brands: known.brands,
+    flavorsByBrand: known.flavorsByBrand,
+    aliasLinkSuggestions: {
+      ...heuristicLinkSuggestionMap([...linkSuggestions, ...cheeseSuggestions]),
+      ...buildAliasLinkSuggestions(aliases),
+    },
+    ...(sourceHash ? { sourceHash } : {}),
+    ...(note ? { note } : {}),
+    ...(profilesRemovedFromWorkbook.length > 0 ? { profilesRemovedFromWorkbook } : {}),
+    ...(newMixIngredients.length > 0 ? { newMixIngredients } : {}),
+    ...(doughCustomerAssignments.length > 0 ? { doughCustomerAssignments } : {}),
+    ...(doughVariantsFromTable.length > 0 ? { doughVariantsFromTable } : {}),
+  };
+}
+
+/**
+ * Adapter for photographed pages. The vision endpoint deliberately returns
+ * workbook-style text rather than touching import state; wrapping it in one
+ * in-memory sheet lets the established parser, canonicalization, diff, and
+ * review gate handle photos exactly like an Excel import.
+ */
+export async function prepareSpecImportFromText(
+  workbookText: string,
+  name?: string,
+  signal?: AbortSignal,
+): Promise<SpecImportPrepared> {
+  const rows = workbookText.split(/\r?\n/).map((line) => line.split("\t"));
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, "Photographed spec sheets");
+  const bytes = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+  return prepareSpecImport(bytes, name, signal);
+}
+
+/** Hard cap on files per import so one batch can't fan out into a flood of AI calls. */
+export const MAX_SPEC_IMPORT_FILES = 10;
+
+/**
+ * Multi-file variant: parse several workbooks in ONE import. Each file is its
+ * own AI call (run sequentially to respect the endpoint's cost/rate guards),
+ * then the per-file parses are merged into a single review (profiles deduped by
+ * brand+flavor, recipes by kind+name, later files winning). Files that fail to
+ * read are skipped and surfaced as a note; it only throws if EVERY file failed.
+ */
+export async function prepareSpecImportMulti(
+  buffers: ArrayBuffer[],
+  onProgress?: (done: number, total: number) => void,
+  names?: string[],
+  signal?: AbortSignal,
+): Promise<SpecImportPrepared> {
+  const ingredientMergeAliasesPromise = fetchIngredientMergeAliasesBestEffort();
+  const { known, aliases } = await loadSpecImportContext();
+
+  // Exact re-import of the SAME unchanged file set: reuse the stored parse
+  // (see prepareSpecImport). Must run before the parse loop — it releases the
+  // buffers as it goes, and the hash needs the original bytes.
+  const { sourceHash, snapshot } = await findReusableParse(names ?? [], buffers);
+  if (snapshot) {
+    onProgress?.(buffers.length, buffers.length);
+    return buildReusedPrepared(
+      snapshot.data,
+      known,
+      aliases,
+      sourceHash,
+      await ingredientMergeAliasesPromise,
+    );
+  }
+
+  const parsedList: ParsedSpecImport[] = [];
+  // File label per successful parse (index-aligned with parsedList, which
+  // skips failed files) — the per-file dough family collapse below needs to
+  // know WHICH file each parse came from.
+  const parsedLabels: string[] = [];
+  const allResolved: ParseCore["resolved"] = [];
+  const flagged: SpecFlaggedItem[] = [];
+  const errors: string[] = [];
+  const failedNames: string[] = [];
+  let totalDropped = 0;
+  const allTruncated: TruncatedCell[] = [];
+  const allOverflow: OverflowColumnRow[] = [];
+  // Collected deterministic customer assignments from every file's header
+  // section (merged across files — a multi-workbook dough import may split
+  // the assignment list across sheets).
+  const allCustomerAssignments: DoughCustomerAssignment[] = [];
+  // Deterministic variant-table entries from each file's yield table, keyed by
+  // label (lower-case) to dedup when the same workbook appears more than once.
+  const allVariantsFromTableSeen = new Set<string>();
+  const allVariantsFromTable: DoughVariantTableEntry[] = [];
+
+  for (let i = 0; i < buffers.length; i++) {
+    if (signal?.aborted) throw signal.reason ?? new DOMException("Import cancelled", "AbortError");
+    // Name each file so a failure can say WHICH file was skipped (fall back to a
+    // positional label when the caller didn't pass filenames).
+    const label = names?.[i]?.trim() || `File ${i + 1}`;
+    try {
+      // Yield to the event loop between files: workbook parsing is synchronous
+      // and CPU-heavy, and back-to-back parses on a big batch can freeze the
+      // tab long enough for the browser to kill the page mid-import.
+      await new Promise((r) => setTimeout(r, 0));
+      const grids = await readWorkbookGrids(buffers[i]);
+      // Deterministic customer-section parse — must happen BEFORE the buffer is
+      // freed in the finally block below.
+      for (const a of parseDoughCustomerAssignmentsFromGrids(grids)) {
+        const dup = allCustomerAssignments.find(
+          (e) =>
+            e.brand.toLowerCase() === a.brand.toLowerCase() &&
+            e.qualifierKey === a.qualifierKey,
+        );
+        if (dup) {
+          for (const f of a.flavors) {
+            if (!dup.flavors.some((ef) => ef.toLowerCase() === f.toLowerCase())) {
+              dup.flavors.push(f);
+            }
+          }
+        } else {
+          allCustomerAssignments.push(a);
+        }
+      }
+      // Deterministic variant-table parse — accumulate across files, dedup by label.
+      for (const v of parseDoughVariantTableFromGrids(grids)) {
+        const key = v.label.toLowerCase();
+        if (!allVariantsFromTableSeen.has(key)) {
+          allVariantsFromTableSeen.add(key);
+          allVariantsFromTable.push(v);
+        }
+      }
+      const core = await parseWorkbookCore(grids, known, aliases, signal);
+      parsedList.push(core.parsed);
+      parsedLabels.push(label);
+      allResolved.push(...core.resolved);
+      flagged.push(...core.flagged);
+      totalDropped += core.droppedRows;
+      // Prefix the sheet label with the file so a multi-file review says WHICH
+      // workbook holds the shortened cell.
+      allTruncated.push(...core.truncatedCells.map((t) => ({ ...t, sheet: `${label} ${t.sheet}` })));
+      allOverflow.push(...core.overflowRows.map((o) => ({ ...o, sheet: `${label} ${o.sheet}` })));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "could not be read";
+      failedNames.push(label);
+      errors.push(`${label}: ${msg}`);
+    } finally {
+      // Release the raw file bytes (parsed or failed) so a 10-file batch
+      // doesn't hold every workbook in memory for the whole import.
+      buffers[i] = new ArrayBuffer(0);
+      onProgress?.(i + 1, buffers.length);
+    }
+  }
+
+  if (parsedList.length === 0) {
+    throw new Error(errors.length ? errors.join("\n") : "Nothing to import.");
+  }
+
+  // Per-file dough family collapse: each dough mixing workbook's row-identical
+  // sibling group must collapse onto ITS OWN file-name hint BEFORE the parses
+  // merge. Done on the merged parse, the batch-level hint (first file's) would
+  // rename ANOTHER file's recipe group onto the wrong family — importing
+  // "Aldo's Dough Mixing…" + "Brand Dough Mixing…" together put Brand &
+  // Corky's variants under "Aldo's Dough". The merged-parse hint pass still
+  // runs in linkParsed/commit but only when all files agree on one hint.
+  if (parsedList.length > 1) {
+    let doughPoolNames: string[] = [];
+    let doughPoolRecipes: Array<{
+      name: string;
+      rows?: Array<{ ingredient?: string | null }>;
+    }> = [];
+    try {
+      const pool = await fetchNamedRecipes("dough");
+      doughPoolNames = pool.map((r) => r.name);
+      doughPoolRecipes = pool.map((r) => ({
+        name: r.name,
+        rows: (r.components ?? []).map((c) => ({ ingredient: c.ingredient })),
+      }));
+    } catch {
+      // Best-effort (offline) — collapse still anchors on the hint itself.
+    }
+    const doughUniverse = [...new Set([...(known.doughRecipes ?? []), ...doughPoolNames])];
+    for (let i = 0; i < parsedList.length; i++) {
+      const hint = specImportDoughFamilyHintFromFileName(parsedLabels[i]);
+      if (!hint) continue;
+      // Same name-cleanup + relink the merged pass performs, scoped to this
+      // file's parse with this FILE's hint (both passes are idempotent).
+      parsedList[i] = linkSpecImportNamedRecipesToExisting(
+        canonicalizeSpecImportNamedRecipeNames(parsedList[i]),
+        "dough",
+        doughUniverse,
+        { doughFamilyHint: hint, existingRecipes: doughPoolRecipes },
+      );
+    }
+  }
+
+  const merged = mergeParsedSpecImports(parsedList);
+  // Fold "new" names onto existing saved ones (no dupes) + conservative cross-fill.
+  const { parsed: linked, matchAliases, linkSuggestions } = await linkParsed(merged, known, names);
+
+  // Respect prior merges/deletions (see prepareSpecImport).
+  const { kept, skipped } = partitionTombstonedParse(
+    linked,
+    importProfileIsTombstoned,
+    recipeNameIsTombstoned,
+  );
+
+  // Collapse per-weight cheese-blend name variants + merge duplicate cheese
+  // recipes into one (union targets) so review shows a single "Aldo's Cheese Mix"
+  // attaching to every flavor, not one per applicator weight. Learned
+  // blend-name aliases then apply to recipe + slots in lockstep (remembered
+  // reassignments). Mirrors mobile.
+  const parsed = dedupeSpecImportCheeseRecipes(
+    applySpecImportBlendNameAliases(
+      canonicalizeSpecImportCheeseRecipeNames(kept),
+      aliases,
+    ),
+  );
+
+  const summary = summarizeSpecImport(parsed, profileExistsForImport, recipeExistsForImport);
+  const newAliases = [...collectSpecAliases(allResolved), ...matchAliases];
+  const ingredientMergeAliases = await ingredientMergeAliasesPromise;
+  const discrepancies = buildDiscrepancies(parsed, ingredientMergeAliases);
+
+  const noteParts: string[] = [];
+  if (parsed.note) noteParts.push(parsed.note);
+  if (errors.length) {
+    const list = failedNames.length ? `: ${failedNames.join(", ")}` : "";
+    noteParts.push(
+      `${errors.length} file${errors.length === 1 ? "" : "s"} could not be read and ${errors.length === 1 ? "was" : "were"} skipped${list}.`,
+    );
+  }
+  const note = appendOverflowNote(
+    appendTruncatedNote(
+      appendDroppedNote(noteParts.length ? noteParts.join("\n") : undefined, totalDropped),
+      allTruncated,
+    ),
+    allOverflow,
+  );
+
+  // Beyond-exact cheese pool near-dups on the FINAL recipe names (see
+  // prepareSpecImport); learned aliases merge OVER heuristics.
+  const cheeseSuggestions = collectSpecImportCheeseLinkSuggestions(
+    parsed,
+    await fetchCheesePoolNamesBestEffort(),
+  );
+
+  // Profiles from the previous snapshots for these files that are absent from
+  // the new parse — manager can choose to tombstone them in the review dialog.
+  const profilesRemovedFromWorkbook =
+    (names?.length ?? 0) > 0
+      ? await computeProfilesRemovedFromWorkbook(names ?? [], aliases, parsed.profiles)
+      : [];
+  const importReview = buildSpecImportReview(parsed, profilesRemovedFromWorkbook, allCustomerAssignments);
+
+  // Detect new ingredient rows on existing mixes — best-effort, after all
+  // other work so it doesn't slow the AI parse path.
+  const newMixIngredients = await computeNewMixIngredients(parsed);
+
+  return {
+    parsed,
+    summary,
+    newAliases,
+    flagged,
+    discrepancies,
+    formulaChanges: buildFormulaChanges(parsed, ingredientMergeAliases),
+    importReview,
+    ...(ingredientMergeAliases ? { ingredientMergeAliases } : {}),
+    skipped,
+    brands: known.brands,
+    flavorsByBrand: known.flavorsByBrand,
+    aliasLinkSuggestions: {
+      ...heuristicLinkSuggestionMap([...linkSuggestions, ...cheeseSuggestions]),
+      ...buildAliasLinkSuggestions(aliases),
+    },
+    ...(sourceHash ? { sourceHash } : {}),
+    ...(note ? { note } : {}),
+    ...(profilesRemovedFromWorkbook.length > 0 ? { profilesRemovedFromWorkbook } : {}),
+    ...(newMixIngredients.length > 0 ? { newMixIngredients } : {}),
+    ...(allCustomerAssignments.length > 0 ? { doughCustomerAssignments: allCustomerAssignments } : {}),
+    ...(allVariantsFromTable.length > 0 ? { doughVariantsFromTable: allVariantsFromTable } : {}),
+  };
+}
+
+/**
+ * Apply a prepared import: write profiles + recipes, persist new aliases, and
+ * add any mixes detected in the sheet to the factory-wide Mixes list. Returns
+ * how many new mixes were added so the UI can refresh the Mixes screen.
+ */
+export async function commitSpecImport(
+  prepared: SpecImportPrepared,
+  /**
+   * Profile keys (`"${brand}\u0000${flavor}"` lower-cased) for which blank-fill
+   * guards in applySpecImport are bypassed — the sheet's values overwrite stored
+   * ones. Sourced from the step-2 "Force update" checkboxes in SpecImportDialog.
+   */
+  forceUpdateProfileKeys?: ReadonlySet<string>,
+  /**
+   * Mix names (lower-cased) whose newly detected ingredient rows should be
+   * APPENDED to the saved mix. Sourced from the step-2 "new mix ingredients"
+   * checkboxes in SpecImportDialog. Only entries in `prepared.newMixIngredients`
+   * that the manager accepted are applied; unchecked ones are skipped silently.
+   */
+  acceptedNewMixIngredientNames?: ReadonlySet<string>,
+): Promise<{
+  mixesAdded: number;
+  cheeseRecipesAdded: number;
+  /**
+   * Saved server-pool recipes (dough / sauce) whose ingredient rows were
+   * REPLACED with this sheet's, because the user linked the parsed recipe
+   * to them AND checked "update it with this sheet" in the review.
+   */
+  recipesUpdated: number;
+  /**
+   * Dough or sauce recipes whose imported name was a near-exact match
+   * (word reorder or single typo) of an existing pool entry, and were
+   * automatically linked to that entry at commit time rather than creating
+   * a duplicate. Reported so the caller can note "Auto-linked N near-duplicate
+   * recipe names" in the import summary.
+   */
+  autoLinkedRecipes: number;
+  /** Brand+flavor profiles this import wrote — see applySpecImport. */
+  touchedProfiles: Array<{ brand: string; flavor: string }>;
+  /**
+   * Subset of touchedProfiles that are purchased-crust products (no die type
+   * + crust-named doughName). The caller uses this to auto-switch any matching
+   * run's Line Type toggle to "Crust" so the operator doesn't have to.
+   */
+  crustProfiles: Array<{ brand: string; flavor: string }>;
+  /**
+   * The parse that was actually APPLIED: prune + commit-time pool relink
+   * (dough family collapse included) applied on top of the review-edited
+   * parse. Post-commit collects (dough variant labels, "who it goes to"
+   * tags) must read THIS, not the review parse — on a reused-parse import
+   * the collapse only happens here.
+   */
+  appliedParsed: ParsedSpecImport;
+  finalImportReview: ImportReview;
+  /**
+   * True when the learned-alias POST failed after the import itself applied:
+   * the user's renames / "use existing" picks were NOT remembered, so the next
+   * re-import of the same sheet will ask again. The caller surfaces a warning
+   * instead of letting the loss stay silent.
+   */
+  aliasSaveFailed: boolean;
+}> {
+  // Collapse per-weight cheese-blend name variants ("Aldo's Cheese Mix 2.07" /
+  // "…1.75") to one clean name up front, so the profile applicator fields and the
+  // server cheese pool both link to a single recipe (the per-pizza weight lives
+  // on app{n}OzPerPizza, not in the recipe name). Mirrors mobile (replit.md parity).
+  prepared.parsed = canonicalizeSpecImportCheeseRecipeNames(prepared.parsed);
+
+  // Snap imported cheese blends onto the EXISTING server Cheese Recipes pool by
+  // name (loose match on case/punctuation/spacing) BEFORE apply, so a flavor's
+  // applicator links to the recipe the user already saved instead of a
+  // disconnected copy the pick-only Cheese card can't resolve. Best-effort: if
+  // the pool can't be fetched, apply the imported names as-is. Mirrors mobile
+  // (replit.md parity).
+  let existingCheeseForLink: CheeseRecipe[] | null = null;
+  try {
+    existingCheeseForLink = await fetchCheeseRecipes();
+    prepared.parsed = linkSpecImportCheeseToExisting(
+      prepared.parsed,
+      existingCheeseForLink.map((r) => r.name),
+    );
+  } catch {
+    // Best-effort — apply with imported names if the pool is unavailable.
+  }
+
+  // Commit-time dough/sauce relink against the LIVE server pool. Prepare's
+  // link pass is best-effort (its pool fetch may have failed offline), so a
+  // profile could still carry a variant dough name ("CRB Heavy Plus recipe")
+  // whose base family recipe ("CRB Dough") exists in the pool. Re-snapping
+  // here keeps the apply and the placeholder suppression below consistent —
+  // otherwise suppression could strand a profile pointing at a name with no
+  // backing recipe anywhere.
+  // The fetched pools are also handed to applySpecImport below: it snaps
+  // spec names onto pool spellings (no phantom dropdown names) and hydrates
+  // profile recipe rows from the pool when this device has no local preset.
+  // The relink runs over the FULL parse BEFORE the prune: the dough family
+  // collapse needs the whole row-identical sibling group to fire (a pruned
+  // remnant of one row can't collapse), and reused-parse imports skip
+  // linkParsed entirely — the file-name family hint here is their only shot,
+  // or a re-import onto an emptied pool mints one recipe per customer row.
+  const livePools: {
+    dough?: SpecImportServerPoolRecipe[];
+    sauce?: SpecImportServerPoolRecipe[];
+  } = {};
+  const poolNamesByKind: { dough?: string[]; sauce?: string[] } = {};
+  let fullRelinked = prepared.parsed;
+  // Accumulate near-exact auto-links across both kinds so the caller can
+  // surface "Auto-linked N near-duplicate recipe names" in the import summary,
+  // and so the renames can be learned as aliases for future re-imports.
+  const autoLinkedOut = { count: 0 };
+  const autoLinkedRenames: Array<{ kind: "dough" | "sauce"; importedName: string; existingName: string }> = [];
+  for (const kind of ["dough", "sauce"] as const) {
+    try {
+      const livePool = await fetchNamedRecipes(kind);
+      livePools[kind] = livePool.map((r) => ({
+        name: r.name,
+        components: (r.components ?? []).map((c) => ({ ingredient: c.ingredient, lbs: c.lbs })),
+        doughballWeightOz: r.doughballWeightOz,
+        doughballsPerTray: r.doughballsPerTray,
+        doughballVariants: r.doughballVariants,
+      }));
+      poolNamesByKind[kind] = livePool.map((r) => r.name);
+      const kindRenames: Array<{ importedName: string; existingName: string }> = [];
+      fullRelinked = linkSpecImportNamedRecipesToExisting(
+        fullRelinked,
+        kind,
+        poolNamesByKind[kind]!,
+        kind === "dough"
+          ? {
+              doughFamilyHint: doughFamilyHintFromSourceNames(prepared.sourceNames),
+              existingRecipes: livePools[kind]!.map((r) => ({
+                name: r.name,
+                rows: (r.components ?? []).map((c) => ({ ingredient: c.ingredient })),
+              })),
+              autoApplyNearExact: true,
+              autoApplyEmptyFamily: true,
+              autoApplyCompatibleFamily: true,
+              autoLinkedOut,
+              autoLinkedRenames: kindRenames,
+            }
+          : {
+              existingRecipes: livePools[kind]!.map((r) => ({
+                name: r.name,
+                rows: (r.components ?? []).map((c) => ({ ingredient: c.ingredient })),
+              })),
+              autoApplyNearExact: true,
+              autoLinkedOut,
+              autoLinkedRenames: kindRenames,
+            },
+      );
+      for (const r of kindRenames) autoLinkedRenames.push({ kind, ...r });
+    } catch {
+      // Best-effort (offline) — prepare's link result stands.
+    }
+  }
+
+  // Learn the auto-applied near-exact renames as recipeName aliases so future
+  // re-imports of the same sheet auto-link without re-triggering the near-dup
+  // scan. Context is the recipe kind ("dough" / "sauce") to scope the alias
+  // within its pool — the same convention as dough/sauce "use existing" picks.
+  if (autoLinkedRenames.length) {
+    const learnedRenameAliases: SpecImportAlias[] = autoLinkedRenames.map(({ kind, importedName, existingName }) => ({
+      kind: "recipeName" as SpecAliasKind,
+      externalName: importedName,
+      canonicalName: existingName,
+      context: kind,
+    }));
+    prepared.newAliases = [...prepared.newAliases, ...learnedRenameAliases];
+  }
+
+  // Re-import prune: compare against the snapshot(s) saved by PREVIOUS imports
+  // of this same file and strip everything the spec didn't change, so manual
+  // edits made since the last import survive a re-import. Only what actually
+  // changed in the workbook is applied. Snapshots are matched per FILE (set
+  // intersection on the "|"-joined sourceKey), not by exact key: a file first
+  // imported inside a multi-file batch lives in a compound-key snapshot that an
+  // exact match would miss — which silently skipped the prune and clobbered
+  // user edits. Multiple matching snapshots (newest first) merge so the newest
+  // occurrence of each profile/recipe wins. The snapshot saved below stays the
+  // FULL parse (never the pruned one) so the next re-import compares against
+  // the complete previous state. Best-effort: if snapshots can't be fetched,
+  // apply the full parse (previous behavior).
+  // Prune on the ORIGINAL (pre-relink) names so parse and snapshot keys line
+  // up — snapshots store the raw parse. Then carry the full-parse relink's
+  // renames onto whatever survived, and re-add any dough/sauce recipe the
+  // prune stripped as "unchanged" whose (relinked) name no longer exists in
+  // the live pool: "unchanged since last import" must never suppress
+  // re-creating a recipe the user has since deleted from the pool (the
+  // delete-the-junk-then-re-import recovery path depends on this).
+  let applyParsed = prepared.parsed;
+  let pruned = false;
+  try {
+    const sourceKey = deriveSourceKey(prepared.sourceNames ?? []);
+    if (sourceKey) {
+      const sheets = await fetchSavedSpecSheets();
+      const candidates = selectPruneSnapshots(sheets, sourceKey).filter((s) => s.data);
+      if (candidates.length > 0) {
+        const previous = mergePruneSnapshots(candidates.map((s) => s.data));
+        applyParsed = pruneSpecImportAgainstSnapshot(prepared.parsed, previous).parsed;
+        pruned = true;
+      }
+    }
+  } catch {
+    // Best-effort — a failed snapshot fetch must never block the import.
+  }
+  applyParsed = adoptRelinkedNames(applyParsed, prepared.parsed, fullRelinked);
+  if (pruned) {
+    applyParsed = readdPoolMissingRecipes(applyParsed, fullRelinked, poolNamesByKind);
+  }
+
+  // Manager-stored per-die line-setting overrides (Manage Lists → Die
+  // Defaults) so the import's blank-fill of crusts/cycle, speed, adjustment,
+  // Freeze tunnel time, and cases/layer honors them; the built-in map is the
+  // fallback. Best-effort — a failed fetch never blocks the import.
+  let dieLineDefaultOverrides: DieLineDefaultsOverrides | undefined;
+  try {
+    dieLineDefaultOverrides = toOverridesMap(await fetchDieLineDefaults());
+  } catch {
+    // Offline / server error — applySpecImport falls back to the built-in map.
+  }
+
+  // Factory merge history for the categories a spec sheet can name-link
+  // (sauce/dough via profile fields, mixes/cheese via applicator slots).
+  // applySpecImport resolves every spec-named link through this map so a
+  // sheet naming a recipe that was since merged away links the profile to
+  // the surviving canonical name instead of resurrecting the old one.
+  // Best-effort — a failed fetch never blocks the import (names apply as
+  // written, the pre-fix behavior).
+  let importMergeAliases: ImportMergeAliasMap | undefined;
+  try {
+    const [sauce, dough, mixes, cheese, ingredient] = await Promise.all([
+      fetchMergeAliases("sauce"),
+      fetchMergeAliases("dough"),
+      fetchMergeAliases("mixes"),
+      fetchMergeAliases("cheese"),
+      fetchMergeAliases("ingredient"),
+    ]);
+    importMergeAliases = { sauce, dough, mixes, cheese, ingredient };
+  } catch {
+    // Offline / server error — apply names as written.
+  }
+
+  // Resolve every recipe row's INGREDIENT name through the factory's merge
+  // history BEFORE anything applies — a sheet naming an ingredient that was
+  // since merged away must write the surviving canonical name everywhere
+  // (local presets, ingredient lists, AND the server pools below), never
+  // resurrect the old one. Done once here so all downstream writes see the
+  // same resolved payload.
+  if (importMergeAliases?.ingredient?.length) {
+    applyParsed = {
+      ...applyParsed,
+      recipes: (applyParsed.recipes ?? []).map((r) => {
+        if (!r.rows?.length) return r;
+        let changed = false;
+        const rows = r.rows.map((row) => {
+          const resolved = resolveImportName(row.ingredient ?? "", "ingredient", importMergeAliases);
+          if (resolved === row.ingredient) return row;
+          changed = true;
+          return { ...row, ingredient: resolved };
+        });
+        return changed ? { ...r, rows } : r;
+      }),
+    };
+  }
+
+  const finalImportReview = buildSpecImportReview(
+    applyParsed,
+    prepared.profilesMarkedForRemoval ?? [],
+    prepared.doughCustomerAssignments ?? [],
+  );
+  if (
+    prepared.destructiveReviewSignature !== undefined &&
+    prepared.destructiveReviewSignature !== importReviewSignature(finalImportReview)
+  ) {
+    throw new ImportReviewReconfirmationError(finalImportReview);
+  }
+  if (finalImportReview.requiresExplicitConfirmation && !prepared.destructiveChangesAcknowledged) {
+    throw new ImportReviewReconfirmationError(finalImportReview);
+  }
+
+  const applyOut: { nameCorrections?: SpecImportNameCorrection[] } = {};
+  const { touchedProfiles, crustProfiles } = applySpecImport(applyParsed, applyOut, livePools, dieLineDefaultOverrides, forceUpdateProfileKeys, importMergeAliases);
+
+  // Explicit manager Apply is AUTHORITATIVE: re-mark every profile this
+  // import touched as a FORCED upsert, so the server-pool push bypasses the
+  // per-profile LWW stamp guard. Without this, a wrong stored profile that
+  // happens to carry a newer stamp (saved after this import was prepared, or
+  // stamped by a fast-clocked device / server heal) silently blocks the
+  // apply — the manager sees "reimport hasn't fixed it" with no explanation
+  // (the Hannaford Tikka Masala incident). The LWW guard stays in place for
+  // ordinary autosaves; only this deliberate Apply action overrides it.
+  for (const { brand, flavor } of touchedProfiles) {
+    markProfileForceEdited(canonicalProfileKey(brand, flavor));
+  }
+  // A spec import is an explicit manager repair, not an eventually-consistent
+  // autosave. Do not continue into the "Import applied" success path until the
+  // server has acknowledged every force-write. Failed ops remain in the queue
+  // for retry rather than silently leaving the fix only in this browser.
+  await flushProfileQueueStrict();
+
+  // ── Bad-alias cleanup after a CORRECTING import ──
+  // applySpecImport reported every name this import overwrote with a DIFFERENT
+  // value (profile sauce/dough links, mix/cheese slot links, ingredient rows).
+  // For each correction: delete the alias that minted the old wrong name
+  // (spec raw label -> old name) so the next import can't re-apply the
+  // mistake — UNLESS the old name is a live pool entry (then it's a real,
+  // different recipe and the alias may be legitimate elsewhere) — and learn
+  // the REVERSE mapping (old wrong name -> correct name) so older workbooks
+  // that still use the wrong name redirect to the right one. The reverse
+  // aliases ride the normal newAliases save below (sanitize + corrections
+  // mirror included). Deletion is synchronous within the commit but
+  // best-effort: the import itself already applied.
+  const corrections = applyOut.nameCorrections ?? [];
+  if (corrections.length) {
+    // Liveness universes for the "old name is a real recipe" guard. A failed
+    // fetch means "unknown" — deletion is skipped for that kind (fail safe).
+    let mixesLive: { name: string; components?: Array<{ ingredient: string }> }[] | null = null;
+    try {
+      mixesLive = await fetchMixes();
+    } catch {
+      // Unknown — skip deletions that need the mixes universe.
+    }
+    let cheeseLive: { name: string; components?: Array<{ ingredient: string }> }[] | null =
+      existingCheeseForLink;
+    if (!cheeseLive) {
+      try {
+        cheeseLive = await fetchCheeseRecipes();
+      } catch {
+        // Unknown — skip deletions that need the cheese universe.
+      }
+    }
+    const ciEq = (a: string, b: string): boolean => a.trim().toLowerCase() === b.trim().toLowerCase();
+    const oldNameIsLive = (c: SpecImportNameCorrection): boolean | null => {
+      if (c.kind === "recipeName" && (c.context === "dough" || c.context === "sauce")) {
+        const pool = livePools[c.context];
+        if (!pool) return null; // pool fetch failed — unknown
+        return pool.some((r) => specImportNamedRecipeNamesEqual(r.name, c.oldName));
+      }
+      if (c.kind === "appType") {
+        if (mixesLive === null || cheeseLive === null) return null;
+        return [...mixesLive.map((m) => m.name), ...cheeseLive.map((r) => r.name)].some((n) =>
+          specImportNamedRecipeNamesEqual(n, c.oldName),
+        );
+      }
+      if (c.kind === "doughIngredient" || c.kind === "sauceIngredient") {
+        const pool = livePools[c.kind === "doughIngredient" ? "dough" : "sauce"];
+        if (!pool) return null;
+        return pool.some((r) => (r.components ?? []).some((row) => ciEq(row.ingredient, c.oldName)));
+      }
+      if (c.kind === "cheeseIngredient") {
+        // Cheese-kind imported recipes can be routed to EITHER the cheese
+        // pool or the Mixes pool, so the old ingredient must be checked
+        // against BOTH universes; if either is unknown, liveness is unknown.
+        if (cheeseLive === null || mixesLive === null) return null;
+        return (
+          cheeseLive.some((r) => (r.components ?? []).some((row) => ciEq(row.ingredient ?? "", c.oldName))) ||
+          mixesLive.some((m) => (m.components ?? []).some((row) => ciEq(row.ingredient ?? "", c.oldName)))
+        );
+      }
+      return null; // unexpected kind — never delete
+    };
+    const toDelete = corrections
+      .filter((c) => oldNameIsLive(c) === false)
+      .map((c) => ({
+        kind: c.kind,
+        externalName: (c.specRawName || c.newName).trim(),
+        canonicalName: c.oldName,
+        context: c.kind === "recipeName" ? c.context : null,
+      }));
+    if (toDelete.length) {
+      try {
+        await deleteSpecImportAliases(toDelete);
+      } catch {
+        // Best-effort — the import already applied; a surviving bad alias is
+        // caught again by the next correcting re-import.
+      }
+    }
+    // Reverse mapping learned for EVERY correction (live-pool old names too:
+    // redirecting old workbooks is still right even when deletion is skipped).
+    prepared.newAliases = [
+      ...prepared.newAliases,
+      ...corrections.map((c) => ({
+        kind: c.kind,
+        externalName: c.oldName,
+        canonicalName: c.newName,
+        context: c.kind === "recipeName" ? c.context : null,
+      })),
+    ];
+  }
+
+  // For the SERVER-POOL collects below only: backfill "who it goes to"
+  // brand/flavor targets onto cheese-kind recipes that arrived unscoped, from
+  // the profiles whose applicator grid references them by name. Without this,
+  // sheets that express the tie only through the applicator grid produce
+  // Cheese Recipes / Mixes pool entries with no customer tag. The local apply
+  // above intentionally uses the untouched parse (its own slot-matching pass
+  // already ties recipes to profiles).
+  const scopedParsed = fillSpecCheeseTargetsFromProfiles(applyParsed);
+  // A spec import is only successful when every required shared-data write has
+  // been acknowledged. The local profile apply happens before these pool
+  // writes, so swallowing a POST failure here would leave a profile pointing
+  // at a recipe whose components never landed while still showing the success
+  // toast. Keep fetches/snapshots/learned aliases best-effort, but never
+  // downgrade a required recipe write into a partial success. This applies to
+  // ordinary imports as well as explicit forced corrections.
+  // Add any mixes detected in this import to the factory-wide Mixes list so they
+  // appear on the Mixes screen alongside premix-imported ones. New mixes are
+  // matched by name against existing ones so an
+  // import never duplicates (or blanks) a mix the manager already keeps; a spec
+  // sheet can't express per-pizza/batch amounts, so they arrive with those at 0
+  // for the manager to fill in the editor.
+  let mixesAdded = 0;
+  let existingMixes: Mix[];
+  try {
+    existingMixes = await fetchMixes();
+  } catch {
+    existingMixes = [];
+  }
+  try {
+    const userMixNamesLower = new Set(existingMixes.map((m) => m.name.trim().toLowerCase()));
+    const candidates = collectSpecImportMixes(scopedParsed, userMixNamesLower)
+      .map((d) => specMixDraftToMix(d))
+      .filter((m): m is Mix => m != null);
+
+    // accepted additions computed before the candidates-gated block so they are
+    // applied even on a snapshot-pruned re-import where `candidates` is empty
+    // (unchanged recipes are pruned, but the manager's accepted additions from
+    // the review must still persist).
+    // Compound key: "${brand}\0${name}" — same scheme the dialog uses, so
+    // same-name mixes under different brands are never conflated.
+    const acceptedAdditions = (prepared.newMixIngredients ?? []).filter((e) => {
+      const compoundKey = `${e.brand.trim().toLowerCase()}\0${e.mixName.trim().toLowerCase()}`;
+      return acceptedNewMixIngredientNames?.has(compoundKey);
+    });
+
+    // Working state starts as raw existing mixes; the candidates block advances
+    // it through add → tag → perPizza if the pruned parse has mix data.
+    let workingMixes: Mix[] = existingMixes as Mix[];
+    let added = 0;
+    let tagged = 0;
+    let updated = 0;
+
+    if (candidates.length) {
+      const addRes = addSpecMixesIfAbsent(existingMixes, candidates);
+      added = addRes.added;
+      updated = addRes.updated;
+      // Backfill product tags onto already-saved UNBRANDED mixes this sheet
+      // scopes (e.g. a prior import saved them with no customer) — a mix that
+      // already has a brand is never re-scoped.
+      const tagRes = fillSpecMixTags(addRes.merged, candidates);
+      tagged = tagRes.tagged;
+      // Refresh per-pizza oz on already-saved mixes from spec-sheet amounts.
+      // SPEC-WINS: a positive spec value always overwrites what's stored (so a
+      // correcting re-import fixes a prior bad value); only components that
+      // already exist on the mix are touched, and a zero/absent spec value
+      // never zeroes a manager's hand-typed number.
+      const ozRes = applyMixPerPizza(tagRes.next, candidates);
+      updated += ozRes.updated;
+      workingMixes = ozRes.next;
+    }
+
+    // Apply accepted new ingredient rows independent of whether candidates is
+    // populated. On a snapshot-pruned re-import the candidates block above is
+    // skipped entirely, so workingMixes may still hold unbranded pool mixes.
+    // Run a fillSpecMixTags pass using the accepted entries as proxies so
+    // previously-unbranded mixes get their brand assigned before
+    // applyNewMixComponents matches by brand+name — mirroring exactly what
+    // would happen if candidates were present. fillSpecMixTags is idempotent
+    // for already-branded mixes, so this is safe when candidates also ran.
+    if (acceptedAdditions.length) {
+      const tagRes2 = fillSpecMixTags(
+        workingMixes,
+        acceptedAdditions.map((a) => ({ name: a.mixName, brand: a.brand, flavor: "" })),
+      );
+      tagged += tagRes2.tagged;
+      const newCompRes = applyNewMixComponents(tagRes2.next, acceptedAdditions);
+      if (added > 0 || tagged > 0 || updated > 0 || newCompRes.applied > 0) {
+        await saveMixes(newCompRes.next);
+        mixesAdded = added;
+      }
+    } else if (added > 0 || tagged > 0 || updated > 0) {
+      await saveMixes(workingMixes);
+      mixesAdded = added;
+    }
+  } catch (error) {
+    throw error;
+  }
+
+  // Add any named cheese blends detected in this import to the factory-wide
+  // Cheese Recipes pool so the run applicator "Cheese" cards (pick-only, they
+  // hydrate rows from the pool) can select them. Matched by name against the
+  // existing pool so an import never duplicates a manager's curated recipe.
+  // A regular spec refreshes compatible blend shares and recipe assignment
+  // details, but never turns its per-pizza ounces into the pool's per-batch
+  // pounds. A failed shared-pool write rejects the explicit manager Apply.
+  // SPEC-WINS: every dough/sauce recipe this sheet carries rows for also
+  // replaces the matching SERVER pool recipe's ingredient rows — the
+  // dough/sauce pickers hydrate rows from the pools, so without this the
+  // on-screen recipe would keep its old rows after a correcting re-import.
+  // No "update existing" opt-in anymore: the spec sheet is the source of
+  // truth for recipe content. Explicit referenceOnly review picks ("use my
+  // existing recipe, don't touch it") are still honored. DOUGH/SAUCE ONLY:
+  // cheese rows are never replaced here — spec sheets carry per-PIZZA ounces
+  // while the cheese pool's rows are per-BATCH pounds (the Cheese Mix Recipe
+  // Specs workbook importer owns those).
+  const updateTargets = (applyParsed.recipes ?? []).filter(
+    (r): r is typeof r & { name: string } =>
+      !r.referenceOnly &&
+      (r.kind === "dough" || r.kind === "sauce") &&
+      Boolean((r.name ?? "").trim()) &&
+      (r.rows?.length ?? 0) > 0,
+  );
+  let recipesUpdated = 0;
+
+  let cheeseRecipesAdded = 0;
+  let existingMixesForCheese: Mix[];
+  try {
+    existingMixesForCheese = await fetchMixes();
+  } catch {
+    existingMixesForCheese = [];
+  }
+  try {
+    const userMixNamesLower = new Set(existingMixesForCheese.map((m) => m.name.trim().toLowerCase()));
+    const drafts = collectSpecImportCheeseRecipes(scopedParsed, userMixNamesLower);
+    const candidates = drafts
+      .map((d) => specCheeseDraftToRecipe(d))
+      .filter((r): r is CheeseRecipe => r != null && r.components.length > 0);
+    if (drafts.length) {
+      const existingCheese = existingCheeseForLink ?? (await fetchCheeseRecipes());
+      const { merged, added, updated } = addCheeseRecipesIfAbsentByName(existingCheese, candidates);
+      // Backfill customer tags onto already-saved UNBRANDED pool recipes this
+      // sheet scopes (e.g. a prior import saved them with no customer) — a
+      // recipe that already has a brand is never re-scoped.
+      const tagRes = fillCheeseRecipeTags(merged, drafts);
+      if (added > 0 || updated > 0 || tagRes.tagged > 0) {
+        await saveCheeseRecipes(tagRes.next);
+        cheeseRecipesAdded = added;
+      }
+    }
+  } catch (error) {
+    throw error;
+  }
+
+  // Same update step for the Dough / Sauce named-recipe pools. A successful
+  // import means these corrected shared rows were acknowledged as well.
+  for (const kind of ["dough", "sauce"] as const) {
+    // Ingredient names inside the rows were already resolved through the
+    // factory's merge history above (resolveImportName on applyParsed), so
+    // the pool write sees the same canonical names as the local apply.
+    const updates = updateTargets
+      .filter((r) => r.kind === kind)
+      .map((r) => ({ name: r.name.trim(), rows: r.rows ?? [] }));
+    if (!updates.length) continue;
+    try {
+      let pool: PoolNamedRecipe[];
+      try {
+        pool = await fetchNamedRecipes(kind);
+      } catch {
+        continue;
+      }
+      const upd = updateRecipePoolComponents(pool, updates);
+      if (upd.updated > 0) {
+        const saved = await saveNamedRecipes(kind, upd.next);
+        assertNamedRecipeWriteLanded(saved, updates);
+        recipesUpdated += upd.updated;
+      } else if (
+        typeof window !== "undefined" &&
+        updates.some((update) => countUsableRecipeRows(update.rows) > 0)
+      ) {
+        const candidates: PoolNamedRecipe[] = updates.map((update) => ({
+          id: `spec-import-${kind}-${update.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+          name: update.name,
+          notes: "",
+          components: update.rows,
+          enabled: true,
+          brand: "",
+          flavors: [],
+        }));
+        const result = await addNamedRecipesToServerIfAbsent(
+          kind,
+          candidates,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          { upsertComponents: true },
+        );
+        recipesUpdated += result.updated;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Snapshot this import server-side (factory-wide; only the two most recent are
+  // kept) so it can later be cross-referenced against the current recipe library
+  // (see /ai/spec-reconcile) and diffed by the next re-import of the same file
+  // (see the prune above). Profile-only sheets snapshot too so their re-imports
+  // can also skip unchanged profiles. Best-effort: the import already applied
+  // locally, so a failed snapshot must never surface as an import error.
+  if ((fullRelinked.recipes?.length ?? 0) > 0 || (fullRelinked.profiles?.length ?? 0) > 0) {
+    try {
+      const names = prepared.sourceNames ?? [];
+      await saveSpecSheet(
+        buildSpecSheetLabel(fullRelinked, names),
+        fullRelinked,
+        deriveSourceKey(names),
+        prepared.sourceHash,
+      );
+    } catch {
+      // best-effort
+    }
+  }
+
+  // Final hygiene gate before persisting learned aliases: whatever path
+  // produced them (canonicalize tracking, review links/renames, match
+  // aliases), never save poisoned pairs — generic "Mix"/"cheese" names,
+  // digit mismatches, cycles. Applies to the corrections mirror too.
+  const savableAliases = sanitizeSpecAliases(prepared.newAliases);
+  // Surface (don't just swallow) a failed alias save: the import itself already
+  // applied, but losing the learned aliases means the next re-import of this
+  // sheet won't remember the user's renames / "use existing" picks. The caller
+  // shows a non-blocking warning so the manager knows the memory didn't land.
+  let aliasSaveFailed = false;
+  if (savableAliases.length) {
+    try {
+      await saveSpecImportAliases(savableAliases);
+    } catch {
+      // Best-effort: the import already applied; learning is a bonus — but
+      // report it so the UI can warn instead of failing silently.
+      aliasSaveFailed = true;
+    }
+    // Mirror each learned name mapping into the factory-wide corrections pool
+    // (additive — alongside the spec-import aliases above) so every other
+    // name-resolving AI helper honors it too.
+    void saveAiCorrections(
+      savableAliases.map((a) => ({
+        domain: aliasKindToDomain(a.kind),
+        fromText: a.externalName,
+        toText: a.canonicalName,
+      })),
+    );
+  }
+
+  return { mixesAdded, cheeseRecipesAdded, recipesUpdated, autoLinkedRecipes: autoLinkedOut.count, touchedProfiles, crustProfiles, appliedParsed: applyParsed, finalImportReview, aliasSaveFailed };
+}

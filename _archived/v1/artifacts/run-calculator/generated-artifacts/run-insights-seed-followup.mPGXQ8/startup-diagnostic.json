@@ -1,0 +1,45 @@
+{
+  "mode": "read-only-no-install",
+  "networkUsed": false,
+  "discoveredToolsExecuted": false,
+  "startupVerified": false,
+  "offlineStartupVerified": false,
+  "node": {
+    "expected": "24.21.0",
+    "running": "24.21.0",
+    "matchesPin": true
+  },
+  "packageManager": {
+    "name": "pnpm",
+    "expected": "12.8.1",
+    "activeVersion": "not-executed"
+  },
+  "commands": {
+    "node": {
+      "available": true,
+      "executed": false
+    },
+    "corepack": {
+      "available": true,
+      "executed": false
+    },
+    "pnpm": {
+      "available": true,
+      "executed": false
+    },
+    "npm": {
+      "available": true,
+      "executed": false
+    },
+    "npx": {
+      "available": true,
+      "executed": false
+    }
+  },
+  "cache": {
+    "state": "present-unverified",
+    "versionMatchesPin": true,
+    "integrity": "not-verified"
+  },
+  "findings": []
+}

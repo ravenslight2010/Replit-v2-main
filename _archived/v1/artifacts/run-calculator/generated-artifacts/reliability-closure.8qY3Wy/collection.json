@@ -1,0 +1,5787 @@
+{
+  "config": {
+    "argv": [
+      "/nix/store/503mh0fj8j1cfvrxcavr76szbn4dk2r7-nodejs-slim-24.21.0/bin/node",
+      "/home/runner/workspace/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "--list",
+      "--reporter=json"
+    ],
+    "configFile": "/home/runner/workspace/artifacts/run-calculator/playwright.config.ts",
+    "rootDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/home/runner/workspace/artifacts/run-calculator/e2e/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": {},
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/test-results/full",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "**/task3494-audited-import.spec.ts",
+          "**/completed-history-archive.spec.ts",
+          "live-authority.spec.ts",
+          "live-authority-continuation.spec.ts",
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts",
+          "ios-safari-pwa-device.spec.ts",
+          "csp-production.spec.ts",
+          "docker-caddy-browser-smoke.spec.ts",
+          "home-opening-measurement.spec.ts",
+          "import-gold-apply.spec.ts",
+          "reduced-motion.spec.ts",
+          "webkit-https.spec.ts",
+          "recipe-picker-webkit.spec.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": {},
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/test-results/full",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "snapshotDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "**/task3494-audited-import.spec.ts",
+          "**/completed-history-archive.spec.ts",
+          "live-authority.spec.ts",
+          "live-authority-continuation.spec.ts",
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts",
+          "ios-safari-pwa-device.spec.ts",
+          "csp-production.spec.ts",
+          "docker-caddy-browser-smoke.spec.ts",
+          "home-opening-measurement.spec.ts",
+          "import-gold-apply.spec.ts",
+          "reduced-motion.spec.ts",
+          "webkit-https.spec.ts",
+          "recipe-picker-webkit.spec.ts"
+        ],
+        "testMatch": "**/*.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:19002",
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "video": "off",
+          "launchOptions": {
+            "executablePath": "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium"
+          },
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "accessibility-smoke.spec.ts",
+      "file": "accessibility-smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "accessibility smoke",
+          "file": "accessibility-smoke.spec.ts",
+          "line": 651,
+          "column": 6,
+          "specs": [
+            {
+              "title": "sign-in has labeled controls, keyboard navigation, and no obvious violations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-fb7395b69471ee0cf960",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 652,
+              "column": 3
+            },
+            {
+              "title": "sign-in remains operable at 200% zoom",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-7fecf6fa7af88da5096c",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 661,
+              "column": 3
+            },
+            {
+              "title": "stoppage and surplus labels pass contrast on operational backgrounds",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-35b7afda1d29ecb41cd3",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 667,
+              "column": 3
+            },
+            {
+              "title": "authenticated staff workflows expose accessible controls and dialogs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-2427ad2f5553d99c0b5b",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 720,
+              "column": 3
+            },
+            {
+              "title": "schedule calendar is labeled, keyboard operable, and free of obvious violations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-a9003bbfc685f9fbeaab",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 891,
+              "column": 3
+            },
+            {
+              "title": "manager break plans persist and operators can view placements without edit controls",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-91bf403109c5a93b559a",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 942,
+              "column": 3
+            },
+            {
+              "title": "touch break planning opens above Schedule and retains the saved draft",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-41f7241cc87a1af49487",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 1064,
+              "column": 3
+            },
+            {
+              "title": "break planning enlarged-text keyboard controls",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-cdf8d5d7070c58763f57",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 1326,
+              "column": 3
+            },
+            {
+              "title": "Android-sized PWA schedule editor exposes the break planner and preserves placements",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-fa5ddcde3f0e3dd588fe",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 1384,
+              "column": 3
+            },
+            {
+              "title": "authorized supervisors can save all break slots without manager-only controls",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-ce8928c52e9dea52ddd3",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 1472,
+              "column": 3
+            },
+            {
+              "title": "supervisors can review field checks without physical-device attestation controls",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3a484c32c27bf70010f7-f7a1531dd5576c2c608d",
+              "file": "accessibility-smoke.spec.ts",
+              "line": 1539,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ai-outage-reviewability.spec.ts",
+      "file": "ai-outage-reviewability.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "keeps deterministic management workflows reviewable when enrichment is unavailable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c296ec8670c78b29311f-26bccec48dfcca7f44ea",
+          "file": "ai-outage-reviewability.spec.ts",
+          "line": 185,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "audit-log-export.spec.ts",
+      "file": "audit-log-export.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "exports the filtered audit PDF and safely retries rejected downloads",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e21a9e01474eaab985e8-2004f6dfca089ecd4c71",
+          "file": "audit-log-export.spec.ts",
+          "line": 133,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "compact-run-strip.spec.ts",
+      "file": "compact-run-strip.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "CompactRunStrip — ended-run round-trip",
+          "file": "compact-run-strip.spec.ts",
+          "line": 146,
+          "column": 6,
+          "specs": [
+            {
+              "title": "strip stays visible with Ended status after Run-tab round-trip, no pause/resume buttons",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "efc59160648b6339f760-05d14898c9bc0a5e3fac",
+              "file": "compact-run-strip.spec.ts",
+              "line": 147,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "critical-workflows.spec.ts",
+      "file": "critical-workflows.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "completes manager-approved password recovery and fences the old session",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f250b564cadc2ad8fc74-d6e194a85deae9f7b63c",
+          "file": "critical-workflows.spec.ts",
+          "line": 361,
+          "column": 1
+        },
+        {
+          "title": "repairs scoped Data Health findings, preserves started runs, and guards undo",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f250b564cadc2ad8fc74-6fb5ce35c7d253cc09f3",
+          "file": "critical-workflows.spec.ts",
+          "line": 485,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "cross-device-smoke.spec.ts",
+      "file": "cross-device-smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "staff lifecycle recovers across desktop and phone layouts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "dd636d924961af0e09aa-1316b0829dfca28e2e4e",
+          "file": "cross-device-smoke.spec.ts",
+          "line": 201,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "department-workflow-navigation.spec.ts",
+      "file": "department-workflow-navigation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "production, warehouse, QC, and management remain connected after navigation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b841d751d8220a1a108b-c1095d91326b0d12f740",
+          "file": "department-workflow-navigation.spec.ts",
+          "line": 150,
+          "column": 1
+        },
+        {
+          "title": "manager can open the Dough recipe editor without an uncaught page error",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b841d751d8220a1a108b-ff3dea7d9657b16b0995",
+          "file": "department-workflow-navigation.spec.ts",
+          "line": 210,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "die-tunnel-defaults.spec.ts",
+      "file": "die-tunnel-defaults.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "run-form die defaults and split timer",
+          "file": "die-tunnel-defaults.spec.ts",
+          "line": 114,
+          "column": 6,
+          "specs": [
+            {
+              "title": "fills 7-inch values, switches to 12-inch values, and preserves typed time",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "014ecd8e68ba7bed6c4b-ddc78017a27432ad4c54",
+              "file": "die-tunnel-defaults.spec.ts",
+              "line": 115,
+              "column": 3
+            },
+            {
+              "title": "keeps the split through a paired run, pause/resume, reload, and an independent browser",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "014ecd8e68ba7bed6c4b-f9166adcebd60926bc0a",
+              "file": "die-tunnel-defaults.spec.ts",
+              "line": 164,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "dough-correction-resume.spec.ts",
+      "file": "dough-correction-resume.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "manager Dough corrections resume without a catch-up write",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "da4cb942aaa769f89a29-01bbfc24e3ceeead685a",
+          "file": "dough-correction-resume.spec.ts",
+          "line": 280,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "field-check-diagnostics.spec.ts",
+      "file": "field-check-diagnostics.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "manager sees safe sync categories and performance sources from isolated API evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c478e56e4441fde418dc-e2eb09f68a382bc2dea1",
+          "file": "field-check-diagnostics.spec.ts",
+          "line": 20,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "freezer-surplus.spec.ts",
+      "file": "freezer-surplus.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "confirms and applies dated surplus at desktop",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "471534103a4de4ac6cc1-bd5090ebc0fdfdc24061",
+          "file": "freezer-surplus.spec.ts",
+          "line": 387,
+          "column": 3
+        },
+        {
+          "title": "confirms and applies dated surplus at phone",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "471534103a4de4ac6cc1-7c827c7e8b075aacc7c1",
+          "file": "freezer-surplus.spec.ts",
+          "line": 387,
+          "column": 3
+        },
+        {
+          "title": "keeps Start, Packaging progress, End, and explicit-none receipts run-bound across five runs",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "471534103a4de4ac6cc1-71ab6a6f5076e5e85f28",
+          "file": "freezer-surplus.spec.ts",
+          "line": 735,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "guarded-undo.spec.ts",
+      "file": "guarded-undo.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "guarded server Undo, legacy evidence, access, pagination, and responsive controls",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "4f7c8578628b7576c33d-c125f16da52163bddf76",
+          "file": "guarded-undo.spec.ts",
+          "line": 393,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "home-deferred-panels.spec.ts",
+      "file": "home-deferred-panels.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Home opens each deferred panel in the selected browser and viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "39b6ae82758a881b1b08-da2a10e74fd90f410408",
+          "file": "home-deferred-panels.spec.ts",
+          "line": 266,
+          "column": 1
+        },
+        {
+          "title": "manager removes saved copies repeatedly without touching pending or active data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "39b6ae82758a881b1b08-3248353faa5d3690c7bc",
+          "file": "home-deferred-panels.spec.ts",
+          "line": 543,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "facility reconnect delivery",
+          "file": "home-deferred-panels.spec.ts",
+          "line": 894,
+          "column": 6,
+          "specs": [
+            {
+              "title": "pending facility edit is acknowledged once after connectivity returns",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "39b6ae82758a881b1b08-f899648806141f60243e",
+              "file": "home-deferred-panels.spec.ts",
+              "line": 898,
+              "column": 1
+            },
+            {
+              "title": "independent facility edit progresses after a malformed acknowledgment on reconnect",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "39b6ae82758a881b1b08-6f401c50a0cc0b647b2a",
+              "file": "home-deferred-panels.spec.ts",
+              "line": 898,
+              "column": 1
+            },
+            {
+              "title": "independent facility edit progresses after a stale acknowledgment on reconnect",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "39b6ae82758a881b1b08-fa3d51d3fe339785fb55",
+              "file": "home-deferred-panels.spec.ts",
+              "line": 898,
+              "column": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "home-navigation-reload.spec.ts",
+      "file": "home-navigation-reload.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Home navigation persistence",
+          "file": "home-navigation-reload.spec.ts",
+          "line": 108,
+          "column": 6,
+          "specs": [
+            {
+              "title": "restores a non-Run tab after reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "44e5c5f32b2a39f684c0-7605eab089d747c68566",
+              "file": "home-navigation-reload.spec.ts",
+              "line": 109,
+              "column": 3
+            },
+            {
+              "title": "unwinds tab history on browser back before leaving the app",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "44e5c5f32b2a39f684c0-a856c038ce8091e8815e",
+              "file": "home-navigation-reload.spec.ts",
+              "line": 122,
+              "column": 3
+            },
+            {
+              "title": "resets page scroll for a tab-backed More-menu destination",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "44e5c5f32b2a39f684c0-8b8a048dad5d22ab05d1",
+              "file": "home-navigation-reload.spec.ts",
+              "line": 154,
+              "column": 3
+            },
+            {
+              "title": "falls back to Run when the stored tab is invalid",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "44e5c5f32b2a39f684c0-f801170dc706bbaa75b7",
+              "file": "home-navigation-reload.spec.ts",
+              "line": 179,
+              "column": 3
+            },
+            {
+              "title": "keeps the Warehouse label on its direct screen after hydration and reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "44e5c5f32b2a39f684c0-9591e3237b50e04b493d",
+              "file": "home-navigation-reload.spec.ts",
+              "line": 196,
+              "column": 3
+            },
+            {
+              "title": "keeps the Inventory label after its supported menu path and reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "44e5c5f32b2a39f684c0-b0fecd452f563ce0d764",
+              "file": "home-navigation-reload.spec.ts",
+              "line": 218,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ignored-match-filter.spec.ts",
+      "file": "ignored-match-filter.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ignored-match search stays within category and brand and restores a filtered pair",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cbd06f15a138c0df8a65-db44548b704e84a320f4",
+          "file": "ignored-match-filter.spec.ts",
+          "line": 239,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "import-gold-approvals-authenticated.spec.ts",
+      "file": "import-gold-approvals-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Gold Lab approval metadata lifecycle, authorization, errors, and responsive review",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5d143afa49088e0b6b14-ebef286cc2b7cc548a1d",
+          "file": "import-gold-approvals-authenticated.spec.ts",
+          "line": 16,
+          "column": 1
+        },
+        {
+          "title": "expired metadata remains reviewable with correct role and capability gating at this viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5d143afa49088e0b6b14-f6bd216f335cd702c91c",
+          "file": "import-gold-approvals-authenticated.spec.ts",
+          "line": 345,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "import-gold-lab-responsive.spec.ts",
+      "file": "import-gold-lab-responsive.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Import Gold manager panel fits and remains reviewable at this browser viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5d7312cfb8ddadf8397b-8a3fe39edc4c9f984d4b",
+          "file": "import-gold-lab-responsive.spec.ts",
+          "line": 14,
+          "column": 1
+        },
+        {
+          "title": "Import Gold cleanup-only manager panel fits, deletes, and refreshes in this browser viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5d7312cfb8ddadf8397b-3bd9a9a73b7a82540e70",
+          "file": "import-gold-lab-responsive.spec.ts",
+          "line": 136,
+          "column": 1
+        },
+        {
+          "title": "QC Manager can use the scoped retention panel without opening the Gold Lab",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5d7312cfb8ddadf8397b-b2cbfd4480ea4dc60cff",
+          "file": "import-gold-lab-responsive.spec.ts",
+          "line": 236,
+          "column": 1
+        },
+        {
+          "title": "daily retention reminders stay metadata-only and scoped by role",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "5d7312cfb8ddadf8397b-de6e01707871de9eec24",
+          "file": "import-gold-lab-responsive.spec.ts",
+          "line": 311,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "line-map-responsive.spec.ts",
+      "file": "line-map-responsive.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders Line Map station cards at the selected responsive viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "47cddabe66b5dff1e8d1-5ffee7a74af4613dfbf4",
+          "file": "line-map-responsive.spec.ts",
+          "line": 28,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "live-sauce-dough-phone.spec.ts",
+      "file": "live-sauce-dough-phone.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Sauce and Dough live cards work at a phone viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "de37030a76b8f08effcb-c8dbe4aaab537c39a8a2",
+          "file": "live-sauce-dough-phone.spec.ts",
+          "line": 302,
+          "column": 1
+        },
+        {
+          "title": "Sauce stock edits sync to a peer and persist after tab changes and reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "de37030a76b8f08effcb-f443c16374aa542a6785",
+          "file": "live-sauce-dough-phone.spec.ts",
+          "line": 350,
+          "column": 1
+        },
+        {
+          "title": "Sauce automatic supply stays accurate after the final partial unit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "de37030a76b8f08effcb-5532c1c1e304732950c9",
+          "file": "live-sauce-dough-phone.spec.ts",
+          "line": 440,
+          "column": 1
+        },
+        {
+          "title": "Dough and Sauce phone quick checks share line-speed feedback across tab switches",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "de37030a76b8f08effcb-504bf7036ba0c9f23822",
+          "file": "live-sauce-dough-phone.spec.ts",
+          "line": 511,
+          "column": 1
+        },
+        {
+          "title": "Frontline App1 batch supply survives off-tab work, adjustment, pause, and reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "de37030a76b8f08effcb-5b1f2e32f91a190f52de",
+          "file": "live-sauce-dough-phone.spec.ts",
+          "line": 545,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "management-performance.spec.ts",
+      "file": "management-performance.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "keeps signed-out cold and warm startup within the budget",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e9b1901668437d63b5e6-0a5328625bb5c0fb49f0",
+          "file": "management-performance.spec.ts",
+          "line": 229,
+          "column": 1
+        },
+        {
+          "title": "keeps role-management controls unavailable to a non-manager on the staff roster",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e9b1901668437d63b5e6-f4694dc00dc3b21eaabd",
+          "file": "management-performance.spec.ts",
+          "line": 311,
+          "column": 1
+        },
+        {
+          "title": "captures authenticated initial load and deferred staff visit budgets",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e9b1901668437d63b5e6-eb2ac77cc556f9e1e8e8",
+          "file": "management-performance.spec.ts",
+          "line": 388,
+          "column": 1
+        },
+        {
+          "title": "keeps the first authenticated calculator visit usable on slow 3G @mobile-slow-network",
+          "ok": true,
+          "tags": [
+            "mobile-slow-network"
+          ],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e9b1901668437d63b5e6-a49d683a2760dcd8cd59",
+          "file": "management-performance.spec.ts",
+          "line": 550,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "manager-action-queue-stale.spec.ts",
+      "file": "manager-action-queue-stale.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "loads the active view without hiding large queue history",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aaed9a9051d1e0bab188-3ec611ed34d5ba471d72",
+          "file": "manager-action-queue-stale.spec.ts",
+          "line": 380,
+          "column": 1
+        },
+        {
+          "title": "shows a stale update error, then refreshes and safely retries",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aaed9a9051d1e0bab188-83b91468e63517a32725",
+          "file": "manager-action-queue-stale.spec.ts",
+          "line": 519,
+          "column": 1
+        },
+        {
+          "title": "opens a scoped sync queue item in the sync diagnostics workflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aaed9a9051d1e0bab188-f74ce5ff8241bf257ad7",
+          "file": "manager-action-queue-stale.spec.ts",
+          "line": 688,
+          "column": 1
+        },
+        {
+          "title": "keeps a completed sync merge in resolved review history",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aaed9a9051d1e0bab188-4fa49801f7b00d34802c",
+          "file": "manager-action-queue-stale.spec.ts",
+          "line": 754,
+          "column": 1
+        },
+        {
+          "title": "opens an incident queue item in the matching incident review surface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aaed9a9051d1e0bab188-e9f07cc8c26735b73bce",
+          "file": "manager-action-queue-stale.spec.ts",
+          "line": 798,
+          "column": 1
+        },
+        {
+          "title": "keeps a direct sync diagnostics panel focused after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aaed9a9051d1e0bab188-24986b47ff756900873f",
+          "file": "manager-action-queue-stale.spec.ts",
+          "line": 888,
+          "column": 1
+        },
+        {
+          "title": "keeps a direct sync diagnostics link focused after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aaed9a9051d1e0bab188-4ae6e38dd3b64d5429dd",
+          "file": "manager-action-queue-stale.spec.ts",
+          "line": 974,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "manager-attention.spec.ts",
+      "file": "manager-attention.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "manager-attention header and More-menu badges meet small-text contrast",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-c8e2daf6cefeb6b4ba93",
+          "file": "manager-attention.spec.ts",
+          "line": 87,
+          "column": 1
+        },
+        {
+          "title": "manager-attention badges show full counts at desktop, phone, and tablet widths",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-ccbf6ed5bd6527d51892",
+          "file": "manager-attention.spec.ts",
+          "line": 139,
+          "column": 1
+        },
+        {
+          "title": "staff cannot see manager-attention actions or badges",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-2bb2a4b27d3ffd4b697b",
+          "file": "manager-attention.spec.ts",
+          "line": 217,
+          "column": 1
+        },
+        {
+          "title": "manager can open and close Manager attention using only the keyboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-835d766f134681bd13fb",
+          "file": "manager-attention.spec.ts",
+          "line": 265,
+          "column": 1
+        },
+        {
+          "title": "manager can keyboard-open each Manager attention workflow and retain useful focus",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-bbd885f74d0f1104fda0",
+          "file": "manager-attention.spec.ts",
+          "line": 319,
+          "column": 1
+        },
+        {
+          "title": "manager can approve and decline password resets by keyboard and retain useful focus",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-0c8f96cb9aa38504be42",
+          "file": "manager-attention.spec.ts",
+          "line": 451,
+          "column": 1
+        },
+        {
+          "title": "manager setup stays usable when recipe names are incomplete",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-0a0677f9fd2b18e4018a",
+          "file": "manager-attention.spec.ts",
+          "line": 627,
+          "column": 1
+        },
+        {
+          "title": "live and setup profile recipe pickers keep the shared selector contract",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-946587cda83e78c49b1a",
+          "file": "manager-attention.spec.ts",
+          "line": 783,
+          "column": 1
+        },
+        {
+          "title": "manager attention remains stable across dialog and destination transitions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-fa2f079c6e91eec6b360",
+          "file": "manager-attention.spec.ts",
+          "line": 1028,
+          "column": 1
+        },
+        {
+          "title": "manager can review and resolve an incident with Enter and Space",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "866e5552b05cf6f436b8-6af68d825434b97b4948",
+          "file": "manager-attention.spec.ts",
+          "line": 1249,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "merge-alias-retarget.spec.ts",
+      "file": "merge-alias-retarget.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "ignoring a recipe-name match stays in its category after reload and preserves aliases",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bd5f021370304de57d64-d2c89e72c392a05c294e",
+          "file": "merge-alias-retarget.spec.ts",
+          "line": 505,
+          "column": 1
+        },
+        {
+          "title": "ignoring a flavor match stays in its brand after reload and preserves the other brand",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bd5f021370304de57d64-3c4ac40a13b465714267",
+          "file": "merge-alias-retarget.spec.ts",
+          "line": 553,
+          "column": 1
+        },
+        {
+          "title": "confirmed flavor merge retargets scoped aliases and a later scan suggests the survivor",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bd5f021370304de57d64-6c6deb151301952b796c",
+          "file": "merge-alias-retarget.spec.ts",
+          "line": 675,
+          "column": 1
+        },
+        {
+          "title": "ingredient confirmation stores ingredient aliases and keeps later scans in scope",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bd5f021370304de57d64-8dc8afb8b68220cdc451",
+          "file": "merge-alias-retarget.spec.ts",
+          "line": 842,
+          "column": 1
+        },
+        {
+          "title": "recipe-name confirmations keep learned aliases isolated to each recipe category",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bd5f021370304de57d64-8b3be7b7b1c62d3c3a7f",
+          "file": "merge-alias-retarget.spec.ts",
+          "line": 918,
+          "column": 1
+        },
+        {
+          "title": "brand confirmation saves brand aliases without leaking them into ingredient suggestions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bd5f021370304de57d64-e3cd599dd74dff544df5",
+          "file": "merge-alias-retarget.spec.ts",
+          "line": 992,
+          "column": 1
+        },
+        {
+          "title": "learned aliases are available to a different manager after sign-in",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "bd5f021370304de57d64-6b5ad9e14cfd6d4b211d",
+          "file": "merge-alias-retarget.spec.ts",
+          "line": 1112,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "merge-ignore-undo.spec.ts",
+      "file": "merge-ignore-undo.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "manager can undo a flavor ignore without changing other scopes or aliases",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "e2f6e02613948e6a8a7b-5dcb7192ac6f159aed8a",
+          "file": "merge-ignore-undo.spec.ts",
+          "line": 144,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "mix-plan.spec.ts",
+      "file": "mix-plan.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Mix Plan — prep card suppression and ended-run removal",
+          "file": "mix-plan.spec.ts",
+          "line": 575,
+          "column": 6,
+          "specs": [
+            {
+              "title": "prep mix card is absent when no active run lists its component ingredient",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-589b74f98b3100bd030a",
+              "file": "mix-plan.spec.ts",
+              "line": 579,
+              "column": 3
+            },
+            {
+              "title": "ending one run keeps the other run's mix card visible in a multi-run shift",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-ab8145e2c173d27c4542",
+              "file": "mix-plan.spec.ts",
+              "line": 625,
+              "column": 3
+            },
+            {
+              "title": "mix card disappears from the plan after the run is marked ended",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-ba3b4fe4061e537fbc32",
+              "file": "mix-plan.spec.ts",
+              "line": 773,
+              "column": 3
+            },
+            {
+              "title": "prep mix card shows the ordinary ingredient total",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-4dcb021a472323401fca",
+              "file": "mix-plan.spec.ts",
+              "line": 867,
+              "column": 3
+            },
+            {
+              "title": "prep mix card shows correct pull quantities when a run uses its ingredient",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-3f340f66fd2592b0bcfd",
+              "file": "mix-plan.spec.ts",
+              "line": 959,
+              "column": 3
+            },
+            {
+              "title": "Pull For Prep includes a second run added while Mixes is open",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-273979282885e418ba96",
+              "file": "mix-plan.spec.ts",
+              "line": 1038,
+              "column": 3
+            },
+            {
+              "title": "prep mix card shows correct per-run breakdown when two brands share an ingredient",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-8346357ff2323eabf0a8",
+              "file": "mix-plan.spec.ts",
+              "line": 1148,
+              "column": 3
+            },
+            {
+              "title": "Pull For Prep is reduced proportionally when some of the mix is already made",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-4481e8c4defa973b44f9",
+              "file": "mix-plan.spec.ts",
+              "line": 1266,
+              "column": 3
+            },
+            {
+              "title": "Pull For Prep shows 0.00 lbs when the mix is fully covered by amountAlreadyMade",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-058f5a1fc1cda5ca46d0",
+              "file": "mix-plan.spec.ts",
+              "line": 1362,
+              "column": 3
+            },
+            {
+              "title": "'need X lbs' badge updates immediately when 'already made' is edited",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-b8669424892d3f255f34",
+              "file": "mix-plan.spec.ts",
+              "line": 1445,
+              "column": 3
+            },
+            {
+              "title": "Pull For Prep is scaled proportionally when two runs share a prep ingredient and some is already made",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-b9e82e6bb1c1948819f0",
+              "file": "mix-plan.spec.ts",
+              "line": 1565,
+              "column": 3
+            },
+            {
+              "title": "prep mix card appears for a scheduled future-day run that lists its ingredient",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-9e73bfaa654760112198",
+              "file": "mix-plan.spec.ts",
+              "line": 1721,
+              "column": 3
+            },
+            {
+              "title": "prep mix with daysEarly=0 is absent the day before the run and present on the run day",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-d2e8e3cc630f55d5a1d0",
+              "file": "mix-plan.spec.ts",
+              "line": 1941,
+              "column": 3
+            },
+            {
+              "title": "prep mix card appears when run uses a qualified ingredient name matching the mix component base name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-03a75c60d3fd0134274e",
+              "file": "mix-plan.spec.ts",
+              "line": 2128,
+              "column": 3
+            },
+            {
+              "title": "Pull For Prep updates live when the already-made field is edited in the UI",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-b802234110c88eb0894f",
+              "file": "mix-plan.spec.ts",
+              "line": 2224,
+              "column": 3
+            },
+            {
+              "title": "need X lbs badge on regular mix card shows correct remaining amount",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-2bed37f7a319318b1fd1",
+              "file": "mix-plan.spec.ts",
+              "line": 2333,
+              "column": 3
+            },
+            {
+              "title": "need 0.00 lbs badge appears on regular mix card when amountAlreadyMade >= totalLbs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-5111f988003a000157c2",
+              "file": "mix-plan.spec.ts",
+              "line": 2425,
+              "column": 3
+            },
+            {
+              "title": "Pull For Prep updates live when already-made is edited and two runs share the prep ingredient",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-613d7827b68b85346ddf",
+              "file": "mix-plan.spec.ts",
+              "line": 2517,
+              "column": 3
+            },
+            {
+              "title": "'need X lbs' badge on a regular mix card updates live when 'already made' is edited",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-b95292fc27da96a74eba",
+              "file": "mix-plan.spec.ts",
+              "line": 2667,
+              "column": 3
+            },
+            {
+              "title": "manager can retry an already-made amount after the first save fails",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-efe31ef9d2f4bedf9729",
+              "file": "mix-plan.spec.ts",
+              "line": 2781,
+              "column": 3
+            },
+            {
+              "title": "retried already-made amount survives a later Mix Plan reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-7bc909028c8e7a091468",
+              "file": "mix-plan.spec.ts",
+              "line": 2872,
+              "column": 3
+            },
+            {
+              "title": "prep mix with daysEarly=1 appears on the run day and one day early but not two days before",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-93b417c09768160b78b7",
+              "file": "mix-plan.spec.ts",
+              "line": 3038,
+              "column": 3
+            },
+            {
+              "title": "mix plan collapses to empty when all runs in a shift are ended",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-55777288875a93275876",
+              "file": "mix-plan.spec.ts",
+              "line": 3217,
+              "column": 3
+            },
+            {
+              "title": "'already made' value persists after a page reload (saved to server)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-e791dd654bcb1e40f217",
+              "file": "mix-plan.spec.ts",
+              "line": 3387,
+              "column": 3
+            },
+            {
+              "title": "prep mix card appears when run ingredient uses comma-separator variant (e.g. 'Herb, Chopped')",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-827a671ab504a42ae503",
+              "file": "mix-plan.spec.ts",
+              "line": 3517,
+              "column": 3
+            },
+            {
+              "title": "prep mix card appears when run ingredient uses paren-separator variant (e.g. 'Herb (Tidbits)')",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-183a6ebd2fbf40391d29",
+              "file": "mix-plan.spec.ts",
+              "line": 3615,
+              "column": 3
+            },
+            {
+              "title": "prep mix card appears when run ingredient uses slash-separator variant (e.g. 'Herb/Fresh')",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-dce00742532dfa332dc2",
+              "file": "mix-plan.spec.ts",
+              "line": 3713,
+              "column": 3
+            },
+            {
+              "title": "prep mix card appears when mix component uses comma-separator qualified name and run uses base name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-49b3c421f90f5ef0f653",
+              "file": "mix-plan.spec.ts",
+              "line": 3812,
+              "column": 3
+            },
+            {
+              "title": "prep mix card appears when mix component uses paren-separator qualified name and run uses base name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-f2ab012df61d07ad78d1",
+              "file": "mix-plan.spec.ts",
+              "line": 3911,
+              "column": 3
+            },
+            {
+              "title": "prep mix card appears when mix component uses slash-separator qualified name and run uses base name",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-9b44e71b8d0e29778bfc",
+              "file": "mix-plan.spec.ts",
+              "line": 4010,
+              "column": 3
+            },
+            {
+              "title": "empty state is preserved after a page reload when all runs are ended",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-f6b6c73b8dbe7ae8c416",
+              "file": "mix-plan.spec.ts",
+              "line": 4120,
+              "column": 3
+            },
+            {
+              "title": "shows the empty state on first Mixes visit after a cold reload with all runs ended",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-1f162ef282f0713e1ed2",
+              "file": "mix-plan.spec.ts",
+              "line": 4264,
+              "column": 3
+            },
+            {
+              "title": "batch count on a regular mix card updates live when 'already made' is edited",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-db70a5d03fada1e18d11",
+              "file": "mix-plan.spec.ts",
+              "line": 4405,
+              "column": 3
+            },
+            {
+              "title": "batch count on cold load uses persisted amountAlreadyMade from the server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-fe81e9ff01ca88726d4f",
+              "file": "mix-plan.spec.ts",
+              "line": 4537,
+              "column": 3
+            },
+            {
+              "title": "Pull For Mix per-component lbs on a regular mix card update live when 'already made' is edited",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7c516d8c44144c658e33-67d6413330dd405d872a",
+              "file": "mix-plan.spec.ts",
+              "line": 4700,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "multi-device-convergence.spec.ts",
+      "file": "multi-device-convergence.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "multi-device convergence",
+          "file": "multi-device-convergence.spec.ts",
+          "line": 102,
+          "column": 6,
+          "specs": [
+            {
+              "title": "simultaneous edits converge to one canonical value on both devices",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0cbaa98b5214f6644175-d2ecb996d8b544adb5d8",
+              "file": "multi-device-convergence.spec.ts",
+              "line": 103,
+              "column": 3
+            },
+            {
+              "title": "offline peer adopts the active edit after wake and reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0cbaa98b5214f6644175-286c6146e7da9df624e4",
+              "file": "multi-device-convergence.spec.ts",
+              "line": 190,
+              "column": 3
+            },
+            {
+              "title": "offline peer cannot resurrect a deleted run after reconnect and reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0cbaa98b5214f6644175-983b37b48ccd390c1fc8",
+              "file": "multi-device-convergence.spec.ts",
+              "line": 481,
+              "column": 3
+            },
+            {
+              "title": "reset epoch prevents an offline peer from re-adopting cleared state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0cbaa98b5214f6644175-477d742fcf108923d12e",
+              "file": "multi-device-convergence.spec.ts",
+              "line": 554,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "packaging-recovery.spec.ts",
+      "file": "packaging-recovery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Packaging correction and acknowledged Resume converge across tabs, reload and reconnect",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "056e67ca77caa0dc2a6a-292c2fde3eb99711671d",
+          "file": "packaging-recovery.spec.ts",
+          "line": 62,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "phone-layout.spec.ts",
+      "file": "phone-layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "phone layout smoke",
+          "file": "phone-layout.spec.ts",
+          "line": 722,
+          "column": 6,
+          "specs": [
+            {
+              "title": "sign-in is usable without overflow at 375x812",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-1dc1eb230e4ff7c2f974",
+              "file": "phone-layout.spec.ts",
+              "line": 726,
+              "column": 5
+            },
+            {
+              "title": "sign-in is usable without overflow at 390x844",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-1a583eb59fc14281167c",
+              "file": "phone-layout.spec.ts",
+              "line": 726,
+              "column": 5
+            },
+            {
+              "title": "tablet calculator stays readable at 768x1024",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-ef7261803f135ecf3301",
+              "file": "phone-layout.spec.ts",
+              "line": 751,
+              "column": 5
+            },
+            {
+              "title": "tablet calculator stays readable at 1024x768",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-5f208a4195eae42b5fed",
+              "file": "phone-layout.spec.ts",
+              "line": 751,
+              "column": 5
+            },
+            {
+              "title": "tablet manager settings remain reachable at 768x1024",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-97da695fad0425a7cfdf",
+              "file": "phone-layout.spec.ts",
+              "line": 777,
+              "column": 5
+            },
+            {
+              "title": "tablet manager settings remain reachable at 1024x768",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-fec115b2459c4fe2187b",
+              "file": "phone-layout.spec.ts",
+              "line": 777,
+              "column": 5
+            },
+            {
+              "title": "authenticated calculator stays usable at 375x812",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-16649bd82f94eaf40772",
+              "file": "phone-layout.spec.ts",
+              "line": 818,
+              "column": 5
+            },
+            {
+              "title": "authenticated calculator stays usable at 390x844",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-f2c3d7a201889e96f395",
+              "file": "phone-layout.spec.ts",
+              "line": 818,
+              "column": 5
+            },
+            {
+              "title": "expanded update details never cover Run or bottom tabs and QC owns the allergen footprint",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-5c4965c2539186f64240",
+              "file": "phone-layout.spec.ts",
+              "line": 945,
+              "column": 3
+            },
+            {
+              "title": "Floor Mode remains opaque and closable at 375x812",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-2e664eaa9f015bd02574",
+              "file": "phone-layout.spec.ts",
+              "line": 1082,
+              "column": 5
+            },
+            {
+              "title": "Floor Mode remains opaque and closable at 568x320",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-72865a9e82e939f8967d",
+              "file": "phone-layout.spec.ts",
+              "line": 1082,
+              "column": 5
+            },
+            {
+              "title": "Floor Mode remains opaque and closable at 768x1024",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-b281d32ac270c74d965c",
+              "file": "phone-layout.spec.ts",
+              "line": 1082,
+              "column": 5
+            },
+            {
+              "title": "Floor Mode remains opaque and closable at 1024x768",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-29cab6d5116b70c2d6f2",
+              "file": "phone-layout.spec.ts",
+              "line": 1082,
+              "column": 5
+            },
+            {
+              "title": "Floor Mode remains opaque and closable at 1280x800",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-48da2ef9772b696978d7",
+              "file": "phone-layout.spec.ts",
+              "line": 1082,
+              "column": 5
+            },
+            {
+              "title": "sync details stay fully visible from phone through desktop widths",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-02623cc1a9dca7605a43",
+              "file": "phone-layout.spec.ts",
+              "line": 1228,
+              "column": 3
+            },
+            {
+              "title": "failed sync keeps the retained-change retry action visible on phone",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-79ef154d5aab61ee51d1",
+              "file": "phone-layout.spec.ts",
+              "line": 1277,
+              "column": 3
+            },
+            {
+              "title": "manager workflows stay usable in narrow landscape at 568x320",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-f09ccffd5485c80b3e77",
+              "file": "phone-layout.spec.ts",
+              "line": 1332,
+              "column": 3
+            },
+            {
+              "title": "standalone setup editor actions remain reachable at 375x812",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-ab115f4ddb38bfc8abef",
+              "file": "phone-layout.spec.ts",
+              "line": 1365,
+              "column": 5
+            },
+            {
+              "title": "standalone setup editor actions remain reachable at 568x320",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-aba9d50cc1e67f2cf542",
+              "file": "phone-layout.spec.ts",
+              "line": 1365,
+              "column": 5
+            },
+            {
+              "title": "operational dialog actions remain reachable at 375x812",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-ac9705dea269ae1efe6f",
+              "file": "phone-layout.spec.ts",
+              "line": 1460,
+              "column": 5
+            },
+            {
+              "title": "operational dialog actions remain reachable at 568x320",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-a7f4a377f25c11f67972",
+              "file": "phone-layout.spec.ts",
+              "line": 1460,
+              "column": 5
+            },
+            {
+              "title": "sign-in is usable without overflow in narrow landscape at 568x320",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-ac63e4e037fecbefd5b7",
+              "file": "phone-layout.spec.ts",
+              "line": 1659,
+              "column": 3
+            },
+            {
+              "title": "focused sign-in fields stay reachable when the virtual keyboard reduces the viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                        "line": 722,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "cdcd97487f3c871d9bed-df638f7682bae4b8b95b",
+              "file": "phone-layout.spec.ts",
+              "line": 1679,
+              "column": 3
+            }
+          ],
+          "suites": [
+            {
+              "title": "touch selection dialogs on phone",
+              "file": "phone-layout.spec.ts",
+              "line": 2012,
+              "column": 10,
+              "specs": [
+                {
+                  "title": "opens schedule and recipe pickers without page scrolling",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                            "line": 722,
+                            "column": 6
+                          }
+                        }
+                      ],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "cdcd97487f3c871d9bed-2287151f337908e28582",
+                  "file": "phone-layout.spec.ts",
+                  "line": 2019,
+                  "column": 7
+                }
+              ]
+            },
+            {
+              "title": "touch selection dialogs on tablet",
+              "file": "phone-layout.spec.ts",
+              "line": 2012,
+              "column": 10,
+              "specs": [
+                {
+                  "title": "opens schedule and recipe pickers without page scrolling",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 60000,
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "/home/runner/workspace/artifacts/run-calculator/e2e/phone-layout.spec.ts",
+                            "line": 722,
+                            "column": 6
+                          }
+                        }
+                      ],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "cdcd97487f3c871d9bed-25a91be1ec93478c777d",
+                  "file": "phone-layout.spec.ts",
+                  "line": 2019,
+                  "column": 7
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "photo-count.spec.ts",
+      "file": "photo-count.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "completes the manager photo-count review on desktop and phone",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "4a21857119d28839d36c-089cabb797612fb4a463",
+          "file": "photo-count.spec.ts",
+          "line": 178,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "photo-spec-import.spec.ts",
+      "file": "photo-spec-import.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "keeps photographed pages editable and canceling review leaves master data unchanged",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "00ab9abd56207e862e32-56260c09d8da223bd025",
+          "file": "photo-spec-import.spec.ts",
+          "line": 244,
+          "column": 1
+        },
+        {
+          "title": "applies photographed review edits to the authenticated profile and recipe pools",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "00ab9abd56207e862e32-2b2420ac8e6ba5cf2058",
+          "file": "photo-spec-import.spec.ts",
+          "line": 379,
+          "column": 1
+        },
+        {
+          "title": "persists every ingredient from a photographed multi-ingredient dough recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "00ab9abd56207e862e32-1da7ebcbbb452bfc430a",
+          "file": "photo-spec-import.spec.ts",
+          "line": 590,
+          "column": 1
+        },
+        {
+          "title": "applies a photographed sauce review edit to the authenticated sauce recipe pool",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "00ab9abd56207e862e32-2034b1738da4be960c0f",
+          "file": "photo-spec-import.spec.ts",
+          "line": 734,
+          "column": 1
+        },
+        {
+          "title": "persists every ingredient from a photographed multi-ingredient cheese recipe",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "00ab9abd56207e862e32-5498418323e60c93a751",
+          "file": "photo-spec-import.spec.ts",
+          "line": 879,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "premade-crust-profile.spec.ts",
+      "file": "premade-crust-profile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "marked profile selects Crust for a new run, not an already-started run",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "b4ed5f56be804d2bd321-5816f4c2d538c2b3d82f",
+          "file": "premade-crust-profile.spec.ts",
+          "line": 226,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "prior-run-drain.spec.ts",
+      "file": "prior-run-drain.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "keeps the prior-run drain selected through next-run and tab changes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "6c9e0a02e4a94fe8cb89-58b4468ae6472b1ececa",
+          "file": "prior-run-drain.spec.ts",
+          "line": 144,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "profile-subtab-reload.spec.ts",
+      "file": "profile-subtab-reload.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "adopts crust preference, reloads, and starts a new run in crust mode",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "158a84fa64ad948079cf-a89937c6cca55961d01f",
+          "file": "profile-subtab-reload.spec.ts",
+          "line": 185,
+          "column": 1
+        },
+        {
+          "title": "keeps the saved crust preference after sign-out and a fresh browser session",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "158a84fa64ad948079cf-7c07b217f81d099db910",
+          "file": "profile-subtab-reload.spec.ts",
+          "line": 232,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "pwa-handoff.spec.ts",
+      "file": "pwa-handoff.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "PWA update handoff",
+          "file": "pwa-handoff.spec.ts",
+          "line": 1096,
+          "column": 6,
+          "specs": [
+            {
+              "title": "preserves unsafe work, then auto-reloads after safe inactivity",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "68653885c13ad33062c9-5525da1780bb477027cf",
+              "file": "pwa-handoff.spec.ts",
+              "line": 1793,
+              "column": 3
+            },
+            {
+              "title": "auto-reloads when Home was already safe before update discovery",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "68653885c13ad33062c9-01e6d02deb28827ea8f0",
+              "file": "pwa-handoff.spec.ts",
+              "line": 3016,
+              "column": 3
+            },
+            {
+              "title": "recovers an old HTML-served Home chunk onto the current build once",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "68653885c13ad33062c9-58ccbb40d396d96bf2ad",
+              "file": "pwa-handoff.spec.ts",
+              "line": 3183,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "pwa-morning-login.spec.ts",
+      "file": "pwa-morning-login.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "keeps one morning sign-in authenticated through stale-day rollover",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c15eb0ded4bc49dafb53-61c5dcbff5fb7aeabd8f",
+          "file": "pwa-morning-login.spec.ts",
+          "line": 83,
+          "column": 1
+        },
+        {
+          "title": "resumes the cookie session after an Android-style PWA close and reopen",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c15eb0ded4bc49dafb53-31f096d20e628754a590",
+          "file": "pwa-morning-login.spec.ts",
+          "line": 194,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-allergen-activity-responsive.spec.ts",
+      "file": "qc-allergen-activity-responsive.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "renders the daily allergen report from recorded current-day sources",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "0f94205afff8aec58f91-a2a5953466207738aeee",
+          "file": "qc-allergen-activity-responsive.spec.ts",
+          "line": 121,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-brix-authenticated.spec.ts",
+      "file": "qc-brix-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "QC manager and operator record, correct, and sign off Brix evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "9f3bb1f5c35af48850fc-fc897550b8cbfdc12dd6",
+          "file": "qc-brix-authenticated.spec.ts",
+          "line": 65,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-date-code-authenticated.spec.ts",
+      "file": "qc-date-code-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "QC records advisory date codes, approves exact text and retains a mismatch after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "f773e3401c9678708011-97c8618cc054c7503fe0",
+          "file": "qc-date-code-authenticated.spec.ts",
+          "line": 26,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-import-review-authenticated.spec.ts",
+      "file": "qc-import-review-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "authenticated managers review committed imports with stale conflict, retry, badge refresh, and persistence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cbc2dc6bd50ca9b68c64-78a8d5d3d8609cc81553",
+          "file": "qc-import-review-authenticated.spec.ts",
+          "line": 60,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-import-review-reload-badge.spec.ts",
+      "file": "qc-import-review-reload-badge.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "retained import QC reload and badge deltas",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "4c85c7879091c7adae0a-70e475d921ecb3a9ea64",
+          "file": "qc-import-review-reload-badge.spec.ts",
+          "line": 50,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-intelligence-authenticated.spec.ts",
+      "file": "qc-intelligence-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "QC manager filters, exports and reloads effective reports while staff are denied",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c65f7ae4ca29117609de-2be431d27a70a6ecdfb9",
+          "file": "qc-intelligence-authenticated.spec.ts",
+          "line": 19,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-planning-authenticated.spec.ts",
+      "file": "qc-planning-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "QC staff read the canonical upcoming schedule and refresh after an external manager edit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "cc7ccc4a1598374bc652-d3e582af80c13ae2911d",
+          "file": "qc-planning-authenticated.spec.ts",
+          "line": 47,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-recipe-review-authenticated.spec.ts",
+      "file": "qc-recipe-review-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "editor-applied recipe revisions have scoped QC review, stale conflict protection, and reload persistence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "8c51cd9054cd2d8deab3-ca2b5f1d6b7e7b01b66d",
+          "file": "qc-recipe-review-authenticated.spec.ts",
+          "line": 140,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "qc-workflows-authenticated.spec.ts",
+      "file": "qc-workflows-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "QC operator and manager complete scoped evidence workflows in authenticated browsers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c8328a2975cd05e590a0-9deebaa445924ee7e957",
+          "file": "qc-workflows-authenticated.spec.ts",
+          "line": 301,
+          "column": 1
+        },
+        {
+          "title": "QC manager targets and operator checks fit phone and tablet layouts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "c8328a2975cd05e590a0-1cec2099fe7f6795bd1e",
+          "file": "qc-workflows-authenticated.spec.ts",
+          "line": 1170,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "recipe-refresh-start-freeze.spec.ts",
+      "file": "recipe-refresh-start-freeze.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "a delayed learned batch weight reaches future pending runs but preserves started and paused snapshots",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-a52720859f8f190bbee8",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1070,
+          "column": 1
+        },
+        {
+          "title": "dough recipe edits refresh pending runs across browsers but freeze after Start",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-c0a6e9deebc00afcac5e",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1467,
+          "column": 3
+        },
+        {
+          "title": "sauce recipe edits refresh pending runs across browsers but freeze after Start",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-5a63dbf15e16b9a0cab0",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1467,
+          "column": 3
+        },
+        {
+          "title": "mix recipe edits refresh pending runs across browsers but freeze after Start",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-b7b70731666df83dcc7f",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1467,
+          "column": 3
+        },
+        {
+          "title": "cheese recipe edits refresh pending runs across browsers but freeze after Start",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-d43bcb04588322dd9e5f",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1467,
+          "column": 3
+        },
+        {
+          "title": "dough recipe refresh stays with its original run after a rapid switch",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-02636a85888258935354",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1792,
+          "column": 3
+        },
+        {
+          "title": "sauce recipe refresh stays with its original run after a rapid switch",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-811610ca85b74073d067",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1792,
+          "column": 3
+        },
+        {
+          "title": "mix recipe refresh stays with its original run after a rapid switch",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-6b44268e62f3ab3f91f4",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1792,
+          "column": 3
+        },
+        {
+          "title": "remembered non-default pepperoni batch weights rehydrate in a peer without changing default sticks",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-c287807f5a121b5cd8e3",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 2002,
+          "column": 1
+        },
+        {
+          "title": "remembered plain ingredient batch weights survive a fresh sign-in",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-765119294ca95e4f88b4",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 2221,
+          "column": 1
+        },
+        {
+          "title": "manager weight edits acknowledge, propagate, clear, and remain retryable across devices",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-f2f32ae3289e82d80332",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 2458,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "report-issue-confirmation.spec.ts",
+      "file": "report-issue-confirmation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "staff can retry a failed issue report without retyping and sees its diagnostic reference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "d21a26eb6ee06c496123-247b2c95a25573654a80",
+          "file": "report-issue-confirmation.spec.ts",
+          "line": 38,
+          "column": 1
+        },
+        {
+          "title": "manager reviews a staff issue report and retains the review after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "d21a26eb6ee06c496123-54d9b080a07949931b53",
+          "file": "report-issue-confirmation.spec.ts",
+          "line": 91,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "run-insights.spec.ts",
+      "file": "run-insights.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Run Insights — accept, dismiss, follow-up",
+          "file": "run-insights.spec.ts",
+          "line": 222,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Accept changes cycleSpeed in the saved profile and shows confirmation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "736afea232ebec992563-8294fdaad9c75e27c5db",
+              "file": "run-insights.spec.ts",
+              "line": 268,
+              "column": 3
+            },
+            {
+              "title": "Dismiss suppresses the suggestion and it stays suppressed on same drift",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "736afea232ebec992563-64be67868844772afc83",
+              "file": "run-insights.spec.ts",
+              "line": 354,
+              "column": 3
+            },
+            {
+              "title": "Follow-up note appears after next run and is cleared by Got-it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "736afea232ebec992563-0e701494e62738ec749a",
+              "file": "run-insights.spec.ts",
+              "line": 427,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "run-startup-slow-network.spec.ts",
+      "file": "run-startup-slow-network.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Run controls work before delayed optional station panels finish loading",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "154fbf0a186bd6eccc09-40afc87b2bacfec63447",
+          "file": "run-startup-slow-network.spec.ts",
+          "line": 311,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "schedule-dialog-layering.spec.ts",
+      "file": "schedule-dialog-layering.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Schedule access and nested brand picker work across browser sizes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "af388105788408c02134-fbc85391820c3748ba08",
+          "file": "schedule-dialog-layering.spec.ts",
+          "line": 185,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "screen-off-wake.spec.ts",
+      "file": "screen-off-wake.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "screen-off / wake — case counter lifecycle",
+          "file": "screen-off-wake.spec.ts",
+          "line": 1489,
+          "column": 6,
+          "specs": [
+            {
+              "title": "A. running run: counter jumps by full 50-case delta in one wake tick (no cap)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-b4ee22cc43893515b8a9",
+              "file": "screen-off-wake.spec.ts",
+              "line": 1538,
+              "column": 3
+            },
+            {
+              "title": "B. paused run: counter stays frozen after screen-off + wake",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-9700b02db5d6bafb7ad0",
+              "file": "screen-off-wake.spec.ts",
+              "line": 1590,
+              "column": 3
+            },
+            {
+              "title": "wake recovery queues one Stop tap and applies it to the same run",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-8a2f09edaa0d2554540f",
+              "file": "screen-off-wake.spec.ts",
+              "line": 1631,
+              "column": 3
+            },
+            {
+              "title": "responsive display matches shared line occupancy while running, paused, and draining",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-44650c337636c7b5b911",
+              "file": "screen-off-wake.spec.ts",
+              "line": 1667,
+              "column": 3
+            },
+            {
+              "title": "preserves cases-on-line occupancy across reload while the freezer drains",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-8db64c66ec6739e92213",
+              "file": "screen-off-wake.spec.ts",
+              "line": 1806,
+              "column": 3
+            },
+            {
+              "title": "keeps cases-on-line occupancy frozen across reload while paused",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-ef3c5acc63db2167549f",
+              "file": "screen-off-wake.spec.ts",
+              "line": 1875,
+              "column": 3
+            },
+            {
+              "title": "D. pause, background sleep, and resume keep all live countdowns aligned",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-39dd45fb5800e020b270",
+              "file": "screen-off-wake.spec.ts",
+              "line": 1944,
+              "column": 3
+            },
+            {
+              "title": "speed adjustment during a dough run stays aligned across screen wake",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-b8a761c08d8cb82a936a",
+              "file": "screen-off-wake.spec.ts",
+              "line": 2148,
+              "column": 3
+            },
+            {
+              "title": "offline wake waits for reconnect acknowledgement before sending tray and batch claims",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-94cc4db8a008e40b4cb0",
+              "file": "screen-off-wake.spec.ts",
+              "line": 2697,
+              "column": 3
+            },
+            {
+              "title": "two live sessions converge through visible retry after an offline wake",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-7deee136aa7fbba95e09",
+              "file": "screen-off-wake.spec.ts",
+              "line": 2924,
+              "column": 3
+            },
+            {
+              "title": "C. disconnected sleeping peer adopts remote Stop before stale recovery writes and after reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-9a70c6dc0f9d472df855",
+              "file": "screen-off-wake.spec.ts",
+              "line": 3300,
+              "column": 3
+            },
+            {
+              "title": "E. one device keeps a paired Packaging correction through wake and reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-a2c4b7e1dbe62693b1f1",
+              "file": "screen-off-wake.spec.ts",
+              "line": 3589,
+              "column": 3
+            },
+            {
+              "title": "F. a failed Packaging correction stays visible on phone until an explicit retry",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-d37ccc84f7fd7bbada89",
+              "file": "screen-off-wake.spec.ts",
+              "line": 4013,
+              "column": 3
+            },
+            {
+              "title": "D. active peers and server keep a downward skid correction over a stale automatic write",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "66779183da0cca34f17f-e21d63802bda1584360a",
+              "file": "screen-off-wake.spec.ts",
+              "line": 4266,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "spec-import-unit-provenance.spec.ts",
+      "file": "spec-import-unit-provenance.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "shows amount advisories and recipe unit provenance without rescaling or blocking Apply",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ec91ab03155dea56a86b-85c06210b477e8a9addf",
+          "file": "spec-import-unit-provenance.spec.ts",
+          "line": 299,
+          "column": 1
+        },
+        {
+          "title": "a manager can replace a missing formula result and only redacted source evidence is retained",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "ec91ab03155dea56a86b-c448506978edfdfd3317",
+          "file": "spec-import-unit-provenance.spec.ts",
+          "line": 429,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "station-handoff-responsive.spec.ts",
+      "file": "station-handoff-responsive.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "keeps Frontline and Packaging handoffs selected once on a phone-sized viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "df041561ca79cf1f03a5-e8274529ac091940485b",
+          "file": "station-handoff-responsive.spec.ts",
+          "line": 199,
+          "column": 1
+        },
+        {
+          "title": "Summary card keeps an uncommitted note focused across a live timer tick",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "df041561ca79cf1f03a5-2d6abd7e40126b822c1b",
+          "file": "station-handoff-responsive.spec.ts",
+          "line": 294,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "sync-convergence.spec.ts",
+      "file": "sync-convergence.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "frontline supply recovers across runs and converges with a second tab",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-37607e7f057c307b689a",
+          "file": "sync-convergence.spec.ts",
+          "line": 757,
+          "column": 1
+        },
+        {
+          "title": "measures canonical edit and foreground recovery latency",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-05872536f2b38d33540c",
+          "file": "sync-convergence.spec.ts",
+          "line": 1079,
+          "column": 1
+        },
+        {
+          "title": "temporarily failed sync write retries automatically after the network recovers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-e0d8500d8382f5339772",
+          "file": "sync-convergence.spec.ts",
+          "line": 1265,
+          "column": 1
+        },
+        {
+          "title": "queued Target Cases edit recovers when a sleeping tab wakes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-eb21fbcdf4ac4a2f0574",
+          "file": "sync-convergence.spec.ts",
+          "line": 1401,
+          "column": 1
+        },
+        {
+          "title": "stale-base recovery keeps the server conflict, reapplies independent edits and settles after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-1498c8a44be033399e0e",
+          "file": "sync-convergence.spec.ts",
+          "line": 1487,
+          "column": 1
+        },
+        {
+          "title": "queued Target Cases edits survive a tab restart in browser emulation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-c90061ec00eabf035602",
+          "file": "sync-convergence.spec.ts",
+          "line": 1911,
+          "column": 1
+        },
+        {
+          "title": "exhausted sync failure retains the change for a manual retry",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-37ca07bd2d475c183eee",
+          "file": "sync-convergence.spec.ts",
+          "line": 2015,
+          "column": 1
+        },
+        {
+          "title": "offline device adopts active deletion, survives reload, and never resurrects the run",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-eb6b119de4bea6dc1bc5",
+          "file": "sync-convergence.spec.ts",
+          "line": 2082,
+          "column": 1
+        },
+        {
+          "title": "wake enforces reset epoch and client-date scope while unchanged writes stay no-op",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-7fd34c01db238c278843",
+          "file": "sync-convergence.spec.ts",
+          "line": 2155,
+          "column": 1
+        },
+        {
+          "title": "manager moves a future run into a populated today plan and keeps it after reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-97a98070e89786c3dfad",
+          "file": "sync-convergence.spec.ts",
+          "line": 2397,
+          "column": 1
+        },
+        {
+          "title": "keeps the future source available with retry guidance when the destination write fails",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-807f3d3e9d67fe160dc5",
+          "file": "sync-convergence.spec.ts",
+          "line": 2537,
+          "column": 1
+        },
+        {
+          "title": "reload after a lost move acknowledgement confirms one canonical copy without replay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-1df71d4bf355075b2112",
+          "file": "sync-convergence.spec.ts",
+          "line": 2611,
+          "column": 1
+        },
+        {
+          "title": "manager can cancel, swap two schedules, and append without losing source runs",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-e99e964903171b78e1f8",
+          "file": "sync-convergence.spec.ts",
+          "line": 2700,
+          "column": 1
+        },
+        {
+          "title": "manager can append when the server reports a started-today swap is unavailable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-53fd78d1691b49c5b972",
+          "file": "sync-convergence.spec.ts",
+          "line": 2777,
+          "column": 1
+        },
+        {
+          "title": "manager classification of a premade crust persists across reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "17b4adb5ffdadd31160b-c9419eacfd713ceb084b",
+          "file": "sync-convergence.spec.ts",
+          "line": 2875,
+          "column": 1
+        }
+      ],
+      "suites": [
+        {
+          "title": "first daily baseline adoption",
+          "file": "sync-convergence.spec.ts",
+          "line": 537,
+          "column": 6,
+          "specs": [
+            {
+              "title": "server's first daily baseline replaces stale local day state before recovery push",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "17b4adb5ffdadd31160b-2ff54f4689acf6862391",
+              "file": "sync-convergence.spec.ts",
+              "line": 540,
+              "column": 3
+            },
+            {
+              "title": "server's explicit empty first daily baseline removes stale local day state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "17b4adb5ffdadd31160b-804065ab3ca11f506539",
+              "file": "sync-convergence.spec.ts",
+              "line": 614,
+              "column": 3
+            },
+            {
+              "title": "server's first daily baseline is adopted after a stream interruption",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "17b4adb5ffdadd31160b-0dd929f368a6d39b193d",
+              "file": "sync-convergence.spec.ts",
+              "line": 699,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "sync-diagnostics-download.spec.ts",
+      "file": "sync-diagnostics-download.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "downloads a date-scoped sync diagnostic JSON report",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "460ae65a8475602a4bb5-a51933d1c4c1fbd1ce88",
+          "file": "sync-diagnostics-download.spec.ts",
+          "line": 98,
+          "column": 1
+        },
+        {
+          "title": "filters older local sync diagnostics from the downloaded report",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "460ae65a8475602a4bb5-d908ffa3c63b27eaf0f9",
+          "file": "sync-diagnostics-download.spec.ts",
+          "line": 154,
+          "column": 1
+        },
+        {
+          "title": "keeps the diagnostic report on the active date across local midnight",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "460ae65a8475602a4bb5-8a590d76aca49c7c1b3d",
+          "file": "sync-diagnostics-download.spec.ts",
+          "line": 231,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "visual-regression.spec.ts",
+      "file": "visual-regression.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "intentional visual regression baselines",
+          "file": "visual-regression.spec.ts",
+          "line": 176,
+          "column": 6,
+          "specs": [
+            {
+              "title": "desktop production states: live run, Mix Plan, import review, and alert dialog",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/visual-regression.spec.ts",
+                        "line": 176,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "78e23c5201ba1ea12e76-d3cce9d0e078445e4e83",
+              "file": "visual-regression.spec.ts",
+              "line": 248,
+              "column": 3
+            },
+            {
+              "title": "phone compact presentation and stop dialog",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/visual-regression.spec.ts",
+                        "line": 176,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "78e23c5201ba1ea12e76-09d2a94b6040ad52768c",
+              "file": "visual-regression.spec.ts",
+              "line": 344,
+              "column": 3
+            },
+            {
+              "title": "tablet portrait and landscape compact presentation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/visual-regression.spec.ts",
+                        "line": 176,
+                        "column": 6
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "78e23c5201ba1ea12e76-69dbc42f637735b5f52b",
+              "file": "visual-regression.spec.ts",
+              "line": 389,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "warehouse-coverage.spec.ts",
+      "file": "warehouse-coverage.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "operator staging check persists for a canonical per-run material across reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aac01e58916e42437cbf-f5d81a429914b80e3e94",
+          "file": "warehouse-coverage.spec.ts",
+          "line": 411,
+          "column": 1
+        },
+        {
+          "title": "shows capped offsite transfer guidance and hides it when onsite stock covers demand",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aac01e58916e42437cbf-8a2ab69ff7ed84b4c419",
+          "file": "warehouse-coverage.spec.ts",
+          "line": 542,
+          "column": 1
+        },
+        {
+          "title": "explains restricted inventory actions to non-managers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aac01e58916e42437cbf-eb73a7c6e1fee2d80548",
+          "file": "warehouse-coverage.spec.ts",
+          "line": 614,
+          "column": 1
+        },
+        {
+          "title": "keeps capped offsite transfer guidance readable on a phone",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aac01e58916e42437cbf-e8bed9a005a56c668b4c",
+          "file": "warehouse-coverage.spec.ts",
+          "line": 699,
+          "column": 1
+        },
+        {
+          "title": "keeps capped offsite transfer guidance readable on a tablet",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aac01e58916e42437cbf-6ffa82ed182cccf0836c",
+          "file": "warehouse-coverage.spec.ts",
+          "line": 788,
+          "column": 1
+        },
+        {
+          "title": "shows the Warehouse switchover handoff through real tab navigation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aac01e58916e42437cbf-c0c66e9ba3398cd92624",
+          "file": "warehouse-coverage.spec.ts",
+          "line": 871,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "workbook-auto-ai-fallback.spec.ts",
+      "file": "workbook-auto-ai-fallback.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "manager gets Mauro's three products in review; source audit calls are read-only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "16eedc602427dd326404-990df5709c3270e62111",
+          "file": "workbook-auto-ai-fallback.spec.ts",
+          "line": 251,
+          "column": 1
+        },
+        {
+          "title": "deterministic exported workbook stays model-free",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "16eedc602427dd326404-9cd87df357c5dd73ad83",
+          "file": "workbook-auto-ai-fallback.spec.ts",
+          "line": 718,
+          "column": 1
+        },
+        {
+          "title": "profile importer without AI permission sees guidance and sends no parse request",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "16eedc602427dd326404-7027b723f0975b39f2ee",
+          "file": "workbook-auto-ai-fallback.spec.ts",
+          "line": 746,
+          "column": 1
+        },
+        {
+          "title": "provider failure preserves an incomplete review and one retry can recover",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "16eedc602427dd326404-3c5279ad23d6d1f88216",
+          "file": "workbook-auto-ai-fallback.spec.ts",
+          "line": 776,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T07:08:18.257Z",
+    "duration": 1407.5260000000003,
+    "expected": 0,
+    "skipped": 240,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

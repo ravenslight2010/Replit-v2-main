@@ -1,0 +1,308 @@
+{
+  "scope": "File-target existence only; not prose, symbol, remote URL, or anchor certification",
+  "checked": [
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/lib/masterDataHealth.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/lib/roles.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/lib/syncHealth.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/routes/auditLogs.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/routes/importGoldApprovals.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/routes/importOperations.integration.test.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/routes/importOperations.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/routes/index.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/api-server/src/routes/roles.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/AuthContext.tsx",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/alertReceipts.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/components/AuditLogCard.tsx",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/components/FactoryDirectoryStatus.tsx",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/components/ImportGoldApprovalsCard.tsx",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/components/ImportGoldLabCard.tsx",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/components/RolesManager.tsx",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/components/SharedRecordsStatus.tsx",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/factoryDataSync.test.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/factoryDataSync.ts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/src/pages/home.tsx",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/evidence/agent-storage-merge-stalls-2026-10-30.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/evidence/facility-pending-status.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/evidence/full-browser-repair-progress-2026-10-24.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/evidence/full-browser-runtime-certification-2026-10-24.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/evidence/import-gold-approvals-ui.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/evidence/import-gold-source-use-decision.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/evidence/scheduled-check-database-latency-2026-10-31.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/isolated-staging.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/research-reconciliation/app-wide-audit-2026-10-29.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/research-reconciliation/coverage-ledger.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "docs/staff-role-permissions-audit-2026-10-30.md",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "lib/db/migrations/identity-sequence-health.mjs",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "scripts/src/configure-project-pnpm.sh",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "scripts/src/release-check.mts",
+      "exists": true
+    },
+    {
+      "document": ".local/tasks/consolidated-app-reliability-closure.md",
+      "kind": "inline",
+      "target": "scripts/src/run-project-pnpm.sh",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": ".local/build-identity/archived-stages/",
+      "exists": false
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/client-runtime-followup.DRqIi9/command.log",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/facility-reconnect-followup.moyOqq/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/manager-attention-followup.ocFcFl/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/premade-isolation-followup.E1MtVg/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/pwa-recovery-followup.rH8XAZ/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/recipe-freeze-followup.1ooaBq/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/recipe-freeze-followup.sq4bSL/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/recipe-gold-repair-followup.hdZQFD/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/reliability-closure-approved.Ih1R4I/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/reliability-closure.8qY3Wy/",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "artifacts/run-calculator/generated-artifacts/startup-shim-followup.Yyfh20/real-corepack.log",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "docs/full-browser-inventory.md",
+      "exists": true
+    },
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": "docs/research-reconciliation",
+      "exists": true
+    }
+  ],
+  "missing": [
+    {
+      "document": "docs/evidence/reliability-closure-progress.md",
+      "kind": "inline",
+      "target": ".local/build-identity/archived-stages/",
+      "exists": false
+    }
+  ],
+  "private_artifact_missing": []
+}

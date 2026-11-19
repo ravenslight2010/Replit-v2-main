@@ -1,0 +1,141 @@
+{
+  "config": {
+    "argv": [
+      "/nix/store/503mh0fj8j1cfvrxcavr76szbn4dk2r7-nodejs-slim-24.21.0/bin/node",
+      "/home/runner/workspace/artifacts/run-calculator/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=playwright.warehouse-coverage.config.ts",
+      "--grep=operator staging check persists for a canonical per-run material across reload$",
+      "--list",
+      "--reporter=json"
+    ],
+    "configFile": "/home/runner/workspace/artifacts/run-calculator/playwright.warehouse-coverage.config.ts",
+    "rootDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "warehouse-coverage.spec.ts"
+        ],
+        "timeout": 180000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "snapshotDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [],
+        "testMatch": "warehouse-coverage.spec.ts",
+        "timeout": 180000,
+        "use": {
+          "baseURL": "http://127.0.0.1:18999",
+          "headless": true,
+          "serviceWorkers": "block",
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "video": "off",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium",
+          "launchOptions": {
+            "executablePath": "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium"
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "warehouse-coverage.spec.ts",
+      "file": "warehouse-coverage.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "operator staging check persists for a canonical per-run material across reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [],
+              "status": "skipped"
+            }
+          ],
+          "id": "aac01e58916e42437cbf-f5d81a429914b80e3e94",
+          "file": "warehouse-coverage.spec.ts",
+          "line": 407,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T14:03:12.323Z",
+    "duration": 2477.773,
+    "expected": 0,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

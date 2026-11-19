@@ -1,0 +1,92 @@
+---
+name: Die-type master list — heal + variant consolidation
+description: Why the Die Type picker can go blank or list duplicate spellings, and how both apps recover.
+---
+
+# Die-type master list: heal from profiles + fold variant spellings
+
+Two related quirks, both because the Die Type **picker** reads a separate master
+list (`DIE_TYPES_KEY` / `state.dieTypes`) while each brand+flavor profile stores its
+own `dieType` **value**:
+
+1. **Blank picker after a reset.** Import writes each profile's `dieType` value but
+   never adds it to the master list, and `DEFAULT_DIE_TYPES` is `[]` (2026-07 purge),
+   so a reset leaves the picker empty. Fix: both apps self-heal the list by unioning
+   every profile's `dieType` back in on load — case-insensitive, keeping existing
+   spelling, honoring the `deletedItems["dieTypes"]` deletion tombstones (never
+   resurrect a deleted die). Web `healDieTypesFromProfiles` also scans crust-profile
+   keys and persists the effective list; mobile mirrors it purely in `normalizeState`.
+
+2. **Duplicate spellings of the same die.** Import can create several names for one
+   physical die (e.g. `11`, `11"`, `11" dies`). Die types are deliberately excluded
+   from the in-app Merge feature (see `die-types-merge-exclusion.md`), so the user
+   can't merge them. Instead consolidate with a `DIE_TYPE_RENAMES` map — the same
+   pattern as `PEP_TYPE_RENAMES` / `INGREDIENT_RENAMES` — mirrored web+mobile.
+   Applied everywhere die names surface on load/sync: the master-list heal, the
+   per-run/profile `dieType` field normalizer (web `normalizePepFields` / mobile
+   `renamePepSettings`), and sync-receive of the remote die list.
+
+**Sync rule (easy to miss):** on receive, map the incoming die list through
+`DIE_TYPE_RENAMES` and do NOT apply the global merged-away tombstone to die types
+(web passes `applyMergedAway=false`; mobile omits `dropTomb`). Applying merged-away
+to die types would let an ingredient merge whose source name collides with a die
+delete that die.
+
+**Why:** the picker's master list and the stored profile value are two separate
+stores. Writing a value (import) is not the same as registering it as a choosable
+option, and a value can drift into several spellings the picker shows as duplicates.
+
+**How to apply:** any field that has both a stored value and its own selectable
+master list must add/heal the value into that list; to consolidate variant spellings
+of an unmergeable list, add a rename map and apply it on every load + sync path,
+honoring deletion tombstones.
+
+**Renaming a die type must rewrite profiles AND tombstone the old name.** The Die
+Type picker's rename used to change only the master list + live run values, leaving
+the old name in the saved profiles — so the profile heal (and a stale peer's sync
+union) re-added it, giving "2 of each". A correct die rename must: fold the master
+list (dedupe), rewrite the `dieType` value on every saved profile (web:
+`run-calc-profile-*` + crust keys; mobile: `brandProfiles` entries) and live run,
+tombstone the old name in `deletedItems["dieTypes"]`, and clear any tombstone on the
+new name. Renaming onto an existing name is allowed (it MERGES) so the user can
+consolidate leftover duplicates. Same principle for any master list whose value is
+also cached in profiles/runs.
+
+**EVERY master-list rename must tombstone the old name (not just die types).** The
+same "2 of each" bug exists on any rename that only rewrites the list without a
+tombstone: renames were single-device-safe but a stale peer's additive sync union
+re-adds the old spelling. Die types alone had a fix because they also self-heal from
+profiles; the rest silently duplicated across devices. The fix, mirrored web+mobile,
+is the delete-handler pattern applied to EVERY rename: `tombstoneDeleted(namespace,
+oldName)` + `clearDeleted(namespace, newName)`. Namespaces are the payload list keys
+(`brands`, `pepTypes`, `ingredientTypes`, `{dough,frontline,cheese,mix}Ingredients`,
+`{dough,frontline,cheese,mix}RecipeNames`) and `flavorNamespace(brand)` for flavors.
+Web renames are inline in `home.tsx`; mobile is the generic branch of
+`renameListItem` plus `renameBrand`/`renameFlavor`.
+
+**Recipe-name renames must ALSO move the preset key old→new (web only).** Recipe
+presets are keyed by name and are synced on web, so tombstoning the old recipe name
+makes the sync-receive `dropTombstonedPresetKeys` delete the old preset — losing the
+recipe rows. Carry the value across first (shared `moveRecipePresetKey` helper; works
+for both `{rows}` and `RecipeRow[]` shapes; mix rows live in the cheese preset map).
+Mobile recipe presets stay **local** (not synced) and `renameRecipePreset` already
+moves the key, so no tombstone is needed there.
+
+**2026-07 web update — die types are now a factory-wide SERVER pool** (`die_types`
+table, `/api/die-types`, NOT in the day-state sync blob). Web no longer merges
+`payload.dieTypes` on sync receive (a stale peer would resurrect factory-deleted
+dies); the payload still carries the list for mobile, which hasn't migrated
+(parity paused). Web reconciles on load: local tombstones always win, local
+spelling wins over server spelling, local-only names are pushed up (first
+successful push = one-time migration, marker-gated; afterwards only
+profile-referenced names are healed locally so stale caches can't re-push
+deletions). Rename pushes new + deletes old on the server, EXCEPT case-only
+renames (server id is the lowercased name — deleting the old spelling would
+delete the new row too). Picking a die also blank-fills line-setting defaults
+(7"/11"/12"/Argus map in web `dieDefaults.ts`) — only fields still at their
+untouched `DEFAULT_VALUES` (speedAdjustment's untouched value is 1.0, not 0).
+
+**Known remaining mobile gap (deferred):** the ingredient-merge *apply* path in
+mobile `RunContext` still rewrites `dieTypes` via the merge map; web excludes die
+types from that rewrite. Unrelated to variant consolidation (that uses the rename
+map, not the merge feature) — mirror when the mobile merge-exclusion parity is done.

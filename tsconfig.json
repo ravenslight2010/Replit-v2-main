@@ -1,0 +1,115 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./lib/db"
+    },
+    {
+      "path": "./lib/api-client-react"
+    },
+    {
+      "path": "./lib/api-zod"
+    },
+    {
+      "path": "./lib/onboarding"
+    },
+    {
+      "path": "./lib/allergen"
+    },
+    {
+      "path": "./lib/fill-missing"
+    },
+    {
+      "path": "./lib/inventory-math"
+    },
+    {
+      "path": "./lib/cheese-recipes"
+    },
+    {
+      "path": "./lib/named-recipes"
+    },
+    {
+      "path": "./lib/cheese-import"
+    },
+    {
+      "path": "./lib/voice-commands"
+    },
+    {
+      "path": "./lib/name-match"
+    },
+    {
+      "path": "./lib/spec-import"
+    },
+    {
+      "path": "./lib/spec-reconcile"
+    },
+    {
+      "path": "./lib/spec-export"
+    },
+    {
+      "path": "./lib/merge-suggest"
+    },
+    {
+      "path": "./lib/production-rules"
+    },
+    {
+      "path": "./lib/freezer-pull"
+    },
+    {
+      "path": "./lib/mixes"
+    },
+    {
+      "path": "./lib/premix-import"
+    },
+    {
+      "path": "./lib/shipping-import"
+    },
+    {
+      "path": "./lib/mix-reconcile"
+    },
+    {
+      "path": "./lib/corpus-harness"
+    },
+    {
+      "path": "./lib/cycle-count"
+    },
+    {
+      "path": "./lib/scheduled-recipe-check"
+    },
+    {
+      "path": "./lib/profile-cleanup"
+    },
+    {
+      "path": "./lib/downtime-trends"
+    },
+    {
+      "path": "./lib/day-summary"
+    },
+    {
+      "path": "./lib/incident-cluster"
+    },
+    {
+      "path": "./lib/anomaly"
+    },
+    {
+      "path": "./lib/schedule-optimize"
+    },
+    {
+      "path": "./lib/schedule-move"
+    },
+    {
+      "path": "./lib/ai-memory"
+    },
+    {
+      "path": "./lib/ai-review"
+    },
+    {
+      "path": "./lib/recipe-apply"
+    },
+    {
+      "path": "./lib/integrations-openai-ai-server"
+    }
+  ]
+}

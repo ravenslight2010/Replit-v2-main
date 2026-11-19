@@ -1,0 +1,30 @@
+{"version":10,"type":"context-options","origin":"library","browserName":"","playwrightVersion":"1.64.1","options":{},"platform":"linux","wallTime":1793516798012,"monotonicTime":40857.695,"sdkLanguage":"javascript","title":"accessibility-smoke.spec.ts:720 › accessibility smoke › authenticated staff workflows expose accessible controls and dialogs"}
+{"type":"before","callId":"ekxb@694","startTime":46638.36,"class":"APIRequestContext","method":"fetch","params":{"url":"http://127.0.0.1:33295/api/sync/today?today=2026-11-01","method":"GET","headers":[{"name":"Cookie","value":"rc_auth=eyJzdWIiOiJhODIwNzExNi02NjczLTQ5OTQtOWNjZi1jODRkMDQ5ZDRjYTEiLCJqdGkiOiJiZTU3MjVhOS1jNzlhLTQ5Y2UtYmZhMy1jOGU4YzBmYjg4YzUiLCJpYXQiOjE3OTM1MTY3OTgsImV4cCI6MTc5NjEwODc5OH0.zD68xZLuJGX1xZVpSFhanVXovdfB3hB5IkAidS_NK-c"}]}}
+{"type":"log","callId":"ekxb@694","time":46642.565,"message":"→ GET http://127.0.0.1:33295/api/sync/today?today=2026-11-01"}
+{"type":"log","callId":"ekxb@694","time":46642.578,"message":"  user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36"}
+{"type":"log","callId":"ekxb@694","time":46642.581,"message":"  accept: */*"}
+{"type":"log","callId":"ekxb@694","time":46642.583,"message":"  accept-encoding: gzip,deflate,br"}
+{"type":"log","callId":"ekxb@694","time":46642.585,"message":"  Cookie: rc_auth=eyJzdWIiOiJhODIwNzExNi02NjczLTQ5OTQtOWNjZi1jODRkMDQ5ZDRjYTEiLCJqdGkiOiJiZTU3MjVhOS1jNzlhLTQ5Y2UtYmZhMy1jOGU4YzBmYjg4YzUiLCJpYXQiOjE3OTM1MTY3OTgsImV4cCI6MTc5NjEwODc5OH0.zD68xZLuJGX1xZVpSFhanVXovdfB3hB5IkAidS_NK-c"}
+{"type":"log","callId":"ekxb@694","time":46649.637,"message":"← 200 OK"}
+{"type":"log","callId":"ekxb@694","time":46649.646,"message":"  x-powered-by: Express"}
+{"type":"log","callId":"ekxb@694","time":46649.649,"message":"  x-correlation-id: 50dde17f-2eab-4bdf-bcb0-844e880139ab"}
+{"type":"log","callId":"ekxb@694","time":46649.651,"message":"  x-content-type-options: nosniff"}
+{"type":"log","callId":"ekxb@694","time":46649.653,"message":"  referrer-policy: strict-origin-when-cross-origin"}
+{"type":"log","callId":"ekxb@694","time":46649.654,"message":"  x-frame-options: DENY"}
+{"type":"log","callId":"ekxb@694","time":46649.656,"message":"  content-security-policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://api.qrserver.com; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'"}
+{"type":"log","callId":"ekxb@694","time":46649.658,"message":"  vary: Origin"}
+{"type":"log","callId":"ekxb@694","time":46649.659,"message":"  access-control-allow-credentials: true"}
+{"type":"log","callId":"ekxb@694","time":46649.661,"message":"  cache-control: no-store, no-cache, must-revalidate"}
+{"type":"log","callId":"ekxb@694","time":46649.662,"message":"  pragma: no-cache"}
+{"type":"log","callId":"ekxb@694","time":46649.664,"message":"  expires: 0"}
+{"type":"log","callId":"ekxb@694","time":46649.666,"message":"  x-sync-canonical-revision: 0"}
+{"type":"log","callId":"ekxb@694","time":46649.668,"message":"  x-sync-server-time: 1793516803800"}
+{"type":"log","callId":"ekxb@694","time":46649.669,"message":"  x-sync-response: complete"}
+{"type":"log","callId":"ekxb@694","time":46649.671,"message":"  x-sync-snapshot: 087e4423f018b1f434256e1a1160f814de1418038e07cb8f71c4673cb38243ed"}
+{"type":"log","callId":"ekxb@694","time":46649.672,"message":"  content-type: application/json; charset=utf-8"}
+{"type":"log","callId":"ekxb@694","time":46649.674,"message":"  content-length: 206"}
+{"type":"log","callId":"ekxb@694","time":46649.675,"message":"  etag: W/\"ce-s2BbvGr2ZuZ/h/RJAQqg8z7fiVE\""}
+{"type":"log","callId":"ekxb@694","time":46649.677,"message":"  date: Sun, 01 Nov 2026 07:06:43 GMT"}
+{"type":"log","callId":"ekxb@694","time":46649.679,"message":"  connection: keep-alive"}
+{"type":"log","callId":"ekxb@694","time":46649.681,"message":"  keep-alive: timeout=5"}
+{"type":"after","callId":"ekxb@694","endTime":46649.798,"result":{"response":{"url":"http://127.0.0.1:33295/api/sync/today?today=2026-11-01","status":200,"statusText":"OK","headers":[{"name":"X-Powered-By","value":"Express"},{"name":"X-Correlation-ID","value":"50dde17f-2eab-4bdf-bcb0-844e880139ab"},{"name":"X-Content-Type-Options","value":"nosniff"},{"name":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"name":"X-Frame-Options","value":"DENY"},{"name":"Content-Security-Policy","value":"default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://api.qrserver.com; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'"},{"name":"Vary","value":"Origin"},{"name":"Access-Control-Allow-Credentials","value":"true"},{"name":"Cache-Control","value":"no-store, no-cache, must-revalidate"},{"name":"Pragma","value":"no-cache"},{"name":"Expires","value":"0"},{"name":"X-Sync-Canonical-Revision","value":"0"},{"name":"X-Sync-Server-Time","value":"1793516803800"},{"name":"X-Sync-Response","value":"complete"},{"name":"X-Sync-Snapshot","value":"087e4423f018b1f434256e1a1160f814de1418038e07cb8f71c4673cb38243ed"},{"name":"Content-Type","value":"application/json; charset=utf-8"},{"name":"Content-Length","value":"206"},{"name":"ETag","value":"W/\"ce-s2BbvGr2ZuZ/h/RJAQqg8z7fiVE\""},{"name":"Date","value":"Sun, 01 Nov 2026 07:06:43 GMT"},{"name":"Connection","value":"keep-alive"},{"name":"Keep-Alive","value":"timeout=5"}],"serverAddr":{"ipAddress":"127.0.0.1","port":33295},"timing":{"startTime":1793516803794,"domainLookupStart":-1,"domainLookupEnd":-1,"connectStart":0,"secureConnectionStart":-1,"connectEnd":3.5120000000024447,"requestStart":3.5120000000024447,"responseStart":7.4120000000039},"responseEndTiming":8.540999999997439,"fetchUid":"67fd4f02ebf164168b5d5785584a0363"}}}

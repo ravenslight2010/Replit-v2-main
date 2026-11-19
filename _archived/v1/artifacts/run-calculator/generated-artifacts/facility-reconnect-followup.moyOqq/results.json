@@ -1,0 +1,248 @@
+{
+  "config": {
+    "argv": [
+      "/nix/store/503mh0fj8j1cfvrxcavr76szbn4dk2r7-nodejs-slim-24.21.0/bin/node",
+      "/home/runner/workspace/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=playwright.release-debug.config.ts",
+      "home-deferred-panels.spec.ts",
+      "--grep",
+      "(pending facility edit is acknowledged once after connectivity returns|independent facility edit progresses after a (malformed|stale) acknowledgment on reconnect)$",
+      "--reporter=line,json",
+      "--output=/home/runner/workspace/artifacts/run-calculator/generated-artifacts/facility-reconnect-followup.moyOqq/results"
+    ],
+    "configFile": "/home/runner/workspace/artifacts/run-calculator/playwright.release-debug.config.ts",
+    "rootDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/home/runner/workspace/artifacts/run-calculator/e2e/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": {},
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/facility-reconnect-followup.moyOqq/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": {},
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/facility-reconnect-followup.moyOqq/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "snapshotDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts"
+        ],
+        "testMatch": "**/*.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:43657",
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "video": "off",
+          "launchOptions": {
+            "executablePath": "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium"
+          },
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "home-deferred-panels.spec.ts",
+      "file": "home-deferred-panels.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "facility reconnect delivery",
+          "file": "home-deferred-panels.spec.ts",
+          "line": 894,
+          "column": 6,
+          "specs": [
+            {
+              "title": "pending facility edit is acknowledged once after connectivity returns",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 15850,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T16:47:44.403Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "39b6ae82758a881b1b08-f899648806141f60243e",
+              "file": "home-deferred-panels.spec.ts",
+              "line": 898,
+              "column": 1
+            },
+            {
+              "title": "independent facility edit progresses after a malformed acknowledgment on reconnect",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 14398,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T16:48:14.337Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "39b6ae82758a881b1b08-6f401c50a0cc0b647b2a",
+              "file": "home-deferred-panels.spec.ts",
+              "line": 898,
+              "column": 1
+            },
+            {
+              "title": "independent facility edit progresses after a stale acknowledgment on reconnect",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 14373,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T16:48:28.748Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "39b6ae82758a881b1b08-fa3d51d3fe339785fb55",
+              "file": "home-deferred-panels.spec.ts",
+              "line": 898,
+              "column": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T16:47:17.499Z",
+    "duration": 85931.57800000001,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

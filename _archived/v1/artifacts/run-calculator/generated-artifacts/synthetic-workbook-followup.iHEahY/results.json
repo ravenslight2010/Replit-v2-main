@@ -1,0 +1,406 @@
+{
+  "config": {
+    "argv": [
+      "/nix/store/503mh0fj8j1cfvrxcavr76szbn4dk2r7-nodejs-slim-24.21.0/bin/node",
+      "/home/runner/workspace/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=playwright.release-debug.config.ts",
+      "workbook-auto-ai-fallback.spec.ts",
+      "--reporter=line,json",
+      "--output=/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results"
+    ],
+    "configFile": "/home/runner/workspace/artifacts/run-calculator/playwright.release-debug.config.ts",
+    "rootDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/home/runner/workspace/artifacts/run-calculator/e2e/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": {},
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": {},
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "snapshotDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts"
+        ],
+        "testMatch": "**/*.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:48665",
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "video": "off",
+          "launchOptions": {
+            "executablePath": "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium"
+          },
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "workbook-auto-ai-fallback.spec.ts",
+      "file": "workbook-auto-ai-fallback.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "manager gets three synthetic products in review; cancel is read-only",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 16496,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true })\u001b[22m\n\n    at /home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts:790:96",
+                    "location": {
+                      "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                      "column": 96,
+                      "line": 790
+                    },
+                    "snippet": "  788 |     await page.setViewportSize(viewport);\n  789 |     for (const flavor of SYNTHETIC_REVIEW_FLAVORS) {\n> 790 |       await expect(dialog.getByText(`${SYNTHETIC_REVIEW_BRAND} — ${flavor}`, { exact: true })).toBeVisible();\n      |                                                                                                ^\n  791 |     }\n  792 |     await expect(dialog.getByRole(\"button\", { name: \"Cancel\", exact: true })).toBeVisible();\n  793 |     const width = await page.evaluate(() => document.documentElement.scrollWidth);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                        "column": 96,
+                        "line": 790
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true }) with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByText('Local Fixture Bakery — Garden', { exact: true })\u001b[22m\n\n\n  788 |     await page.setViewportSize(viewport);\n  789 |     for (const flavor of SYNTHETIC_REVIEW_FLAVORS) {\n> 790 |       await expect(dialog.getByText(`${SYNTHETIC_REVIEW_BRAND} — ${flavor}`, { exact: true })).toBeVisible();\n      |                                                                                                ^\n  791 |     }\n  792 |     await expect(dialog.getByRole(\"button\", { name: \"Cancel\", exact: true })).toBeVisible();\n  793 |     const width = await page.evaluate(() => document.documentElement.scrollWidth);\n    at /home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts:790:96"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T16:03:03.282Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--ce382--review-cancel-is-read-only-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--ce382--review-cancel-is-read-only-chromium/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--ce382--review-cancel-is-read-only-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--ce382--review-cancel-is-read-only-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                    "column": 96,
+                    "line": 790
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "16eedc602427dd326404-13978c5de3f69fe4f90a",
+          "file": "workbook-auto-ai-fallback.spec.ts",
+          "line": 751,
+          "column": 1
+        },
+        {
+          "title": "deterministic exported workbook stays model-free",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10184,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T16:03:35.727Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "16eedc602427dd326404-9cd87df357c5dd73ad83",
+          "file": "workbook-auto-ai-fallback.spec.ts",
+          "line": 818,
+          "column": 1
+        },
+        {
+          "title": "profile importer without AI permission sees guidance and sends no parse request",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 14739,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\nExpected substring: \u001b[32m\"AI interpretation is unavailable for your account\"\u001b[39m\nReceived string:    \u001b[31m\"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\u001b[22m\n\u001b[2m    12 × locator resolved to <div role=\"status\" data-testid=\"spec-import-unresolved\" class=\"rounded-md border border-amber-400/60 bg-amber-500/10 p-3\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\nExpected substring: \u001b[32m\"AI interpretation is unavailable for your account\"\u001b[39m\nReceived string:    \u001b[31m\"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\u001b[22m\n\u001b[2m    12 × locator resolved to <div role=\"status\" data-testid=\"spec-import-unresolved\" class=\"rounded-md border border-amber-400/60 bg-amber-500/10 p-3\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[22m\n\n    at /home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts:864:62",
+                    "location": {
+                      "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                      "column": 62,
+                      "line": 864
+                    },
+                    "snippet": "  862 |   });\n  863 |   const dialog = page.getByRole(\"dialog\", { name: \"Import Spec Sheet\" });\n> 864 |   await expect(dialog.getByTestId(\"spec-import-unresolved\")).toContainText(\n      |                                                              ^\n  865 |     \"AI interpretation is unavailable for your account\",\n  866 |   );\n  867 |   expect(parserRequests).toBe(0);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                        "column": 62,
+                        "line": 864
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\nExpected substring: \u001b[32m\"AI interpretation is unavailable for your account\"\u001b[39m\nReceived string:    \u001b[31m\"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\u001b[22m\n\u001b[2m    12 × locator resolved to <div role=\"status\" data-testid=\"spec-import-unresolved\" class=\"rounded-md border border-amber-400/60 bg-amber-500/10 p-3\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[22m\n\n\n  862 |   });\n  863 |   const dialog = page.getByRole(\"dialog\", { name: \"Import Spec Sheet\" });\n> 864 |   await expect(dialog.getByTestId(\"spec-import-unresolved\")).toContainText(\n      |                                                              ^\n  865 |     \"AI interpretation is unavailable for your account\",\n  866 |   );\n  867 |   expect(parserRequests).toBe(0);\n    at /home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts:864:62"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T16:03:46.160Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--a5218--and-sends-no-parse-request-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--a5218--and-sends-no-parse-request-chromium/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--a5218--and-sends-no-parse-request-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--a5218--and-sends-no-parse-request-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                    "column": 62,
+                    "line": 864
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "16eedc602427dd326404-7027b723f0975b39f2ee",
+          "file": "workbook-auto-ai-fallback.spec.ts",
+          "line": 847,
+          "column": 1
+        },
+        {
+          "title": "provider failure preserves an incomplete review and one retry can recover",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 16446,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\nExpected substring: \u001b[32m\"Automatic AI interpretation did not resolve all content\"\u001b[39m\nReceived string:    \u001b[31m\"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\u001b[22m\n\u001b[2m    14 × locator resolved to <div role=\"status\" data-testid=\"spec-import-unresolved\" class=\"rounded-md border border-amber-400/60 bg-amber-500/10 p-3\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\nExpected substring: \u001b[32m\"Automatic AI interpretation did not resolve all content\"\u001b[39m\nReceived string:    \u001b[31m\"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\u001b[22m\n\u001b[2m    14 × locator resolved to <div role=\"status\" data-testid=\"spec-import-unresolved\" class=\"rounded-md border border-amber-400/60 bg-amber-500/10 p-3\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[22m\n\n    at /home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts:924:62",
+                    "location": {
+                      "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                      "column": 62,
+                      "line": 924
+                    },
+                    "snippet": "  922 |     timeout: 8 * 60_000,\n  923 |   });\n> 924 |   await expect(dialog.getByTestId(\"spec-import-unresolved\")).toContainText(\n      |                                                              ^\n  925 |     \"Automatic AI interpretation did not resolve all content\",\n  926 |   );\n  927 |   await dialog.getByRole(\"button\", { name: \"Retry AI interpretation\", exact: true }).click();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                        "column": 62,
+                        "line": 924
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\nExpected substring: \u001b[32m\"Automatic AI interpretation did not resolve all content\"\u001b[39m\nReceived string:    \u001b[31m\"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved') with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('dialog', { name: 'Import Spec Sheet' }).getByTestId('spec-import-unresolved')\u001b[22m\n\u001b[2m    14 × locator resolved to <div role=\"status\" data-testid=\"spec-import-unresolved\" class=\"rounded-md border border-amber-400/60 bg-amber-500/10 p-3\">…</div>\u001b[22m\n\u001b[2m       - unexpected value \"1 unresolved source sectionThis workbook is not a supported pizza-spec, dough, or sauce recipe source. Use its dedicated importer or choose a supported workbook.\"\u001b[22m\n\n\n  922 |     timeout: 8 * 60_000,\n  923 |   });\n> 924 |   await expect(dialog.getByTestId(\"spec-import-unresolved\")).toContainText(\n      |                                                              ^\n  925 |     \"Automatic AI interpretation did not resolve all content\",\n  926 |   );\n  927 |   await dialog.getByRole(\"button\", { name: \"Retry AI interpretation\", exact: true }).click();\n    at /home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts:924:62"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T16:04:03.926Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--a464c-w-and-one-retry-can-recover-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--a464c-w-and-one-retry-can-recover-chromium/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--a464c-w-and-one-retry-can-recover-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/synthetic-workbook-followup.iHEahY/results/workbook-auto-ai-fallback--a464c-w-and-one-retry-can-recover-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/workspace/artifacts/run-calculator/e2e/workbook-auto-ai-fallback.spec.ts",
+                    "column": 62,
+                    "line": 924
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "16eedc602427dd326404-3c5279ad23d6d1f88216",
+          "file": "workbook-auto-ai-fallback.spec.ts",
+          "line": 878,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T16:02:21.984Z",
+    "duration": 119595.09999999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

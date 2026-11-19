@@ -1,0 +1,60 @@
+---
+name: Warehouse staging checklist
+description: Per-run "What Each Run Needs" check-off state — how it's keyed, stored, and synced across web+mobile.
+---
+
+# Warehouse staging checklist
+
+Warehouse staff tick off per-run need rows (ingredients + packaging) in the
+"What Each Run Needs" card as they pull/stage them.
+
+- **Storage:** `dayState.stagedItems?: Record<string, boolean>` (web `DayState`,
+  mobile `AppState`). Only checked rows stored as `true`; unchecking deletes the
+  key. NOT master data — a today-only day-state overlay.
+- **Key:** `${runId}::${label}__${unit}` where `label`+`unit` come from the same
+  `aggregateNeedRows`/`aggregatePackagingNeeds` (web) and
+  `buildRunNeedRows`/`buildRunPackagingRows` (mobile) row builders. The
+  `label__unit` form matches across platforms, so a check on one device lines up
+  on the other for the same logical row.
+- **Sync:** rides in the synced day-state exactly like `substitutions` —
+  authoritative whole-map replacement on the accepted day (last-writer-of-day
+  wins; same residual ≤30s echo-race tradeoff as substitutions, not merged
+  per-key). Added to web `appStateToPayload` build + accept paths, mobile
+  `SyncDayState`/`SyncableState`/`appStateToPayload`/`applyPayloadToState`.
+- **Reset:** cleared at the daily reset everywhere substitutions are: web
+  `freshDayState` + both rollover `DayState` constructs; mobile `freshDay`,
+  `rolloverDay`, `DEFAULT_APP_STATE`, `normalizeState`.
+
+**Why the substitutions pattern:** it's the established today-only synced overlay
+in this codebase; reusing it (whole-map replace, same reset points) keeps the new
+field from being clobbered by additive list unions and keeps web+mobile parity.
+
+## Warehouse-mode need rows (2026-07-10)
+
+Warehouse surfaces (cast screen, warehouse-tab roll-up, per-run checklist) pass
+`{ warehouse: true }` to the need-row builder: sauce rows are OMITTED (pulling
+sauce is the sauce maker's job, not warehouse) and Cheese/Mix applicator rows
+are labeled `Type — BlendName` so staff know WHICH cheese/mix to pull.
+**Why:** user decision — warehouse must not stage sauce, and a bare "Cheese"
+row is useless to them.
+**How to apply:** any NEW warehouse-facing consumer of the need rows must pass
+the warehouse flag; the freezer-pull scheduled path deliberately stays on
+default labels (its labels feed manager-tagged ingredient matching — renaming
+breaks existing tags). Label changes reset that day's staged checkmarks for the
+renamed rows (keys embed the label) — accepted, day-state only.
+
+## Pre-made mix staging
+
+Regular Mix applicators are made before production, so warehouse surfaces stage
+only the finished `Mix — <name>` amount and must never expand the mix's
+ingredient components. Cheese applicators continue to expand their recipe
+ingredients because those components still need to be pulled to make the
+cheese blend.
+
+**Why:** warehouse staging reflects the handoff to the line, not the separate
+pre-production mix-making job; expanding a regular mix double-directs the
+warehouse to pull ingredients that should already be in the completed mix.
+
+**How to apply:** keep this distinction in per-run checklists, all-runs
+rollups, and warehouse station screens. Do not change inventory consumption or
+make-day mix planning when changing the display rule.

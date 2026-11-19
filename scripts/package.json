@@ -1,0 +1,50 @@
+{
+  "name": "@workspace/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "audit:source-snapshot": "tsx ./src/capture-source-audit-snapshot.mts",
+    "audit:source-compare": "tsx ./src/compare-source-audit.mts",
+    "test:source-compare": "tsx ./src/compare-source-audit.test.mts",
+    "test:skill-catalog": "tsx ./src/skill-catalog.test.mts",
+    "verify-large-spec-import": "tsx ./src/verify-large-spec-import.mts",
+    "test": "bash ./src/check-shell-inventory.sh && bash ./src/check-shell-inventory.test.sh && bash ./src/check-model-version-bump.test.sh && bash ./src/check-workflows.test.sh && pnpm run check:shell && bash ./src/push-main.test.sh && pnpm run test:source-compare && pnpm run test:skill-catalog",
+    "test:recovery": "tsx ./src/recovery-audit.test.mts",
+    "test:release-evidence": "tsx ./src/release-evidence.test.mts && tsx ../artifacts/run-calculator/e2e/release-duration-reporter.unit.mts",
+    "test:release-resume": "tsx ./src/release-resume.integration.test.mts",
+    "test:release-stopped-summary": "RELEASE_STOPPED_SUMMARY_ONLY=1 tsx ./src/release-resume.integration.test.mts",
+    "check:release-concurrency": "tsx ./src/release-concurrency-stress.mts",
+    "test:release-concurrency": "tsx ./src/release-concurrency-stress.test.mts",
+    "audit:recovery": "tsx ./src/recovery-audit.mts",
+    "check-model-bump": "pnpm run test && bash ./src/check-model-version-bump.sh",
+    "check-department-playwright-projects": "tsx ./src/check-department-playwright-projects.mts",
+    "check-operational-skill-evidence": "tsx ./src/check-operational-skill-evidence.mts",
+    "check:ci-binary-provenance": "bash ./src/check-ci-binary-provenance.sh",
+    "check:github-signed-commit-policy": "bash ./src/check-github-signed-commit-policy.sh",
+    "check:shell": "shellcheck ./src/check-ci-binary-provenance.sh ./src/check-github-signed-commit-policy.sh ./src/check-model-version-bump.sh ./src/check-model-version-bump.test.sh ./src/check-shell-inventory.sh ./src/check-shell-inventory.test.sh ./src/check-workflows.test.sh ./src/check-workflows.sh ./src/fetch-release-concurrency-history.sh ./src/push-main.sh ./src/push-main.test.sh ./src/release-stopped-summary.sh",
+    "check:workflows": "bash ./src/check-workflows.sh",
+    "check:skill-catalog": "tsx ./src/skill-catalog.mts",
+    "check:release-evidence": "tsx ./src/release-check.mts --verify-evidence",
+    "check:clean-start": "tsx ./src/verify-clean-start.mts",
+    "push:main": "bash ./src/push-main.sh",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@workspace/db": "workspace:*",
+    "@workspace/spec-export": "workspace:*",
+    "@workspace/spec-import": "workspace:*",
+    "@workspace/cheese-import": "workspace:*",
+    "@workspace/premix-import": "workspace:*",
+    "@workspace/shipping-import": "workspace:*",
+    "@workspace/named-recipes": "workspace:*",
+    "@workspace/spec-reconcile": "workspace:*",
+    "xlsx": "npm:@e965/xlsx@^0.20.3",
+    "@workspace/name-match": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "github-actionlint": "1.7.12",
+    "tsx": "catalog:"
+  }
+}

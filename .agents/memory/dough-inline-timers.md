@@ -1,0 +1,20 @@
+---
+name: Dough inline timers & measured machine times
+description: Web Dough tab live countdowns, machine-time pacing of auto-track, and the tickDueRefs anchoring contract
+---
+
+# Dough inline timers (web-only, graduated from canvas mockup 2026-07-08)
+
+- Three form fields `mixerLowSec`/`mixerHighSec`/`hopperSec` (0 = not measured) are run-value config, deliberately NOT in PROGRESS_FIELDS. They flow through the normal form persistence/sync paths like any other run value.
+- `useAutoTrack` accepts optional `machine: {spinSec, hopperSec}`:
+  - `spinSec > 0` → the "+1 batch produced" tick period becomes the measured spin time instead of line-speed batch time.
+  - batch drain period = `max(hopperMs, lineBatchMs)`, quarter-ticks, consumption scaled to that effective period. Everything falls back to old line-speed behavior at 0.
+- **Countdown anchoring rule:** any UI countdown for an auto counter must anchor to the hook's exposed `tickDueRefs` (next-due timestamps per counter), never re-derive its own schedule — otherwise display and counter drift apart.
+- **Why:** the hook re-arms/clamps its own schedule (suppression, resume, run switches); a parallel UI timer cannot stay in sync.
+- **Resume baseline rule:** resume re-arms only the selected timer scope (`case`, `dough`, or `all`) from `now + configured cadence`; dough scope includes every production and consumption due ref, while case progress baselines and completed work stay untouched.
+- **Why:** resetting the selected timer from a full interval prevents a same-render count/write after Resume without disturbing unrelated active timers or case-progress bookkeeping.
+- **Clock-source rule:** state-transition re-arms must use `Date.now()`, not the once-per-second display clock.
+- **Why:** a display-clock value can be nearly one second stale, enough to make the minimum one-second cadence immediately due after Manual → Auto or pause → resume.
+- Packaging quick-check card encodes skids+cases as one packed total (`floor/mod` by casesPerSkid) and must keep the old steppers' upper clamp (total ≤ casesNeeded). Only crust mode keeps the plain steppers; with casesPerSkid ≤ 0 the card still renders but buttons bump the raw fields directly and all `/cps`-derived UI (pace badge, summary, denominators) is hidden — never divide by cps without the guard.
+- **Mockup fidelity lesson (2026-07-08 fix round):** the user compares the graduated tab against the mockup card-by-card — cards must be ALWAYS visible with sensible empty states ("—:—" + hint, "Timers paused" note), not gated behind config being filled in, and section order must match the mockup exactly (banner → pipeline → machine times → What You Need Now → steppers → packaging → run-to-time → recipe).
+- Dev note: editing home.tsx always triggers a full Fast Refresh invalidate (`useDropdownScrollKeeper` export) — a one-off "Invalid hook call in <Home>" in the console right after HMR is that known artifact, not a code bug; fresh loads are clean.

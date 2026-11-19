@@ -1,0 +1,17 @@
+{
+  "scope": "Only the failed version handoff after restoring omitted source lockfile; no app/database",
+  "baseline": "report.json",
+  "deadlineSeconds": 35,
+  "status": "passed",
+  "code": 0,
+  "elapsedMs": 10645,
+  "addedInput": {
+    "file": "pnpm-lock.yaml",
+    "sha256": "d103dfa4b08910fa7b095739c62ada16acc3af7b840238fe04df288c658c9d83"
+  },
+  "sourceLockfileUnchanged": true,
+  "fixtureLockfileUnchanged": true,
+  "connectCalls": 2,
+  "unreachableCalls": 0,
+  "traceDenied": false
+}

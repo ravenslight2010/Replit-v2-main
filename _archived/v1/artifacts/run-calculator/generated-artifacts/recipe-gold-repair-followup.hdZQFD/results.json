@@ -1,0 +1,399 @@
+{
+  "config": {
+    "argv": [
+      "/nix/store/503mh0fj8j1cfvrxcavr76szbn4dk2r7-nodejs-slim-24.21.0/bin/node",
+      "/home/runner/workspace/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=playwright.release-debug.config.ts",
+      "recipe-refresh-start-freeze.spec.ts",
+      "import-gold-lab-responsive.spec.ts",
+      "import-gold-approvals-authenticated.spec.ts",
+      "--grep",
+      "(mix|cheese) recipe edits refresh pending runs across browsers but freeze after Start$|Gold Lab approval metadata lifecycle, authorization, errors, and responsive review$|daily retention reminders stay metadata-only and scoped by role$|QC Manager can use the scoped retention panel without opening the Gold Lab$|Import Gold manager panel fits and remains reviewable at this browser viewport$",
+      "--reporter=line,json",
+      "--output=/home/runner/workspace/artifacts/run-calculator/generated-artifacts/recipe-gold-repair-followup.hdZQFD/results"
+    ],
+    "configFile": "/home/runner/workspace/artifacts/run-calculator/playwright.release-debug.config.ts",
+    "rootDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/home/runner/workspace/artifacts/run-calculator/e2e/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": {},
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/recipe-gold-repair-followup.hdZQFD/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": {},
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/recipe-gold-repair-followup.hdZQFD/results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "snapshotDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts"
+        ],
+        "testMatch": "**/*.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "http://127.0.0.1:56463",
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "video": "off",
+          "launchOptions": {
+            "executablePath": "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium"
+          },
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "import-gold-approvals-authenticated.spec.ts",
+      "file": "import-gold-approvals-authenticated.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Gold Lab approval metadata lifecycle, authorization, errors, and responsive review",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 210000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19384,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T18:49:22.793Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d143afa49088e0b6b14-ebef286cc2b7cc548a1d",
+          "file": "import-gold-approvals-authenticated.spec.ts",
+          "line": 16,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "import-gold-lab-responsive.spec.ts",
+      "file": "import-gold-lab-responsive.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Import Gold manager panel fits and remains reviewable at this browser viewport",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2591,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T18:50:00.343Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d7312cfb8ddadf8397b-8a3fe39edc4c9f984d4b",
+          "file": "import-gold-lab-responsive.spec.ts",
+          "line": 14,
+          "column": 1
+        },
+        {
+          "title": "QC Manager can use the scoped retention panel without opening the Gold Lab",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2577,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T18:50:02.944Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5d7312cfb8ddadf8397b-b2cbfd4480ea4dc60cff",
+          "file": "import-gold-lab-responsive.spec.ts",
+          "line": 237,
+          "column": 1
+        },
+        {
+          "title": "daily retention reminders stay metadata-only and scoped by role",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 16851,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('gold-retention-reminders')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('gold-retention-reminders') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('gold-retention-reminders')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('gold-retention-reminders')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('gold-retention-reminders') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('gold-retention-reminders')\u001b[22m\n\n    at /home/runner/workspace/artifacts/run-calculator/e2e/import-gold-lab-responsive.spec.ts:414:29",
+                    "location": {
+                      "file": "/home/runner/workspace/artifacts/run-calculator/e2e/import-gold-lab-responsive.spec.ts",
+                      "column": 29,
+                      "line": 414
+                    },
+                    "snippet": "  412 |     await openHome(manager.token);\n  413 |     const reminders = page.getByTestId(\"gold-retention-reminders\");\n> 414 |     await expect(reminders).toBeVisible({ timeout: 15_000 });\n      |                             ^\n  415 |     await expect(reminders.getByTestId(\"gold-retention-due-soon-reminder\")).toContainText(\"2 deadlines due within 7 days\");\n  416 |     await expect(reminders.getByTestId(\"gold-retention-overdue-reminder\")).toContainText(\"1 overdue deadline\");\n  417 |     await expect(reminders).not.toContainText(/SYNTHETIC_PRIVATE|Expected:|Predicted:|Spec import/);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/workspace/artifacts/run-calculator/e2e/import-gold-lab-responsive.spec.ts",
+                        "column": 29,
+                        "line": 414
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('gold-retention-reminders')\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByTestId('gold-retention-reminders') with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('gold-retention-reminders')\u001b[22m\n\n\n  412 |     await openHome(manager.token);\n  413 |     const reminders = page.getByTestId(\"gold-retention-reminders\");\n> 414 |     await expect(reminders).toBeVisible({ timeout: 15_000 });\n      |                             ^\n  415 |     await expect(reminders.getByTestId(\"gold-retention-due-soon-reminder\")).toContainText(\"2 deadlines due within 7 days\");\n  416 |     await expect(reminders.getByTestId(\"gold-retention-overdue-reminder\")).toContainText(\"1 overdue deadline\");\n  417 |     await expect(reminders).not.toContainText(/SYNTHETIC_PRIVATE|Expected:|Predicted:|Spec import/);\n    at /home/runner/workspace/artifacts/run-calculator/e2e/import-gold-lab-responsive.spec.ts:414:29"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T18:50:05.531Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/recipe-gold-repair-followup.hdZQFD/results/import-gold-lab-responsive-47577-ata-only-and-scoped-by-role-chromium/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/recipe-gold-repair-followup.hdZQFD/results/import-gold-lab-responsive-47577-ata-only-and-scoped-by-role-chromium/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/workspace/artifacts/run-calculator/generated-artifacts/recipe-gold-repair-followup.hdZQFD/results/import-gold-lab-responsive-47577-ata-only-and-scoped-by-role-chromium/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/workspace/artifacts/run-calculator/e2e/import-gold-lab-responsive.spec.ts",
+                    "column": 29,
+                    "line": 414
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "5d7312cfb8ddadf8397b-de6e01707871de9eec24",
+          "file": "import-gold-lab-responsive.spec.ts",
+          "line": 313,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "recipe-refresh-start-freeze.spec.ts",
+      "file": "recipe-refresh-start-freeze.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "mix recipe edits refresh pending runs across browsers but freeze after Start",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 55439,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T18:50:24.576Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-b7b70731666df83dcc7f",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1467,
+          "column": 3
+        },
+        {
+          "title": "cheese recipe edits refresh pending runs across browsers but freeze after Start",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 48935,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T18:51:20.455Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "75de061c2c92d1a6a11d-d43bcb04588322dd9e5f",
+          "file": "recipe-refresh-start-freeze.spec.ts",
+          "line": 1467,
+          "column": 3
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T18:48:40.688Z",
+    "duration": 210197.959,
+    "expected": 5,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

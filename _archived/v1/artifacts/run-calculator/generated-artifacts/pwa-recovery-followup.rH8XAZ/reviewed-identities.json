@@ -1,0 +1,17 @@
+[
+  [
+    "68653885c13ad33062c9-01e6d02deb28827ea8f0",
+    "chromium",
+    "auto-reloads when Home was already safe before update discovery"
+  ],
+  [
+    "68653885c13ad33062c9-5525da1780bb477027cf",
+    "chromium",
+    "preserves unsafe work, then auto-reloads after safe inactivity"
+  ],
+  [
+    "68653885c13ad33062c9-58ccbb40d396d96bf2ad",
+    "chromium",
+    "recovers an old HTML-served Home chunk onto the current build once"
+  ]
+]

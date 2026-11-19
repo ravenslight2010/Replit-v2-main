@@ -1,0 +1,65 @@
+{
+  "scope": "Credential-free diagnostic provisioning and version-only probes; no app/database",
+  "deadlineSeconds": 35,
+  "phases": [
+    {
+      "name": "signed-artifact-provisioning",
+      "status": "passed",
+      "metadata": {
+        "schema": 1,
+        "pnpm": "12.8.1",
+        "buildNode": "24.21.0",
+        "corepack": "0.36.0",
+        "platform": "linux",
+        "arch": "x64",
+        "sha256": "ac557d8df43e3cd4fae0cd9827ddf5d845b1b5ccac7b7c8909aea820ff3a36bf",
+        "producer": "corepack-pack-pnpm-native-default-integrity"
+      }
+    },
+    {
+      "name": "verified-cache-only-restore",
+      "status": "passed"
+    },
+    {
+      "name": "native-outside-project",
+      "status": "passed",
+      "code": 0,
+      "traceLines": 146,
+      "execTargets": [
+        "pnpm-native"
+      ],
+      "connectCalls": 0,
+      "unreachableCalls": 0,
+      "traceDenied": false
+    },
+    {
+      "name": "retained-project-launcher",
+      "status": "failed",
+      "code": 124,
+      "traceLines": 8174,
+      "execTargets": [
+        "bash",
+        "dirname",
+        "node",
+        "corepack.js",
+        "realpath",
+        "mkdir",
+        "corepack",
+        "pnpm",
+        "pnpm-native",
+        "rm"
+      ],
+      "connectCalls": 10,
+      "unreachableCalls": 6,
+      "traceDenied": false
+    }
+  ],
+  "inputs": {
+    "package.json": "1cc73a9d24275c4d04a8dbe1965280679dca6742f21d54b350954c58f3712543",
+    ".nvmrc": "07a8533ef4d8265fe6c7e676c7e8c265075888ba6046b5755df43b1cd9f6fb92",
+    "pnpm-workspace.yaml": "7112e41e79556099f6b0b8405cb2d4111e268716e1d9da0a1196f2f6c11e00fd",
+    "scripts/src/run-project-pnpm.sh": "e09baeab6d0a8421b833f7f6b2d512b44fa838fddd2ece8770b827c5d2984375",
+    "scripts/src/configure-project-pnpm.sh": "1bab4971a62693c8651f7d46b62845ce4db3889f3605ff3c814307705f8d56ce",
+    "scripts/src/runtime-tool-cache.mjs": "73c73d1400ce703f40d5a3138c627ff286614be4e2f77ad6dea3c02f74812b93"
+  }
+}

@@ -1,0 +1,15614 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: manager-attention.spec.ts >> manager can review and resolve an incident with Enter and Space
+- Location: e2e/manager-attention.spec.ts:1249:1
+
+# Error details
+
+```
+Error: expect(locator).toBeVisible() failed
+
+Locator: locator('[data-incident-header="38317e29-fc89-4e88-9c24-d2908763bcae"]').locator('..').getByRole('button', { name: 'Mark reviewed' })
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" locator('[data-incident-header="38317e29-fc89-4e88-9c24-d2908763bcae"]').locator('..').getByRole('button', { name: 'Mark reviewed' }) with timeout 5000ms
+  - waiting for locator('[data-incident-header="38317e29-fc89-4e88-9c24-d2908763bcae"]').locator('..').getByRole('button', { name: 'Mark reviewed' })
+
+```
+
+```yaml
+- complementary "App updates":
+  - button "App updates · Development preview"
+  - status: Development preview. Published updates are not checked in this development preview.
+- main:
+  - text: Not started Unnamed Run Run 1/1
+  - heading "Production Run Calculator" [level=1]
+  - paragraph: Pizza line planning & schedule estimation
+  - 'button "Sync status: Synchronized"': Synchronized
+  - text: Saved
+  - button "Cast to other screens"
+  - button "Enter fullscreen / kiosk mode"
+  - button "Supervisor"
+  - button "More — 397 manager actions need attention": "397"
+  - tabpanel:
+    - group "qc department":
+      - heading "Reported issues" [level=1]
+      - region "Field checks":
+        - heading "Field checks" [level=2]
+        - paragraph: Advisory evidence scoped to this facility. No run data, screenshots, or device fingerprints are collected.
+        - text: "Overall health: Needs review"
+        - paragraph: "This browser only: 0 observations retained locally · 0 eligible for delivery. This is not a facility-wide delivery status."
+        - group "Field evidence filters":
+          - text: Build
+          - combobox "Build":
+            - option "All builds" [selected]
+            - option "Unknown build (local)"
+            - option "Exact build identifier"
+          - text: Browser category
+          - combobox "Browser category":
+            - option "All browser / device categories" [selected]
+            - option "Desktop Chrome"
+            - option "Desktop Safari"
+            - option "Desktop Firefox"
+            - option "Mobile Chrome"
+            - option "Mobile Safari"
+            - option "Tablet browser"
+            - option "Other browser"
+            - option "Android phone (guided hardware)"
+            - option "Android tablet (guided hardware)"
+            - option "iPad (guided hardware)"
+            - option "iPhone (guided hardware)"
+          - button "Apply field filters"
+          - button "Clear field filters"
+          - status: "Unfiltered: all builds and browser / device categories. Counts and recovery use facility lifetime issues; recent evidence is retained for 30 days. Advisory only; not release verification evidence. “local” identifies an unknown build, not an environment."
+        - button "Download safe field-check report"
+        - paragraph: JSON for the displayed population with bounded diagnostic details only. Advisory, not release or physical-device verification.
+        - paragraph: Browser-observed checks
+        - paragraph: Startup
+        - text: "Health: Healthy"
+        - paragraph: Recorded when the authenticated field-check observer starts; home-bundle timing is a separate performance observation.
+        - paragraph: "Evidence coverage: Current success"
+        - paragraph: "Failures: 0 · Incomplete: 0 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: under 1 minute after the browser timestamp (clock differences may affect this estimate)"
+        - paragraph: "Last success: just now"
+        - paragraph: Background / foreground recovery
+        - text: "Health: Collecting evidence"
+        - paragraph: Recorded when this page becomes visible after the browser reported it hidden.
+        - paragraph: "Evidence coverage: Never observed"
+        - paragraph: "Failures: 0 · Incomplete: 0 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: Unknown/unconfirmed"
+        - paragraph: "Last success: Not yet"
+        - paragraph: Sync acknowledgment
+        - text: "Health: Healthy"
+        - paragraph: Recorded when a naturally occurring sync write receives its server acknowledgment.
+        - paragraph: "Evidence coverage: Current success"
+        - paragraph: "Failures: 3 · Incomplete: 0 · Recovered"
+        - paragraph: "Server receipt delay estimate: under 1 minute after the browser timestamp (clock differences may affect this estimate)"
+        - paragraph: "Last success: 1m ago"
+        - paragraph: "Recent non-successes: 3 · latest failure · 17m ago · mobile-chrome · The account or permission was rejected"
+        - paragraph: Production-run save and sync
+        - text: "Health: Healthy"
+        - paragraph: Recorded after a production-run save; success requires server acknowledgment, interruption is incomplete, and only bounded duration/cause codes are retained.
+        - paragraph: "Evidence coverage: Current success"
+        - paragraph: "Failures: 1 · Incomplete: 0 · Recovered"
+        - paragraph: "Server receipt delay estimate: under 1 minute after the browser timestamp (clock differences may affect this estimate)"
+        - paragraph: "Last success: 1m ago · 441 ms"
+        - paragraph: "Recent non-successes: 1 · latest failure · 1m ago · desktop-chrome · 301 ms · Unrecoverable sync conflict"
+        - paragraph: Spec import parse, review, and commit
+        - text: "Health: Collecting evidence"
+        - paragraph: Recorded after the spec-import review/commit flow; cancellation is incomplete, success requires persisted changes, and only bounded duration is retained.
+        - paragraph: "Evidence coverage: Never observed"
+        - paragraph: "Failures: 0 · Incomplete: 0 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: Unknown/unconfirmed"
+        - paragraph: "Last success: Not yet"
+        - paragraph: Cross-device convergence
+        - text: "Health: Healthy"
+        - paragraph: Recorded when this browser applies a naturally occurring peer or merged update.
+        - paragraph: "Evidence coverage: Current success"
+        - paragraph: "Failures: 0 · Incomplete: 0 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: under 1 minute after the browser timestamp (clock differences may affect this estimate)"
+        - paragraph: "Last success: 1m ago"
+        - paragraph: Reload startup
+        - text: "Health: Healthy"
+        - paragraph: Recorded after a full-page reload followed by authenticated observer startup; saved-data persistence is not checked.
+        - paragraph: "Evidence coverage: Current success"
+        - paragraph: "Failures: 0 · Incomplete: 0 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: under 1 minute after the browser timestamp (clock differences may affect this estimate)"
+        - paragraph: "Last success: 3m ago"
+        - paragraph: Offline recovery
+        - text: "Health: Healthy"
+        - paragraph: Recorded when the browser reports returning online after an offline interval.
+        - paragraph: "Evidence coverage: Current success"
+        - paragraph: "Failures: 0 · Incomplete: 0 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: under 1 minute after the browser timestamp (clock differences may affect this estimate)"
+        - paragraph: "Last success: 10m ago"
+        - paragraph: Offline queue replay
+        - text: "Health: Collecting evidence"
+        - paragraph: Recorded when a queued offline operation receives server acknowledgment after connectivity returns.
+        - paragraph: "Evidence coverage: Never observed"
+        - paragraph: "Failures: 0 · Incomplete: 0 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: Unknown/unconfirmed"
+        - paragraph: "Last success: Not yet"
+        - paragraph: PWA update handoff
+        - text: "Health: Collecting evidence"
+        - paragraph: Recorded when a service-worker update is ready or an update handoff is initiated; this does not confirm recovery.
+        - paragraph: "Evidence coverage: Never observed"
+        - paragraph: "Failures: 0 · Incomplete: 0 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: Unknown/unconfirmed"
+        - paragraph: "Last success: Not yet"
+        - paragraph: Stale-deployment recovery
+        - text: "Health: Collecting evidence"
+        - paragraph: An update attempt is incomplete until an authenticated startup on a different build; same-build or interrupted attempts remain unconfirmed.
+        - paragraph: "Evidence coverage: Observed, no success"
+        - paragraph: "Failures: 0 · Incomplete: 1 · No issue recorded"
+        - paragraph: "Server receipt delay estimate: under 1 minute after the browser timestamp (clock differences may affect this estimate)"
+        - paragraph: "Last success: Not yet"
+        - paragraph: "Recent non-successes: 1 · latest incomplete · 17m ago · mobile-chrome"
+        - paragraph: Performance
+        - text: "Health: Needs review"
+        - paragraph: Records home-bundle load, page-navigation load, and API timeout/network timings against their reviewed budgets.
+        - paragraph: "Evidence coverage: Current success"
+        - paragraph: "Failures: 61 · Incomplete: 221 · Open"
+        - paragraph: "Server receipt delay estimate: under 1 minute after the browser timestamp (clock differences may affect this estimate)"
+        - paragraph: "Last success: just now"
+        - paragraph: "Recent non-successes: 5 · latest failure · just now · desktop-chrome · 250 ms · Server returned an error · another app request · account or permission rejected · HTTP 403 · browser wait 250 ms · no background change observed; operating-system pause is unknown. Browser wait is not server processing time."
+        - paragraph: 61 failures · review below
+        - paragraph: Guided hardware confirmations
+        - paragraph: Browser evidence cannot confirm these. Follow the physical-device protocol without entering production data, then record only the device category, protocol version, outcome, and time.
+        - list:
+          - listitem: Use a clean training or idle screen; do not start or edit a production run.
+          - listitem: "Perform only the named check: rotate, inspect clearance, open and cancel a picker, update/reopen, or test the listed interaction."
+          - listitem: Record Pass, Fail, or Incomplete below immediately after the physical check.
+        - text: "Touch accuracy: Health Unsupported · Coverage Never observed"
+        - paragraph: The app cannot verify physical touch accuracy without guided human confirmation.
+        - text: "Keyboard clearance: Health Unsupported · Coverage Never observed"
+        - paragraph: The app cannot verify visual keyboard clearance across physical devices.
+        - text: "Orientation layout: Health Unsupported · Coverage Never observed"
+        - paragraph: A manager visually confirmed that the working screen remains usable after rotating a physical device.
+        - text: "Safe-area and fixed-navigation clearance: Health Unsupported · Coverage Never observed"
+        - paragraph: A manager visually confirmed controls are not obstructed by device safe areas or fixed navigation.
+        - text: "Camera and file selection: Health Unsupported · Coverage Never observed"
+        - paragraph: A manager confirmed the physical device can open and cancel its camera or file picker without uploading production data.
+        - text: "Update handoff: Health Unsupported · Coverage Never observed"
+        - paragraph: A manager confirmed the guided update and reopen protocol on a physical device.
+        - text: "OS process-kill recovery: Health Unsupported · Coverage Never observed"
+        - paragraph: The app cannot prove OS process-kill behavior without a guided device check.
+        - paragraph: Recent field-check failures
+        - text: Performance just now
+        - paragraph: Failed · build app-build:8e799c87-4cd1-4513-a6e9-ad00a476594a · desktop-chrome
+        - paragraph: Server returned an error · another app request · account or permission rejected · HTTP 403 · browser wait 250 ms · no background change observed; operating-system pause is unknown. Browser wait is not server processing time.
+        - paragraph:
+          - text: "Client-reported request reference:"
+          - code: 4777b609-19f2-460b-8b8e-88cfdaaadc70
+        - paragraph: Browser-observed evidence only; measurements are bounded and contain no production payload.
+        - text: Performance just now
+        - paragraph: Repeatedly incomplete · build app-build:8e799c87-4cd1-4513-a6e9-ad00a476594a · desktop-chrome
+        - paragraph: Request ended before a reply · syncing · cancelled before a reply · browser wait 163 ms · no background change observed; operating-system pause is unknown. Browser wait is not server processing time.
+        - paragraph: Browser-observed evidence only; measurements are bounded and contain no production payload.
+        - text: Performance just now
+        - paragraph: Repeatedly incomplete · build app-build:8e799c87-4cd1-4513-a6e9-ad00a476594a · desktop-chrome
+        - paragraph: Request ended before a reply · another app request · cancelled before a reply · browser wait 3 ms · no background change observed; operating-system pause is unknown. Browser wait is not server processing time.
+        - paragraph: Browser-observed evidence only; measurements are bounded and contain no production payload.
+      - region "Find patterns":
+        - heading "Find patterns" [level=2]
+        - paragraph: Deterministic grouping by screen and platform. Advisory only.
+        - button "Analyze"
+      - region "Incident list":
+        - heading "Incident list" [level=2]
+        - text: Status
+        - button "All"
+        - button "New"
+        - button "Reviewed"
+        - button "Resolved"
+        - text: Work
+        - button "All"
+        - button "New"
+        - button "Assigned"
+        - button "Waiting"
+        - button "Resolved"
+        - text: Platform
+        - button "All"
+        - button "Web"
+        - button "Mobile"
+        - text: Source
+        - button "All"
+        - button "Reported"
+        - button "Auto-crash"
+        - button "Field checks"
+        - button "Auto-captured crash New e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q) · / · web · just now":
+          - text: Auto-captured crash New
+          - paragraph: e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q) · / · web · just now
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 112020c0-01c9-44af-8d41-3e832ec15fac
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 4777b609-19f2-460b-8b8e-88cfdaaadc70
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:45:26 AM · browser waited 250 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q) · / · web · just now":
+          - text: Auto-captured crash New
+          - paragraph: e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q) · / · web · just now
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f9638f54-b6e8-49d4-b124-98ac78f4e5c2
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:45:25 AM · browser waited 163 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q) · / · web · just now":
+          - text: Auto-captured crash New
+          - paragraph: e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q) · / · web · just now
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a02de0af-c14d-4119-888d-07872d569c2f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:45:25 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Reported issue New e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q) · Run · web · just now":
+          - text: Reported issue New
+          - paragraph: e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q) · Run · web · just now
+        - paragraph: What they reported
+        - paragraph: Keyboard queue exit pt4pln0a
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 40fb390b-ff7b-4103-b766-3bd3abd7056e
+        - paragraph: "Extra details for support: report problem · error · 0 automatic retries · unknown connection · unknown sync status · Other on desktop · build reference not recorded"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiykle_hgm4ogge (e2e-role_mvxiykms_6dn62k46) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiykle_hgm4ogge (e2e-role_mvxiykms_6dn62k46) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f882e385-792d-4c08-8128-153cf168a6b9
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: c094d924-4ce0-4481-9092-903593ca99ae
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:53 AM · browser waited 281 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiykle_hgm4ogge (e2e-role_mvxiykms_6dn62k46) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiykle_hgm4ogge (e2e-role_mvxiykms_6dn62k46) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c38fc4f8-6120-46a5-a3c2-2b5f603e3274
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:53 AM · browser waited 181 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiykle_hgm4ogge (e2e-role_mvxiykms_6dn62k46) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiykle_hgm4ogge (e2e-role_mvxiykms_6dn62k46) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3642d49b-355f-4e52-910d-0eed25370706
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:52 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiy90x_5pq40uwc (e2e-role_mvxiy92o_017490p9) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiy90x_5pq40uwc (e2e-role_mvxiy92o_017490p9) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 13e1cab0-9b6c-4057-b668-ad5f59f511a1
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 3cdeeda3-c8a1-4452-a904-f82a65bfa836
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:38 AM · browser waited 288 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiy90x_5pq40uwc (e2e-role_mvxiy92o_017490p9) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiy90x_5pq40uwc (e2e-role_mvxiy92o_017490p9) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a226efb7-b232-48ea-a383-a301701cf365
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:38 AM · browser waited 180 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiy90x_5pq40uwc (e2e-role_mvxiy92o_017490p9) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiy90x_5pq40uwc (e2e-role_mvxiy92o_017490p9) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 86d7dbbb-64d9-43ef-bbd3-4faea571fe57
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:37 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiy10i_mxowz9sl (e2e-role_mvxiy11x_8fmdr3gd) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiy10i_mxowz9sl (e2e-role_mvxiy11x_8fmdr3gd) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 86b3c516-238c-4414-8214-ff438c318240
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 1be02e37-b8c5-405b-8b85-95d986d7c4b9
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:28 AM · browser waited 442 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiy10i_mxowz9sl (e2e-role_mvxiy11x_8fmdr3gd) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiy10i_mxowz9sl (e2e-role_mvxiy11x_8fmdr3gd) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3e87cbf5-dda2-4bd1-8964-9eba614b0a4b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:28 AM · browser waited 221 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiy10i_mxowz9sl (e2e-role_mvxiy11x_8fmdr3gd) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiy10i_mxowz9sl (e2e-role_mvxiy11x_8fmdr3gd) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: efce3975-e337-410d-9723-e565f728d5c1
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:27 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_keyboard_manager_mvxixw02_1dc9nkl9 (e2e-role_mvxixw1p_34et2rxm) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_keyboard_manager_mvxixw02_1dc9nkl9 (e2e-role_mvxixw1p_34et2rxm) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3980e294-69ea-4db9-84be-c88831fac90d
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 8cde6d11-1b99-422e-9ab0-6dbee59a5ea5
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:22 AM · browser waited 239 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_keyboard_manager_mvxixw02_1dc9nkl9 (e2e-role_mvxixw1p_34et2rxm) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_keyboard_manager_mvxixw02_1dc9nkl9 (e2e-role_mvxixw1p_34et2rxm) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e17e43e7-ad9d-4ed7-8f9e-bf28383149c0
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:21 AM · browser waited 154 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_keyboard_manager_mvxixw02_1dc9nkl9 (e2e-role_mvxixw1p_34et2rxm) · / · web · 1m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_keyboard_manager_mvxixw02_1dc9nkl9 (e2e-role_mvxixw1p_34et2rxm) · / · web · 1m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 504a81d2-943c-4b36-b7f0-fd3b48a0bfb0
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:44:21 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiwbi1_yblpf4r6 (e2e-role_mvxiwbje_z37ka0tb) · / · web · 2m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiwbi1_yblpf4r6 (e2e-role_mvxiwbje_z37ka0tb) · / · web · 2m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 81511993-eff8-4f25-8c45-8c099c19bdf3
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: e5f9e3c8-1050-49d5-9633-3e75fcc41c0f
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:43:08 AM · browser waited 245 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiwbi1_yblpf4r6 (e2e-role_mvxiwbje_z37ka0tb) · / · web · 2m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiwbi1_yblpf4r6 (e2e-role_mvxiwbje_z37ka0tb) · / · web · 2m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: cb5803d7-2c10-4f19-aecc-caf41a80bb9d
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:43:08 AM · browser waited 155 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiwbi1_yblpf4r6 (e2e-role_mvxiwbje_z37ka0tb) · / · web · 2m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiwbi1_yblpf4r6 (e2e-role_mvxiwbje_z37ka0tb) · / · web · 2m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ad30b995-2389-4cf2-b5ef-12912d849602
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:43:07 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiw8dd_lyrxkxax (e2e-role_mvxiw8es_gny920oy) · / · web · 2m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiw8dd_lyrxkxax (e2e-role_mvxiw8es_gny920oy) · / · web · 2m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d34ba17e-2a22-412e-b985-c0841e1182cf
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: cd3dc750-3b5b-4ac6-bdc1-688e2c524851
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:43:04 AM · browser waited 237 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiw8dd_lyrxkxax (e2e-role_mvxiw8es_gny920oy) · / · web · 2m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiw8dd_lyrxkxax (e2e-role_mvxiw8es_gny920oy) · / · web · 2m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 043b1547-6971-4988-875d-09ed7d47f855
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:43:04 AM · browser waited 150 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxiw8dd_lyrxkxax (e2e-role_mvxiw8es_gny920oy) · / · web · 2m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxiw8dd_lyrxkxax (e2e-role_mvxiw8es_gny920oy) · / · web · 2m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 9df115ef-5ebe-43b2-bfd7-2c0fde14ca56
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:43:03 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_attention_staff_mvxiw6hr_fd4w2hxs (e2e-role_mvxiw6j5_lndtcf59) · / · web · 2m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_attention_staff_mvxiw6hr_fd4w2hxs (e2e-role_mvxiw6j5_lndtcf59) · / · web · 2m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d2997209-a6c0-4f5f-b0f7-a7bf8a657935
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:43:01 AM · browser waited 149 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_attention_staff_mvxiw6hr_fd4w2hxs (e2e-role_mvxiw6j5_lndtcf59) · / · web · 2m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_attention_staff_mvxiw6hr_fd4w2hxs (e2e-role_mvxiw6j5_lndtcf59) · / · web · 2m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6d9d3845-cbca-422f-af51-824b406dc720
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:43:01 AM · browser waited 6 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d45745cf-9de0-41d4-a2cb-4f0ad6ffb76f
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 820e413c-4782-4c66-997b-b9c252deaa93
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:56 AM · browser waited 374 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 1143d6f2-bec3-4e15-bf27-0bbc81b7a9f3
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:56 AM · browser waited 196 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 62fd9a35-3b40-43dc-bfaa-cacd872ca877
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:56 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 33ec97ea-f16c-4015-a827-eac2f6200e7d
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 2e3b06d5-9e63-4d47-9f4d-ed9b46f0b3b0
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:52 AM · browser waited 303 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: dda3a648-af0d-424a-82fa-98317877dd25
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:52 AM · browser waited 230 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 34d314d8-40ed-4c42-a7bb-0fe872bce27b
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:52 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 73fb3a55-9aa9-4930-b61b-570e164c13b5
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 62d457d1-ff48-409e-85a4-bdc2c6b42a05
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:47 AM · browser waited 291 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 961f159c-b582-47f1-ad36-a7b2b42b06a2
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:47 AM · browser waited 180 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivveh_a57kt8ew (e2e-role_mvxivvfv_jd2gpk8g) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7f515e84-fa15-4b68-97d7-4c38d847be19
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:46 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivrwa_q8falvao (e2e-role_mvxivryd_69xz5d7r) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivrwa_q8falvao (e2e-role_mvxivryd_69xz5d7r) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 9ab8fcfc-714a-46f4-9e42-bedd572f43c4
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 25659a03-8647-4dfd-a4ea-397b5089e214
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:42 AM · browser waited 266 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivrwa_q8falvao (e2e-role_mvxivryd_69xz5d7r) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivrwa_q8falvao (e2e-role_mvxivryd_69xz5d7r) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 01ababd2-c5d0-436f-8d09-a1370273c5a0
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:42 AM · browser waited 174 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_attention_mvxivrwa_q8falvao (e2e-role_mvxivryd_69xz5d7r) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_attention_mvxivrwa_q8falvao (e2e-role_mvxivryd_69xz5d7r) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c399ff3a-9fa0-41ab-b1dd-c575378f0e40
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:42 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: dbd5d8e4-f5c4-440d-901d-a32feb76a045
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 8ababfcd-7ee3-4c99-bf03-8cd3d8d3b961
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:35 AM · browser waited 141 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 11f63324-ca55-48db-a238-8026eb4ef83a
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:34 AM · browser waited 153 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d2bb6c83-ad8c-4d64-b86f-c964f9172c52
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:34 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b8d0cf66-f8f1-4e74-9d3c-09f55e3088c7
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 3c2a0ec4-eb74-43ab-9dc5-ce11edd12064
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:30 AM · browser waited 31 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f557db8e-ea02-4bb2-abd5-1ace2f362f29
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:29 AM · browser waited 131 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 1cf63c71-e3a4-4260-8854-bd71136b4148
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:28 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e938d859-468f-4ec8-89d4-464b1944fad1
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:27 AM · browser waited 180 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (manager) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 716e8740-4ed6-4819-be47-c91e28a8f118
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:26 AM · browser waited 1 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (operator) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (operator) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d82f278b-50f1-4007-b28a-cf1fc61abb4a
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:25 AM · browser waited 367 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxivdr8_ypm776un (operator) · / · web · 3m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxivdr8_ypm776un (operator) · / · web · 3m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e1e7373c-8145-4bad-a200-0be7212c73c5
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:42:24 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 963b17fd-cb10-4f3b-834a-57771e4c6cda
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:48 AM · browser waited 132 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: fbca604a-3b31-4003-8717-1afd5fdea613
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:47 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 077d6b48-7720-4c3f-a844-9310d7637f31
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:46 AM · browser waited 968 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f563f897-5b35-4f8a-b4fd-2580ef187dc5
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:32 AM · browser waited 125 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 290119ad-8e83-483f-80ad-8c371c952beb
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:31 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5e34cdee-0321-4b5a-84a6-eadadb40242b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:30 AM · browser waited 237 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 9f8b9b11-7288-4177-b74f-563a3aa5e6c9
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:29 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (operator) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (operator) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ab8a0aa9-dd95-4f27-bb7e-13144ed4dec0
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:28 AM · browser waited 382 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxiu5s2_4iv9368s (operator) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxiu5s2_4iv9368s (operator) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6caae468-0296-494f-9228-e183842b425e
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:27 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8a1345d9-3a94-4186-9ac9-132377051cef
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:12 AM · browser waited 155 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 4m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 4m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d6c3342d-f859-4356-ae19-fb4c1376a255
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:41:12 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 584b30a7-f154-4141-b399-cf84addb105a
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 930b132a-d21d-40dc-a6a9-884081cbc85a
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:56 AM · browser waited 17 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 03964852-1494-40fd-8655-fd2259104a00
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:54 AM · browser waited 197 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 210af577-d55a-40b2-a184-8ab6c36470f4
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:54 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (operator) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (operator) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0d881f4f-a1c6-4a59-ab34-a53dc0129a5c
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:51 AM · browser waited 351 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (operator) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxitdtv_rw7qi3cn (operator) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b1b3a7da-de97-4b8e-b9f5-157539493d63
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:51 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit8b5_zufruvva (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit8b5_zufruvva (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 118e3e19-6bbc-486d-9c16-e938882790b7
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 0412aa69-9fec-4d42-b2ee-492e29f3099b
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:48 AM · browser waited 42 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit8b5_zufruvva (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit8b5_zufruvva (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d04239ad-8b1c-4012-af68-77aeb549fbef
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:46 AM · browser waited 194 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit8b5_zufruvva (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit8b5_zufruvva (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5defb042-cdae-40a3-9d8a-d11e020ca760
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:45 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit8b5_zufruvva (operator) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit8b5_zufruvva (operator) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ebc3c7e2-3672-4ff6-9ab8-babbad06d845
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:44 AM · browser waited 374 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit8b5_zufruvva (operator) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit8b5_zufruvva (operator) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8fd3cbc7-03e8-4d6f-8486-e821cbba45a5
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:44 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f1b50fcb-7860-48bf-b890-adfbd7a5aebe
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: a176c256-8e90-45e2-996d-fbb0284a39b7
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:42 AM · browser waited 32 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a5cb748f-d2fb-4b05-9377-96f281ffdb6a
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:40 AM · browser waited 192 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: feeef0ac-1247-4fa0-9449-6e1696ee326d
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:39 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a709a35d-4ef2-4915-a118-5c905b07113e
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:39 AM · browser waited 132 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (operator) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (operator) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: fc3db1a2-e156-4b04-905c-e67c1f2d1453
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:38 AM · browser waited 341 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (operator) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxit3j7_5ogq7lo8 (operator) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c3346df1-8878-4c89-91e3-0ad2075fcb91
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:37 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 1c2a7b3f-4d85-409a-a7c8-df3550b0112d
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:22 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f8369468-1bc7-4376-be01-7d8a5e9c4ed8
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: d33bcd59-9b27-499f-a028-94dbd9546595
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:18 AM · browser waited 132 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 9fe383cc-8a83-45a8-b8e6-98665cf12124
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 01c8a794-8ef2-4a39-8cae-a6e743f8cf03
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:17 AM · browser waited 45 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: fd6dbacf-f70a-4d28-822c-d16be7133f48
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:15 AM · browser waited 174 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c05bc620-bb02-42e7-a383-5e83e27ef5a4
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:15 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 9e02e94d-7ced-4390-8edd-a5b75da4dd92
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:14 AM · browser waited 211 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7e6ab413-7050-4693-94bb-d52f6945dc8c
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:13 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (manager) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7786e4bd-02d3-4fd6-97f1-5da09c8b7776
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:13 AM · browser waited 23 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (operator) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (operator) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 2e5c1856-e83c-460b-9ab6-28d86c142dd6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:12 AM · browser waited 508 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxisi55_5h2574ll (operator) · / · web · 5m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxisi55_5h2574ll (operator) · / · web · 5m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0b985fa7-30d8-4c92-acad-9177eb967ba7
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:40:11 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxirti5_qjv5ln41 (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxirti5_qjv5ln41 (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 602d5f1f-8c4f-4e8c-8d6e-5b6b57aaac9d
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 7f263105-ce44-4eb3-95d3-97f525da81ab
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:42 AM · browser waited 37 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxirti5_qjv5ln41 (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxirti5_qjv5ln41 (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 287d5e14-1457-4117-8302-94373f484d24
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:40 AM · browser waited 173 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxirti5_qjv5ln41 (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxirti5_qjv5ln41 (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 15d421a8-54cf-4a8d-b0c9-fd6f2f96e235
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:39 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxirti5_qjv5ln41 (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxirti5_qjv5ln41 (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8d9c21f3-499a-4042-a0fd-780da6a3f5ad
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:39 AM · browser waited 28 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxirti5_qjv5ln41 (operator) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxirti5_qjv5ln41 (operator) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a2940543-a659-45fe-9f37-de5be0f0924b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:38 AM · browser waited 361 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_manager_sync_reload_mvxirti5_qjv5ln41 (operator) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_manager_sync_reload_mvxirti5_qjv5ln41 (operator) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 08359a74-400e-44e8-8118-d954a7c785ad
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:38 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirogk_3jwegmn7 (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirogk_3jwegmn7 (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 549bfece-f88a-4173-bb7f-9eeb13871491
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:35 AM · browser waited 201 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirogk_3jwegmn7 (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirogk_3jwegmn7 (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5cc99554-58b9-425b-b825-2c2e651ce0eb
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:35 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirogk_3jwegmn7 (operator) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirogk_3jwegmn7 (operator) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 04de5e96-6eb0-4448-998d-2ee6bfe9da17
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:32 AM · browser waited 406 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirogk_3jwegmn7 (operator) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirogk_3jwegmn7 (operator) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: da8d58ca-0a6b-4beb-b2b3-a9fad32d354f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:31 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 75ea26eb-a62a-4859-89a3-123e261452fc
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:25 AM · browser waited 203 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8daef3d0-3630-4625-b901-9662776f83d3
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:24 AM · browser waited 6 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 558340ae-0cf4-4436-aa18-8b70b63c2600
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:23 AM · browser waited 202 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (manager) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (manager) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 490efa41-33e4-43da-a3ed-136b2e1de318
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:22 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (operator) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (operator) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 924a9fa5-3f7f-437c-8d5d-159632ba2372
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:21 AM · browser waited 413 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (operator) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxirflp_mn0u2y3r (operator) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b578152b-fa35-43b6-ae63-05aa617c9c96
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:20 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxira6s_50dtkdbk (e2e_reset_approver_mvxira6s_6wfeuqq5) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxira6s_50dtkdbk (e2e_reset_approver_mvxira6s_6wfeuqq5) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7ed756e5-2814-44a2-9adf-7b3758cff080
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:16 AM · browser waited 227 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxira6s_50dtkdbk (e2e_reset_approver_mvxira6s_6wfeuqq5) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxira6s_50dtkdbk (e2e_reset_approver_mvxira6s_6wfeuqq5) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 4bbc40dd-7d18-4e42-93a0-7e9089a5a1f1
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:16 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxira6s_50dtkdbk (operator) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxira6s_50dtkdbk (operator) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c47d72ea-5aad-43f1-9796-1604a5c1cc4e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:14 AM · browser waited 382 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_authenticated_slow_network_mvxira6s_50dtkdbk (operator) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_authenticated_slow_network_mvxira6s_50dtkdbk (operator) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f65f3096-7a14-454b-a787-466c64fd1f69
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:13 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5fa9a917-0423-4741-8bf5-0563aecd507e
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 9944439f-ec85-4f60-a604-d7137de32e24
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:07 AM · browser waited 427 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0fc8adf4-d952-4fef-8036-6001db5e38bf
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:07 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 6m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 6m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d8841a94-64e4-434c-95b8-fbbeacf8b468
+        - paragraph: "App activity: Syncing saved changes · the network request could not reach the server · support route: sync auto track claim"
+        - paragraph: Observed by this browser at 11/1/2026, 7:39:01 AM · browser waited 0 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 14d1c9c8-7b02-4d53-98bb-a84ba6a393c8
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: e4cd1d6d-95ab-4f6b-a095-3931a69a6ae8
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:58 AM · browser waited 288 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b1c7332a-5bc3-4dfd-b58e-9b0e61d05ebe
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:58 AM · browser waited 185 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_70ne4q2 (e2e-role_mvxiqz0q_459tynko) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 71ba0181-84b4-411e-a78a-fb31ae00b099
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:58 AM · browser waited 7 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_wnmta0t (e2e-role_mvxiq4i4_yzh8boeq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_wnmta0t (e2e-role_mvxiq4i4_yzh8boeq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a9b2f8c0-e180-4118-8ba4-edf5682a9ef6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:21 AM · browser waited 190 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_wnmta0t (e2e-role_mvxiq4i4_yzh8boeq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_wnmta0t (e2e-role_mvxiq4i4_yzh8boeq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 54f4c6f3-44f8-4a19-b8a5-d270d6f777eb
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:21 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_wnmta0t (e2e-role_mvxiq4i4_yzh8boeq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_wnmta0t (e2e-role_mvxiq4i4_yzh8boeq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 115fb091-7b25-4e5e-93f7-47efe929d46f
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:19 AM · browser waited 185 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_wnmta0t (e2e-role_mvxiq4i4_yzh8boeq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_wnmta0t (e2e-role_mvxiq4i4_yzh8boeq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8a935aa1-b0a8-46ef-a88d-8731f1a45879
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:18 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 86e7a7a5-1485-4937-8c9f-08f89f272e9b
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 4dbc89bd-74da-413f-9157-8e388e5bbe85
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:16 AM · browser waited 175 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3b4ea602-181d-483f-974e-6118e5628d1b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:16 AM · browser waited 139 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a49d7afc-f6e8-4a24-af18-a1d2df4fa426
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:16 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 46930d2e-e570-4721-bdeb-0ada2675440d
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: b6d2dc5f-4429-4b7d-88b4-ae2752906ff5
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:11 AM · browser waited 253 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e9464992-9777-43e9-b1b3-ca27a87b981f
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:11 AM · browser waited 162 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ux6lk9b (e2e-role_mvxipyeq_adcvmdrq) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 058c325f-4c74-4cbb-b461-e92b81029a8e
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:10 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0027a19f-a1b5-4103-8e63-f3b81b64a850
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: f70037aa-1b0d-4c81-955f-2acaeac9a66e
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:07 AM · browser waited 256 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8dd08c0e-efe5-436b-a191-c8991acd18f6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:07 AM · browser waited 183 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 028d0141-c34d-468f-ab8f-21439324dce8
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:06 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: db907b31-d8aa-4572-b581-daf60c945b7c
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:06 AM · browser waited 234 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7c9e8977-4488-42da-b561-b85c2f5a7684
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: d6492bc9-0b2a-489a-9ed3-fa6113535faa
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:02 AM · browser waited 244 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d9cd276b-481b-49c0-9397-44f3a16c577c
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:02 AM · browser waited 162 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 7m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 04abc6c0-be7a-4fcf-a53b-1125bab003fd
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:38:01 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c1558857-450f-47a9-a6bb-2775607cf44d
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 80165d88-b552-43ab-9b4c-69424fd46194
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:57 AM · browser waited 254 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d73e8d2f-1d04-4b70-875a-5ef3e2547eb7
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:57 AM · browser waited 169 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_esuit7p (e2e-role_mvxipngc_ncku95es) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c0f322f1-b7ed-4ff8-ad13-b5e1f33ff1a7
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:56 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ek4l6bq (e2e-role_mvxipjhz_lzxjj4qb) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ek4l6bq (e2e-role_mvxipjhz_lzxjj4qb) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API 400
+        - paragraph: In plain language
+        - paragraph: This sync update did not pass a validation check. Review the current values and run state, keep your draft, and do not retry it unchanged.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8696f309-50e5-42af-9530-3b4cb2644f69
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 2cd8f89c-e56d-4fe0-aff3-64cc44a31227
+        - paragraph: "App activity: Syncing saved changes · the server rejected the request · HTTP 400 · support route: sync auto track claim"
+        - paragraph:
+          - text: "Support code:"
+          - code: SYNC_VALIDATION_FAILED
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:54 AM · browser waited 28 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: review the rejected action and correct its inputs or run state. Do not retry the unchanged action. Keep this reference for a developer if the reason is unclear."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ek4l6bq (e2e-role_mvxipjhz_lzxjj4qb) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ek4l6bq (e2e-role_mvxipjhz_lzxjj4qb) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 84bac76b-8572-4ceb-8344-7c2fbfb3bc6f
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: f34d056f-e1d0-4941-b4e7-bb38dcd22032
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:52 AM · browser waited 287 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ek4l6bq (e2e-role_mvxipjhz_lzxjj4qb) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ek4l6bq (e2e-role_mvxipjhz_lzxjj4qb) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 2edcb5c5-d777-46bd-b4ef-64d0d9941bb8
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:52 AM · browser waited 204 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_live_tabs_ek4l6bq (e2e-role_mvxipjhz_lzxjj4qb) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_live_tabs_ek4l6bq (e2e-role_mvxipjhz_lzxjj4qb) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5ca13f54-61a8-4f5b-908c-3a398d79d66d
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:51 AM · browser waited 7 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_line_map_mvxipbo9_588dw5hn (operator) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_line_map_mvxipbo9_588dw5hn (operator) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d6dd9018-f9bd-4224-9a27-e4083b73f050
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:42 AM · browser waited 398 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_line_map_mvxipbo9_588dw5hn (operator) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_line_map_mvxipbo9_588dw5hn (operator) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 41d34614-4963-4d56-9319-18b19de9a140
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:42 AM · browser waited 8 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_gold_reminder_manager_mvxioweu_d6ztuj4x (e2e-role_mvxiowgk_s9mumwky) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_gold_reminder_manager_mvxioweu_d6ztuj4x (e2e-role_mvxiowgk_s9mumwky) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: df6eee2d-4032-49d9-be24-18184cad472a
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:22 AM · browser waited 167 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_gold_reminder_manager_mvxioweu_d6ztuj4x (e2e-role_mvxiowgk_s9mumwky) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_gold_reminder_manager_mvxioweu_d6ztuj4x (e2e-role_mvxiowgk_s9mumwky) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f78f3059-e147-4bc4-be0a-38e79bf962b4
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:21 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_gold_retention_qc_mvxionmz_vf818wm0 (qc-manager) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_gold_retention_qc_mvxionmz_vf818wm0 (qc-manager) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a865ff31-0710-4291-826b-5815b50b646f
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:10 AM · browser waited 149 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_gold_retention_qc_mvxionmz_vf818wm0 (qc-manager) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_gold_retention_qc_mvxionmz_vf818wm0 (qc-manager) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d792f1bd-e24c-483e-b9e2-075b80013620
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:10 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_import_gold_cleanup_mvxiojri_u8ld9vuf (e2e-role_mvxiojt3_i27ihnfe) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_import_gold_cleanup_mvxiojri_u8ld9vuf (e2e-role_mvxiojt3_i27ihnfe) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: eb12e1d4-703a-4448-95f7-ad5a8ce535ff
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 151d1705-b5de-4737-bd5a-e7f555d3789a
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:05 AM · browser waited 293 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_import_gold_cleanup_mvxiojri_u8ld9vuf (e2e-role_mvxiojt3_i27ihnfe) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_import_gold_cleanup_mvxiojri_u8ld9vuf (e2e-role_mvxiojt3_i27ihnfe) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: df4e6961-0cc8-4cab-8977-6b87840df8e8
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:05 AM · browser waited 178 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_import_gold_cleanup_mvxiojri_u8ld9vuf (e2e-role_mvxiojt3_i27ihnfe) · / · web · 8m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_import_gold_cleanup_mvxiojri_u8ld9vuf (e2e-role_mvxiojt3_i27ihnfe) · / · web · 8m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 53130bd7-d488-481e-bddd-9e9761eade47
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:37:05 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_import_gold_mvxioatj_59sfct12 (e2e-role_mvxioaut_m6jy12jq) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_import_gold_mvxioatj_59sfct12 (e2e-role_mvxioaut_m6jy12jq) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3ffd0c40-87b8-44e7-a609-ddfca56eb885
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:54 AM · browser waited 163 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_import_gold_mvxioatj_59sfct12 (e2e-role_mvxioaut_m6jy12jq) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_import_gold_mvxioatj_59sfct12 (e2e-role_mvxioaut_m6jy12jq) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 18e19b50-766d-478b-bb31-1aa1084aa569
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:53 AM · browser waited 6 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_manager_no_cap_mvxio7sb_onvm9nbc (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_manager_no_cap_mvxio7sb_onvm9nbc (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: eae7118e-d7b3-4340-a4a4-bbc24728f4cb
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:50 AM · browser waited 174 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_manager_no_cap_mvxio7sb_onvm9nbc (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_manager_no_cap_mvxio7sb_onvm9nbc (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6d557392-ae29-4591-9dd6-eb392dfe3976
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:49 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_staff_mvxinzbc_59kvqud7 (e2e-role_mvxinzcl_7804yi1w) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_staff_mvxinzbc_59kvqud7 (e2e-role_mvxinzcl_7804yi1w) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: fecbaede-8191-459d-9112-69a5ccdcfc05
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 69f12def-16d8-4984-a91e-8397ada886db
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:47 AM · browser waited 348 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_staff_mvxinzbc_59kvqud7 (e2e-role_mvxinzcl_7804yi1w) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_staff_mvxinzbc_59kvqud7 (e2e-role_mvxinzcl_7804yi1w) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 93f25652-c777-4ceb-8279-02b577f7e724
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:46 AM · browser waited 167 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_staff_mvxinzbc_59kvqud7 (e2e-role_mvxinzcl_7804yi1w) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_staff_mvxinzbc_59kvqud7 (e2e-role_mvxinzcl_7804yi1w) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 23eb9520-bae8-45e1-8820-69105d29ff89
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:46 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_qc_mvxinz9m_kd4efoqe (qc-manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_qc_mvxinz9m_kd4efoqe (qc-manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 995d4681-b137-42d6-b2a9-1e864f7b34b5
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:43 AM · browser waited 179 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_qc_mvxinz9m_kd4efoqe (qc-manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_qc_mvxinz9m_kd4efoqe (qc-manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3e2e34e4-f0a5-4ebd-b9ff-ddf3fed5697e
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:43 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_manager_mvxinz79_ezyuwk2v (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_manager_mvxinz79_ezyuwk2v (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6df01ec6-1329-4c96-a261-b7fb5dc28737
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:39 AM · browser waited 156 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_expired_manager_mvxinz79_ezyuwk2v (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_expired_manager_mvxinz79_ezyuwk2v (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7678f1d9-e5b0-47cf-ae2d-ce811a8371df
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:38 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_manager_mvxinprf_ezut6pr8 (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_manager_mvxinprf_ezut6pr8 (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API 503
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a88c973b-d396-4fde-b44e-db75570acd84
+        - paragraph: "App activity: Using another app function · the server reported an error · HTTP 503 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:29 AM · browser waited 7 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_manager_mvxinprf_ezut6pr8 (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_manager_mvxinprf_ezut6pr8 (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 698d81b1-b815-4643-857c-e78719a1479e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:27 AM · browser waited 179 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New gold_approval_manager_mvxinprf_ezut6pr8 (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: gold_approval_manager_mvxinprf_ezut6pr8 (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 458d1366-7869-4860-be28-05e223dc9332
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:26 AM · browser waited 6 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ignored_filter_manager_mvxind3j_s54jmsau (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: ignored_filter_manager_mvxind3j_s54jmsau (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7132f3e3-05e1-4e1a-abaf-6381315182a8
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:15 AM · browser waited 200 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ignored_filter_manager_mvxind3j_s54jmsau (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: ignored_filter_manager_mvxind3j_s54jmsau (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3e596ef1-fe9a-4054-b60f-2e34aee7c31c
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:14 AM · browser waited 6 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ignored_filter_manager_mvxind3j_s54jmsau (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: ignored_filter_manager_mvxind3j_s54jmsau (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c3c899a9-2b91-4fcd-8e3a-fd8147c87aa3
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:13 AM · browser waited 195 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ignored_filter_manager_mvxind3j_s54jmsau (manager) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: ignored_filter_manager_mvxind3j_s54jmsau (manager) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b4d6d2e9-2705-45a5-8314-99f0b773110b
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:12 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ignored_filter_manager_mvxind3j_s54jmsau (operator) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: ignored_filter_manager_mvxind3j_s54jmsau (operator) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 14e634ac-2f6d-42cc-8153-e624c6bd9e1c
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:11 AM · browser waited 388 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ignored_filter_manager_mvxind3j_s54jmsau (operator) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: ignored_filter_manager_mvxind3j_s54jmsau (operator) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 331a1e10-017a-4948-965c-a86eb37fb858
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:10 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_m8ycrjtq (operator) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_m8ycrjtq (operator) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6c3b0373-464a-48bc-a5d4-c9e79826118e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:08 AM · browser waited 160 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_m8ycrjtq (operator) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_m8ycrjtq (operator) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5642c8b6-5558-4d03-aa99-67fe7fd910c9
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:07 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_m8ycrjtq (operator) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_m8ycrjtq (operator) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 95c1723d-a960-4e5f-b398-e401a357d711
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:04 AM · browser waited 402 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_m8ycrjtq (operator) · / · web · 9m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_m8ycrjtq (operator) · / · web · 9m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 1ec86767-bfa0-4123-949d-e9137a010cd1
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:36:03 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_iccn7mj2 (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_iccn7mj2 (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 13033956-9d18-42d4-a103-62110ac26388
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:58 AM · browser waited 375 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_iccn7mj2 (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_iccn7mj2 (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ea83eca0-6cb9-454d-921f-009a166d7872
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:57 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_x915oga0 (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_x915oga0 (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: fa4c5f69-9cfa-4789-b1bb-70c33744fbe6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:55 AM · browser waited 218 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_x915oga0 (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_x915oga0 (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f1854393-3d16-4fd1-9615-e7fdd56a506b
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:54 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_x915oga0 (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_x915oga0 (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 80290821-dc64-43da-8dd3-54001987b037
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:52 AM · browser waited 400 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_x915oga0 (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_x915oga0 (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 853180bb-b00d-4604-962e-62adcfcf81c8
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:52 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_nlhb66qw (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_nlhb66qw (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 65d74547-0faf-4bec-93e5-efee39ded0f9
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:48 AM · browser waited 401 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_nlhb66qw (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_nlhb66qw (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: efa51793-1f97-48d5-a31d-d7625a1190df
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:47 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_iqkztv30 (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_iqkztv30 (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f3746fb9-9e6f-42fd-8096-9a950f9a9833
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:43 AM · browser waited 443 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_iqkztv30 (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_iqkztv30 (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d2bc0bfe-1547-4e71-946a-c2aa21cd1e13
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:43 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_xizeg5zi (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_xizeg5zi (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b7b92e39-9516-4992-b834-48ae953e1ecd
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:39 AM · browser waited 137 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_xizeg5zi (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_xizeg5zi (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 231c70b2-e12a-4dcd-8c4e-65e7d6501348
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:38 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_xizeg5zi (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_xizeg5zi (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: cfbb3455-a911-4db4-a096-4053947cff6b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:36 AM · browser waited 377 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_navigation_xizeg5zi (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_navigation_xizeg5zi (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d5b25d79-e24d-4caf-b430-fbe28f82c926
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:35 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request failed while browser reported offline
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 91ef3d9d-9599-4031-89b9-aafc7ea558c3
+        - paragraph: "App activity: Using another app function · the browser reported no connection · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:27 AM · browser waited 15 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · offline connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: cfc8eda5-e46e-4e70-9456-88ebacf35dc0
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:27 AM · browser waited 11 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 26196e0a-47d0-469f-a698-451b05ca8155
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:26 AM · browser waited 217 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8f3c2015-1e09-4011-8153-1610cf073cce
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:26 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 2b074f62-edc7-4c00-b37c-65090c684066
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:25 AM · browser waited 12 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c017d81c-dac5-476d-8f29-e3a1613c619f
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:24 AM · browser waited 208 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: de66f57f-cae4-471b-aa94-7796a640bff9
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:24 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8a7f76a4-2d1a-4bed-9757-afe19f0e2b9e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:14 AM · browser waited 367 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxim5gk_mh6gkneg (operator) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxim5gk_mh6gkneg (operator) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 55dfe0dc-311b-433e-8b3f-690ec1867f22
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:13 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request failed while browser reported offline
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 44809bb8-fea2-495b-b851-71e8ba895694
+        - paragraph: "App activity: Using another app function · the browser reported no connection · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:05 AM · browser waited 16 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · offline connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f723af51-7d74-4b09-ab6c-bc9411b7305d
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:05 AM · browser waited 32 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 568fe293-4555-48be-9521-6f4791716aa6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:04 AM · browser waited 185 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e9c87b8d-8d98-4789-9414-534b8825ac7f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:04 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 2c69334f-1f16-4722-99fd-28c79f8e2b98
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:03 AM · browser waited 12 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b64e02a6-31eb-416a-a034-326a99a374e0
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:02 AM · browser waited 215 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (manager) · / · web · 10m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b8080480-7a9c-494e-8040-32b8278783d6
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:35:01 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (operator) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (operator) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 9479883e-8e4f-44a7-bd3c-a335091bc19b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:52 AM · browser waited 374 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxilnz8_didlv5un (operator) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxilnz8_didlv5un (operator) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5cef4c83-95dd-40cc-9df9-cf6e26cce907
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:51 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request failed while browser reported offline
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b6ea2044-7b2b-475a-a344-daa873d02643
+        - paragraph: "App activity: Using another app function · the browser reported no connection · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:42 AM · browser waited 20 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · offline connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 4c5bc71a-9303-470f-85b1-94f0943a8582
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:41 AM · browser waited 207 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 031ed86a-47f5-42a1-a724-5de81cb92810
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:41 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a32c3aba-84ad-428b-8233-09fccb5ab247
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:40 AM · browser waited 11 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f2de4716-d0ef-4c91-8366-fc6a2fe59c61
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:39 AM · browser waited 207 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxil6m6_nn5fonl3 (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f35cfcff-6bae-4259-bc5c-f8fbb5c094cf
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:39 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxil6m6_nn5fonl3 (operator) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxil6m6_nn5fonl3 (operator) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 106f4528-2ccd-4406-9579-c3f622c707a6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:29 AM · browser waited 374 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_facility_reconnect_mvxil6m6_nn5fonl3 (operator) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_facility_reconnect_mvxil6m6_nn5fonl3 (operator) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: fe11688d-eac1-46d0-91b7-0302c528c1d6
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:28 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 314f8e01-1ff8-4dbc-b4c9-81c728ec7750
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:23 AM · browser waited 219 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: baf79751-21fd-4a62-8484-c3a25e3d7260
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:22 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e783698a-b08a-4098-a5de-a91080f39178
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:19 AM · browser waited 191 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ee2507a4-668f-48ec-ad43-68c475bd9dc6
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:18 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: fa61a243-3fc0-49de-8f61-4e92e9628555
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:18 AM · browser waited 264 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0001fed9-777e-4bec-974a-e52c965b6793
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:16 AM · browser waited 396 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_saved_copy_removal_mvxikwbm_x8wj7cnb (manager) · / · web · 11m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b37bf90c-9a1c-41b7-9ef1-a7474539c8e5
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:34:15 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_home_deferred_mvxij9tx_z3pl2mmc (manager) · / · web · 12m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_home_deferred_mvxij9tx_z3pl2mmc (manager) · / · web · 12m ago
+        - paragraph: Error
+        - paragraph: API 404
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 843163e4-0e8f-4ed4-9153-8f892d85912d
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: b8285fdb-35ea-4853-bebd-31f153fdef15
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 404 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:33:15 AM · browser waited 31 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_home_deferred_mvxij9tx_z3pl2mmc (manager) · / · web · 12m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_home_deferred_mvxij9tx_z3pl2mmc (manager) · / · web · 12m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: aca1c48f-9fbc-49d0-87be-9a44770964c5
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:33:10 AM · browser waited 205 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_home_deferred_mvxij9tx_z3pl2mmc (manager) · / · web · 12m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_home_deferred_mvxij9tx_z3pl2mmc (manager) · / · web · 12m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 269d6c73-da2d-402a-ae10-e00b5742ab57
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:33:10 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_home_deferred_mvxij9tx_z3pl2mmc (operator) · / · web · 12m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_home_deferred_mvxij9tx_z3pl2mmc (operator) · / · web · 12m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 80c63103-71d8-4858-a48c-084efed67b04
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:33:00 AM · browser waited 383 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_home_deferred_mvxij9tx_z3pl2mmc (operator) · / · web · 12m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_home_deferred_mvxij9tx_z3pl2mmc (operator) · / · web · 12m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 28721e5f-d10b-4287-ab45-278e4af08f1f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:59 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_staff_mvxiia7g_4xg75qos (operator) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_staff_mvxiia7g_4xg75qos (operator) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a4f3bf33-f965-49e6-a611-1f9fed828ddd
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:50 AM · browser waited 399 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_staff_mvxiia7g_4xg75qos (operator) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_staff_mvxiia7g_4xg75qos (operator) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 70ba76e3-d09f-4f37-bd16-a4286d29be55
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:49 AM · browser waited 9 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c1b7f154-424b-44d7-902b-99fd1f9cc27f
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:42 AM · browser waited 196 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: aabcf8c5-72b9-4601-94ba-3691b2c1cbde
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:41 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API 409
+        - paragraph: In plain language
+        - paragraph: The shared value changed before this save reached the server. Compare it with the current run and resolve the difference before retrying.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a39ecf51-a161-4899-bd16-e1363dc788b1
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: a210dd3d-a6fc-41f5-9d47-4c26b259ee0c
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 409 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:39 AM · browser waited 146 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: review the conflicting change against the current shared run. Keep the local draft and resolve the conflict; retrying unchanged or reloading does not save it."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 4115b8fe-aa91-4fc0-af53-4602b0af616c
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:24 AM · browser waited 194 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_b_mvxiia7g_c8xy346d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c56f10c7-588d-4e26-9b03-5b08ba6be802
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:24 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_b_mvxiia7g_c8xy346d (operator) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_b_mvxiia7g_c8xy346d (operator) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 9e555b56-afbf-41aa-b10e-07a4a45e8ae5
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:22 AM · browser waited 388 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_b_mvxiia7g_c8xy346d (operator) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_b_mvxiia7g_c8xy346d (operator) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 86580f08-990b-46ad-b245-a6a6d25cff8c
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:21 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6b2f5350-dc50-4031-9722-f4225529138f
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:18 AM · browser waited 179 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e6e71acb-c4b8-4bb9-9333-347c1597ec85
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:17 AM · browser waited 6 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: daa84bf1-5967-43b5-9ded-30c33657890f
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:17 AM · browser waited 50 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 306f285e-4545-44bd-9eb5-1a7b0eacea0f
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:16 AM · browser waited 183 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7a6c1f7e-5b73-4c11-ba99-abefb877b1cf
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:16 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_a_mvxiia7g_kyu8uk4d (operator) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_a_mvxiia7g_kyu8uk4d (operator) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5b7f00fe-21f6-481a-ac5c-1848aa2a82a1
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:14 AM · browser waited 541 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New undo_chromium_manager_a_mvxiia7g_kyu8uk4d (operator) · / · web · 13m ago":
+          - text: Auto-captured crash New
+          - paragraph: undo_chromium_manager_a_mvxiia7g_kyu8uk4d (operator) · / · web · 13m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a8db4dce-f687-4451-9ead-c812542dcacb
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:32:13 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 15m ago":
+          - text: Auto-captured crash New
+          - paragraph: sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 15m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: bca65c11-909c-489c-a51e-0ea9c317d6a2
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:30:10 AM · browser waited 196 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 15m ago":
+          - text: Auto-captured crash New
+          - paragraph: sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 15m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6ddd11ab-30ab-4501-9b72-4286a5bc253a
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:30:09 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 15m ago":
+          - text: Auto-captured crash New
+          - paragraph: sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 15m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 61fa2e92-0801-4e94-b1f0-c4383a9e41ac
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:30:09 AM · browser waited 201 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 16m ago":
+          - text: Auto-captured crash New
+          - paragraph: sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 16m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ee583bea-d3d5-459d-bb3c-75bebd985745
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:29:09 AM · browser waited 403 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 16m ago":
+          - text: Auto-captured crash New
+          - paragraph: sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 16m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c45c6642-1700-4a32-ad18-7a30c91fc80e
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:29:08 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 16m ago":
+          - text: Auto-captured crash New
+          - paragraph: sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 16m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6ee73916-a634-4798-9568-d197802390c5
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:29:06 AM · browser waited 166 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 16m ago":
+          - text: Auto-captured crash New
+          - paragraph: sequential_packaging_mvxiea6j_hsnfr2oz (manager) · / · web · 16m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 48d6ff54-3ec2-47f2-89aa-076a665f331e
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:29:06 AM · browser waited 7 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 16m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 16m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 405c9942-e372-4ec9-b777-135d6405b677
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:29:02 AM · browser waited 194 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 16m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 16m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e54b1715-369b-4797-8d24-4b077da155a2
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:29:01 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 16m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 16m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: bfbeb135-37af-43ad-8890-bf0fbd7cbc8f
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:59 AM · browser waited 180 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a811ef9e-3359-46a2-b471-a4ea0c25dc5b
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:59 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 503
+        - paragraph:
+          - text: "Incident reference:"
+          - code: de1ae875-8287-46e7-b3b9-ca6edcdf87a5
+        - paragraph: "App activity: Using another app function · the server reported an error · HTTP 503 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:54 AM · browser waited 236 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 409
+        - paragraph: In plain language
+        - paragraph: The shared value changed before this save reached the server. Compare it with the current run and resolve the difference before retrying.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0503832f-3003-40dc-adb9-ce0fff806bd7
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 409 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:54 AM · browser waited 266 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: review the conflicting change against the current shared run. Keep the local draft and resolve the conflict; retrying unchanged or reloading does not save it."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_operator_mvxidy2n_a2earuyb (operator) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_operator_mvxidy2n_a2earuyb (operator) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a4b2446f-ddb2-4310-858f-a14f024b5be0
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:51 AM · browser waited 173 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_operator_mvxidy2n_a2earuyb (operator) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_operator_mvxidy2n_a2earuyb (operator) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 38e3864a-58f6-49ef-9792-245aa4833036
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:50 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c8be36f1-a6fc-4249-b1c2-a0c2c6478625
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:48 AM · browser waited 229 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 69d21bce-98c2-44f1-867e-9e66c1eee6a2
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:47 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6d29942e-4c28-4df3-ae96-3aca366e44c6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:46 AM · browser waited 173 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_phone_mvxidu4n_bp3g8e06 (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8b6eee83-95e2-44d0-b847-295708b5860f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:45 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 58ed4ef2-c146-4d71-8b5c-077b01b696b8
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:41 AM · browser waited 173 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 173c11fb-ab80-4118-b154-ff5380bb052d
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:40 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 16253498-a090-43a9-8158-f9ef0fe8cda3
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:38 AM · browser waited 183 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 00804e1f-36ff-4af5-b1ef-62179d5f5092
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:38 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 503
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f5853f41-d783-4319-bdc2-43c139ababa8
+        - paragraph: "App activity: Using another app function · the server reported an error · HTTP 503 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:33 AM · browser waited 317 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 409
+        - paragraph: In plain language
+        - paragraph: The shared value changed before this save reached the server. Compare it with the current run and resolve the difference before retrying.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 646cbb18-b1e0-457f-ad81-277ef0bbcb81
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 409 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:33 AM · browser waited 251 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: review the conflicting change against the current shared run. Keep the local draft and resolve the conflict; retrying unchanged or reloading does not save it."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_operator_mvxidhwi_6evo6g9o (operator) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_operator_mvxidhwi_6evo6g9o (operator) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e451352d-e723-4515-b23b-261c6f240c43
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:30 AM · browser waited 192 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_operator_mvxidhwi_6evo6g9o (operator) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_operator_mvxidhwi_6evo6g9o (operator) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 227682b7-0dda-4391-b831-b8f6ea732d57
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:29 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b138f365-d45a-4ff7-8be3-e331048636c8
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:27 AM · browser waited 214 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 2495dee1-d01b-4113-b68f-71a28f1cea1a
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:26 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 79ddd588-eac2-4264-ae6a-535b0df48f10
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:24 AM · browser waited 206 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: surplus_desktop_mvxiddpi_0pyr8piy (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6011df29-d9d3-42e9-a84d-661163f9c900
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:24 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 371aab36-cc33-4351-83fa-63e5c6fddb05
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 660d7ad6-e422-42df-b0a0-2f0bda3b2fe4
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:13 AM · browser waited 0 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a4308c21-f6ed-41db-bbc5-a08efb2ca91e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:13 AM · browser waited 0 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 1caa98bf-10cc-4e04-9880-4e3670870648
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:13 AM · browser waited 0 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 409
+        - paragraph: In plain language
+        - paragraph: The shared value changed before this save reached the server. Compare it with the current run and resolve the difference before retrying.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6fedc085-b684-40a5-babb-0d2964e341f2
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 58156a33-18e3-4796-894a-af09b6188d19
+        - paragraph: "App activity: Syncing saved changes · the server rejected the request · HTTP 409 · support route: sync manual section"
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · blocked sync status · Other on desktop · build reference app-build:identified"
+        - paragraph: "Next step: review the conflicting change against the current shared run. Keep the local draft and resolve the conflict; retrying unchanged or reloading does not save it."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c301d4bf-a4f2-4b7a-a1c5-cc332945b053
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: a33ba9d2-b5ca-48e4-a760-0fafa78f2f2a
+        - paragraph: "App activity: Using another app function · the server rejected the request · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · blocked sync status · Other on desktop · build reference app-build:identified"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 400
+        - paragraph: In plain language
+        - paragraph: This sync update did not pass a validation check. Review the current values and run state, keep your draft, and do not retry it unchanged.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: bf16063d-5f2f-42d4-9c97-07193ee2bc60
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 6ea23279-c368-4a89-9773-6fe92adcf5d5
+        - paragraph: "App activity: Syncing saved changes · the server rejected the request · HTTP 400 · support route: sync manual section"
+        - paragraph:
+          - text: "Support code:"
+          - code: SYNC_VALIDATION_FAILED
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · blocked sync status · Other on desktop · build reference app-build:identified"
+        - paragraph: "Next step: review the rejected action and correct its inputs or run state. Do not retry the unchanged action. Keep this reference for a developer if the reason is unclear."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: field_diagnostics_mvxid5u2_j5zubzvs (e2e-role_mvxid5vk_d38u33og) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API 500
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8a61e1e8-c6f0-4302-a546-b4d45a969f9f
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 57839abc-b37b-4ab9-9c4f-ef0656ef9fcc
+        - paragraph: "App activity: Syncing saved changes · the server reported an error · HTTP 500"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:13 AM · browser waited 4023360 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Other on desktop · build reference app-build:identified"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_dough_correction_manager_mvxicmk3_6sqb3xab (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_dough_correction_manager_mvxicmk3_6sqb3xab (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 92bd061d-a36e-4e0e-aea6-53ee06166113
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:01 AM · browser waited 142 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_dough_correction_manager_mvxicmk3_6sqb3xab (manager) · / · web · 17m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_dough_correction_manager_mvxicmk3_6sqb3xab (manager) · / · web · 17m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 47b14543-feda-4afd-8891-8d09517c8b4a
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:28:00 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_dough_correction_manager_mvxicmk3_6sqb3xab (manager) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_dough_correction_manager_mvxicmk3_6sqb3xab (manager) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 522c9b9f-0341-45f5-a629-5db72219c9a5
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:52 AM · browser waited 216 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_dough_correction_manager_mvxicmk3_6sqb3xab (manager) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_dough_correction_manager_mvxicmk3_6sqb3xab (manager) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0153be3f-e708-49b0-9b7c-e2c3fd290bd5
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:51 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_dough_correction_manager_mvxicmk3_6sqb3xab (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_dough_correction_manager_mvxicmk3_6sqb3xab (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6bd8a363-e105-4f42-9a78-4608a6766dae
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:50 AM · browser waited 363 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_dough_correction_manager_mvxicmk3_6sqb3xab (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_dough_correction_manager_mvxicmk3_6sqb3xab (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6aa918ac-0d55-4f69-9e69-986c288df04a
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:49 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edielmrctnb (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edielmrctnb (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 786f0de9-7498-42b1-af56-6de8d2fe7a59
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:46 AM · browser waited 212 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edielmrctnb (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edielmrctnb (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 22fd7bc9-8a49-4b84-93c4-300114f4e738
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:45 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edielmrctnb (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edielmrctnb (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6db9c5cb-a753-46ae-8e9f-0ca8674e3b5d
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:43 AM · browser waited 164 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edielmrctnb (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edielmrctnb (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c2cdc86b-34d1-4b57-ad8c-fd008404e830
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:43 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edielmrctnb (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edielmrctnb (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3300014c-98cd-46a7-92d6-9c8136a57bfe
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:39 AM · browser waited 199 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edielmrctnb (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edielmrctnb (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f8817160-4aff-4c1b-9d88-d879e5150713
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:39 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edielmrctnb (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edielmrctnb (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c70de6d5-7c4c-4f87-a641-43aa28da7db1
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:05 AM · browser waited 358 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edielmrctnb (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edielmrctnb (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7c5974fb-5053-481b-a315-a4ffc38d22f0
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:04 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edie00rlbuw (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edie00rlbuw (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f2b3adaa-ebe0-409c-b316-f85d7348f391
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:00 AM · browser waited 205 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edie00rlbuw (operator) · / · web · 18m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edie00rlbuw (operator) · / · web · 18m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a031a481-9584-4ecf-a920-5b75daa17616
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:27:00 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edie00rlbuw (operator) · / · web · 19m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edie00rlbuw (operator) · / · web · 19m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 97cc56eb-8e8e-40b5-8905-dd1c30243e21
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:26:58 AM · browser waited 396 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2edie00rlbuw (operator) · / · web · 19m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2edie00rlbuw (operator) · / · web · 19m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 569713c0-7d1c-4709-bc2b-e55ffa5ea821
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:26:57 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_departments_7u5rim4s (manager) · / · web · 19m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_departments_7u5rim4s (manager) · / · web · 19m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 47a0b198-9fd2-401d-b87b-8f4cf28dbfb9
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:26:45 AM · browser waited 224 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_departments_7u5rim4s (manager) · / · web · 19m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_departments_7u5rim4s (manager) · / · web · 19m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 373c4f5f-d1e1-4604-abc8-1a2df79a6da0
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:26:44 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_departments_7u5rim4s (operator) · / · web · 19m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_departments_7u5rim4s (operator) · / · web · 19m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c7f6850b-1334-4841-9e70-8bb20143cf95
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:26:42 AM · browser waited 398 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_departments_7u5rim4s (operator) · / · web · 19m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_departments_7u5rim4s (operator) · / · web · 19m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 90f518de-a8e3-49c3-abd1-5495056ba3e3
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:26:42 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_departments_0dvixplm (manager) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_departments_0dvixplm (manager) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6876d8b1-8e8e-4d3e-8064-56f26dc05f4b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:40 AM · browser waited 205 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_departments_0dvixplm (manager) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_departments_0dvixplm (manager) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: baab20e8-7a9f-4030-8e0b-e0c6f0d05493
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:39 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_departments_0dvixplm (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_departments_0dvixplm (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 2c9cd854-5f43-4bc4-bf5c-66926017e870
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:37 AM · browser waited 382 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_departments_0dvixplm (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_departments_0dvixplm (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e4ff8668-392a-4bd7-99ef-1b44c8f332ae
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:37 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 19a03a2e-f53d-4b4e-9a2c-ab2a52ba2911
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:35 AM · browser waited 196 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 11aef3b9-a740-4241-94bd-da3ab7b5be87
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:34 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 34c8f2ae-9083-4e3b-b6bb-e72b8efd1757
+        - paragraph: "App activity: Syncing saved changes · the network request could not reach the server · support route: sync today read"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:33 AM · browser waited 38 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b9419cae-34ae-4a78-bae4-5cf51301a193
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:32 AM · browser waited 200 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d13b89d7-adbe-4feb-9027-3b4eaf33935a
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:32 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: fa133b2c-ad5c-43d3-bdf0-66ab081b4a2e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:29 AM · browser waited 403 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e0d50967-973f-4913-a3bb-e65c921ff353
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:28 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b09a3e82-46a6-4fbc-ba41-75bac61ca89a
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:28 AM · browser waited 82 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b43f9c8b-6fac-413a-9186-d98d7ba9fc39
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:27 AM · browser waited 384 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_matrix_ijgs8aez (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_matrix_ijgs8aez (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a24a224f-1207-4699-a29a-df0c19234636
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:26 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_health_manager_mvxi97b5_gtvvmaxq (manager) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_health_manager_mvxi97b5_gtvvmaxq (manager) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: cd5ef668-6068-4a4c-ad5f-9f2230600ba7
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:20 AM · browser waited 212 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_health_manager_mvxi97b5_gtvvmaxq (manager) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_health_manager_mvxi97b5_gtvvmaxq (manager) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 88b4a861-53e2-479a-ba9c-c4d2a1f36c40
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:19 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_health_manager_mvxi97b5_gtvvmaxq (manager) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_health_manager_mvxi97b5_gtvvmaxq (manager) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8dcc2a0e-a3fb-4f23-8073-86967c9c2be3
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:13 AM · browser waited 177 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_health_manager_mvxi97b5_gtvvmaxq (manager) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_health_manager_mvxi97b5_gtvvmaxq (manager) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 31b119dc-3c7f-4639-b1b0-fe328bd7a902
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:12 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_health_manager_mvxi97b5_gtvvmaxq (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_health_manager_mvxi97b5_gtvvmaxq (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c30a063f-96e6-4133-8e68-1f6edd8b1e7b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:10 AM · browser waited 401 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_health_manager_mvxi97b5_gtvvmaxq (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_health_manager_mvxi97b5_gtvvmaxq (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 259151d1-6585-42ac-8e72-b768fb612e8b
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:09 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API 401
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7dfa2c77-60cf-4517-a861-f9b13924c322
+        - paragraph:
+          - text: "Related request reference (client-reported):"
+          - code: 5629f7bd-e980-46ea-a4fc-de8a0f84afe7
+        - paragraph: "App activity: Checking account access · account access was rejected · HTTP 401 · support route: authentication"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:07 AM · browser waited 15 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: sign in again, confirm the current shared run, then explicitly retry eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: df840dac-fdc5-4810-8a02-c35a8c88fb66
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:05 AM · browser waited 155 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8e64cf81-8068-44f5-b15e-cdf68b47161d
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:05 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_manager_mvxi8wa7_qdsrd45g (manager) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_manager_mvxi8wa7_qdsrd45g (manager) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8e1957f7-2145-4513-a343-a86c1ed3fac9
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:01 AM · browser waited 188 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_manager_mvxi8wa7_qdsrd45g (manager) · / · web · 20m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_manager_mvxi8wa7_qdsrd45g (manager) · / · web · 20m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8bcf86c3-34b1-4fe4-aa7d-26d55311a52d
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:25:01 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_manager_mvxi8wa7_qdsrd45g (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_manager_mvxi8wa7_qdsrd45g (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 10e05d80-6cd3-49ef-a9f8-5bebba8d9ac6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:59 AM · browser waited 392 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_manager_mvxi8wa7_qdsrd45g (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_manager_mvxi8wa7_qdsrd45g (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ca076a56-5575-49f4-acf6-6422713dcb5f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:58 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e9b4694b-57c3-4649-8564-9f7d9e3a570c
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:56 AM · browser waited 368 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_reset_staff_mvxi8wa7_5wd8s3nd (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 89af16b0-06e9-46aa-b53b-2b5b53822c3f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:55 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2estripu0sc5er (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2estripu0sc5er (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 76797687-b586-42c9-bfd7-5b81c01c7498
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:51 AM · browser waited 196 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2estripu0sc5er (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2estripu0sc5er (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 2083ca9a-2a7a-403e-993b-dc2313e19cd4
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:51 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2estripu0sc5er (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2estripu0sc5er (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 9f0aed08-ec11-4cb8-99aa-a53314a8eb57
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:48 AM · browser waited 389 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2estripu0sc5er (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2estripu0sc5er (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 602b9eb7-9c55-4c79-bf9c-63696fa13c93
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:48 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (manager) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (manager) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API 403
+        - paragraph: In plain language
+        - paragraph: This request was denied because this account does not currently have permission. Ask a manager to check access before trying again.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 331d6419-62a9-4e50-bdb1-f0f7c5383d2e
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 403 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:46 AM · browser waited 12 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: ask an authorized manager to review access before retrying eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (manager) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (manager) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API 401
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 95ecbf25-ee55-44bb-af98-aec7ad65e938
+        - paragraph: "App activity: Using another app function · account access was rejected · HTTP 401 · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:46 AM · browser waited 11 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: sign in again, confirm the current shared run, then explicitly retry eligible retained work."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (manager) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (manager) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b5b7a748-079f-4150-b00e-56bc06c60543
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:43 AM · browser waited 229 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (manager) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (manager) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d9e97290-d70f-4ef6-8a10-b29565ec02ed
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:42 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 907a2f5e-4a2b-44d2-93f7-3810e1f05cc6
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:40 AM · browser waited 395 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: e2e_audit_pdf_manager_mvxi8kh6_46r9z2c5 (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d85b817b-f805-44ce-bba9-477e6bbcbc21
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:40 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ai_outage_manager_mvxi8ahi_w6ks5d0g (manager) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: ai_outage_manager_mvxi8ahi_w6ks5d0g (manager) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 1f5a784a-f95d-4217-8972-86ae909a773e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:30 AM · browser waited 199 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ai_outage_manager_mvxi8ahi_w6ks5d0g (manager) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: ai_outage_manager_mvxi8ahi_w6ks5d0g (manager) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 455e94f2-718d-4451-8341-27ffae07a735
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:29 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ai_outage_manager_mvxi8ahi_w6ks5d0g (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: ai_outage_manager_mvxi8ahi_w6ks5d0g (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 75f18fc4-da14-4601-81cf-80d05ed9c4ae
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:28 AM · browser waited 388 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New ai_outage_manager_mvxi8ahi_w6ks5d0g (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: ai_outage_manager_mvxi8ahi_w6ks5d0g (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e8708c8d-373e-4a91-a7eb-0461580c9f07
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:27 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi84gz_g69u7fq3 (supervisor) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi84gz_g69u7fq3 (supervisor) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 39fe6642-2719-4d41-9506-6c4ef5d109a0
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:23 AM · browser waited 208 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi84gz_g69u7fq3 (supervisor) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi84gz_g69u7fq3 (supervisor) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c5f37228-70c4-41d5-9c76-335eb5f064f0
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:22 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi84gz_g69u7fq3 (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi84gz_g69u7fq3 (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 33025b2f-4b3a-4f53-b150-55ec5c95a24a
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:20 AM · browser waited 482 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi84gz_g69u7fq3 (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi84gz_g69u7fq3 (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d6fbbbfe-ba1b-4b3e-ae8d-9354c40bfed9
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:19 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7sls_z53b3t1c (supervisor) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7sls_z53b3t1c (supervisor) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 3ed7a3b4-dd50-48f8-b810-0ae2f7486933
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:09 AM · browser waited 182 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7sls_z53b3t1c (supervisor) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7sls_z53b3t1c (supervisor) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: bb7bbbb9-b57b-4ff1-9a9e-cffab416a066
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:08 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7sls_z53b3t1c (supervisor) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7sls_z53b3t1c (supervisor) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 632a0463-d96e-4193-b020-39114db4de43
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:07 AM · browser waited 218 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7sls_z53b3t1c (supervisor) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7sls_z53b3t1c (supervisor) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7ac05362-9a9f-4971-bf1f-1811d66e3eb7
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:07 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7sls_z53b3t1c (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7sls_z53b3t1c (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 327f1bee-738d-4ffa-96a6-4aa4faceb80d
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:04 AM · browser waited 382 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7sls_z53b3t1c (operator) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7sls_z53b3t1c (operator) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d0d36d61-88a2-4b40-9709-6173a7f075bd
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:04 AM · browser waited 7 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (manager) · / · web · 21m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (manager) · / · web · 21m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: baca1396-61f9-44c5-bd56-52ca9772386e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:24:00 AM · browser waited 185 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7f0fa53b-daf4-4991-823f-cf7b25dafdb1
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:59 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ae595f59-86fc-43a4-880f-9eb792fdf1b1
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:53 AM · browser waited 181 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 818c6eb3-7fe0-46e9-a30f-d6d0928dc14d
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:53 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b4d5259d-9e6a-4314-be18-85218e88507d
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:52 AM · browser waited 52 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 1eb75fbc-2991-4b9e-a3b2-5e0fefadd4cf
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:51 AM · browser waited 212 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 85f1b0db-3a57-4ab4-a217-2d9adc8d9770
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:51 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0aa5d359-8b90-4bdd-ae26-08587e42b43d
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:48 AM · browser waited 434 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi7gbc_lru5483f (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi7gbc_lru5483f (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b728a0f9-2171-4495-8858-5ba3db6cd06f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:48 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 22e42f0e-aa84-44a7-8504-c40e7b935437
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:43 AM · browser waited 201 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 16597b20-fea6-4ed3-81c4-046df1510b8e
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:42 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0265b97d-5d0a-40c8-857b-a4d8c22866bd
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:42 AM · browser waited 48 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a568f3f6-4191-4c22-a907-b83fb56fef52
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:41 AM · browser waited 229 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi77v9_ojrrsoxk (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 4fd89d5e-4978-46fc-bc9f-aa345975af66
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:40 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi77v9_ojrrsoxk (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi77v9_ojrrsoxk (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0b0c8d1e-843a-4fde-bc03-63aad0af03cc
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:38 AM · browser waited 384 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi77v9_ojrrsoxk (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi77v9_ojrrsoxk (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: b8eda739-77e9-4cf7-b9d7-1a433ae183ba
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:37 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7e95522f-54a7-4363-85b9-b2da290a2f1b
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:15 AM · browser waited 0 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: dd8083b5-08af-4ba1-89ff-06b770cf1636
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:15 AM · browser waited 0 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 18d41634-956e-43d5-8e03-62e8c5bbb5cb
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:15 AM · browser waited 0 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 0de50ac1-31d6-4b26-8d82-bd3830217bc1
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:15 AM · browser waited 0 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 00110923-696e-479d-9343-bb3cc369cd60
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:15 AM · browser waited 0 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7656fec3-3924-4eb8-bb22-b06d5c39dd07
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:15 AM · browser waited 225 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (manager) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 42ec05c9-1fda-4565-abcc-3397b2f7852f
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:14 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6f3983f5-be3c-401c-bb2f-f8f3649778be
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:12 AM · browser waited 415 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi6o5s_nl9on9o4 (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi6o5s_nl9on9o4 (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 8f067860-5f29-4b4f-909c-b1230513f921
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:11 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7c023ab1-70c7-4f50-89e4-e27816518ed5
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:07 AM · browser waited 245 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: a60568c5-ab31-4c83-a792-92ffbb20185e
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:06 AM · browser waited 5 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 978a1b0f-c8dc-40bd-9483-1106f2ed13a9
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:06 AM · browser waited 103 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 911f0650-ceb9-4daa-9793-8416369116ba
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:05 AM · browser waited 180 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: def25822-81af-4978-a874-1cb49f90f97b
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:05 AM · browser waited 4 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c513de91-d500-4a45-b64e-18daa4f8c886
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:02 AM · browser waited 391 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago":
+          - text: Auto-captured crash New
+          - paragraph: break_operator_mvxi6gs0_k1ywgmpq (operator) · / · web · 22m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 7adbe1f7-f515-438e-ba54-bc20c6167cf3
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:23:02 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c4e69660-a687-441a-858a-3f2edda7f32c
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:56 AM · browser waited 201 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 1a5638b8-546f-4cbc-872d-8c3477b70ed0
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:56 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 56ca0fbf-875b-4ab5-aafd-12b5ea690d12
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:56 AM · browser waited 25 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: ee668c38-f170-4714-947f-247d4da118a7
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:49 AM · browser waited 175 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c9ba0ac6-2147-4453-a35b-f42f562a4b00
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:48 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6d731f3b-d129-4b22-9b05-cb9b385c5e17
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:47 AM · browser waited 203 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 86c6daee-7ff2-4d21-ae42-6f86c9c1fd23
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:47 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (operator) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (operator) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f6fb0dfd-dfe1-484f-83c5-f8876d5ee701
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:45 AM · browser waited 412 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi63c2_hsvomo6u (operator) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi63c2_hsvomo6u (operator) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: e7ae2337-8345-4770-8987-f115c989ddfc
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:44 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi5vv5_j27ljnb5 (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi5vv5_j27ljnb5 (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f0c482db-4bb4-4373-b7fb-b0c1c0dddaf4
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:38 AM · browser waited 198 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi5vv5_j27ljnb5 (manager) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi5vv5_j27ljnb5 (manager) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: c3bc4b1e-4fae-4382-9ca5-fd00cdf3a63a
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:37 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi5vv5_j27ljnb5 (operator) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi5vv5_j27ljnb5 (operator) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 83dff09b-1d16-4778-9dfb-63144131c6cc
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:35 AM · browser waited 399 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi5vv5_j27ljnb5 (operator) · / · web · 23m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi5vv5_j27ljnb5 (operator) · / · web · 23m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 460f23d0-264d-4029-a263-40b72aeaedcb
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:22:34 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 5632d981-3a2a-4c55-84d9-a8cc8eb0383a
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:21:57 AM · browser waited 214 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: aaf96729-4bff-4d51-9321-5af32fa9b02b
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:21:57 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago
+        - paragraph: Error
+        - paragraph: API transport failure
+        - paragraph: In plain language
+        - paragraph: The app could not get a network reply. Check the connection, then retry retained work once while online.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 108478ac-eed9-4cf2-aad8-0be091ccc541
+        - paragraph: "App activity: Using another app function · the network request could not reach the server · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:21:56 AM · browser waited 41 ms
+        - paragraph: The app was in the background while waiting; the phone operating system may also have paused it. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · error · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: check connectivity and retry eligible retained work once. If it repeats, keep this reference for a developer; do not reload or update while work is active or unsaved."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: d42977b4-7de2-4ab2-a4f3-88588094210e
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:21:55 AM · browser waited 194 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi4yzi_t77j6o2e (manager) · / · web · 24m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: f190b480-a5c8-41cf-816f-ccf0fd28cfcc
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:21:55 AM · browser waited 2 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi4yzi_t77j6o2e (operator) · / · web · 24m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi4yzi_t77j6o2e (operator) · / · web · 24m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 923f72fc-fb2a-4376-9adb-97a550c4dd31
+        - paragraph: "App activity: Syncing saved changes · the request stopped before a reply arrived · support route: sync other"
+        - paragraph: Observed by this browser at 11/1/2026, 7:21:53 AM · browser waited 352 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · blocked sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+        - button "Auto-captured crash New a11y_mvxi4yzi_t77j6o2e (operator) · / · web · 24m ago":
+          - text: Auto-captured crash New
+          - paragraph: a11y_mvxi4yzi_t77j6o2e (operator) · / · web · 24m ago
+        - paragraph: Error
+        - paragraph: API request cancelled
+        - paragraph: In plain language
+        - paragraph: The browser stopped waiting before a reply arrived. This does not show whether the server accepted the request.
+        - paragraph:
+          - text: "Incident reference:"
+          - code: 6479b5f3-0ab2-4d4d-8381-f8743abe90f6
+        - paragraph: "App activity: Using another app function · the request stopped before a reply arrived · support route: not identified in the available diagnostics"
+        - paragraph: Observed by this browser at 11/1/2026, 7:21:52 AM · browser waited 3 ms
+        - paragraph: No background change was detected; the operating-system pause state is unknown. The browser wait is not server processing time.
+        - paragraph: "Extra details for support: call api · degraded · 0 automatic retries · online connection · unknown sync status · Chrome on desktop · build reference app-build:[token redacted]"
+        - paragraph: "Next step: this request ended before a response, so it does not show that the server rejected the session. If it happened during sign-in, sign-out, or an account switch, no action is needed. Otherwise, review the available diagnostics if it recurs; the cancellation source is unknown."
+        - text: Priority
+        - combobox "Priority":
+          - option "Low"
+          - option "Normal" [selected]
+          - option "High"
+          - option "Urgent"
+        - text: Work
+        - combobox "Work":
+          - option "New" [selected]
+          - option "Assigned"
+          - option "Waiting"
+          - option "Resolved"
+        - text: Owner
+        - combobox "Owner":
+          - option "Unassigned" [selected]
+          - option "e2e_incident_keyboard_mvxiz9ps_kngqv2ep (e2e-role_mvxiz9rd_grqaks8q)"
+          - option "undo_chromium_manager_a_mvxiia7g_kyu8uk4d (manager)"
+          - option "undo_chromium_manager_b_mvxiia7g_c8xy346d (manager)"
+          - option "undo_chromium_staff_mvxiia7g_4xg75qos (operator)"
+        - textbox "Add an operational note…"
+        - button "Add note" [disabled]
+        - button "Mark reviewed"
+        - button "Mark resolved"
+  - tablist:
+    - tab "Run"
+    - tab "Dough"
+    - tab "Sauce"
+    - tab "Front"
+    - tab "Pack"
+    - tab "Warehouse"
+- region "Notifications (F8)":
+  - list
+```
+
+# Test source
+
+```ts
+  1174 |     await page.screenshot({ path: testInfo.outputPath("manager-attention-phone.png") });
+  1175 |     await page.setViewportSize({ width: 1440, height: 1000 });
+  1176 | 
+  1177 |     await page.getByTestId("manager-attention-action-password-resets").click();
+  1178 |     await expect(page.getByRole("heading", { name: "Staff Roster" })).toBeVisible();
+  1179 | 
+  1180 |     await openManagerAttention(page);
+  1181 |     await page.getByTestId("manager-attention-action-incidents").click();
+  1182 |     await expect(page.getByText("Reported issues", { exact: true })).toBeVisible();
+  1183 | 
+  1184 |     await openManagerAttention(page);
+  1185 |     await page.getByTestId("manager-attention-action-recipe-setup").click();
+  1186 |     await expect(page.getByRole("heading", { name: "Setup Profiles" })).toBeVisible();
+  1187 |     await expect(page.getByText(scheduledBrand, { exact: true })).toBeVisible();
+  1188 |     await expect(page.getByText(scheduledFlavor, { exact: true })).toBeVisible();
+  1189 |     const doughRecipePicker = page.getByTestId("setup-recipe-picker-dough");
+  1190 |     await doughRecipePicker.click();
+  1191 |     await expect(page.getByText("Valid Dough", { exact: true })).toBeVisible({
+  1192 |       timeout: 15_000,
+  1193 |     });
+  1194 |     await expect(page.getByText("Legacy Dough", { exact: true })).toBeVisible();
+  1195 |     await page.keyboard.press("Escape");
+  1196 |     await page.screenshot({ path: testInfo.outputPath("manager-attention-destination.png") });
+  1197 |     const setupProfilesClose = page.getByRole("button", { name: "Close", exact: true });
+  1198 |     if (await setupProfilesClose.count()) {
+  1199 |       await setupProfilesClose.click();
+  1200 |     }
+  1201 | 
+  1202 |     await page.reload({ waitUntil: "domcontentloaded" });
+  1203 |     await page.getByTestId("tab-run").waitFor({ state: "attached", timeout: 25_000 });
+  1204 |     await openManagerAttention(page);
+  1205 |     await expect(page.getByTestId("manager-attention-list")).toBeVisible();
+  1206 |     await page.getByRole("button", { name: "Open full manager queue" }).click();
+  1207 |     await expect(page.getByTestId("manager-action-queue")).toBeVisible();
+  1208 |     await expect(page.getByText("Something went wrong", { exact: true })).toHaveCount(0);
+  1209 |     expect(browserErrors).toEqual([]);
+  1210 |   } finally {
+  1211 |     if (malformedAliasId !== null) {
+  1212 |       const cleanupDb = new Client({
+  1213 |         connectionString: requireIsolatedTestDatabase("remove malformed manager-attention alias"),
+  1214 |       });
+  1215 |       try {
+  1216 |         await cleanupDb.connect();
+  1217 |         await cleanupDb.query("DELETE FROM spec_import_aliases WHERE id = $1", [malformedAliasId]);
+  1218 |       } finally {
+  1219 |         await cleanupDb.end().catch(() => {});
+  1220 |       }
+  1221 |     }
+  1222 |     await fixtures.cleanup();
+  1223 |   }
+  1224 | });
+  1225 | 
+  1226 | async function deleteIncidentFixtures(incidentIds: readonly string[]): Promise<void> {
+  1227 |   if (incidentIds.length === 0) return;
+  1228 |   const connectionString = requireIsolatedTestDatabase("clean up manager incident fixtures");
+  1229 |   const db = new Client({ connectionString });
+  1230 |   try {
+  1231 |     await db.connect();
+  1232 |     await db.query(
+  1233 |       "DELETE FROM incidents WHERE id = ANY($1::text[]) AND scope = 'live'",
+  1234 |       [incidentIds],
+  1235 |     );
+  1236 |   } finally {
+  1237 |     await db.end().catch(() => {});
+  1238 |   }
+  1239 | }
+  1240 | 
+  1241 | async function tabToControl(page: Page, control: Locator, maxTabs = 30): Promise<void> {
+  1242 |   for (let tabCount = 0; tabCount < maxTabs; tabCount += 1) {
+  1243 |     if (await control.evaluate((element) => element === document.activeElement)) return;
+  1244 |     await page.keyboard.press("Tab");
+  1245 |   }
+  1246 |   await expect(control).toBeFocused();
+  1247 | }
+  1248 | 
+  1249 | test("manager can review and resolve an incident with Enter and Space", async ({ page, playwright }) => {
+  1250 |   test.setTimeout(120_000);
+  1251 |   const fixtures = await AuthorizedBrowserFixtures.create(playwright, API_BASE, SIGNUP_CODE);
+  1252 |   const incidentIds: string[] = [];
+  1253 |   try {
+  1254 |     const account = await fixtures.createAccount({
+  1255 |       username: uniqueTestId("e2e_incident_keyboard"),
+  1256 |       password: PASSWORD,
+  1257 |       capabilities: DEFAULT_MANAGER_CAPABILITIES,
+  1258 |       onboardingSeen: true,
+  1259 |     });
+  1260 |     await page.context().addCookies([{ name: "rc_auth", value: account.token, url: API_BASE }]);
+  1261 |     const description = `Keyboard queue exit ${uniqueTestId("incident").slice(-8)}`;
+  1262 |     const incidentId = await createReviewableIncident(page, account.token, description);
+  1263 |     incidentIds.push(incidentId);
+  1264 |     await page.goto("/", { waitUntil: "domcontentloaded" });
+  1265 |     await page.getByTestId("tab-run").waitFor({ state: "attached", timeout: 25_000 });
+  1266 |     await openManagerAttention(page);
+  1267 |     await page.getByRole("button", { name: "Review issues" }).click();
+  1268 |     await expect(page.locator(".station-tabs [role='tabpanel'][data-state='active']")).toBeFocused();
+  1269 |     const headerButton = page.locator(`[data-incident-header="${incidentId}"]`);
+  1270 |     const incident = headerButton.locator("..");
+  1271 |     const reviewedButton = incident.getByRole("button", { name: "Mark reviewed" });
+  1272 |     // New incidents deliberately start expanded. Exercise collapse and reopen
+  1273 |     // rather than treating the first Enter (collapse) as an expansion.
+> 1274 |     await expect(reviewedButton).toBeVisible();
+       |                                  ^ Error: expect(locator).toBeVisible() failed
+  1275 |     await expect(headerButton).toBeVisible();
+  1276 |     await headerButton.focus();
+  1277 |     await expect(headerButton).toBeFocused();
+  1278 |     await page.keyboard.press("Enter");
+  1279 |     await expect(reviewedButton).toBeHidden();
+  1280 |     await page.keyboard.press("Enter");
+  1281 |     await expect(reviewedButton).toBeVisible({ timeout: 10_000 });
+  1282 |     await tabToControl(page, reviewedButton);
+  1283 |     await page.keyboard.press("Enter");
+  1284 |     await expect(incident.getByText("Reviewed", { exact: true })).toBeVisible();
+  1285 |     const resolvedButton = incident.getByRole("button", { name: "Mark resolved" });
+  1286 |     await tabToControl(page, resolvedButton);
+  1287 |     await page.keyboard.press("Space");
+  1288 |     // Focused filtered rows intentionally remain mounted through the status
+  1289 |     // transition so keyboard focus is not abandoned when an action completes.
+  1290 |     // The status filter also contains a hidden native <option> named
+  1291 |     // "Resolved". Assert the visible incident header rather than matching
+  1292 |     // both the badge and the filter option.
+  1293 |     await expect(headerButton).toContainText("Resolved");
+  1294 |     await expect(headerButton).toBeFocused();
+  1295 |     await expect(page.locator(":focus")).toBeVisible();
+  1296 |   } finally {
+  1297 |     await deleteIncidentFixtures(incidentIds);
+  1298 |     await fixtures.cleanup();
+  1299 |   }
+  1300 | });
+  1301 | 
+```

@@ -1,0 +1,220 @@
+{
+  "config": {
+    "argv": [
+      "/nix/store/503mh0fj8j1cfvrxcavr76szbn4dk2r7-nodejs-slim-24.21.0/bin/node",
+      "/home/runner/workspace/artifacts/run-calculator/node_modules/@playwright/test/cli.js",
+      "test",
+      "e2e/pwa-handoff.spec.ts",
+      "--list",
+      "--project=chromium",
+      "--grep=(preserves unsafe work, then auto-reloads after safe inactivity|auto-reloads when Home was already safe before update discovery|recovers an old HTML-served Home chunk onto the current build once)$",
+      "--reporter=json"
+    ],
+    "configFile": "/home/runner/workspace/artifacts/run-calculator/playwright.config.ts",
+    "rootDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/home/runner/workspace/artifacts/run-calculator/e2e/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": {},
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/test-results/full",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "**/task3494-audited-import.spec.ts",
+          "**/completed-history-archive.spec.ts",
+          "live-authority.spec.ts",
+          "live-authority-continuation.spec.ts",
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts",
+          "ios-safari-pwa-device.spec.ts",
+          "csp-production.spec.ts",
+          "docker-caddy-browser-smoke.spec.ts",
+          "home-opening-measurement.spec.ts",
+          "import-gold-apply.spec.ts",
+          "reduced-motion.spec.ts",
+          "webkit-https.spec.ts",
+          "recipe-picker-webkit.spec.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": {},
+        "outputDir": "/home/runner/workspace/artifacts/run-calculator/test-results/full",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "name": "chromium",
+        "testDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "snapshotDir": "/home/runner/workspace/artifacts/run-calculator/e2e",
+        "testIgnore": [
+          "**/task3494-audited-import.spec.ts",
+          "**/completed-history-archive.spec.ts",
+          "live-authority.spec.ts",
+          "live-authority-continuation.spec.ts",
+          "calendar.spec.ts",
+          "release-webkit-smoke.spec.ts",
+          "ios-safari-pwa-device.spec.ts",
+          "csp-production.spec.ts",
+          "docker-caddy-browser-smoke.spec.ts",
+          "home-opening-measurement.spec.ts",
+          "import-gold-apply.spec.ts",
+          "reduced-motion.spec.ts",
+          "webkit-https.spec.ts",
+          "recipe-picker-webkit.spec.ts"
+        ],
+        "testMatch": "**/*.spec.ts",
+        "timeout": 60000,
+        "use": {
+          "baseURL": "https://de4fa38f-10e1-481d-ab62-4ad238a33ebf-00-cptzdyqx3917.picard.replit.dev",
+          "headless": true,
+          "trace": "retain-on-failure",
+          "screenshot": "only-on-failure",
+          "video": "off",
+          "launchOptions": {
+            "executablePath": "/nix/store/qa9cnw4v5xkxyip6mb9kxqfq1z4x2dx1-chromium-138.0.7204.100/bin/chromium"
+          },
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "pwa-handoff.spec.ts",
+      "file": "pwa-handoff.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "PWA update handoff",
+          "file": "pwa-handoff.spec.ts",
+          "line": 1093,
+          "column": 6,
+          "specs": [
+            {
+              "title": "preserves unsafe work, then auto-reloads after safe inactivity",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "68653885c13ad33062c9-5525da1780bb477027cf",
+              "file": "pwa-handoff.spec.ts",
+              "line": 1790,
+              "column": 3
+            },
+            {
+              "title": "auto-reloads when Home was already safe before update discovery",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "68653885c13ad33062c9-01e6d02deb28827ea8f0",
+              "file": "pwa-handoff.spec.ts",
+              "line": 3013,
+              "column": 3
+            },
+            {
+              "title": "recovers an old HTML-served Home chunk onto the current build once",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "68653885c13ad33062c9-58ccbb40d396d96bf2ad",
+              "file": "pwa-handoff.spec.ts",
+              "line": 3180,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T15:12:53.352Z",
+    "duration": 1589.9770000000008,
+    "expected": 0,
+    "skipped": 3,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

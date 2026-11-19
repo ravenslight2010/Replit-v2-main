@@ -1,0 +1,15 @@
+---
+name: Sign-up bootstrap hardening
+description: Access-code-gated sign-up, rate limiting, and the bootstrap-manager race fix on the self-contained auth system.
+---
+
+Public self-registration was hardened against three issues without adding new user-facing flows:
+
+1. **Bootstrap-manager race AND privilege escalation via the shared sign-up code.** Originally "first registered user becomes a manager" had two problems: (a) a check-then-insert race where two concurrent sign-ups could both become manager, and (b) anyone who knew the shared `STAFF_SIGNUP_CODE` (handed to every ordinary new hire) could win the race deliberately and seize admin control on a fresh deployment. Fixed both: a Postgres advisory lock (`pg_advisory_xact_lock`) wrapped around the check-then-insert in a `db.transaction` serializes role resolution facility-wide; AND bootstrap manager now requires TWO separate secrets to both match: `INITIAL_MANAGER_USERNAME` (exact username, case-insensitive) AND `INITIAL_MANAGER_ACCESS_CODE` (a distinct code, timing-safe compared against the sign-up request's `accessCode` field). A username alone is guessable (e.g. "admin"), so requiring only that would let anyone holding just the shared staff code register the guessed name and still win — the separate unguessable code closes that gap. Fails closed (no auto-manager) if either is unset. `INITIAL_MANAGER_ACCESS_CODE` is also independently accepted as an alternate value for the basic sign-up access-code gate (not just the bootstrap decision), so the intended admin doesn't need to separately know the ordinary staff code too. See `isDesignatedInitialManager`/`resolveBootstrapRole` in `artifacts/api-server/src/lib/roles.ts` and `accessCodeMatches` in `artifacts/api-server/src/routes/auth.ts`.
+   **Why:** the bootstrap manager grant is a security-sensitive one-time event; a shared onboarding secret (or a guessable username alone) must never double as the admin-takeover key.
+
+2. **No rate limiting on public auth endpoints.** Added a shared rate limiter (generous window: 20 req/60s) across sign-up, sign-in, username-available, forgot-password, and reset-password. Reuses the existing pluggable rate-limit store pattern (Postgres-backed in prod, in-memory otherwise) already used by the AI cost-cap limiter.
+   **Why:** these endpoints are unauthenticated by necessity, making them brute-force/enumeration targets.
+
+3. **Fully public self-registration exposed internal factory data.** Sign-up now requires a shared `accessCode` matched (timing-safe) against `STAFF_SIGNUP_CODE`. Sign-up is closed entirely (fails closed, not open) if the env var is unset — no auto-fallback. This is the same shared-secret pattern as the existing supervisor PIN, not a new auth flow.
+   **How to apply:** the code is a plain string field on the sign-up request/form (`SignUpCredentials` in the OpenAPI spec), shown only in sign-up mode; 403 on mismatch. Web + mobile both gate on it identically. Any new sign-up call site (including tests) must pass `accessCode`.
