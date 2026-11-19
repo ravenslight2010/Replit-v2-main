@@ -710,6 +710,14 @@ fi
   GRANT EXECUTE ON FUNCTION v2.list_die_default_events(uuid, integer) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.save_die_default(uuid, uuid, text, text, text, bigint, jsonb, boolean) TO v2_api_test;
 " >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0009-production-schedules.sql" >/dev/null
+"${PSQL[@]}" -c "
+  GRANT EXECUTE ON FUNCTION v2.schedule_default_start_time(uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.get_production_schedule(uuid, date) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_schedule_run_templates(uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.apply_production_schedule_command(uuid, uuid, date, text, text, bigint, jsonb) TO v2_api_test;
+" >/dev/null
 assert_no_direct_table_access "v2.run_inventory_consumptions"
 assert_no_direct_table_access "v2.inventory_movements"
 assert_no_direct_table_access "v2.setup_catalog_imports"
@@ -725,6 +733,8 @@ assert_no_direct_table_access "v2.setup_manager_list_records"
 assert_no_direct_table_access "v2.setup_alias_records"
 assert_no_direct_table_access "v2.die_default_settings"
 assert_no_direct_table_access "v2.die_default_events"
+assert_no_direct_table_access "v2.production_schedules"
+assert_no_direct_table_access "v2.production_schedule_receipts"
 INVENTORY_COMPLETION_PRIVILEGES="$("${PSQL[@]}" -c "
   SET ROLE v2_api_test;
   SELECT has_function_privilege(current_user,
@@ -738,8 +748,8 @@ if [[ "$INVENTORY_COMPLETION_PRIVILEGES" != "t" ]]; then
   exit 1
 fi
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-approved-setup-catalogs.test.sql"
-"${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0009-production-schedules.test.sql"
 ENCODED_DB_USER="$(python3 - "$DB_USER" <<'PY'
 import sys
 import urllib.parse

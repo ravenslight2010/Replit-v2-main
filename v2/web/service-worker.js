@@ -11,10 +11,12 @@ const SHELL_ASSETS = [
   ["/v2/core/die-defaults.mjs", "/v2/core/die-defaults.mjs"],
   ["/v2/web/inventory.js", "/v2/web/inventory.js"],
   ["/v2/web/setup-catalog.js", "/v2/web/setup-catalog.js"],
+  ["/v2/web/schedule.js", "/v2/web/schedule.js"],
   ["/v2/core/import-csv-templates.mjs", "/v2/core/import-csv-templates.mjs"],
   ["/v2/core/import-csv.mjs", "/v2/core/import-csv.mjs"],
   ["/v2/core/setup-catalog-csv.mjs", "/v2/core/setup-catalog-csv.mjs"],
   ["/v2/core/station-workflows.mjs", "/v2/core/station-workflows.mjs"],
+  ["/v2/core/schedule-planning.mjs", "/v2/core/schedule-planning.mjs"],
 ];
 const SHELL_URLS = new Set(SHELL_ASSETS.map(([, cacheUrl]) => cacheUrl));
 const LEGACY_V1_CACHE_NAMES = new Set([

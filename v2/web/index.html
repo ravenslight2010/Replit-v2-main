@@ -270,6 +270,86 @@
             </form>
           </div>
         </section>
+        <section class="manager-tools schedule-tools" id="schedule-tools" aria-labelledby="schedule-heading" hidden>
+          <div class="manager-tools-heading">
+            <div>
+              <p class="eyebrow intro-kicker">PLANNING · CENTRAL TIME <span class="intro-rule"></span> V2</p>
+              <h2 id="schedule-heading">Production schedule</h2>
+              <p class="manager-tools-copy">Plan runs and breaks before production. A schedule never starts or changes a live run.</p>
+            </div>
+          </div>
+          <p class="schedule-status" id="schedule-status" role="status" aria-live="polite"></p>
+          <p class="schedule-alert" id="schedule-alert" role="alert" hidden></p>
+          <div class="schedule-toolbar">
+            <label class="field" for="schedule-date">
+              <span>Production date</span>
+              <input id="schedule-date" type="date" required />
+            </label>
+            <button class="button button-secondary" id="schedule-refresh" type="button">Refresh plan</button>
+            <button class="button button-secondary" id="schedule-retry" type="button" hidden>Retry the same save</button>
+            <span class="schedule-revision" id="schedule-revision"></span>
+          </div>
+          <div class="schedule-layout">
+            <section class="schedule-card" aria-labelledby="schedule-plan-heading">
+              <div class="schedule-card-heading">
+                <div>
+                  <p class="eyebrow">DATE-SCOPED PLAN</p>
+                  <h3 id="schedule-plan-heading">Planned runs</h3>
+                </div>
+                <button class="button button-primary" id="schedule-add" type="button">Add planned run</button>
+              </div>
+              <div class="schedule-run-list" id="schedule-runs" aria-live="polite"></div>
+              <p class="schedule-empty" id="schedule-empty">No planned runs for this date.</p>
+              <fieldset class="schedule-swap">
+                <legend>Swap two planned runs</legend>
+                <label class="field" for="schedule-swap-first"><span>First run</span><select id="schedule-swap-first"></select></label>
+                <label class="field" for="schedule-swap-second"><span>Second run</span><select id="schedule-swap-second"></select></label>
+                <button class="button button-secondary" id="schedule-swap-button" type="button">Swap order</button>
+              </fieldset>
+            </section>
+            <section class="schedule-card" aria-labelledby="schedule-timeline-heading">
+              <div class="schedule-card-heading">
+                <div>
+                  <p class="eyebrow">ESTIMATES · NOT LIVE STATE</p>
+                  <h3 id="schedule-timeline-heading">Planned timeline</h3>
+                </div>
+              </div>
+              <p class="schedule-help" id="schedule-timeline-note">Times use America/Chicago. Missing run inputs keep later estimates unknown.</p>
+              <ol class="schedule-timeline" id="schedule-timeline" aria-live="polite"></ol>
+              <p class="schedule-finish" id="schedule-finish"></p>
+              <section class="schedule-live" aria-labelledby="schedule-live-heading">
+                <p class="eyebrow">SERVER-OWNED LIVE RUNS</p>
+                <h4 id="schedule-live-heading">Actual run state</h4>
+                <ul id="schedule-live-runs" class="schedule-live-list" aria-live="polite"></ul>
+              </section>
+            </section>
+          </div>
+          <section class="schedule-card schedule-break-card" aria-labelledby="schedule-break-heading">
+            <div class="schedule-card-heading">
+              <div>
+                <p class="eyebrow">THREE STANDARD 30-MINUTE BREAKS</p>
+                <h3 id="schedule-break-heading">Assign breaks after runs</h3>
+              </div>
+              <button class="button button-secondary" id="schedule-break-save" type="button">Save break assignments</button>
+            </div>
+            <div class="schedule-breaks" id="schedule-breaks"></div>
+          </section>
+          <section class="schedule-card schedule-import-card" aria-labelledby="schedule-import-heading">
+            <div class="schedule-card-heading">
+              <div>
+                <p class="eyebrow">V1 SCHEDULE WORKBOOK</p>
+                <h3 id="schedule-import-heading">Review schedule import</h3>
+              </div>
+            </div>
+            <p class="schedule-help">Review every row and choose its V2 product, setup, template, and target before applying. Imported rows only update a date plan; they never create or start live runs.</p>
+            <form id="schedule-import-form" class="schedule-import-form">
+              <label class="field" for="schedule-import-file"><span>Excel workbook</span><input id="schedule-import-file" type="file" accept=".xlsx,.xlsm" required /></label>
+              <label class="field" for="schedule-import-date"><span>Date for flat workbooks</span><input id="schedule-import-date" type="date" /></label>
+              <button class="button button-secondary" id="schedule-import-review" type="submit">Review workbook</button>
+            </form>
+            <div id="schedule-import-preview" class="schedule-import-preview" aria-live="polite" hidden></div>
+          </section>
+        </section>
         <section class="manager-tools" id="manager-tools" aria-labelledby="manager-tools-title" hidden>
           <div class="manager-tools-heading">
             <div>

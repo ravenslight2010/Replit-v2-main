@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createAuthApi } from "./auth-api.mjs";
 import { createInventoryApi } from "./inventory-api.mjs";
 import { createRunApiForDatabase } from "./run-api.mjs";
+import { createScheduleApi } from "./schedule-api.mjs";
 
 const RESPONSE_SECURITY_HEADERS = {
   "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; worker-src 'self'",
@@ -30,6 +31,8 @@ const WEB_ASSETS = new Map([
   ["/v2/core/setup-catalog-csv.mjs", { file: new URL("../core/setup-catalog-csv.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/inventory.js", { file: new URL("../web/inventory.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/setup-catalog.js", { file: new URL("../web/setup-catalog.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
+  ["/v2/web/schedule.js", { file: new URL("../web/schedule.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
+  ["/v2/core/schedule-planning.mjs", { file: new URL("../core/schedule-planning.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/write-gate.mjs", { file: new URL("../web/write-gate.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/styles.css", { file: new URL("../web/styles.css", import.meta.url), type: "text/css; charset=utf-8" }],
 ]);
@@ -79,6 +82,8 @@ function safeRouteName(url) {
   if (url.pathname === "/v2/core/setup-catalog-csv.mjs") return "web.setup_catalog_csv";
   if (url.pathname === "/v2/web/inventory.js") return "web.inventory";
   if (url.pathname === "/v2/web/setup-catalog.js") return "web.setup_catalog";
+  if (url.pathname === "/v2/web/schedule.js") return "web.schedule";
+  if (url.pathname === "/v2/core/schedule-planning.mjs") return "web.schedule_planning";
   if (url.pathname === "/v2/web/write-gate.mjs") return "web.write-gate";
   if (url.pathname === "/v2/web/styles.css") return "web.styles";
   if (url.pathname === "/healthz") return "health";
@@ -94,6 +99,10 @@ function safeRouteName(url) {
   if (/^\/api\/v2\/runs\/[^/]+\/commands$/.test(url.pathname)) return "runs.command";
   if (/^\/api\/v2\/runs\/[^/]+\/stations\/[^/]+\/commands$/.test(url.pathname)) return "runs.station_command";
   if (/^\/api\/v2\/runs\/[^/]+$/.test(url.pathname)) return "runs.detail";
+  if (url.pathname === "/api/v2/schedules") return "schedules.date";
+  if (url.pathname === "/api/v2/schedules/catalog") return "schedules.catalog";
+  if (url.pathname === "/api/v2/schedules/commands") return "schedules.command";
+  if (url.pathname === "/api/v2/schedules/import-preview") return "schedules.import_preview";
   if (url.pathname === "/api/v2/imports") return "imports.collection";
   if (url.pathname === "/api/v2/setup-catalog/imports") return "setup_catalog_imports.collection";
   if (/^\/api\/v2\/setup-catalog\/imports\/[^/]+$/.test(url.pathname)) return "setup_catalog_imports.detail";
@@ -144,6 +153,12 @@ export function createV2Api({
     logger,
   });
   const inventoryApi = createInventoryApi({
+    pool,
+    authenticate: (request) => authAdapter.authenticate(request),
+    verifyCsrf: (request, auth) => authAdapter.verifyCsrf(request, auth),
+    logger,
+  });
+  const scheduleApi = createScheduleApi({
     pool,
     authenticate: (request) => authAdapter.authenticate(request),
     verifyCsrf: (request, auth) => authAdapter.verifyCsrf(request, auth),
@@ -213,6 +228,7 @@ export function createV2Api({
 
       if (await authApi(request, response)) return;
       if (await inventoryApi(request, response)) return;
+      if (await scheduleApi(request, response)) return;
       await runApi(request, response);
     } catch (error) {
       logger({

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import * as XLSX from "xlsx";
+import { Pool } from "pg";
 import { buildAllowlistedCutoverBatch } from "../core/cutover-transform.mjs";
 import { startV2Server } from "./main.mjs";
 
@@ -96,6 +97,7 @@ async function main() {
   }
 
   let serverInstance;
+  const adminPool = new Pool({ connectionString: adminConnectionString });
   try {
     const logs = [];
     serverInstance = await startV2Server({
@@ -394,6 +396,126 @@ async function main() {
     const stagedSetup = await jsonResponse(setupImport);
     const appliedSetup = await managerPost(`/api/v2/imports/${stagedSetup.importId}/apply`, {});
     assert.equal(appliedSetup.status, 200, await appliedSetup.clone().text());
+
+    const scheduleTemplateData = {
+      brand: "North Shop",
+      flavor: "Plain",
+      values: { pizzasPerCase: 12, crustsPerCycle: 4, cycleSpeed: 2, freezerTime: 0 },
+    };
+    await adminPool.query("BEGIN");
+    const fixtureImport = await adminPool.query({
+      text: `INSERT INTO v2.setup_catalog_imports(
+        facility_id, actor_id, request_id, request_hash, family, records, status, applied_at
+      )
+      SELECT facility_id, $1::uuid, 'schedule-template-fixture', $2::text, 'run-templates', $3::jsonb,
+        'applied', clock_timestamp()
+      FROM v2.facility_scope WHERE singleton
+      RETURNING facility_id, id`,
+      values: [
+        MANAGER_ID,
+        "d".repeat(64),
+        JSON.stringify([{ code: "SCHEDULE-TEMPLATE", name: "Schedule Integration Template", data: scheduleTemplateData }]),
+      ],
+    });
+    assert.equal(fixtureImport.rowCount, 1, "the disposable facility should accept one schedule template fixture");
+    await adminPool.query({
+      text: `INSERT INTO v2.setup_run_template_records(facility_id, code, name, data, source_import_id)
+        VALUES ($1::uuid, 'SCHEDULE-TEMPLATE', 'Schedule Integration Template', $2::jsonb, $3::uuid)`,
+      values: [fixtureImport.rows[0].facility_id, JSON.stringify(scheduleTemplateData), fixtureImport.rows[0].id],
+    });
+    await adminPool.query("COMMIT");
+
+    const secondManager = await signIn(baseUrl, "V2IntegrationManager", MANAGER_PASSWORD);
+    const operatorSchedule = await fetch(`${baseUrl}/api/v2/schedules?date=2035-04-15`, {
+      headers: { Cookie: operator.cookieHeader, Accept: "application/json" },
+    });
+    assert.equal(operatorSchedule.status, 403, "operators must not read manager schedules");
+    const scheduleCatalogResponse = await fetch(`${baseUrl}/api/v2/schedules/catalog`, {
+      headers: { Cookie: manager.cookieHeader, Accept: "application/json" },
+    });
+    assert.equal(scheduleCatalogResponse.status, 200);
+    const scheduleCatalog = await jsonResponse(scheduleCatalogResponse);
+    assert.ok(scheduleCatalog.products.some((product) =>
+      product.code === "DOUGH-A" && product.productionSetups.some((setup) => setup.code === "LINE-A")));
+    assert.ok(scheduleCatalog.templates.some((template) => template.code === "SCHEDULE-TEMPLATE"));
+    assert.doesNotMatch(JSON.stringify(scheduleCatalog.templates), /doughRecipe|app1CheeseRecipe|ingredients/u);
+
+    const schedulePath = "/api/v2/schedules?date=2035-04-15";
+    const emptyScheduleResponse = await fetch(`${baseUrl}${schedulePath}`, {
+      headers: { Cookie: manager.cookieHeader, Accept: "application/json" },
+    });
+    assert.equal(emptyScheduleResponse.status, 200);
+    const emptyScheduleBody = await jsonResponse(emptyScheduleResponse);
+    assert.equal(emptyScheduleBody.schedule.revision, 0);
+    assert.equal(emptyScheduleBody.schedule.timeZone, "America/Chicago");
+    const plannedRunA = {
+      id: "73000000-0000-4000-8000-000000000220",
+      productCode: "DOUGH-A",
+      productionSetupCode: "LINE-A",
+      runTemplateCode: "SCHEDULE-TEMPLATE",
+      targetCases: 20,
+      notes: "Synthetic schedule note",
+    };
+    const addScheduleA = {
+      requestId: "73000000-0000-4000-8000-000000000221",
+      date: "2035-04-15",
+      expectedRevision: 0,
+      command: { type: "add", run: plannedRunA },
+    };
+    const acceptedScheduleA = await sessionPost(manager, "/api/v2/schedules/commands", addScheduleA);
+    assert.equal(acceptedScheduleA.status, 200, await acceptedScheduleA.clone().text());
+    assert.equal((await jsonResponse(acceptedScheduleA)).schedule.revision, 1);
+    const replayedScheduleA = await sessionPost(manager, "/api/v2/schedules/commands", addScheduleA);
+    assert.equal(replayedScheduleA.status, 200);
+    const replayedScheduleBody = await jsonResponse(replayedScheduleA);
+    assert.equal(replayedScheduleBody.replayed, true);
+    assert.equal(replayedScheduleBody.schedule.runs.length, 1);
+
+    const secondDeviceRead = await fetch(`${baseUrl}${schedulePath}`, {
+      headers: { Cookie: secondManager.cookieHeader, Accept: "application/json" },
+    });
+    assert.equal(secondDeviceRead.status, 200);
+    assert.equal((await jsonResponse(secondDeviceRead)).schedule.runs[0].id, plannedRunA.id);
+    const plannedRunB = { ...plannedRunA, id: "73000000-0000-4000-8000-000000000222", targetCases: 10, notes: "" };
+    const addScheduleB = {
+      requestId: "73000000-0000-4000-8000-000000000223",
+      date: "2035-04-15",
+      expectedRevision: 1,
+      command: { type: "add", run: plannedRunB },
+    };
+    const acceptedScheduleB = await sessionPost(manager, "/api/v2/schedules/commands", addScheduleB);
+    assert.equal(acceptedScheduleB.status, 200, await acceptedScheduleB.clone().text());
+    const staleScheduleB = await sessionPost(secondManager, "/api/v2/schedules/commands", {
+      ...addScheduleB,
+      requestId: "73000000-0000-4000-8000-000000000224",
+      expectedRevision: 1,
+      command: { type: "add", run: { ...plannedRunB, id: "73000000-0000-4000-8000-000000000225" } },
+    });
+    assert.equal(staleScheduleB.status, 409);
+    const staleScheduleBody = await jsonResponse(staleScheduleB);
+    assert.equal(staleScheduleBody.schedule.revision, 2);
+    assert.deepEqual(staleScheduleBody.schedule.runs.map((run) => run.id), [plannedRunA.id, plannedRunB.id]);
+
+    const scheduleWorkbook = workbookBase64("Plan", [
+      ["Brand", "Flavor", "Cases Planned"],
+      ["North Shop", "Plain", 12],
+      ["", "Plain", 8],
+      [99, "", 20],
+    ]);
+    const scheduleImportPreview = await sessionPost(manager, "/api/v2/schedules/import-preview", {
+      fileName: "schedule-integration.xlsx",
+      workbookBase64: scheduleWorkbook,
+    });
+    assert.equal(scheduleImportPreview.status, 200, await scheduleImportPreview.clone().text());
+    const scheduleImportBody = await jsonResponse(scheduleImportPreview);
+    assert.equal(scheduleImportBody.preview.rows.length, 1);
+    assert.equal(scheduleImportBody.preview.errors.length, 1);
+    assert.equal(scheduleImportBody.preview.skipped.length, 1);
+    const scheduleAfterPreview = await fetch(`${baseUrl}${schedulePath}`, {
+      headers: { Cookie: manager.cookieHeader, Accept: "application/json" },
+    });
+    assert.equal((await jsonResponse(scheduleAfterPreview)).schedule.revision, 2,
+      "workbook preview must never apply or activate production runs");
 
     const runProductsResponse = await fetch(`${baseUrl}/api/v2/runs/products`, {
       headers: { Cookie: operator.cookieHeader, Accept: "application/json" },
@@ -761,11 +883,13 @@ async function main() {
     assert.equal(JSON.stringify(logs).includes(MANAGER_PASSWORD), false);
     assert.equal(JSON.stringify(logs).includes(OPERATOR_PASSWORD), false);
     assert.equal(JSON.stringify(logs).includes(BOOTSTRAP_CODE), false);
-    for (const cookie of [manager.cookieHeader, operator.cookieHeader, promotedOperator.cookieHeader, demotedOperator.cookieHeader]) {
+    assert.equal(JSON.stringify(logs).includes("Synthetic schedule note"), false);
+    for (const cookie of [manager.cookieHeader, operator.cookieHeader, secondManager.cookieHeader, promotedOperator.cookieHeader, demotedOperator.cookieHeader]) {
       assert.equal(JSON.stringify(logs).includes(cookie), false);
     }
-    console.log("V2 HTTP/PostgreSQL check passed: manager setup catalog, inventory, and shared lifecycle/station revisions are authorized and persistent.");
+    console.log("V2 HTTP/PostgreSQL check passed: manager schedules, reviewed import, idempotent retries, conflicts, and role restrictions are persistent.");
   } finally {
+    await adminPool.end();
     if (serverInstance) await serverInstance.close();
   }
 }

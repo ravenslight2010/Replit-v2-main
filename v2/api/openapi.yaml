@@ -385,6 +385,144 @@ paths:
           $ref: "#/components/responses/Error"
         "405":
           $ref: "#/components/responses/Error"
+  /api/v2/schedules/catalog:
+    get:
+      operationId: getScheduleCatalog
+      summary: Read products, setup choices, and run templates for planning
+      description: Requires the manager capability used to manage factory settings. Recipe details and live run state are not included in template estimate values.
+      responses:
+        "200":
+          description: Schedule planning choices and Central production start time
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleCatalog"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/schedules:
+    get:
+      operationId: getProductionSchedule
+      summary: Read one facility schedule by production date
+      parameters:
+        - in: query
+          name: date
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Canonical date-scoped plan and server revision
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [schedule]
+                properties:
+                  schedule:
+                    $ref: "#/components/schemas/ProductionSchedule"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/schedules/commands:
+    post:
+      operationId: applyProductionScheduleCommand
+      summary: Apply one revision-checked schedule change
+      description: >
+        Commands are idempotent per manager and requestId. A stale revision
+        returns 409 with the latest canonical date plan. Planned schedule
+        entries never create or update live run records.
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductionScheduleCommandRequest"
+      responses:
+        "200":
+          description: Accepted change or exact retry; contains canonical schedule state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductionScheduleCommandResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          description: Stale revision or unavailable planned-run reference; latest schedule is returned when revision conflicts
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ProductionScheduleCommandResponse"
+                  - $ref: "#/components/schemas/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/schedules/import-preview:
+    post:
+      operationId: previewProductionScheduleWorkbook
+      summary: Review a V1 schedule workbook without applying it
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleWorkbookPreviewRequest"
+      responses:
+        "200":
+          description: Reviewed rows, skipped entries, and validation issues; no schedule data is changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleWorkbookPreviewResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
   /api/v2/runs/products:
     get:
       operationId: listRunProducts
@@ -3260,6 +3398,350 @@ components:
           type: integer
         replayed:
           type: boolean
+    ScheduleProduct:
+      type: object
+      required: [code, name, productionSetups]
+      properties:
+        code:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        name:
+          type: string
+          maxLength: 120
+        productionSetups:
+          type: array
+          items:
+            type: object
+            required: [code, name]
+            properties:
+              code:
+                type: string
+                pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+              name:
+                type: string
+                maxLength: 120
+    ScheduleRunTemplate:
+      type: object
+      required: [code, name, brand, flavor, values]
+      properties:
+        code:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        name:
+          type: string
+          maxLength: 200
+        brand:
+          type: [string, "null"]
+        flavor:
+          type: [string, "null"]
+        values:
+          type: object
+          properties:
+            pizzasPerCase:
+              type: number
+            crustsPerCycle:
+              type: number
+            cycleSpeed:
+              type: number
+            speedAdjustment:
+              type: number
+            freezerTime:
+              type: number
+    ScheduleCatalog:
+      type: object
+      required: [products, templates, productionStartTime, timeZone]
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleProduct"
+        templates:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleRunTemplate"
+        productionStartTime:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        timeZone:
+          type: string
+          const: America/Chicago
+    PlannedScheduleRun:
+      type: object
+      additionalProperties: false
+      required: [id, productCode, productionSetupCode, runTemplateCode, targetCases, notes]
+      properties:
+        id:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        productionSetupCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        runTemplateCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        targetCases:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+        notes:
+          type: string
+          maxLength: 500
+    ScheduleBreak:
+      type: object
+      additionalProperties: false
+      required: [slot, enabled, runId]
+      properties:
+        slot:
+          type: integer
+          enum: [1, 2, 3]
+        enabled:
+          type: boolean
+        runId:
+          type: [string, "null"]
+          format: uuid
+    ProductionSchedule:
+      type: object
+      additionalProperties: false
+      required: [date, revision, timeZone, productionStartTime, runs, breaks, updatedAt]
+      properties:
+        date:
+          type: [string, "null"]
+          format: date
+        revision:
+          type: integer
+          minimum: 0
+        timeZone:
+          type: string
+          const: America/Chicago
+        productionStartTime:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        runs:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/PlannedScheduleRun"
+        breaks:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            $ref: "#/components/schemas/ScheduleBreak"
+        updatedAt:
+          type: [string, "null"]
+          format: date-time
+    ProductionScheduleCommandRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, date, expectedRevision, command]
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        date:
+          type: [string, "null"]
+          format: date
+        expectedRevision:
+          type: integer
+          minimum: 0
+        command:
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required: [type, run]
+              properties:
+                type:
+                  const: add
+                run:
+                  $ref: "#/components/schemas/PlannedScheduleRun"
+            - type: object
+              additionalProperties: false
+              required: [type, runId, changes]
+              properties:
+                type:
+                  const: update
+                runId:
+                  type: string
+                  format: uuid
+                changes:
+                  type: object
+                  additionalProperties: false
+                  minProperties: 1
+                  properties:
+                    productCode:
+                      type: string
+                    productionSetupCode:
+                      type: string
+                    runTemplateCode:
+                      type: string
+                    targetCases:
+                      type: integer
+                    notes:
+                      type: string
+            - type: object
+              additionalProperties: false
+              required: [type, runId]
+              properties:
+                type:
+                  const: remove
+                runId:
+                  type: string
+                  format: uuid
+            - type: object
+              additionalProperties: false
+              required: [type, runId, toIndex]
+              properties:
+                type:
+                  const: move
+                runId:
+                  type: string
+                  format: uuid
+                toIndex:
+                  type: integer
+                  minimum: 0
+                  maximum: 99
+            - type: object
+              additionalProperties: false
+              required: [type, firstRunId, secondRunId]
+              properties:
+                type:
+                  const: swap
+                firstRunId:
+                  type: string
+                  format: uuid
+                secondRunId:
+                  type: string
+                  format: uuid
+            - type: object
+              additionalProperties: false
+              required: [type, breaks]
+              properties:
+                type:
+                  const: breaks
+                breaks:
+                  type: array
+                  minItems: 3
+                  maxItems: 3
+                  items:
+                    $ref: "#/components/schemas/ScheduleBreak"
+            - type: object
+              additionalProperties: false
+              required: [type, runs]
+              properties:
+                type:
+                  const: merge-import
+                runs:
+                  type: array
+                  maxItems: 100
+                  items:
+                    $ref: "#/components/schemas/PlannedScheduleRun"
+    ProductionScheduleCommandResponse:
+      type: object
+      required: [outcome, replayed, schedule]
+      properties:
+        outcome:
+          type: string
+          enum: [accepted, conflict]
+        replayed:
+          type: boolean
+        schedule:
+          $ref: "#/components/schemas/ProductionSchedule"
+    ScheduleWorkbookPreviewRequest:
+      type: object
+      additionalProperties: false
+      required: [fileName, workbookBase64]
+      properties:
+        fileName:
+          type: string
+          maxLength: 500
+        workbookBase64:
+          type: string
+          maxLength: 6990508
+          contentEncoding: base64
+    ScheduleWorkbookPreviewResponse:
+      type: object
+      required: [preview]
+      properties:
+        preview:
+          type: object
+          required: [rows, errors, skipped, multiDay, fileName]
+          properties:
+            rows:
+              type: array
+              maxItems: 2000
+              items:
+                type: object
+                required: [rowNumber, sheet, date, brand, flavor, targetCases, notes, sourceCells, sourceRow, importRunId]
+                properties:
+                  rowNumber:
+                    type: integer
+                  sheet:
+                    type: string
+                  date:
+                    type: [string, "null"]
+                    format: date
+                  brand:
+                    type: string
+                  flavor:
+                    type: string
+                  targetCases:
+                    type: [integer, "null"]
+                  notes:
+                    type: string
+                  sourceCells:
+                    type: object
+                  sourceRow:
+                    type: integer
+                  importRunId:
+                    type: string
+                    format: uuid
+            errors:
+              type: array
+              items:
+                $ref: "#/components/schemas/ScheduleWorkbookIssue"
+            skipped:
+              type: array
+              items:
+                $ref: "#/components/schemas/ScheduleWorkbookSkipped"
+            multiDay:
+              type: boolean
+            fileName:
+              type: string
+    ScheduleWorkbookIssue:
+      type: object
+      required: [rowNumber, sheet, message]
+      properties:
+        rowNumber:
+          type: integer
+          minimum: 1
+        sheet:
+          type: string
+          maxLength: 31
+        date:
+          type: string
+          format: date
+        message:
+          type: string
+          maxLength: 300
+    ScheduleWorkbookSkipped:
+      type: object
+      required: [rowNumber, sheet, reason]
+      properties:
+        rowNumber:
+          type: integer
+          minimum: 1
+        sheet:
+          type: string
+          maxLength: 31
+        date:
+          type: string
+          format: date
+        reason:
+          type: string
+          maxLength: 300
     Error:
       type: object
       required: [error]

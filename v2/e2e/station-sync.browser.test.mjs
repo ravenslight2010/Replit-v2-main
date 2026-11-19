@@ -20,6 +20,7 @@ import {
 } from "../core/import-csv-templates.mjs";
 import { parseSetupCatalogCsv, setupCatalogCsvTemplates } from "../core/setup-catalog-csv.mjs";
 import { parseSourceWorkbook } from "../core/source-workbook-import.mjs";
+import { applyScheduleCommand, emptySchedule } from "../core/schedule-planning.mjs";
 
 const CSRF_TOKEN = "a".repeat(43);
 const STAFF_ID = "72000000-0000-4000-8000-000000000001";
@@ -69,6 +70,7 @@ const WEB_ASSETS = new Map([
   ["/v2/web/app.js", ["../web/app.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/inventory.js", ["../web/inventory.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/setup-catalog.js", ["../web/setup-catalog.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/schedule.js", ["../web/schedule.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/styles.css", ["../web/styles.css", "text/css; charset=utf-8"]],
   ["/v2/web/write-gate.mjs", ["../web/write-gate.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/import-csv-templates.mjs", ["../core/import-csv-templates.mjs", "text/javascript; charset=utf-8"]],
@@ -76,6 +78,7 @@ const WEB_ASSETS = new Map([
   ["/v2/core/die-defaults.mjs", ["../core/die-defaults.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/setup-catalog-csv.mjs", ["../core/setup-catalog-csv.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/station-workflows.mjs", ["../core/station-workflows.mjs", "text/javascript; charset=utf-8"]],
+  ["/v2/core/schedule-planning.mjs", ["../core/schedule-planning.mjs", "text/javascript; charset=utf-8"]],
 ]);
 
 function stationSnapshot({ inputs = {}, progress = {}, revision = 0, nextDueAt = null } = {}) {
@@ -220,6 +223,10 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
     stationCommandOutcomes: [],
     browserStationCommands: [],
     forceTimerStartConflict: false,
+    schedule: null,
+    scheduleReceipts: new Map(),
+    forceScheduleConflictOnce: false,
+    expectedConflictConsoleErrors: 0,
   };
   const server = createServer(async (request, response) => {
     const asset = WEB_ASSETS.get(new URL(request.url, "http://v2.test").pathname);
@@ -258,7 +265,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
   });
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
-  async function openDevice(deviceViewport = viewport) {
+  async function openDevice(deviceViewport = viewport, { canApprove = manager } = {}) {
     const context = await browser.newContext({
       viewport: deviceViewport,
       ...(browserEngine === webkit ? { serviceWorkers: "block" } : {}),
@@ -276,10 +283,144 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
               userId: STAFF_ID,
               username: "station_tester",
               role: "manager",
-              capabilities: ["station.command", ...(manager ? ["manage-inventory"] : [])],
+              capabilities: ["station.command", ...(canApprove ? [
+                "manage-inventory", "manage-factory-settings",
+              ] : [])],
             },
           }),
         });
+        return;
+      }
+      if (manager && url.pathname === "/api/v2/schedules/catalog" && request.method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            products: [
+              {
+                code: "PRODUCT",
+                name: "Brand Flavor",
+                productionSetups: [{ code: "SETUP", name: "Test Setup" }],
+              },
+              {
+                code: "PRODUCT-ALT",
+                name: "Brand Flavor",
+                productionSetups: [{ code: "SETUP-ALT", name: "Alternate Test Setup" }],
+              },
+            ],
+            templates: [
+              {
+                code: "TEMPLATE",
+                name: "Test Template",
+                brand: "Brand",
+                flavor: "Flavor",
+                values: { pizzasPerCase: 12, crustsPerCycle: 4, cycleSpeed: 2, freezerTime: 0 },
+              },
+              {
+                code: "TEMPLATE-ALT",
+                name: "Alternate Test Template",
+                brand: "Brand",
+                flavor: "Flavor",
+                values: { pizzasPerCase: 12, crustsPerCycle: 4, cycleSpeed: 2, freezerTime: 0 },
+              },
+            ],
+            productionStartTime: "06:00",
+            timeZone: "America/Chicago",
+          }),
+        });
+        return;
+      }
+      if (manager && url.pathname === "/api/v2/schedules" && request.method() === "GET") {
+        const date = url.searchParams.get("date");
+        if (!fixture.schedule || fixture.schedule.date !== date) fixture.schedule = emptySchedule(date);
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schedule: fixture.schedule }) });
+        return;
+      }
+      if (manager && url.pathname === "/api/v2/schedules/import-preview" && request.method() === "POST") {
+        const body = request.postDataJSON();
+        if (!body.fileName || !body.workbookBase64) {
+          await route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ error: "Workbook fields are required." }) });
+          return;
+        }
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            preview: {
+              multiDay: false,
+              fileName: body.fileName,
+              rows: [{
+                rowNumber: 2,
+                sheet: "Plan",
+                date: null,
+                brand: "Brand",
+                flavor: "Flavor",
+                targetCases: 12,
+                notes: "PO 123",
+                sourceCells: { brand: "A2", flavor: "B2", targetCases: "C2" },
+                sourceRow: 2,
+                importRunId: "75000000-0000-4000-8000-000000000001",
+              }],
+              errors: [{ rowNumber: 3, sheet: "Plan", message: "Brand is missing." }],
+              skipped: [{ rowNumber: 4, sheet: "Plan", reason: "Numeric subtotal or running total." }],
+            },
+          }),
+        });
+        return;
+      }
+      if (manager && url.pathname === "/api/v2/schedules/commands" && request.method() === "POST") {
+        if (request.headers()["x-csrf-token"] !== CSRF_TOKEN) {
+          await route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: "Invalid CSRF test token." }) });
+          return;
+        }
+        const body = request.postDataJSON();
+        if (!fixture.schedule || fixture.schedule.date !== body.date) fixture.schedule = emptySchedule(body.date);
+        const replay = fixture.scheduleReceipts.get(body.requestId);
+        if (replay) {
+          await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ...replay, replayed: true }) });
+          return;
+        }
+        if (fixture.forceScheduleConflictOnce) {
+          fixture.forceScheduleConflictOnce = false;
+          fixture.expectedConflictConsoleErrors += 1;
+          fixture.schedule = {
+            ...applyScheduleCommand(fixture.schedule, {
+              type: "add",
+              run: {
+                id: "75000000-0000-4000-8000-000000000002",
+                productCode: "PRODUCT",
+                productionSetupCode: "SETUP",
+                runTemplateCode: "TEMPLATE",
+                targetCases: 6,
+                notes: "",
+              },
+            }),
+            revision: fixture.schedule.revision + 1,
+            updatedAt: new Date().toISOString(),
+          };
+          await route.fulfill({
+            status: 409,
+            contentType: "application/json",
+            body: JSON.stringify({ outcome: "conflict", replayed: false, schedule: fixture.schedule }),
+          });
+          return;
+        }
+        if (body.expectedRevision !== fixture.schedule.revision) {
+          await route.fulfill({
+            status: 409,
+            contentType: "application/json",
+            body: JSON.stringify({ outcome: "conflict", replayed: false, schedule: fixture.schedule }),
+          });
+          return;
+        }
+        fixture.schedule = {
+          ...applyScheduleCommand(fixture.schedule, body.command),
+          revision: fixture.schedule.revision + 1,
+          updatedAt: new Date().toISOString(),
+        };
+        const accepted = { outcome: "accepted", replayed: false, schedule: fixture.schedule };
+        fixture.scheduleReceipts.set(body.requestId, accepted);
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(accepted) });
         return;
       }
       if (manager && url.pathname === "/api/v2/imports" && request.method() === "GET") {
@@ -609,17 +750,21 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
     const page = await context.newPage();
     page.on("pageerror", (error) => fixture.pageErrors.push(error.message));
     page.on("console", (message) => {
-      if (message.type() === "error" && !message.text().includes("TLS support is not available")) {
-        if (fixture.expectedRuleBlockConsoleError && message.text().includes("422")) {
-          fixture.expectedRuleBlockConsoleError = false;
-          return;
-        }
-        if (fixture.expectedLostApplyConsoleError && message.text().includes("503 (Service Unavailable)")) {
-          fixture.expectedLostApplyConsoleError = false;
-          return;
-        }
-        fixture.consoleErrors.push(message.text());
+      if (message.type() !== "error" || message.text().includes("TLS support is not available")) return;
+      if (fixture.expectedRuleBlockConsoleError && message.text().includes("422")) {
+        fixture.expectedRuleBlockConsoleError = false;
+        return;
       }
+      if (message.text().includes("responded with a status of 409 (Conflict)")
+        && fixture.expectedConflictConsoleErrors > 0) {
+        fixture.expectedConflictConsoleErrors -= 1;
+        return;
+      }
+      if (fixture.expectedLostApplyConsoleError && message.text().includes("503 (Service Unavailable)")) {
+        fixture.expectedLostApplyConsoleError = false;
+        return;
+      }
+      fixture.consoleErrors.push(message.text());
     });
     await page.goto(baseUrl);
     try {
@@ -995,93 +1140,304 @@ test(`manager reviews, applies, and safely undoes a setup catalog across respons
 });
 }
 
-for (const browserEngine of [chromium, webkit]) {
-test(
-  `manager previews, applies, and reopens a sauce import in ${browserEngine.name()}`,
-  { skip: browserEngine === webkit && !webkitInstalled ? "Playwright WebKit is not installed on this host." : false },
-  async (t) => {
-  const { fixture, openDevice } = await createFixture(t, undefined, { manager: true, browserEngine });
-  const { page } = await openDevice();
-  await page.locator("#setup-catalog-panel:not([hidden])").waitFor();
-  await page.locator("#source-workbook-family").selectOption("sauce-guides");
-  await page.locator("#source-workbook-file").setInputFiles({
-    name: "synthetic-sauce.xlsx",
+test("manager plans dates, imports reviewed workbook rows, resolves conflicts, and reconnects read-only", async (t) => {
+  const { fixture, openDevice } = await createFixture(t, undefined, { manager: true });
+  const { context, page } = await openDevice();
+  await page.locator("#schedule-tools:not([hidden])").waitFor();
+  await page.getByText(/Server schedule loaded/u).waitFor();
+  const productionDate = await page.locator("#schedule-date").inputValue();
+
+  await page.locator("#schedule-add").click();
+  const draft = page.locator('.schedule-run[data-is-new="true"]');
+  await draft.locator('[data-field="productCode"]').selectOption("PRODUCT");
+  await draft.locator('[data-field="productionSetupCode"]').selectOption("SETUP");
+  await draft.locator('[data-field="runTemplateCode"]').selectOption("TEMPLATE");
+  await draft.locator('[data-field="targetCases"]').fill("20");
+  await draft.getByRole("button", { name: "Add to plan" }).click();
+  await page.getByText("Schedule change saved to the server.").waitFor();
+  await page.getByText("Confirmed revision 1").waitFor();
+  assert.equal(fixture.schedule.runs.length, 1);
+
+  const firstRunId = fixture.schedule.runs[0].id;
+  const firstBreak = page.locator(".schedule-break-row").first();
+  await firstBreak.locator('input[type="checkbox"]').check();
+  await firstBreak.locator("select").selectOption(firstRunId);
+  await page.locator("#schedule-break-save").click();
+  await page.getByText("Confirmed revision 2").waitFor();
+  assert.equal(fixture.schedule.breaks[0].runId, firstRunId);
+  assert.match(await page.locator("#schedule-finish").textContent(), /Estimated planned finish/u);
+
+  await page.locator("#schedule-add").click();
+  const secondDraft = page.locator('.schedule-run[data-is-new="true"]');
+  await secondDraft.locator('[data-field="productCode"]').selectOption("PRODUCT");
+  await secondDraft.locator('[data-field="productionSetupCode"]').selectOption("SETUP");
+  await secondDraft.locator('[data-field="runTemplateCode"]').selectOption("TEMPLATE");
+  await secondDraft.locator('[data-field="targetCases"]').fill("8");
+  await secondDraft.getByRole("button", { name: "Add to plan" }).click();
+  await page.waitForFunction(() => (
+    document.querySelector("#schedule-revision")?.textContent.includes("revision 3")
+      || document.querySelector("#schedule-alert")?.textContent.length > 0
+  ));
+  assert.equal(await page.locator("#schedule-revision").textContent(), "Confirmed revision 3",
+    await page.locator("#schedule-alert").textContent());
+  const secondRunId = fixture.schedule.runs[1].id;
+  await page.locator(`.schedule-run[data-run-id="${firstRunId}"]`).getByRole("button", { name: "Move planned run 1 down" }).click();
+  await page.getByText("Confirmed revision 4").waitFor();
+  assert.deepEqual(fixture.schedule.runs.map((run) => run.id), [secondRunId, firstRunId]);
+  await page.locator("#schedule-swap-first").selectOption(firstRunId);
+  await page.locator("#schedule-swap-second").selectOption(secondRunId);
+  await page.locator("#schedule-swap-button").click();
+  await page.getByText("Confirmed revision 5").waitFor();
+  assert.deepEqual(fixture.schedule.runs.map((run) => run.id), [firstRunId, secondRunId]);
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.locator(`.schedule-run[data-run-id="${secondRunId}"]`).getByRole("button", { name: "Remove run" }).click();
+  await page.getByText("Confirmed revision 6").waitFor();
+  assert.deepEqual(fixture.schedule.runs.map((run) => run.id), [firstRunId]);
+  assert.equal(fixture.schedule.breaks[0].runId, firstRunId);
+
+  const otherDevice = await openDevice();
+  await otherDevice.page.locator("#schedule-tools:not([hidden])").waitFor();
+  await otherDevice.page.getByText("Confirmed revision 6").waitFor();
+  assert.equal(await otherDevice.page.locator(".schedule-run").count(), 1);
+  assert.equal(await otherDevice.page.locator("#schedule-date").inputValue(), productionDate);
+
+  fixture.forceScheduleConflictOnce = true;
+  const firstRun = page.locator(".schedule-run").first();
+  await firstRun.locator('[data-field="targetCases"]').fill("25");
+  await firstRun.getByRole("button", { name: "Save run" }).click();
+  await page.getByText(/Another manager changed this date/u).waitFor();
+  await page.getByText("Confirmed revision 7").waitFor();
+  assert.equal(fixture.schedule.runs.length, 2);
+  assert.equal(await page.locator(".schedule-run").count(), 2);
+  assert.equal(await page.locator('.schedule-run[data-run-id="' + firstRunId + '"] [data-field="targetCases"]').inputValue(), "25");
+
+  await page.locator('.schedule-run[data-run-id="' + firstRunId + '"]').getByRole("button", { name: "Save run" }).click();
+  await page.getByText("Confirmed revision 8").waitFor();
+  assert.equal(fixture.schedule.runs.length, 2);
+  assert.equal(fixture.schedule.runs.find((run) => run.id === firstRunId).targetCases, 25);
+
+  const book = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet([
+    ["Brand", "Flavor", "Cases Planned", "Notes"],
+    ["Brand", "Flavor", 12, "PO 123"],
+  ]), "Plan");
+  const workbook = XLSX.write(book, { type: "buffer", bookType: "xlsx" });
+  await page.locator("#schedule-import-file").setInputFiles({
+    name: "daily-plan.xlsx",
     mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    buffer: Buffer.from(XLSX.write((() => {
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
-        ["Acme uses House Red on Classic at 3.5oz"],
-      ]), "Sauce");
-      return workbook;
-    })(), { type: "buffer", bookType: "xlsx" })),
+    buffer: workbook,
   });
-  await page.getByRole("button", { name: "Preview source rows" }).click();
-  try {
-    await page.getByText(/Sauce guide · 1 source rows · 1 proposed V2 records/u).waitFor({ timeout: 5000 });
-  } catch {
-    assert.fail(`Source preview did not load: ${JSON.stringify({
-      status: await page.locator("#setup-catalog-status").innerText(),
-      pageErrors: fixture.pageErrors,
-      consoleErrors: fixture.consoleErrors,
-    })}`);
-  }
-  assert.equal(await page.locator("#source-workbook-preview").isVisible(), true);
-  await page.getByText(/Sauce guide: Acme · Classic/u).click();
-  await page.getByText("I reviewed and confirmed this mapping", { exact: true }).click();
-  await page.getByRole("button", { name: "Stage reviewed rows" }).click();
-  await page.locator("#setup-catalog-status")
-    .getByText("1 sauce guide rows are staged; 0 skipped and 0 remain review-only.")
-    .waitFor();
-
-  const staged = fixture.setupCatalogImports[0];
-  assert.equal(staged.family, "run-templates");
-  assert.equal(staged.sourceSummary.sourceFamily, "sauce-guides");
-  assert.equal(staged.sourceSummary.importedRows, 1);
-  assert.equal(staged.records[0].data.values.sauceOzPerPizza, 3.5);
-  fixture.loseNextApplyResponse = true;
-  fixture.expectedLostApplyConsoleError = true;
-  await page.getByRole("button", { name: "Apply reviewed setup" }).click();
-  await page.locator("#setup-catalog-status[data-kind='error']").waitFor();
-  assert.equal(fixture.setupCatalogImports[0].status, "applied");
-  assert.equal(fixture.setupCatalogApplyCalls, 1);
-  await page.getByRole("button", { name: "Apply reviewed setup" }).click();
-  await page.locator("#setup-catalog-status").getByText("1 setup rows created and 0 updated.").waitFor();
-  assert.equal(fixture.setupCatalogImports[0].status, "applied");
-  assert.equal(fixture.setupCatalogApplyCalls, 2);
-
-  await page.reload();
-  await page.locator("#setup-catalog-history").waitFor();
-  const historyText = await page.locator("#setup-catalog-history").innerText();
-  assert.match(historyText, /Sauce guide · 1 source · 1 staged · 0 skipped · 0 unresolved · applied · 1 created · 0 updated/u);
-  await page.getByRole("button", { name: "Review", exact: true }).click();
-  await page.locator("#setup-catalog-preview").getByText(/Sauce guide · 1 source rows · 1 staged/u).waitFor();
-  assert.ok(await page.locator("#setup-catalog-preview").getByText(/Sauce guide: Acme · Classic/u).count() >= 1);
+  await page.getByRole("button", { name: "Review workbook", exact: true }).click();
+  await page.getByText(/Workbook reviewed/u).waitFor();
+  await page.getByText(/Brand is missing/u).waitFor();
+  await page.getByText(/Numeric subtotal or running total/u).waitFor();
+  assert.equal(fixture.schedule.revision, 8);
+  const importRow = page.locator(".schedule-import-row");
+  const importFeedback = importRow.locator(".schedule-import-row-status");
+  assert.match(await importFeedback.textContent(), /multiple product matches/u);
+  assert.match(await importFeedback.textContent(), /multiple template matches/u);
+  await importRow.locator('[data-import-field="productCode"]').selectOption("PRODUCT");
+  assert.doesNotMatch(await importFeedback.textContent(), /multiple product matches/u);
+  assert.match(await importFeedback.textContent(), /multiple template matches/u);
+  await importRow.locator('[data-import-field="productionSetupCode"]').selectOption("SETUP");
+  await importRow.locator('[data-import-field="runTemplateCode"]').selectOption("TEMPLATE");
+  assert.equal(await importFeedback.textContent(), "Ready to add to the selected production date.");
+  await page.getByRole("button", { name: /Apply 1 reviewed run/u }).click();
+  await page.getByText("Confirmed revision 9").waitFor();
+  assert.equal(fixture.schedule.runs.length, 3);
+  assert.equal(fixture.schedule.runs.some((run) => run.id === firstRunId && run.targetCases === 25), true);
+  assert.equal(fixture.schedule.runs.some((run) => run.notes === "PO 123"), true);
 
   for (const viewport of [
     { width: 390, height: 844 },
+    { width: 844, height: 390 },
     { width: 768, height: 1024 },
     { width: 1024, height: 768 },
     { width: 1440, height: 900 },
   ]) {
     await page.setViewportSize(viewport);
-    const overflow = await page.evaluate(() => ({
-      width: document.documentElement.scrollWidth,
-      offenders: Array.from(document.querySelectorAll("*")).map((element) => {
-        const rect = element.getBoundingClientRect();
-        return {
-          tag: element.tagName,
-          id: element.id,
-          className: typeof element.className === "string" ? element.className : "",
-          right: Math.round(rect.right),
-          width: Math.round(rect.width),
-        };
-      }).filter((element) => element.right > window.innerWidth + 1),
-    }));
-    assert.ok(overflow.width <= viewport.width + 1,
-      `source import layout should not overflow at ${viewport.width}×${viewport.height}: ${JSON.stringify(overflow.offenders.slice(0, 8))}`);
+    assert.ok(
+      await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1),
+      `schedule layout should not overflow at ${viewport.width}×${viewport.height}`,
+    );
   }
+
+  await context.setOffline(true);
+  await page.getByText(/Offline read-only view/u).waitFor();
+  assert.equal(await page.locator("#schedule-add").isDisabled(), true);
+  assert.equal(await page.locator("#schedule-date").isDisabled(), false);
+  assert.equal(fixture.schedule.revision, 9);
+  await context.setOffline(false);
+  await page.getByText(/Server schedule loaded/u).waitFor();
+  await page.getByText("Confirmed revision 9").waitFor();
+  assert.equal(fixture.schedule.runs.length, 3);
   assert.deepEqual(fixture.pageErrors, []);
   assert.deepEqual(fixture.consoleErrors, []);
-  },
-);
+  await otherDevice.context.close();
+});
+
+for (const browserEngine of [chromium, webkit]) {
+  test(
+    `manager previews, applies, and reopens a sauce import in ${browserEngine.name()}`,
+    { skip: browserEngine === webkit && !webkitInstalled ? "Playwright WebKit is not installed on this host." : false },
+    async (t) => {
+      const { fixture, openDevice } = await createFixture(t, undefined, { manager: true, browserEngine });
+      const { page } = await openDevice();
+      await page.locator("#setup-catalog-panel:not([hidden])").waitFor();
+      await page.locator("#source-workbook-family").selectOption("sauce-guides");
+      await page.locator("#source-workbook-file").setInputFiles({
+        name: "synthetic-sauce.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer: Buffer.from(XLSX.write((() => {
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
+            ["Acme uses House Red on Classic at 3.5oz"],
+          ]), "Sauce");
+          return workbook;
+        })(), { type: "buffer", bookType: "xlsx" })),
+      });
+      await page.getByRole("button", { name: "Preview source rows" }).click();
+      try {
+        await page.getByText(/Sauce guide · 1 source rows · 1 proposed V2 records/u).waitFor({ timeout: 5000 });
+      } catch {
+        assert.fail(`Source preview did not load: ${JSON.stringify({
+          status: await page.locator("#setup-catalog-status").innerText(),
+          pageErrors: fixture.pageErrors,
+          consoleErrors: fixture.consoleErrors,
+        })}`);
+      }
+      assert.equal(await page.locator("#source-workbook-preview").isVisible(), true);
+      await page.getByText(/Sauce guide: Acme · Classic/u).click();
+      await page.getByText("I reviewed and confirmed this mapping", { exact: true }).click();
+      await page.getByRole("button", { name: "Stage reviewed rows" }).click();
+      await page.locator("#setup-catalog-status")
+        .getByText("1 sauce guide rows are staged; 0 skipped and 0 remain review-only.")
+        .waitFor();
+
+      const staged = fixture.setupCatalogImports[0];
+      assert.equal(staged.family, "run-templates");
+      assert.equal(staged.sourceSummary.sourceFamily, "sauce-guides");
+      assert.equal(staged.sourceSummary.importedRows, 1);
+      assert.equal(staged.records[0].data.values.sauceOzPerPizza, 3.5);
+      fixture.loseNextApplyResponse = true;
+      fixture.expectedLostApplyConsoleError = true;
+      await page.getByRole("button", { name: "Apply reviewed setup" }).click();
+      await page.locator("#setup-catalog-status[data-kind='error']").waitFor();
+      assert.equal(fixture.setupCatalogImports[0].status, "applied");
+      assert.equal(fixture.setupCatalogApplyCalls, 1);
+      await page.getByRole("button", { name: "Apply reviewed setup" }).click();
+      await page.locator("#setup-catalog-status").getByText("1 setup rows created and 0 updated.").waitFor();
+      assert.equal(fixture.setupCatalogImports[0].status, "applied");
+      assert.equal(fixture.setupCatalogApplyCalls, 2);
+
+      await page.reload();
+      await page.locator("#setup-catalog-history").waitFor();
+      const historyText = await page.locator("#setup-catalog-history").innerText();
+      assert.match(historyText, /Sauce guide · 1 source · 1 staged · 0 skipped · 0 unresolved · applied · 1 created · 0 updated/u);
+      await page.getByRole("button", { name: "Review", exact: true }).click();
+      await page.locator("#setup-catalog-preview").getByText(/Sauce guide · 1 source rows · 1 staged/u).waitFor();
+      assert.ok(await page.locator("#setup-catalog-preview").getByText(/Sauce guide: Acme · Classic/u).count() >= 1);
+
+      for (const viewport of [
+        { width: 390, height: 844 },
+        { width: 768, height: 1024 },
+        { width: 1024, height: 768 },
+        { width: 1440, height: 900 },
+      ]) {
+        await page.setViewportSize(viewport);
+        const overflow = await page.evaluate(() => ({
+          width: document.documentElement.scrollWidth,
+          offenders: Array.from(document.querySelectorAll("*")).map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+              tag: element.tagName,
+              id: element.id,
+              className: typeof element.className === "string" ? element.className : "",
+              right: Math.round(rect.right),
+              width: Math.round(rect.width),
+            };
+          }).filter((element) => element.right > window.innerWidth + 1),
+        }));
+        assert.ok(overflow.width <= viewport.width + 1,
+          `source import layout should not overflow at ${viewport.width}×${viewport.height}: ${JSON.stringify(overflow.offenders.slice(0, 8))}`);
+      }
+      assert.deepEqual(fixture.pageErrors, []);
+      assert.deepEqual(fixture.consoleErrors, []);
+    },
+  );
 }
+
+test("installed shell serves schedule and setup-import modules offline and after reconnecting", async (t) => {
+  const { fixture, openDevice } = await createFixture(t, { width: 1440, height: 900 }, { manager: true });
+  const { context, page } = await openDevice();
+  const modules = [
+    "/v2/web/schedule.js",
+    "/v2/core/schedule-planning.mjs",
+    "/v2/web/setup-catalog.js",
+    "/v2/core/setup-catalog-csv.mjs",
+    "/v2/core/import-csv.mjs",
+    "/v2/core/import-csv-templates.mjs",
+  ];
+  const failedRequests = [];
+  page.on("requestfailed", (request) => {
+    failedRequests.push({
+      url: request.url(),
+      error: request.failure()?.errorText || "",
+    });
+  });
+
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      await new Promise((resolve) => navigator.serviceWorker.addEventListener("controllerchange", resolve, { once: true }));
+    }
+  });
+  const cached = await page.evaluate(async (paths) => {
+    const cache = await caches.open("fieldline-v2-shell-7");
+    return Promise.all(paths.map(async (path) => ({
+      path,
+      present: Boolean(await cache.match(path)),
+    })));
+  }, modules);
+  assert.deepEqual(cached, modules.map((path) => ({ path, present: true })));
+
+  const checkModules = async () => page.evaluate(async (paths) => Promise.all(paths.map(async (path) => {
+    const response = await fetch(path);
+    return {
+      path,
+      status: response.status,
+      contentType: response.headers.get("content-type"),
+      body: await response.text(),
+    };
+  })), modules);
+
+  await context.setOffline(true);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const offline = await checkModules();
+  for (const module of offline) {
+    assert.equal(module.status, 200, `${module.path} loads while offline`);
+    assert.match(module.contentType || "", /javascript/u);
+    assert.ok(module.body.length > 0, `${module.path} has module contents while offline`);
+  }
+
+  await context.setOffline(false);
+  const reconnected = await checkModules();
+  for (const module of reconnected) {
+    assert.equal(module.status, 200, `${module.path} loads after reconnect`);
+    assert.match(module.contentType || "", /javascript/u);
+    assert.ok(module.body.length > 0, `${module.path} has module contents after reconnect`);
+  }
+  assert.deepEqual(fixture.pageErrors, []);
+  assert.ok(
+    fixture.consoleErrors.every((message) => message === "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"),
+    `only expected offline resource errors should appear: ${JSON.stringify(fixture.consoleErrors)}`,
+  );
+  assert.ok(
+    failedRequests.every(({ url, error }) => (
+      error === "net::ERR_INTERNET_DISCONNECTED"
+      && !modules.includes(new URL(url).pathname)
+    )),
+    `only non-module resources may fail while offline: ${JSON.stringify(failedRequests)}`,
+  );
+  await context.close();
+});

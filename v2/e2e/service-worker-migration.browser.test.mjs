@@ -52,6 +52,9 @@ self.addEventListener("fetch", (event) => {
     return (await cache.match(event.request)) || fetch(event.request);
   })());
 });
+self.addEventListener("message", (event) => {
+  if (event.data === "migration-test-worker-id") event.ports[0]?.postMessage("v1");
+});
 `;
 
 const V2_ASSETS = new Map([
@@ -65,6 +68,7 @@ const V2_ASSETS = new Map([
   ["/v2/web/app.js", ["../web/app.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/inventory.js", ["../web/inventory.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/setup-catalog.js", ["../web/setup-catalog.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/schedule.js", ["../web/schedule.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/styles.css", ["../web/styles.css", "text/css; charset=utf-8"]],
   ["/v2/web/write-gate.mjs", ["../web/write-gate.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/import-csv-templates.mjs", ["../core/import-csv-templates.mjs", "text/javascript; charset=utf-8"]],
@@ -72,12 +76,15 @@ const V2_ASSETS = new Map([
   ["/v2/core/die-defaults.mjs", ["../core/die-defaults.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/setup-catalog-csv.mjs", ["../core/setup-catalog-csv.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/station-workflows.mjs", ["../core/station-workflows.mjs", "text/javascript; charset=utf-8"]],
+  ["/v2/core/schedule-planning.mjs", ["../core/schedule-planning.mjs", "text/javascript; charset=utf-8"]],
 ]);
 
 test("V2 replaces the cached V1 shell without clearing browser data", { timeout: 60_000 }, async (t) => {
   let servedVersion = "v1";
+  const requests = [];
   const server = createServer(async (request, response) => {
     const pathname = new URL(request.url, "http://127.0.0.1").pathname;
+    requests.push({ pathname, servedVersion });
     if (servedVersion === "v1" && pathname === "/") {
       response.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" });
       response.end(request.method === "HEAD" ? undefined : LEGACY_HTML);
@@ -99,7 +106,17 @@ test("V2 replaces the cached V1 shell without clearing browser data", { timeout:
       return;
     }
     try {
-      const contents = await readFile(new URL(asset[0], import.meta.url));
+      let contents = await readFile(new URL(asset[0], import.meta.url));
+      if (pathname === "/service-worker.js") {
+        contents = Buffer.concat([
+          contents,
+          Buffer.from(`
+self.addEventListener("message", (event) => {
+  if (event.data === "migration-test-worker-id") event.ports[0]?.postMessage("v2");
+});
+`),
+        ]);
+      }
       response.writeHead(200, {
         "Cache-Control": "no-cache",
         "Content-Length": contents.byteLength,
@@ -200,6 +217,19 @@ test("V2 replaces the cached V1 shell without clearing browser data", { timeout:
     return registration?.active?.state === "activated"
       && navigator.serviceWorker.controller === registration.active;
   });
+  await page.waitForFunction(async () => {
+    const controller = navigator.serviceWorker.controller;
+    if (!controller) return false;
+    return new Promise((resolve) => {
+      const channel = new MessageChannel();
+      const timeout = setTimeout(() => resolve(false), 500);
+      channel.port1.onmessage = (event) => {
+        clearTimeout(timeout);
+        resolve(event.data === "v2");
+      };
+      controller.postMessage("migration-test-worker-id", [channel.port2]);
+    });
+  }, undefined, { timeout: 5000 });
   await page.reload();
   try {
     await page.waitForFunction(() => document.title === "Run control — Fieldline", undefined, { timeout: 5000 });
@@ -208,6 +238,7 @@ test("V2 replaces the cached V1 shell without clearing browser data", { timeout:
       title: await page.title(),
       url: page.url(),
       body: (await page.locator("body").innerText()).slice(0, 500),
+      requests: requests.slice(-25),
       errors: await page.evaluate(() => performance.getEntriesByType("resource")
         .filter((entry) => entry.name.includes("/v2/"))
         .map((entry) => ({ name: entry.name, duration: entry.duration }))),

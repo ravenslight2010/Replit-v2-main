@@ -342,6 +342,66 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .pending-retry { margin: 10px 0 0; }
 .manager-form button:focus-visible, .manager-list button:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
 
+.schedule-tools { display: grid; gap: 16px; }
+.schedule-tools .manager-tools-heading { margin-bottom: 0; }
+.schedule-status, .schedule-alert { margin: 0; padding: 12px 14px; border-left: 3px solid var(--line-strong); background: var(--surface-raised); color: var(--ink-soft); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.schedule-alert { border-color: var(--warning-border); background: var(--warning-bg); color: var(--warning-text); }
+.schedule-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 14px; border: 1px solid var(--line); background: var(--surface); }
+.schedule-toolbar .field { width: min(100%, 220px); }
+.schedule-toolbar .button { min-height: 47px; }
+.schedule-revision { margin-left: auto; color: var(--muted); font: 10px var(--mono); }
+.schedule-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 14px; align-items: start; }
+.schedule-card { min-width: 0; padding: clamp(17px, 2.5vw, 25px); border: 1px solid var(--line); background: var(--surface); }
+.schedule-card-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 13px; }
+.schedule-card-heading h3 { margin: 7px 0 0; font-size: clamp(21px, 2.5vw, 27px); letter-spacing: -.045em; }
+.schedule-card-heading .button { flex: 0 0 auto; }
+.schedule-run-list { display: grid; gap: 10px; }
+.schedule-run { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; padding: 14px; border: 1px solid var(--line); background: var(--surface-raised); }
+.schedule-run-heading, .schedule-run-actions { display: flex; grid-column: 1 / -1; flex-wrap: wrap; align-items: center; gap: 8px; }
+.schedule-run-heading { justify-content: space-between; }
+.schedule-run-heading h4 { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.schedule-run-order { color: var(--muted); font: 10px var(--mono); }
+.schedule-run .field input, .schedule-run .field select, .schedule-break-row select, .schedule-import-row .field input, .schedule-import-row .field select { width: 100%; min-width: 0; min-height: 46px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 0; background: var(--field); color: var(--ink); font: 13px var(--display); }
+.schedule-run-actions { padding-top: 2px; }
+.schedule-empty { margin: 10px 0 0; padding: 12px; background: var(--paper-deep); color: var(--muted); font-size: 12px; }
+.schedule-swap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 17px 0 0; padding: 14px; border: 1px solid var(--line); }
+.schedule-swap legend { padding: 0 6px; color: var(--muted); font: 10px var(--mono); }
+.schedule-swap .button { grid-column: 1 / -1; }
+.schedule-help { margin: 0 0 14px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.schedule-timeline { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.schedule-timeline-item, .schedule-timeline-break { display: grid; gap: 5px; padding: 12px 9px; border-bottom: 1px solid var(--line); border-left: 2px solid var(--brand); background: var(--surface-raised); }
+.schedule-timeline-item strong { font-size: 12px; overflow-wrap: anywhere; }
+.schedule-timeline-item span, .schedule-timeline-break { color: var(--muted); font-size: 11px; line-height: 1.45; }
+.schedule-timeline-break { margin-left: 19px; border-left-color: var(--muted-soft); background: transparent; }
+.schedule-timeline-warning { border-left-color: var(--warning-border); color: var(--warning-text); }
+.schedule-finish { margin: 12px 0 0; padding: 11px; background: var(--paper-deep); color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.schedule-live { margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line-strong); }
+.schedule-live h4 { margin: 6px 0 10px; font-size: 15px; }
+.schedule-live-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.schedule-live-list li { display: grid; gap: 4px; padding: 10px; border: 1px solid var(--line); background: var(--surface-raised); }
+.schedule-live-list strong { font-size: 11px; overflow-wrap: anywhere; }
+.schedule-live-list span { color: var(--muted); font: 10px/1.5 var(--mono); overflow-wrap: anywhere; }
+.schedule-break-card, .schedule-import-card { margin-top: 0; }
+.schedule-breaks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.schedule-break-row { display: grid; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--line); background: var(--surface-raised); }
+.schedule-break-toggle { display: flex; align-items: center; gap: 10px; min-height: 30px; color: var(--ink-soft); font-size: 12px; }
+.schedule-break-toggle input { width: 20px; height: 20px; accent-color: var(--brand); }
+.schedule-import-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, .55fr) auto; align-items: end; gap: 11px; }
+.schedule-import-form input[type="file"] { height: auto; min-height: 46px; padding: 9px; font-size: 11px; }
+.schedule-import-form .button { min-height: 46px; }
+.schedule-import-preview { display: grid; gap: 12px; margin-top: 16px; }
+.schedule-import-preview > p { margin: 0; color: var(--ink-soft); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.schedule-import-preview .schedule-import-issue { color: var(--warning-text); }
+.schedule-import-preview .schedule-import-skipped { color: var(--muted); }
+.schedule-import-date-group { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line-strong); background: var(--surface-raised); }
+.schedule-import-date-group h4 { margin: 0; font-size: 15px; }
+.schedule-import-rows { display: grid; gap: 8px; }
+.schedule-import-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; border: 1px solid var(--line); background: var(--surface); }
+.schedule-import-row h5, .schedule-import-source, .schedule-import-row-status { grid-column: 1 / -1; margin: 0; }
+.schedule-import-row h5 { font-size: 12px; }
+.schedule-import-source { color: var(--muted); font: 10px/1.5 var(--mono); overflow-wrap: anywhere; }
+.schedule-import-row-status { color: var(--warning-text); font-size: 11px; line-height: 1.4; }
+
 @media (max-width: 860px) {
   .workspace { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .create-form { grid-template-columns: minmax(0, 1fr) 115px; }
@@ -350,6 +410,8 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
   .staff-create-form .button { grid-column: 1 / -1; }
   .station-content { grid-template-columns: minmax(210px, .85fr) minmax(0, 1.15fr); gap: 14px; }
   .manager-grid { gap: 12px; }
+  .schedule-layout { grid-template-columns: 1fr; }
+  .schedule-breaks { grid-template-columns: 1fr; }
 }
 @media (max-width: 680px) {
   .topbar { min-height: 60px; flex-wrap: wrap; gap: 8px 16px; padding: 10px 18px; }
@@ -373,6 +435,17 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
   .intro-copy { max-width: 200px; font-size: 13px; line-height: 1.4; }
   .workspace { grid-template-columns: 1fr; }
   .station-panel { padding: 18px 15px 21px; }
+  .schedule-toolbar { align-items: stretch; }
+  .schedule-toolbar .field { width: 100%; }
+  .schedule-toolbar .button { flex: 1 1 42%; }
+  .schedule-revision { width: 100%; margin: 4px 0 0; }
+  .schedule-card-heading { align-items: stretch; flex-direction: column; }
+  .schedule-card-heading .button { width: 100%; }
+  .schedule-run, .schedule-import-row { grid-template-columns: 1fr; }
+  .schedule-run-actions .button { flex: 1 1 42%; }
+  .schedule-swap { grid-template-columns: 1fr; }
+  .schedule-import-form { grid-template-columns: 1fr; }
+  .schedule-import-form .button { width: 100%; }
   .station-content { grid-template-columns: 1fr; }
   .station-tabs { margin-top: 17px; }
   .station-form { padding: 13px; }

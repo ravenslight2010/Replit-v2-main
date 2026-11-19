@@ -2,6 +2,7 @@ import { canWriteRunState } from "./write-gate.mjs";
 import { STATIONS, calculateStationMetrics } from "/v2/core/station-workflows.mjs";
 import { DIE_DEFAULT_FIELDS, isDieLineSettings, resolveDieLineDefaults, resolveDieLineDefaultsOnSwitch } from "../core/die-defaults.mjs";
 import { initializeInventory, updateInventoryContext } from "./inventory.js";
+import { updateScheduleContext } from "./schedule.js";
 
 const API = "/api/v2/runs";
 const AUTH_API = "/api/v2/auth";
@@ -337,6 +338,7 @@ function clearUserScopedState() {
   serverStateConfirmed = false;
   stationConflictDraft = null;
   updateInventoryContext(currentStaff, false);
+  updateScheduleContext(currentStaff, false);
   render();
 }
 
@@ -351,6 +353,7 @@ function canWriteNow() {
 function enterOfflineMode() {
   serverStateConfirmed = false;
   updateInventoryContext(currentStaff, false);
+  updateScheduleContext(currentStaff, false);
   setConnection(false);
   updateCreateFormForAuth();
   renderRun(selectedRun());
@@ -506,6 +509,7 @@ function showSignIn(message = null, { title = "Sign-in needed", retry = false } 
   staffGeneration += 1;
   staffDirectory = null;
   updateInventoryContext(null, false);
+  updateScheduleContext(null, false);
   el.authPanel.hidden = false;
   el.authForm.hidden = false;
   el.bootstrapForm.hidden = true;
@@ -534,6 +538,7 @@ function showAuthenticated(staff) {
   currentStaff = staff;
   serverStateConfirmed = false;
   updateInventoryContext(currentStaff, false);
+  updateScheduleContext(currentStaff, false);
   el.authPanel.hidden = true;
   el.bootstrapForm.hidden = true;
   el.setupToggle.hidden = true;
@@ -1874,6 +1879,7 @@ async function fetchRuns({ quiet = false } = {}) {
   if (refreshInFlight) return false;
   serverStateConfirmed = false;
   updateInventoryContext(currentStaff, false);
+  updateScheduleContext(currentStaff, false);
   updateCreateFormForAuth();
   renderRun(selectedRun());
   refreshInFlight = true;
@@ -1915,6 +1921,7 @@ async function fetchRuns({ quiet = false } = {}) {
     setLastCheck();
     serverStateConfirmed = true;
     updateInventoryContext(currentStaff, canWriteNow());
+    updateScheduleContext(currentStaff, canWriteNow());
     renderRunProducts();
     updateCreateFormForAuth();
     render();
@@ -1930,6 +1937,7 @@ async function fetchRuns({ quiet = false } = {}) {
     }
     serverStateConfirmed = false;
     updateInventoryContext(currentStaff, false);
+    updateScheduleContext(currentStaff, false);
     setConnection(false);
     saveOfflineCache();
     showError(error instanceof Error ? error.message : "Check the connection and refresh state.", "Could not load current state");
@@ -2065,6 +2073,7 @@ async function sendCommand(pending) {
     }
     serverStateConfirmed = false;
     updateInventoryContext(currentStaff, false);
+    updateScheduleContext(currentStaff, false);
     setConnection(false);
     updateCreateFormForAuth();
     showError(error instanceof Error ? error.message : "The result is uncertain. Retry the same action; its command identity will be preserved.", "Action needs confirmation");
@@ -2208,6 +2217,7 @@ async function createRun(event) {
     }
     serverStateConfirmed = false;
     updateInventoryContext(currentStaff, false);
+    updateScheduleContext(currentStaff, false);
     showError(error instanceof Error ? error.message : "Run creation could not be confirmed. Retry the same request; its identity and details are preserved.", "Run not confirmed");
     el.createNote.textContent = "Not confirmed. Retry uses the same request ID and details; do not start a different creation request.";
     setConnection(false);

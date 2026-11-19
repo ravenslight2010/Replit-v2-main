@@ -301,10 +301,68 @@ async function main() {
     await page.locator("#opening-count-history").getByText(`${secondWarehouse} · applied`).waitFor();
     await page.screenshot({ path: join(evidenceDir, "manager-inventory-after-reload.png"), fullPage: true });
 
-    assert.deepEqual(errors, [], "manager inventory browser journey should have no browser or server errors");
-    assert.deepEqual(failedResponses, [],
-      "the authenticated manager journey must not encounter failed requests");
-    console.log("V2 authenticated Chromium journey passed: reviewed die defaults, switch-aware run snapshot, inventory, and reload persistence. Responsive emulation passed at desktop, phone, tablet portrait, and tablet landscape sizes.");
+    const scheduleDate = "2035-04-16";
+    await page.locator("#schedule-tools:not([hidden])").waitFor();
+    await page.locator("#schedule-date").fill(scheduleDate);
+    await page.getByText("Confirmed revision 0").waitFor();
+    await page.locator("#schedule-add").click();
+    const scheduleDraft = page.locator('.schedule-run[data-is-new="true"]');
+    await scheduleDraft.locator('[data-field="productCode"]').selectOption("DOUGH-A");
+    await scheduleDraft.locator('[data-field="productionSetupCode"]').selectOption("LINE-A");
+    await scheduleDraft.locator('[data-field="runTemplateCode"]').selectOption("SCHEDULE-TEMPLATE");
+    await scheduleDraft.locator('[data-field="targetCases"]').fill("20");
+    await scheduleDraft.getByRole("button", { name: "Add to plan" }).click();
+    await page.getByText("Confirmed revision 1").waitFor();
+    assert.equal(await page.locator(".schedule-run").count(), 1);
+    await page.screenshot({ path: join(evidenceDir, "manager-schedule-after-save.png"), fullPage: true });
+
+    const secondSignIn = await fetch(`${baseUrl}/api/v2/auth/sign-in`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: baseUrl,
+        "Sec-Fetch-Site": "same-origin",
+      },
+      body: JSON.stringify({ username: MANAGER_USERNAME, password: MANAGER_PASSWORD }),
+    });
+    assert.equal(secondSignIn.status, 200, "the second device should receive a separate authenticated session");
+    const secondCookies = secondSignIn.headers.getSetCookie().map((cookie) => cookie.split(";", 1)[0]);
+    const secondContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await secondContext.addCookies(secondCookies.map((cookie) => {
+      const [name, ...valueParts] = cookie.split("=");
+      return { name, value: valueParts.join("="), url: baseUrl };
+    }));
+    const secondPage = await secondContext.newPage();
+    secondPage.on("pageerror", (error) => errors.push(error.message));
+    secondPage.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    secondPage.on("response", (response) => {
+      if (response.status() >= 400) failedResponses.push(`${response.status()} ${new URL(response.url()).pathname}`);
+    });
+    await secondPage.goto(baseUrl);
+    await secondPage.locator("#schedule-tools:not([hidden])").waitFor();
+    await secondPage.locator("#schedule-date").fill(scheduleDate);
+    await secondPage.getByText("Confirmed revision 1").waitFor();
+    assert.equal(await secondPage.locator("#schedule-date").inputValue(), scheduleDate);
+    assert.equal(await secondPage.locator(".schedule-run").count(), 1);
+    assert.equal(await secondPage.locator('.schedule-run [data-field="targetCases"]').inputValue(), "20");
+    assert.ok(await secondPage.evaluate(() =>
+      document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1));
+    await secondPage.screenshot({ path: join(evidenceDir, "manager-schedule-second-device.png"), fullPage: true });
+
+    await secondPage.reload();
+    await secondPage.locator("#schedule-tools:not([hidden])").waitFor();
+    await secondPage.locator("#schedule-date").fill(scheduleDate);
+    await secondPage.getByText("Confirmed revision 1").waitFor();
+    assert.equal(await secondPage.locator(".schedule-run").count(), 1);
+    assert.equal(await secondPage.locator('.schedule-run [data-field="targetCases"]').inputValue(), "20");
+    await secondContext.close();
+
+    assert.deepEqual(errors, [], "manager inventory and schedule browser journeys should have no browser or server errors");
+    assert.deepEqual(failedResponses, ["401 /api/v2/auth/session"],
+      "only the expected unauthenticated session challenge should be rejected");
+    console.log("V2 authenticated Chromium journeys passed: reviewed die defaults, switch-aware run snapshot, inventory, schedule convergence, and reload persistence. Responsive emulation passed at desktop, phone, tablet portrait, and tablet landscape sizes.");
 
     let webkitBrowser;
     try {
