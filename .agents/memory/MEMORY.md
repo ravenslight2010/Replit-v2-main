@@ -162,3 +162,4 @@
 - [V2 product boundaries](v2-product-boundaries.md) — upgraded successor, one facility with multiple warehouses, server-owned shared state, offline read-only, and fresh V2 sessions.
 - [Configuration recovery scope](configuration-recovery-scope.md) — environment recovery can replace current startup wiring; verify its scope and the installer's chosen Nix representation.
 - [Schedule timezone](schedule-timezone.md) — production schedule dates and estimates use America/Chicago, independent of the viewer's device timezone.
+- [Version capability catalog](version-capability-catalog.md) — future major versions start from a portable, evidence-linked feature inventory; unapproved candidates remain distinct from requirements.
