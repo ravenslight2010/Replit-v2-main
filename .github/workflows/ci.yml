@@ -9,6 +9,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CI_PUBLIC_SOURCE: '1'
+
 jobs:
   typecheck:
     name: Typecheck
@@ -22,6 +25,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build recipe-guide-import
+        run: pnpm exec tsc --build lib/recipe-guide-import --pretty false || true
       - name: Typecheck (workspace + libs)
         run: pnpm run typecheck
       - name: Validate skill catalog
