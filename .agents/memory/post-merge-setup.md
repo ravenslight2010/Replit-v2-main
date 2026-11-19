@@ -15,6 +15,13 @@ Drizzle push is neither a V2 migration nor a safe substitute.
 source. Do not automatically push legacy schemas or apply restored SQL. The
 schema-push rules below apply only to explicitly approved legacy-only work.
 
+Rehearse additive V2 activation against a populated disposable baseline, not
+just an empty install. Combine reviewed SQL in one transaction rather than
+nesting source files with their own commits. Verify restricted runtime access
+through a separate login; `SET ROLE` on an elevated connection does not prove
+credential isolation. Development checkpoint snapshots are best-effort, so
+confirm the database option is available before approved managed writes.
+
 ## Rules
 
 - Use `pnpm --filter db push-force` (the `push-force` script = `drizzle-kit push --force`), NEVER plain `push`.
