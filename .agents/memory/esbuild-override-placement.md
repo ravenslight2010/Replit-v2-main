@@ -7,4 +7,4 @@ For pnpm 11 and later, keep workspace-wide security overrides in `pnpm-workspace
 
 **Why:** The authoritative configuration location changed across package-manager versions. Following the old advice can silently leave transitive dependencies vulnerable.
 
-**How to apply:** Check the active pnpm major, regenerate the dependency graph with its supported configuration, and verify the actual installed versions and security audit rather than assuming an override took effect.
+**How to apply:** Check the active pnpm major and update existing pins and catalog entries when they overlap audit-generated overrides. Regenerate with the workspace's pinned pnpm, then verify the resolved versions and rerun the audit.
