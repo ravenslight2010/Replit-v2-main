@@ -33,6 +33,10 @@ jobs:
         run: pnpm run check:skill-catalog
       - name: Test skill catalog contract
         run: pnpm --filter @workspace/scripts run test:skill-catalog
+      - name: Validate portable capability catalog
+        run: pnpm run check:capability-catalog
+      - name: Test portable capability catalog contract
+        run: pnpm --filter @workspace/scripts run test:capability-catalog
 
   test:
     name: Unit tests (web + libs)
