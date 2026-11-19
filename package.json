@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "dev:v2": "bash scripts/start-v2.sh",
+    "build:v2": "pnpm --filter @workspace/lucia-v2 run build",
+    "test:v2": "pnpm --filter @workspace/lucia-v2 run test",
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "audit:prod": "pnpm audit --prod",

@@ -3,6 +3,54 @@
   "description": "Focused evidence inventory for selective recovery from a checkpoint.",
   "entries": [
     {
+      "id": "v2-authentication",
+      "feature": "V2 sign-in and capability boundaries remain server owned",
+      "files": ["v2/server/auth-adapter.mjs", "v2/server/auth-api.mjs", "v2/db/0002-staff-auth.sql"],
+      "wiring": [{"file": "v2/server/main.mjs", "contains": "createAuthAdapter"}],
+      "contracts": [{"file": "v2/api/openapi.yaml", "contains": "/api/v2/auth/sign-in"}],
+      "tests": [{"file": "v2/server/auth-adapter.test.mjs", "contains": "test("}]
+    },
+    {
+      "id": "v2-server-owned-stations",
+      "feature": "V2 run commands, leased auto-tracking and shared station state are wired",
+      "files": ["v2/core/station-auto-track-worker.mjs", "v2/core/station-command-service.mjs", "v2/db/0003-production-stations.sql"],
+      "wiring": [{"file": "v2/server/worker-main.mjs", "contains": "createStationAutoTrackWorker"}],
+      "contracts": [{"file": "v2/api/openapi.yaml", "contains": "stationProgress"}],
+      "tests": [{"file": "v2/e2e/station-sync.browser.test.mjs", "contains": "two live sessions"}]
+    },
+    {
+      "id": "v2-reviewed-imports-and-inventory",
+      "feature": "Reviewed setup imports and exact-once run inventory remain connected",
+      "files": ["v2/core/source-workbook-import.mjs", "v2/web/setup-catalog.js", "v2/web/inventory.js", "v2/db/0006-run-inventory-linkage.sql", "v2/db/0007-approved-setup-catalogs.sql"],
+      "wiring": [{"file": "v2/core/run-command-service.mjs", "contains": "complete_run_with_inventory"}],
+      "contracts": [{"file": "v2/api/openapi.yaml", "contains": "inventoryConsumption"}],
+      "tests": [{"file": "v2/db/0006-run-inventory-linkage.test.sql", "contains": "complete_run_with_inventory"}]
+    },
+    {
+      "id": "v2-imported-production-rules",
+      "feature": "Only reviewed imported rules gate preparation and start atomically",
+      "files": ["v2/db/0008-production-rule-enforcement.sql", "v2/db/0008-production-rule-enforcement.test.sql"],
+      "wiring": [{"file": "v2/web/app.js", "contains": "renderProductionRules"}],
+      "contracts": [{"file": "v2/api/openapi.yaml", "contains": "productionRules"}],
+      "tests": [{"file": "v2/core/run-command-service.test.mjs", "contains": "PRODUCTION_RULES_BLOCKED"}]
+    },
+    {
+      "id": "v2-browser-and-cache-recovery",
+      "feature": "Browser coverage retains read-only offline recovery and legacy-shell migration",
+      "files": ["v2/e2e/service-worker-migration.browser.test.mjs", "v2/web/service-worker.js", ".github/workflows/v2-recovery.yml"],
+      "wiring": [{"file": "v2/e2e/station-sync.browser.test.mjs", "contains": "V2_REQUIRE_WEBKIT"}],
+      "contracts": [{"file": "v2/web/write-gate.mjs", "contains": "export"}],
+      "tests": [{"file": "v2/e2e/station-sync.browser.test.mjs", "contains": "offline reload stays read-only"}]
+    },
+    {
+      "id": "v2-supervised-runtime",
+      "feature": "V2 API and worker are the configured supervised application",
+      "files": ["scripts/start-v2.sh", "process-compose.yaml", ".nvmrc"],
+      "wiring": [{"file": ".replit", "contains": "scripts/start-v2.sh"}],
+      "contracts": [{"file": "process-compose.yaml", "contains": "node v2/server/worker-main.mjs"}],
+      "tests": [{"file": "v2/server/deployment-guard.test.mjs", "contains": "one external web port"}]
+    },
+    {
       "id": "import-history",
       "feature": "Saved import history can be reopened",
       "files": [

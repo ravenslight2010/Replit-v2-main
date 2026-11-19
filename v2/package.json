@@ -1,0 +1,25 @@
+{
+  "name": "@workspace/lucia-v2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.22.3"
+  },
+  "scripts": {
+    "start": "bash ../scripts/start-v2.sh",
+    "start:api": "node server/main.mjs",
+    "start:worker": "node server/worker-main.mjs",
+    "build": "for file in server/*.mjs web/*.js; do node --check \"$file\" || exit; done",
+    "test": "node --test core/*.test.mjs server/*.test.mjs web/*.test.mjs",
+    "test:browser": "node --test e2e/*.test.mjs",
+    "test:db": "bash db/run-local-tests.sh"
+  },
+  "dependencies": {
+    "pg": "8.23.1",
+    "xlsx": "npm:@e965/xlsx@0.20.3"
+  },
+  "devDependencies": {
+    "playwright": "1.65.1"
+  }
+}

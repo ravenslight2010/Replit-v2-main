@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#FF9500" />
+    <meta name="description" content="Production run control" />
+    <title>Run control — Fieldline</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/favicon.ico" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/v2/web/styles.css" />
+    <script type="module" src="/v2/web/app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="wordmark" href="/" aria-label="Fieldline run control home">
+          <span class="mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span>FIELDLINE</span>
+        </a>
+        <div class="topbar-center">
+          <span class="eyebrow">PRODUCTION FLOOR</span>
+          <span class="topbar-divider" aria-hidden="true"></span>
+          <span class="topbar-title">Run control</span>
+        </div>
+        <div class="connection" id="connection-indicator" data-testid="status-connection" role="status" aria-live="polite">
+          <span class="connection-dot" aria-hidden="true"></span>
+          <span id="connection-label">Connecting</span>
+        </div>
+        <div class="account-controls" id="account-controls" hidden>
+          <span class="staff-label" id="staff-label" data-testid="text-current-staff"></span>
+          <button class="text-button sign-out-button" id="sign-out-button" type="button" data-testid="button-sign-out">Sign out</button>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="auth-panel" id="auth-panel" aria-labelledby="auth-heading">
+          <div class="auth-card">
+            <p class="eyebrow auth-kicker">STAFF ACCESS <span class="intro-rule"></span> V2</p>
+            <h1 id="auth-heading">Sign in to the floor<span class="title-period">.</span></h1>
+            <p class="auth-copy">Use your V2 staff account to read the server’s current run state. Changes are sent only while connected.</p>
+            <p class="auth-status" id="auth-status" role="status" aria-live="polite">Checking your saved session…</p>
+            <div class="auth-error" id="auth-error" role="alert" aria-live="assertive" hidden>
+              <strong id="auth-error-title">Sign-in needed</strong>
+              <p id="auth-error-message"></p>
+            </div>
+            <form class="auth-form" id="auth-form" hidden>
+              <label class="field" for="auth-username">
+                <span>Username</span>
+                <input id="auth-username" name="username" type="text" minlength="3" maxlength="40" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="auth-error-message" required data-testid="input-username" />
+              </label>
+              <label class="field" for="auth-password">
+                <span>Password</span>
+                <input id="auth-password" name="password" type="password" minlength="1" maxlength="128" autocomplete="current-password" aria-describedby="auth-error-message" required data-testid="input-password" />
+              </label>
+              <button class="button button-primary auth-submit" id="auth-submit" type="submit" disabled data-testid="button-sign-in">
+                <span>Continue</span><span class="button-arrow" aria-hidden="true">→</span>
+              </button>
+            </form>
+            <button class="text-button setup-toggle" id="setup-toggle" type="button" hidden aria-expanded="false" aria-controls="bootstrap-form">Set up the first manager</button>
+            <form class="auth-form bootstrap-form" id="bootstrap-form" hidden>
+              <p class="form-note">This setup is available only on a fresh V2 database and requires the one-time code configured by the V2 administrator.</p>
+              <label class="field" for="bootstrap-code">
+                <span>One-time setup code</span>
+                <input id="bootstrap-code" name="bootstrapCode" type="password" minlength="32" maxlength="256" autocomplete="off" aria-describedby="auth-error-message" required />
+              </label>
+              <label class="field" for="bootstrap-username">
+                <span>Manager username</span>
+                <input id="bootstrap-username" name="username" type="text" minlength="3" maxlength="40" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="auth-error-message" required />
+              </label>
+              <label class="field" for="bootstrap-password">
+                <span>Manager password</span>
+                <input id="bootstrap-password" name="password" type="password" minlength="6" maxlength="128" autocomplete="new-password" aria-describedby="auth-error-message" required />
+              </label>
+              <button class="button button-primary auth-submit" id="bootstrap-submit" type="submit">
+                <span>Create first manager</span><span class="button-arrow" aria-hidden="true">→</span>
+              </button>
+              <button class="text-button setup-cancel" id="setup-cancel" type="button">Back to sign in</button>
+            </form>
+            <button class="text-button auth-retry" id="auth-retry" type="button" hidden data-testid="button-check-session">Check session again</button>
+            <p class="auth-footnote">Offline mode is read-only. No run state is shown until the server confirms your session.</p>
+          </div>
+        </section>
+
+        <div id="authenticated-app" hidden>
+        <section class="page-intro" aria-labelledby="page-title">
+          <div>
+            <p class="eyebrow intro-kicker">LIVE OPERATIONS <span class="intro-rule"></span> V2</p>
+            <h1 id="page-title" tabindex="-1">Run control<span class="title-period">.</span></h1>
+            <p class="intro-copy">One shared state. Always from the server.</p>
+          </div>
+          <div class="sync-stamp">
+            <span class="sync-icon" aria-hidden="true"></span>
+            <div><span class="eyebrow">LAST CHECK</span><strong id="last-check">Waiting for server</strong></div>
+          </div>
+        </section>
+
+        <section class="staff-panel" id="staff-panel" aria-labelledby="staff-heading" hidden>
+          <div class="staff-panel-header">
+            <div>
+              <p class="eyebrow">MANAGER ACCESS</p>
+              <h2 id="staff-heading">Staff accounts</h2>
+            </div>
+            <p class="staff-panel-note">Account and role changes revoke the staff member’s existing sessions.</p>
+          </div>
+          <p class="staff-status" id="staff-status" role="status" aria-live="polite">Loading staff accounts…</p>
+          <div class="staff-error" id="staff-error" role="alert" hidden></div>
+          <form class="staff-create-form" id="staff-create-form">
+            <label class="field" for="new-staff-username">
+              <span>Username</span>
+                <input id="new-staff-username" name="username" type="text" minlength="3" maxlength="40" autocomplete="off" aria-describedby="staff-error" required />
+            </label>
+            <label class="field" for="new-staff-password">
+              <span>Initial password</span>
+                <input id="new-staff-password" name="password" type="password" minlength="6" maxlength="128" autocomplete="new-password" aria-describedby="staff-error" required />
+            </label>
+            <label class="field" for="new-staff-role">
+              <span>Role</span>
+                <select id="new-staff-role" name="roleName" aria-describedby="staff-error" required></select>
+            </label>
+            <button class="button button-primary" id="create-staff-button" type="submit">Create account</button>
+          </form>
+          <div class="staff-table-wrap">
+            <table class="staff-table">
+              <caption class="visually-hidden">V2 staff accounts and role settings</caption>
+              <thead><tr><th scope="col">Username</th><th scope="col">Status</th><th scope="col">Role</th><th scope="col">Actions</th></tr></thead>
+              <tbody id="staff-list"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <div id="global-error" class="error-banner" role="alert" hidden>
+          <span class="error-symbol" aria-hidden="true">!</span>
+          <div class="error-copy"><strong id="error-title">Could not reach the server</strong><p id="error-message">Check the connection and try again.</p></div>
+          <button class="text-button" id="refresh-button" type="button" data-testid="button-refresh">Refresh state</button>
+        </div>
+
+        <section class="workspace" aria-label="Run operations">
+          <div class="primary-column">
+            <article class="run-panel" aria-labelledby="run-label">
+              <div class="panel-topline">
+                <span class="eyebrow">CURRENT RUN</span>
+                <span class="revision" id="revision-value" data-testid="text-revision">—</span>
+              </div>
+              <div id="run-content" aria-live="polite">
+                <div class="loading-state" aria-label="Loading run state">
+                  <div class="skeleton skeleton-status"></div>
+                  <div class="skeleton skeleton-title"></div>
+                  <div class="skeleton skeleton-line"></div>
+                  <div class="skeleton skeleton-block"></div>
+                </div>
+              </div>
+            </article>
+
+            <section class="create-panel" aria-labelledby="create-heading">
+              <div class="create-heading-row">
+                <div>
+                  <p class="eyebrow">NEW PRODUCTION RUN</p>
+                  <h2 id="create-heading">Prepare a run</h2>
+                </div>
+                <span class="create-index" aria-hidden="true">01</span>
+              </div>
+              <form id="create-form" class="create-form">
+                <label class="field field-label" for="setup-label">
+                  <span>Run label</span>
+                  <input id="setup-label" name="label" type="text" maxlength="120" placeholder="e.g. Citrus blend · morning" autocomplete="off" required data-testid="input-run-label" />
+                </label>
+                <label class="field field-cases" for="target-cases">
+                  <span>Target cases</span>
+                  <input id="target-cases" name="targetCases" type="number" inputmode="numeric" min="1" step="1" placeholder="0" required data-testid="input-target-cases" />
+                </label>
+                <label class="field field-product" for="run-product">
+                  <span>Imported product</span>
+                  <select id="run-product" name="productCode" required data-testid="select-run-product">
+                    <option value="">Loading products…</option>
+                  </select>
+                </label>
+                <label class="field field-product" for="run-production-setup">
+                  <span>Production setup</span>
+                  <select id="run-production-setup" name="productionSetupCode" required data-testid="select-run-production-setup">
+                    <option value="">Choose a product first</option>
+                  </select>
+                </label>
+                <button class="button button-create" id="create-button" type="submit" data-testid="button-create-run">
+                  <span>Prepare run</span><span class="button-arrow" aria-hidden="true">↗</span>
+                </button>
+              </form>
+              <p class="form-note" id="create-note">The server snapshots the imported recipe and production warehouse. Completing the run deducts tracked batch and packaging quantities once; short stock is recorded rather than blocking the run.</p>
+            </section>
+          </div>
+
+          <aside class="side-column">
+            <section class="history-panel" aria-labelledby="runs-heading">
+              <div class="section-heading">
+                <div><p class="eyebrow">SERVER REGISTER</p><h2 id="runs-heading">Runs</h2></div>
+                <span class="count-badge" id="run-count" data-testid="text-run-count">—</span>
+              </div>
+              <div id="runs-list" class="runs-list" aria-live="polite">
+                <div class="list-loading"><span></span><span></span><span></span></div>
+              </div>
+              <div class="list-footer">
+                <span class="server-mark" aria-hidden="true"></span>
+                <span>Current state comes from the server</span>
+              </div>
+            </section>
+
+            <section class="reliability-note" aria-label="State synchronization">
+              <span class="note-mark" aria-hidden="true">↻</span>
+              <div><strong>Reconnected?</strong><p>State refreshes when this screen returns to view, and periodically while open.</p></div>
+            </section>
+          </aside>
+        </section>
+        <section class="station-panel" id="station-panel" aria-labelledby="station-heading" hidden>
+          <div class="station-heading-row">
+            <div>
+              <p class="eyebrow">PRODUCTION STATIONS</p>
+              <h2 id="station-heading">Station work</h2>
+              <p class="station-intro">Edits are saved to the shared run. Timer and automatic progress use server time.</p>
+            </div>
+            <span class="station-revision" id="station-revision" data-testid="text-station-revision"></span>
+          </div>
+          <div class="station-tabs" id="station-tabs" role="tablist" aria-label="Production station"></div>
+          <div class="station-content">
+            <div class="station-summary">
+              <div class="station-summary-header">
+                <span class="eyebrow" id="station-label">RUN / LINE</span>
+                <span class="station-state" id="station-state" data-testid="text-station-state">No progress</span>
+              </div>
+              <div class="station-metrics" id="station-metrics" aria-live="polite"></div>
+              <div class="station-timer" data-testid="station-timer">
+                <div><span class="eyebrow">STATION TIMER</span><strong id="station-timer-value">Not started</strong></div>
+                <div class="timer-controls" id="station-timer-controls"></div>
+              </div>
+            </div>
+            <form class="station-form" id="station-form">
+              <div id="station-fields"></div>
+              <div class="station-form-actions">
+                <p class="station-save-note" id="station-save-note" role="status" aria-live="polite"></p>
+                <button class="button button-primary" id="station-save-button" type="submit" data-testid="button-save-station">Save station values</button>
+              </div>
+            </form>
+          </div>
+        </section>
+        <section class="manager-tools" id="manager-tools" aria-labelledby="manager-tools-title" hidden>
+          <div class="manager-tools-heading">
+            <div>
+              <p class="eyebrow intro-kicker">MANAGER WORKSPACE <span class="intro-rule"></span> V2</p>
+              <h2 id="manager-tools-title">Setup & inventory</h2>
+              <p class="manager-tools-copy">Review setup imports and manage stock by warehouse. Every change is recorded by the server.</p>
+            </div>
+          </div>
+          <div class="manager-error" id="manager-error" role="alert" hidden></div>
+
+          <div class="manager-grid">
+            <section class="manager-card" aria-labelledby="import-heading">
+              <p class="eyebrow">PRODUCTS · RECIPES · PRODUCTION SETUP</p>
+              <h3 id="import-heading">Review setup import</h3>
+              <p class="manager-help">Download a CSV starter and replace its example rows. Import products first; recipe and production setup rows reference product codes already in V2. Missing rows never delete existing setup.</p>
+              <form id="setup-import-form" class="manager-form">
+                <label class="field" for="import-kind">
+                  <span>Import type</span>
+                  <select id="import-kind" name="kind" required>
+                    <option value="products">Products</option>
+                    <option value="recipes">Recipes</option>
+                    <option value="production-setups">Production setup</option>
+                  </select>
+                </label>
+                <p class="csv-template" id="csv-template" aria-live="polite">
+                  <span id="csv-template-columns"></span>
+                  <a class="button button-secondary button-small" id="csv-template-download" download>Download CSV template</a>
+                </p>
+                <label class="field" for="import-file">
+                  <span>CSV file</span>
+                  <input id="import-file" name="file" type="file" accept=".csv,text/csv" required aria-describedby="csv-template" />
+                </label>
+                <button class="button button-primary" id="import-review-button" type="submit">Validate and review</button>
+                <button class="button button-secondary" id="import-retry-button" type="button" hidden>Retry the same import</button>
+              </form>
+              <div id="import-preview" class="manager-preview" aria-live="polite" hidden></div>
+              <div class="manager-actions" id="import-actions" hidden>
+                <button class="button button-primary" id="import-apply-button" type="button">Apply reviewed import</button>
+              </div>
+              <h4 class="manager-subheading">Recent imports</h4>
+              <ul class="manager-list" id="import-history" aria-live="polite"></ul>
+            </section>
+
+            <section class="manager-card" aria-labelledby="setup-catalog-heading" id="setup-catalog-panel" hidden>
+              <p class="eyebrow">APPROVED PRODUCTION SETUP · V2</p>
+              <h3 id="setup-catalog-heading">Review additional setup families</h3>
+              <p class="manager-help">Import ingredient identities and allergen review facts, mixes, die settings, production rules, freezer-pull items, run-setup templates, named manager lists, and aliases. Templates keep units explicit. Blank values stay blank; runtime counters, arbitrary settings, tombstones, and AI memory are not imported.</p>
+              <form id="setup-catalog-form" class="manager-form">
+                <label class="field" for="setup-catalog-family">
+                  <span>Setup family</span>
+                  <select id="setup-catalog-family" name="family" required>
+                    <option value="ingredients">Ingredient identities and allergen facts</option>
+                    <option value="mixes">Mixes</option>
+                    <option value="die-types">Die types</option>
+                    <option value="die-line-defaults">Die line defaults</option>
+                    <option value="production-rules">Production rules</option>
+                    <option value="freezer-pull-items">Freezer-pull items</option>
+                    <option value="run-templates">Run setup templates</option>
+                    <option value="manager-lists">Named manager lists</option>
+                    <option value="aliases">Spec and merge aliases</option>
+                  </select>
+                </label>
+                <p class="csv-template" id="setup-catalog-template" aria-live="polite">
+                  <span id="setup-catalog-template-columns"></span>
+                  <a class="button button-secondary button-small" id="setup-catalog-template-download" download>Download CSV template</a>
+                </p>
+                <label class="field" for="setup-catalog-file">
+                  <span>CSV file</span>
+                  <input id="setup-catalog-file" name="file" type="file" accept=".csv,text/csv" required aria-describedby="setup-catalog-template" />
+                </label>
+                <p class="field-hint">Linked ingredients and die types must already exist in V2, or be imported first. Run-template brand/flavor and source ingredient IDs remain text, not V2 product or ingredient links. Unmatched names stay unlinked; the importer never guesses identity.</p>
+                <button class="button button-primary" id="setup-catalog-review" type="submit">Validate and stage for review</button>
+                <button class="button button-secondary" id="setup-catalog-retry" type="button" hidden>Retry the same import</button>
+              </form>
+              <div class="manager-subsection">
+                <h4>V1 source workbooks</h4>
+                <p class="manager-help">Preview a supported Excel layout, correct its V2 mapping, and stage only reviewed rows. The original workbook is not retained. Photos, OCR suggestions, and unsupported layouts stay out of Apply.</p>
+                <form id="source-workbook-form" class="manager-form">
+                  <label class="field" for="source-workbook-family">
+                    <span>Source family</span>
+                    <select id="source-workbook-family" name="family" required>
+                      <option value="spec-sheets">Spec sheet</option>
+                      <option value="premix-sheets">Premix sheet</option>
+                      <option value="cheese-mix-specs">Cheese mix spec</option>
+                      <option value="shipping-guides">Shipping guide</option>
+                      <option value="sauce-guides">Sauce guide</option>
+                      <option value="dough-guides">Dough guide</option>
+                    </select>
+                  </label>
+                  <label class="field" for="source-workbook-file">
+                    <span id="source-workbook-file-label">XLSX workbook</span>
+                    <input id="source-workbook-file" name="workbook" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required aria-describedby="source-workbook-help" />
+                  </label>
+                  <p class="field-hint" id="source-workbook-help">Up to 5 MiB. Excel formulas and cached formula values require review. Photos and OCR are not applied.</p>
+                  <button class="button button-primary" id="source-workbook-preview-button" type="submit">Preview source rows</button>
+                </form>
+                <div id="source-workbook-preview" class="manager-preview" aria-live="polite" hidden></div>
+                <div class="manager-actions" id="source-workbook-actions" hidden>
+                  <button class="button button-primary" id="source-workbook-stage" type="button">Stage reviewed rows</button>
+                </div>
+              </div>
+              <div id="setup-catalog-preview" class="manager-preview" aria-live="polite" hidden></div>
+              <div class="manager-actions" id="setup-catalog-actions" hidden>
+                <button class="button button-primary" id="setup-catalog-apply" type="button" hidden>Apply reviewed setup</button>
+              </div>
+              <h4 class="manager-subheading">Recent setup imports</h4>
+              <ul class="manager-list" id="setup-catalog-history" aria-live="polite"></ul>
+              <p class="manager-help" id="setup-catalog-status" role="status" aria-live="polite"></p>
+            </section>
+
+            <section class="manager-card manager-card-wide" aria-labelledby="capacity-workbook-heading">
+              <p class="eyebrow">DOUGH CAPACITY SOURCES · V2 ONLY</p>
+              <h3 id="capacity-workbook-heading">Import dough and shipping workbooks</h3>
+              <p class="manager-help">Upload one dough procedure or shipping guide at a time. Exact product-name matches remain automatic; managers can select active products for unmatched rows, review staged links, and apply them. Confirmed links are remembered by product code.</p>
+              <form id="capacity-workbook-form" class="manager-form">
+                <label class="field" for="capacity-workbook-family">
+                  <span>Workbook type</span>
+                  <select id="capacity-workbook-family" name="family" required>
+                    <option value="dough-procedure">Dough procedure</option>
+                    <option value="shipping-guide">Shipping guide</option>
+                  </select>
+                </label>
+                <label class="field" for="capacity-workbook-file">
+                  <span>XLSX workbook</span>
+                  <input id="capacity-workbook-file" name="workbook" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required aria-describedby="capacity-workbook-help" />
+                </label>
+                <p class="field-hint" id="capacity-workbook-help">One workbook per import, up to 5 MiB. Other workbook families are not imported here.</p>
+                <button class="button button-primary" id="capacity-workbook-review" type="submit">Preview workbook links</button>
+                <button class="button button-secondary" id="capacity-workbook-retry" type="button" hidden>Retry the same workbook</button>
+              </form>
+              <div id="capacity-workbook-preview" class="manager-preview" aria-live="polite" hidden></div>
+              <div class="manager-actions" id="capacity-workbook-actions" hidden>
+                <button class="button button-primary" id="capacity-workbook-stage" type="button" hidden>Stage reviewed workbook</button>
+                <button class="button button-primary" id="capacity-workbook-apply" type="button">Apply reviewed workbook</button>
+              </div>
+            </section>
+
+            <section class="manager-card" aria-labelledby="warehouse-heading">
+              <p class="eyebrow">ONE FACILITY · MULTIPLE LOCATIONS</p>
+              <h3 id="warehouse-heading">Warehouse stock</h3>
+              <form id="warehouse-create-form" class="manager-form manager-inline-form">
+                <label class="field" for="warehouse-name">
+                  <span>New warehouse</span>
+                  <input id="warehouse-name" name="name" type="text" maxlength="120" autocomplete="off" required />
+                </label>
+                <button class="button button-secondary" id="warehouse-create-button" type="submit">Add warehouse</button>
+              </form>
+              <label class="field" for="warehouse-select">
+                <span>Selected warehouse</span>
+                <select id="warehouse-select" name="warehouse" required></select>
+              </label>
+              <label class="field" for="production-warehouse-select">
+                <span>Production warehouse</span>
+                <select id="production-warehouse-select" name="productionWarehouse" required></select>
+              </label>
+              <p class="manager-help">Only warehouses with an applied physical opening count can be assigned. New runs keep a fixed snapshot of this warehouse and their selected recipe.</p>
+              <p class="manager-help" id="production-warehouse-status" role="status" aria-live="polite"></p>
+              <button class="button button-secondary" id="production-warehouse-set" type="button">Set production warehouse</button>
+              <div class="inventory-table-wrap">
+                <table class="inventory-table">
+                  <caption>Current product stock in the selected warehouse</caption>
+                  <thead><tr><th scope="col">Product</th><th scope="col">On hand</th></tr></thead>
+                  <tbody id="stock-rows"></tbody>
+                </table>
+              </div>
+              <p class="manager-empty" id="stock-empty" hidden>No active products yet. Import products before recording stock.</p>
+              <h4 class="manager-subheading">Recent stock movements</h4>
+              <ul class="manager-list" id="movement-history" aria-live="polite"></ul>
+              <button class="button button-secondary button-small" id="movement-load-more" type="button" hidden>Load older movements</button>
+            </section>
+
+            <section class="manager-card" aria-labelledby="movement-heading">
+              <p class="eyebrow">AUDITABLE STOCK CHANGES</p>
+              <h3 id="movement-heading">Receive or adjust stock</h3>
+              <form id="movement-form" class="manager-form">
+                <label class="field" for="movement-type">
+                  <span>Change type</span>
+                  <select id="movement-type" name="type">
+                    <option value="receipt">Receive stock</option>
+                    <option value="adjustment">Adjust stock</option>
+                  </select>
+                </label>
+                <label class="field" for="movement-product">
+                  <span>Product</span>
+                  <select id="movement-product" name="productCode" required></select>
+                </label>
+                <label class="field" for="movement-quantity">
+                  <span>Quantity</span>
+                  <input id="movement-quantity" name="quantity" type="text" inputmode="decimal" maxlength="20" placeholder="e.g. 12.5" aria-describedby="movement-quantity-help" required />
+                </label>
+                <p class="field-hint" id="movement-quantity-help">Up to six decimal places. Adjustments may be positive or negative; receipts must be positive.</p>
+                <label class="field" for="movement-reason">
+                  <span>Reason</span>
+                  <input id="movement-reason" name="reason" type="text" minlength="3" maxlength="500" required />
+                </label>
+                <p class="manager-help" id="movement-stock-gate" role="status" hidden></p>
+                <button class="button button-primary" id="movement-submit" type="submit">Record stock change</button>
+              </form>
+              <p class="manager-help">Adjustments may add or remove stock, but cannot make on-hand negative.</p>
+            </section>
+
+            <section class="manager-card" aria-labelledby="transfer-heading">
+              <p class="eyebrow">WAREHOUSE TRANSFER</p>
+              <h3 id="transfer-heading">Move stock</h3>
+              <form id="transfer-form" class="manager-form">
+                <label class="field" for="transfer-from">
+                  <span>From</span>
+                  <select id="transfer-from" name="sourceWarehouseId" required></select>
+                </label>
+                <label class="field" for="transfer-to">
+                  <span>To</span>
+                  <select id="transfer-to" name="targetWarehouseId" required></select>
+                </label>
+                <label class="field" for="transfer-product">
+                  <span>Product</span>
+                  <select id="transfer-product" name="productCode" required></select>
+                </label>
+                <label class="field" for="transfer-quantity">
+                  <span>Quantity</span>
+                  <input id="transfer-quantity" name="quantity" type="text" inputmode="decimal" maxlength="20" placeholder="e.g. 3" required />
+                </label>
+                <label class="field" for="transfer-reason">
+                  <span>Reason</span>
+                  <input id="transfer-reason" name="reason" type="text" minlength="3" maxlength="500" required />
+                </label>
+                <p class="manager-help" id="transfer-stock-gate" role="status" hidden></p>
+                <button class="button button-primary" id="transfer-submit" type="submit">Transfer stock</button>
+              </form>
+            </section>
+
+            <section class="manager-card manager-card-wide" aria-labelledby="opening-count-heading">
+              <p class="eyebrow">FRESH PHYSICAL COUNT · NO V1 BALANCES</p>
+              <h3 id="opening-count-heading">Set opening stock</h3>
+              <p class="manager-help">Count every active product, including zero quantities. Review the staged count before applying it. A warehouse cannot receive an opening count after stock movements begin.</p>
+              <form id="opening-count-form" class="manager-form manager-inline-form">
+                <label class="field" for="opening-warehouse">
+                  <span>Warehouse</span>
+                  <select id="opening-warehouse" name="warehouseId" required></select>
+                </label>
+                <label class="field" for="opening-count-file">
+                  <span>Physical-count CSV</span>
+                  <input id="opening-count-file" name="file" type="file" accept=".csv,text/csv" required aria-describedby="opening-count-template" />
+                </label>
+                <button class="button button-primary" id="opening-count-submit" type="submit">Review physical count</button>
+                <button class="button button-secondary" id="opening-count-retry" type="button" hidden>Retry the same count</button>
+              </form>
+              <p class="csv-template" id="opening-count-template">
+                <span>Columns: <code>product_code,quantity</code>. Replace the synthetic product codes with every active product and enter the counted quantity, including zero.</span>
+                <a class="button button-secondary button-small" id="opening-count-template-download" download>Download count template</a>
+              </p>
+              <div class="manager-preview" id="opening-count-preview" aria-live="polite" hidden></div>
+              <div class="manager-actions" id="opening-count-actions" hidden>
+                <button class="button button-secondary" id="opening-count-mark-reviewed" type="button">Confirm count review</button>
+                <button class="button button-primary" id="opening-count-apply" type="button" disabled>Apply opening count</button>
+              </div>
+              <h4 class="manager-subheading">Recent physical counts</h4>
+              <ul class="manager-list" id="opening-count-history" aria-live="polite"></ul>
+            </section>
+          </div>
+        </section>
+        <footer class="page-footer"><span>FIELDLINE <i>—</i> FLOOR SYSTEMS</span><span>SERVER-AUTHORITATIVE CONTROL</span></footer>
+        </div>
+      </main>
+    </div>
+    <div id="live-announcer" class="visually-hidden" aria-live="assertive" aria-atomic="true"></div>
+  </body>
+</html>

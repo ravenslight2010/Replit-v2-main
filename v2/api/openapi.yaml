@@ -1,0 +1,3018 @@
+openapi: 3.1.0
+info:
+  title: V2 Run Control API
+  version: 0.1.0
+  description: >
+    Facility-scoped run control. The host must authenticate staff, enforce
+    permissions, and validate same-origin/CSRF protection before mutations.
+servers:
+  - url: /
+security:
+  - v2Session: []
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      summary: Check API and V2 database availability
+      security: []
+      responses:
+        "200":
+          description: API and station worker can serve requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: The database or station worker is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/sign-in:
+    post:
+      operationId: signIn
+      summary: Sign in with a V2 staff account
+      description: >
+        Creates a fresh V2-only session. The server sets an HttpOnly session
+        cookie and a separate readable CSRF cookie; credentials and tokens are
+        never returned in the response body.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSignIn"
+      responses:
+        "200":
+          description: Sign-in accepted; session and CSRF cookies are set
+          headers:
+            Set-Cookie:
+              description: Separate v2_session and v2_csrf cookies
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/session:
+    get:
+      operationId: getSession
+      summary: Read the current V2 staff session
+      responses:
+        "200":
+          description: Public staff identity and session expiry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "401":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/bootstrap-status:
+    get:
+      operationId: getFirstManagerSetupStatus
+      summary: Check whether guarded V2 setup is available
+      description: >
+        Setup is available only while a V2 bootstrap secret is configured, no
+        staff account exists, and the durable one-time bootstrap marker is
+        unset. The response never contains the secret or any account credential.
+      security: []
+      responses:
+        "200":
+          description: One-time first-manager setup status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available]
+                properties:
+                  available:
+                    type: boolean
+        "400":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/bootstrap:
+    post:
+      operationId: bootstrapFirstManager
+      summary: Create the first V2 manager once
+      description: >
+        Requires the server-configured one-time V2 bootstrap code and an empty
+        V2 staff-account table. The server sets session and CSRF cookies;
+        passwords, bootstrap codes, and session tokens are not returned in the
+        response body.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FirstManagerBootstrap"
+      responses:
+        "201":
+          description: First manager created and signed in
+          headers:
+            Set-Cookie:
+              description: Separate V2 session and CSRF cookies
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/sign-out:
+    post:
+      operationId: signOut
+      summary: Revoke the current V2 staff session
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "204":
+          description: Session revoked or already absent; V2 auth cookies cleared
+        "403":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/staff:
+    get:
+      operationId: listStaffAccounts
+      summary: List V2 staff accounts and assignable roles
+      responses:
+        "200":
+          description: Bounded staff directory
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDirectory"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createStaffAccount
+      summary: Create a V2 staff account
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffAccountCreate"
+      responses:
+        "201":
+          description: Staff account created; no credential is returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDirectory"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/staff/{staffId}:
+    patch:
+      operationId: updateStaffAccount
+      summary: Disable a staff account or change its role
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffAccountUpdate"
+      responses:
+        "200":
+          description: Staff account updated; affected sessions are revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDirectory"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/runs:
+    get:
+      operationId: listRuns
+      summary: List runs for the authenticated facility
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Facility-scoped run list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [runs]
+                properties:
+                  runs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Run"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createRun
+      summary: Create a planned run
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      description: >
+        New runs require an active imported product. requestId is an idempotency
+        key. Repeating the same request returns the original run; reusing the
+        key for different details returns 409.
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [requestId, setupSnapshot]
+              properties:
+                requestId:
+                  type: string
+                  format: uuid
+                setupSnapshot:
+                  $ref: "#/components/schemas/RunCreateSetup"
+      responses:
+        "201":
+          description: New planned run created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunCreated"
+        "200":
+          description: Previously created run confirmed by idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunCreated"
+        "422":
+          description: Enabled strict imported production rules block preparation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/runs/products:
+    get:
+      operationId: listRunProducts
+      summary: List active products and the production warehouse
+      responses:
+        "200":
+          description: Active products, compatible production setups, and the current production warehouse
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products, productionWarehouse]
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RunProduct"
+                  productionWarehouse:
+                    oneOf:
+                      - $ref: "#/components/schemas/ProductionWarehouse"
+                      - type: "null"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/runs/{runId}:
+    get:
+      operationId: getRun
+      summary: Read one run from the authenticated facility
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+      responses:
+        "200":
+          description: Canonical run state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [run]
+                properties:
+                  run:
+                    $ref: "#/components/schemas/Run"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/runs/{runId}/commands:
+    post:
+      operationId: applyRunCommand
+      summary: Apply a revision-guarded run lifecycle command
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [commandId, commandType, expectedRevision]
+              properties:
+                commandId:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                commandType:
+                  type: string
+                  enum: [start, pause, resume, complete]
+                expectedRevision:
+                  type: integer
+                  minimum: 0
+                  maximum: 9007199254740991
+      responses:
+        "200":
+          description: Command accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunCommandAccepted"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          description: Stale revision or invalid transition; includes canonical state
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RunConflict"
+                  - $ref: "#/components/schemas/InvalidTransition"
+        "422":
+          description: Enabled strict imported production rules block starting this run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/runs/{runId}/stations/{stationKey}/commands:
+    post:
+      operationId: applyRunStationCommand
+      summary: Save or advance canonical production-station state
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - $ref: "#/components/parameters/CsrfToken"
+        - in: path
+          name: stationKey
+          required: true
+          schema:
+            type: string
+            enum: [line, dough, cheese, pepperoni, sauce, frontline, packaging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StationCommand"
+      responses:
+        "200":
+          description: Station edit or automatic/timer action accepted; response includes canonical run state
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/StationCommandAccepted"
+                  - $ref: "#/components/schemas/StationCommandNoChange"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          description: Stale run revision or invalid timer/production transition; includes current state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StationCommandConflict"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/imports:
+    get:
+      operationId: listSetupImports
+      summary: List recent setup import history
+      description: Manager-only, facility-scoped history; at most 100 records.
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Recent imports
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [imports]
+                properties:
+                  imports:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ImportHistoryItem"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: stageSetupImport
+      summary: Validate and stage one setup CSV
+      description: >
+        Manager-only. Supported CSV kinds are products, recipes, and
+        production-setups. The server computes the request hash; retry the
+        same requestId and CSV after an uncertain response.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetupImportRequest"
+      responses:
+        "201":
+          description: CSV validated and staged for review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupImportPreview"
+        "200":
+          description: Previously staged request confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupImportPreview"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+  /api/v2/setup-catalog/imports:
+    get:
+      operationId: listSetupCatalogImports
+      summary: List recent approved setup-family imports
+      description: Manager-only, facility-scoped history for the named V2 setup families.
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Recent setup catalog imports
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [imports]
+                properties:
+                  imports:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SetupCatalogHistoryItem"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: stageSetupCatalogImport
+      summary: Validate and stage one approved setup-family CSV
+      description: >
+        Manager-only. Families have strict headers and field allowlists.
+        Optional sourceSummary records a prior deterministic source-workbook
+        review. The server computes request identity; retry the same requestId,
+        CSV, and sourceSummary after an uncertain response. Apply and undo are
+        separate manager actions.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetupCatalogRequest"
+      responses:
+        "201":
+          description: CSV validated and staged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupCatalogStageResponse"
+        "200":
+          description: Previously submitted request confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupCatalogStageResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v2/setup-catalog/imports/workbooks/preview:
+    post:
+      operationId: previewV1SourceWorkbook
+      summary: Parse one approved V1 source-workbook family
+      description: >
+        Manager-only. Accepts bounded deterministic XLSX layouts for spec,
+        premix, cheese, shipping, sauce, and dough guides, plus DOCX text for
+        sauce guides. Returns proposed V2 run-template or mix records and
+        unresolved source rows. Formula/cached values, unsupported layouts,
+        photos/OCR, and ambiguous mappings are never applied automatically.
+        The file is parsed in memory and not retained. Preview does not stage
+        data; managers correct mappings in the UI and stage only reviewed rows.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceWorkbookPreviewRequest"
+      responses:
+        "200":
+          description: Deterministic preview with explicit unresolved rows
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SourceWorkbookPreviewResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v2/setup-catalog/imports/{importId}:
+    get:
+      operationId: getSetupCatalogImport
+      summary: Reopen staged or applied setup values
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+      responses:
+        "200":
+          description: Stored setup rows for manager review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupCatalogDetail"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v2/setup-catalog/imports/{importId}/apply:
+    post:
+      operationId: applySetupCatalogImport
+      summary: Apply a reviewed setup catalog import
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Setup applied or confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupCatalogActionResult"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/setup-catalog/imports/{importId}/undo:
+    post:
+      operationId: undoSetupCatalogImport
+      summary: Safely undo a setup catalog import
+      description: Undo is blocked when a later edit or dependent setup record references the imported record.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Setup restored or undo confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupCatalogActionResult"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/imports/workbooks/preview:
+    post:
+      operationId: previewDoughCapacityWorkbookLinks
+      summary: Preview exact and remembered workbook product links
+      description: >
+        Manager-only and V2-only. Parses one dough procedure or shipping guide
+        without staging data. Unique exact normalized product names and confirmed
+        product-code links are automatic; ambiguous and unmatched rows remain
+        unlinked until a manager explicitly selects an active product during staging.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CapacityWorkbookPreviewRequest"
+      responses:
+        "200":
+          description: Workbook rows and active products for manager review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapacityWorkbookLinkPreview"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v2/imports/workbooks:
+    post:
+      operationId: stageDoughCapacityWorkbook
+      summary: Validate and stage one dough or shipping workbook
+      description: >
+        Manager-only and V2-only. Accepts dough procedure or shipping guide
+        workbooks, preserves automatic unique exact-name and confirmed links, and
+        accepts explicit active-product selections only for unmatched or ambiguous
+        rows. Stages linked rows for review through the existing import lifecycle.
+        Confirmed product-code links are reused on later imports.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CapacityWorkbookImportRequest"
+      responses:
+        "201":
+          description: Workbook validated and staged for manager review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapacityWorkbookImportPreview"
+        "200":
+          description: Previously staged workbook request confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapacityWorkbookImportPreview"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v2/imports/{importId}:
+    get:
+      operationId: getSetupImport
+      summary: Reopen a setup import for manager review
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+      responses:
+        "200":
+          description: Stored validated import rows and audit identity
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [import]
+                properties:
+                  import:
+                    $ref: "#/components/schemas/SetupImportDetail"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v2/imports/{importId}/apply:
+    post:
+      operationId: applySetupImport
+      summary: Apply a reviewed setup import
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Import applied or confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/imports/{importId}/undo:
+    post:
+      operationId: undoSetupImport
+      summary: Safely undo an applied setup import
+      description: Undo is blocked when later changes depend on imported records.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/ImportId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Import undone or confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/warehouses:
+    get:
+      operationId: listInventoryWarehouses
+      summary: List warehouses in the authenticated facility
+      description: Manager-only; warehouses are locations within one facility.
+      responses:
+        "200":
+          description: Facility warehouses
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [warehouses]
+                properties:
+                  warehouses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Warehouse"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createInventoryWarehouse
+      summary: Create a warehouse location
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWarehouseRequest"
+      responses:
+        "201":
+          description: Warehouse created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseCreated"
+        "200":
+          description: Existing warehouse creation confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WarehouseCreated"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/production-warehouse:
+    post:
+      operationId: setProductionWarehouse
+      summary: Select the production warehouse for new runs
+      description: Manager-only. The warehouse must be active and have an applied physical opening count. Existing runs keep their frozen warehouse.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetProductionWarehouseRequest"
+      responses:
+        "201":
+          description: Production warehouse selected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductionWarehouseSelection"
+        "200":
+          description: Previous selection confirmed by idempotent retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductionWarehouseSelection"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/products:
+    get:
+      operationId: listInventoryProducts
+      summary: List active inventory products
+      responses:
+        "200":
+          description: Active facility products
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products]
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InventoryProduct"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/stock:
+    get:
+      operationId: listWarehouseStock
+      summary: Read stock for one warehouse
+      parameters:
+        - in: query
+          name: warehouseId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Active products and on-hand quantities
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [stock]
+                properties:
+                  stock:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StockItem"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/movements:
+    get:
+      operationId: listInventoryMovements
+      summary: List stock movements for a warehouse
+      parameters:
+        - in: query
+          name: warehouseId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: beforeAt
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Timestamp from the last item on the previous page; provide with beforeId.
+        - in: query
+          name: beforeId
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Movement ID from the last item on the previous page; provide with beforeAt.
+      responses:
+        "200":
+          description: Bounded page from the append-only warehouse movement ledger
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [movements, nextCursor]
+                properties:
+                  movements:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InventoryMovement"
+                  nextCursor:
+                    type: [object, "null"]
+                    required: [occurredAt, id]
+                    properties:
+                      occurredAt:
+                        type: string
+                        format: date-time
+                      id:
+                        type: string
+                        format: uuid
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: recordInventoryMovement
+      summary: Receive or adjust stock in a warehouse
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryMovementRequest"
+      responses:
+        "200":
+          description: Movement accepted or confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryMovementResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/transfers:
+    post:
+      operationId: transferInventory
+      summary: Transfer stock between two warehouses
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryTransferRequest"
+      responses:
+        "200":
+          description: Transfer accepted or confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryTransferResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/opening-counts:
+    get:
+      operationId: listOpeningCounts
+      summary: List recent physical counts for manager review
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Facility-scoped opening count summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [counts]
+                properties:
+                  counts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/OpeningCountSummary"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: stageOpeningCount
+      summary: Stage a physical opening count for review
+      description: Every active product, including zero quantities, must be counted.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpeningCountRequest"
+      responses:
+        "201":
+          description: Count staged for manager review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpeningCount"
+        "200":
+          description: Previously staged count confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpeningCount"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/opening-counts/{countId}:
+    get:
+      operationId: getOpeningCount
+      summary: Read a staged or applied opening count
+      parameters:
+        - $ref: "#/components/parameters/CountId"
+      responses:
+        "200":
+          description: Count review and application state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count:
+                    $ref: "#/components/schemas/OpeningCountRecord"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/opening-counts/{countId}/review:
+    post:
+      operationId: reviewOpeningCount
+      summary: Record manager review of an opening count
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CountId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Review recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpeningCountResult"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/opening-counts/{countId}/apply:
+    post:
+      operationId: applyOpeningCount
+      summary: Apply a reviewed physical opening count
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CountId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Count applied or confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpeningCountResult"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+components:
+  securitySchemes:
+    v2Session:
+      type: apiKey
+      in: cookie
+      name: v2_session
+    v2CsrfCookie:
+      type: apiKey
+      in: cookie
+      name: v2_csrf
+  parameters:
+    RunId:
+      in: path
+      name: runId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ImportId:
+      in: path
+      name: importId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CountId:
+      in: path
+      name: countId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Limit:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    CsrfToken:
+      in: header
+      name: X-CSRF-Token
+      required: true
+      schema:
+        type: string
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          const: ok
+        stationWorker:
+          type: object
+          required:
+            - status
+            - lastCycleAt
+            - lastSuccessAt
+            - consecutiveFailures
+            - lastErrorName
+            - processedLastCycle
+          properties:
+            status:
+              type: string
+              enum: [active, standby]
+            lastCycleAt:
+              type: [string, "null"]
+              format: date-time
+            lastSuccessAt:
+              type: [string, "null"]
+              format: date-time
+            consecutiveFailures:
+              type: integer
+              minimum: 0
+            lastErrorName:
+              type: [string, "null"]
+              pattern: "^[A-Za-z][A-Za-z0-9_]{0,79}$"
+            processedLastCycle:
+              type: integer
+              minimum: 0
+    AuthSignIn:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 40
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+    FirstManagerBootstrap:
+      type: object
+      additionalProperties: false
+      required: [bootstrapCode, username, password]
+      properties:
+        bootstrapCode:
+          type: string
+          minLength: 32
+          maxLength: 256
+        username:
+          type: string
+          minLength: 3
+          maxLength: 40
+        password:
+          type: string
+          minLength: 6
+          maxLength: 128
+    StaffAccountCreate:
+      type: object
+      additionalProperties: false
+      required: [username, password, roleName]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 40
+        password:
+          type: string
+          minLength: 6
+          maxLength: 128
+        roleName:
+          type: string
+          minLength: 1
+          maxLength: 80
+    StaffAccountUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        disabled:
+          type: boolean
+        roleName:
+          type: string
+          minLength: 1
+          maxLength: 80
+    StaffDirectory:
+      type: object
+      required: [staff, roles]
+      properties:
+        staff:
+          type: array
+          maxItems: 200
+          items:
+            $ref: "#/components/schemas/StaffAccount"
+        roles:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/StaffRole"
+    StaffAccount:
+      type: object
+      required: [userId, username, role, disabled, createdAt]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        role:
+          type: string
+        disabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    StaffRole:
+      type: object
+      required: [name, capabilities]
+      properties:
+        name:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+    AuthSession:
+      type: object
+      required: [staff, expiresAt]
+      properties:
+        staff:
+          $ref: "#/components/schemas/Staff"
+        expiresAt:
+          type: string
+          format: date-time
+    Staff:
+      type: object
+      required: [userId, username, role, capabilities]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        role:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+    RunSetup:
+      type: object
+      additionalProperties: false
+      required: [label, targetCases]
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 120
+        targetCases:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        productCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+          description: Stable link to the active V2 product selected when the run is created.
+        productionSetupCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+          description: Stable link to the compatible imported production setup.
+        productionPlan:
+          $ref: "#/components/schemas/ProductionPlanSnapshot"
+    RunCreateSetup:
+      type: object
+      additionalProperties: false
+      required: [label, targetCases, productCode, productionSetupCode]
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 120
+        targetCases:
+          type: integer
+          minimum: 1
+          maximum: 9007199254740991
+        productCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        productionSetupCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+    DoughCapacity:
+      type: object
+      required: [status, reasons, doughballYield, pizzasPerCase]
+      properties:
+        status:
+          type: string
+          enum: [available, unavailable]
+        reasons:
+          type: array
+          items:
+            type: string
+        doughballYield:
+          type: [number, "null"]
+          minimum: 0
+        pizzasPerCase:
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 100
+    RunProduct:
+      type: object
+      required: [code, name, doughCapacity, productionSetups]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        doughCapacity:
+          $ref: "#/components/schemas/DoughCapacity"
+        productionSetups:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductionSetupOption"
+    ProductionSetupOption:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+    ProductionWarehouse:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    ProductionPlanLine:
+      type: object
+      required: [productId, productCode, productName, unit, quantity]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+        productName:
+          type: string
+        unit:
+          type: string
+        quantity:
+          type: string
+          pattern: "^(0|[1-9][0-9]{0,11})(\\.[0-9]{1,6})?$"
+    ProductionRecipeSnapshot:
+      type: object
+      required: [code, name, stationKey, ingredients]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        stationKey:
+          type: string
+          enum: [dough, cheese, pepperoni, sauce, frontline]
+        ingredients:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ProductionPlanLine"
+    ProductionPlanSnapshot:
+      type: object
+      required: [code, name, warehouse, recipes, packagingPerCase]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        warehouse:
+          $ref: "#/components/schemas/ProductionWarehouse"
+        recipes:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ProductionRecipeSnapshot"
+        packagingPerCase:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ProductionPlanLine"
+    InventoryConsumptionLine:
+      type: object
+      required: [productId, productCode, productName, unit, required, deducted, shortfall]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+        productName:
+          type: string
+        unit:
+          type: string
+        required:
+          type: string
+        deducted:
+          type: string
+        shortfall:
+          type: string
+    RunInventoryConsumption:
+      type: object
+      required: [status, runId, warehouseId, warehouseName, lines, occurredAt]
+      properties:
+        status:
+          type: string
+          enum: [completed]
+        runId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        warehouseName:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryConsumptionLine"
+        occurredAt:
+          type: string
+          format: date-time
+    PauseInterval:
+      type: object
+      required: [startedAt, endedAt]
+      properties:
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: [string, "null"]
+          format: date-time
+    Run:
+      type: object
+      description: >
+        Server-owned run snapshot. Optional productionRules contains enabled
+        manager-imported rule assessments. Unknown is not a pass. Flexible
+        findings warn; strict unknown/violated findings block preparation/start.
+        A bypass can only come from the reviewed imported rule configuration.
+      required:
+        - id
+        - status
+        - revision
+        - createdAt
+        - updatedAt
+        - startedAt
+        - pausedAt
+        - resumedAt
+        - completedAt
+        - serverNow
+        - setupSnapshot
+        - doughCapacity
+        - inventoryConsumption
+        - pauseIntervals
+        - stationProgress
+      properties:
+        productionRules:
+          type: array
+          items:
+            type: object
+            required: [code, name, enforcement, status, sourceImportId]
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              enforcement:
+                type: string
+                enum: [flexible, strict]
+              status:
+                type: string
+                enum: [passed, violated, unknown, bypassed]
+              sourceImportId:
+                type: string
+                format: uuid
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [planned, running, paused, completed]
+        revision:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: [string, "null"]
+          format: date-time
+        pausedAt:
+          type: [string, "null"]
+          format: date-time
+        resumedAt:
+          type: [string, "null"]
+          format: date-time
+        completedAt:
+          type: [string, "null"]
+          format: date-time
+        serverNow:
+          type: string
+          format: date-time
+        setupSnapshot:
+          $ref: "#/components/schemas/RunSetup"
+        doughCapacity:
+          $ref: "#/components/schemas/DoughCapacity"
+        inventoryConsumption:
+          oneOf:
+            - $ref: "#/components/schemas/RunInventoryConsumption"
+            - type: "null"
+        pauseIntervals:
+          type: array
+          items:
+            $ref: "#/components/schemas/PauseInterval"
+        stationProgress:
+          type: object
+          description: Canonical per-station inputs, progress, timer state, and revisions.
+          additionalProperties:
+            $ref: "#/components/schemas/StationState"
+    StationState:
+      type: object
+      required: [status, revision, inputs, progress, startedAt, pausedAt, completedAt, nextDueAt, updatedAt]
+      properties:
+        status:
+          type: string
+          enum: [not_started, running, paused, completed]
+        revision:
+          type: integer
+          minimum: 0
+        inputs:
+          type: object
+          additionalProperties:
+            type: number
+        progress:
+          type: object
+          description: Validated station counters and server-owned timer/auto-track anchors.
+        startedAt:
+          type: [string, "null"]
+          format: date-time
+        pausedAt:
+          type: [string, "null"]
+          format: date-time
+        completedAt:
+          type: [string, "null"]
+          format: date-time
+        nextDueAt:
+          type: [string, "null"]
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    StationCommand:
+      type: object
+      additionalProperties: false
+      required: [commandId, expectedRevision, mode, changes]
+      properties:
+        commandId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        expectedRevision:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        mode:
+          type: string
+          enum: [manual, auto_track, timer_start, timer_pause, timer_resume, timer_reset]
+        changes:
+          type: object
+          description: Station-specific numeric setup or progress fields. Automatic/timer modes require an empty object.
+          additionalProperties:
+            type: number
+            minimum: 0
+    StationCommandAccepted:
+      type: object
+      required: [outcome, replayed, commandId, stationKey, run]
+      properties:
+        outcome:
+          const: accepted
+        replayed:
+          type: boolean
+        commandId:
+          type: string
+        stationKey:
+          type: string
+        run:
+          $ref: "#/components/schemas/Run"
+    StationCommandNoChange:
+      type: object
+      required: [outcome, currentRun]
+      properties:
+        outcome:
+          type: string
+          enum: [not_due, not_enabled]
+        currentRun:
+          $ref: "#/components/schemas/Run"
+    StationCommandConflict:
+      type: object
+      required: [outcome, currentRun]
+      properties:
+        outcome:
+          type: string
+          enum: [conflict, invalid_transition]
+        expectedRevision:
+          type: integer
+        currentRun:
+          $ref: "#/components/schemas/Run"
+    RunCreated:
+      type: object
+      required: [outcome, replayed, run]
+      properties:
+        outcome:
+          const: created
+        replayed:
+          type: boolean
+        run:
+          $ref: "#/components/schemas/Run"
+    RunCommandAccepted:
+      type: object
+      required: [outcome, replayed, commandId, run]
+      properties:
+        outcome:
+          const: accepted
+        replayed:
+          type: boolean
+        commandId:
+          type: string
+        run:
+          $ref: "#/components/schemas/Run"
+    RunConflict:
+      type: object
+      required: [outcome, expectedRevision, currentRun]
+      properties:
+        outcome:
+          const: conflict
+        expectedRevision:
+          type: integer
+        currentRun:
+          $ref: "#/components/schemas/Run"
+    InvalidTransition:
+      type: object
+      required: [outcome, currentStatus]
+      properties:
+        outcome:
+          const: invalid_transition
+        currentStatus:
+          type: string
+          enum: [planned, running, paused, completed]
+    SetupImportRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, kind, csv]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        kind:
+          type: string
+          enum: [products, recipes, production-setups]
+        csv:
+          type: string
+          maxLength: 1048576
+    SetupCatalogRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, family, csv]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        family:
+          type: string
+          enum:
+            - ingredients
+            - mixes
+            - die-types
+            - die-line-defaults
+            - production-rules
+            - freezer-pull-items
+            - run-templates
+            - manager-lists
+            - aliases
+        csv:
+          type: string
+          maxLength: 1048576
+          description: Strict family-specific CSV with a maximum of 2,000 data rows.
+        sourceSummary:
+          $ref: "#/components/schemas/SourceImportSummary"
+    SourceWorkbookPreviewRequest:
+      type: object
+      additionalProperties: false
+      required: [family, fileName, workbookBase64]
+      properties:
+        family:
+          type: string
+          enum: [spec-sheets, premix-sheets, cheese-mix-specs, shipping-guides, sauce-guides, dough-guides]
+        fileName:
+          type: string
+          minLength: 1
+          maxLength: 180
+        workbookBase64:
+          type: string
+          maxLength: 6990508
+          contentEncoding: base64
+          description: XLSX bytes, or DOCX bytes for sauce guides; maximum 5 MiB.
+    SourceWorkbookPreviewResponse:
+      type: object
+      required: [family, targetFamily, parserVersion, fileSha256, sourceRows, proposedRows, skippedRows, unresolvedRows, records]
+      properties:
+        family:
+          type: string
+          enum: [spec-sheets, premix-sheets, cheese-mix-specs, shipping-guides, sauce-guides, dough-guides]
+        targetFamily:
+          type: string
+          enum: [mixes, run-templates]
+        parserVersion:
+          type: string
+          const: v1-source-import/1
+        fileSha256:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        sourceRows:
+          type: integer
+          minimum: 0
+          maximum: 2000
+          description: Parser-counted physical rows; a row can fan out to flavors or several rows can group into one record.
+        proposedRows:
+          type: integer
+          minimum: 0
+          maximum: 2000
+        skippedRows:
+          type: integer
+          minimum: 0
+          maximum: 2000
+        unresolvedRows:
+          type: array
+          maxItems: 2000
+          items:
+            $ref: "#/components/schemas/SourceImportUnresolved"
+        records:
+          type: array
+          maxItems: 2000
+          items:
+            $ref: "#/components/schemas/SourceWorkbookPreviewRecord"
+    SourceImportUnresolved:
+      type: object
+      additionalProperties: false
+      required: [source, reason]
+      properties:
+        source:
+          type: string
+          maxLength: 240
+        reason:
+          type: string
+          maxLength: 300
+    SourceWorkbookPreviewRecord:
+      type: object
+      additionalProperties: false
+      required: [source, targetFamily, record]
+      properties:
+        source:
+          type: string
+          maxLength: 240
+        targetFamily:
+          type: string
+          enum: [mixes, run-templates]
+        record:
+          $ref: "#/components/schemas/SetupCatalogRecord"
+        sourceDetails:
+          type: object
+          description: Transient parsed evidence for manager correction; not stored after staging.
+          additionalProperties: true
+    SourceImportSummary:
+      type: object
+      additionalProperties: false
+      required: [sourceFamily, sourceSha256, parserVersion, sourceRows, importedRows, skippedRows, unresolvedRows]
+      properties:
+        sourceFamily:
+          type: string
+          enum: [spec-sheets, premix-sheets, cheese-mix-specs, shipping-guides, sauce-guides, dough-guides]
+        sourceSha256:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        parserVersion:
+          type: string
+          const: v1-source-import/1
+        sourceRows:
+          type: integer
+          minimum: 0
+          maximum: 2000
+          description: Parser-counted physical rows; a row can fan out to flavors or several rows can group into one record.
+        importedRows:
+          type: integer
+          minimum: 1
+          maximum: 2000
+          description: Reviewed V2 records staged; Apply separately reports created and updated targets.
+        skippedRows:
+          type: integer
+          minimum: 0
+          maximum: 2000
+          description: Rows or candidates omitted by parser rules or explicitly skipped during review.
+        unresolvedRows:
+          type: integer
+          minimum: 0
+          maximum: 2000
+          description: Unresolved review-only entries left open after staging.
+    SetupCatalogRecord:
+      type: object
+      additionalProperties: false
+      required: [code, name, data]
+      properties:
+        code:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        data:
+          type: object
+          description: Family-specific allowlisted values; unknown values are rejected.
+          additionalProperties: true
+    SetupCatalogStageResponse:
+      type: object
+      required: [outcome, importId, family, rowCount, replayed, records]
+      properties:
+        outcome:
+          type: string
+          enum: [staged, applied, undone]
+        importId:
+          type: string
+          format: uuid
+        family:
+          type: string
+          enum:
+            - ingredients
+            - mixes
+            - die-types
+            - die-line-defaults
+            - production-rules
+            - freezer-pull-items
+            - run-templates
+            - manager-lists
+            - aliases
+        rowCount:
+          type: integer
+          minimum: 1
+          maximum: 2000
+        replayed:
+          type: boolean
+        records:
+          type: array
+          maxItems: 2000
+          items:
+            $ref: "#/components/schemas/SetupCatalogRecord"
+        sourceSummary:
+          oneOf:
+            - $ref: "#/components/schemas/SourceImportSummary"
+            - type: "null"
+    SetupCatalogHistoryItem:
+      type: object
+      required: [id, family, status, rowCount, createdBy, createdAt, appliedAt, undoneAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        family:
+          type: string
+        status:
+          type: string
+          enum: [staged, applied, undone]
+        rowCount:
+          type: integer
+          minimum: 1
+          maximum: 2000
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        appliedAt:
+          type: [string, "null"]
+          format: date-time
+        undoneAt:
+          type: [string, "null"]
+          format: date-time
+        sourceSummary:
+          oneOf:
+            - $ref: "#/components/schemas/SourceImportSummary"
+            - type: "null"
+        createdCount:
+          type: [integer, "null"]
+          minimum: 0
+        updatedCount:
+          type: [integer, "null"]
+          minimum: 0
+    SetupCatalogDetail:
+      allOf:
+        - $ref: "#/components/schemas/SetupCatalogHistoryItem"
+        - type: object
+          required: [records]
+          properties:
+            records:
+              type: array
+              maxItems: 2000
+              items:
+                $ref: "#/components/schemas/SetupCatalogRecord"
+    SetupCatalogActionResult:
+      type: object
+      required: [outcome, importId, family, replayed]
+      properties:
+        outcome:
+          type: string
+          enum: [applied, undone]
+        importId:
+          type: string
+          format: uuid
+        family:
+          type: string
+        rowCount:
+          type: integer
+        appliedAt:
+          type: string
+          format: date-time
+        undoneAt:
+          type: string
+          format: date-time
+        replayed:
+          type: boolean
+        createdCount:
+          type: integer
+          minimum: 0
+        updatedCount:
+          type: integer
+          minimum: 0
+        sourceSummary:
+          $ref: "#/components/schemas/SourceImportSummary"
+    CapacityWorkbookImportRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, family, fileName, workbookBase64]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        family:
+          type: string
+          enum: [dough-procedure, shipping-guide]
+        fileName:
+          type: string
+          minLength: 5
+          maxLength: 120
+        workbookBase64:
+          type: string
+          maxLength: 6990508
+          contentEncoding: base64
+          contentMediaType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        productLinks:
+          type: array
+          maxItems: 2000
+          items:
+            $ref: "#/components/schemas/CapacityWorkbookProductLink"
+    CapacityWorkbookPreviewRequest:
+      type: object
+      additionalProperties: false
+      required: [family, fileName, workbookBase64]
+      properties:
+        family:
+          type: string
+          enum: [dough-procedure, shipping-guide]
+        fileName:
+          type: string
+          minLength: 5
+          maxLength: 120
+        workbookBase64:
+          type: string
+          maxLength: 6990508
+          contentEncoding: base64
+          contentMediaType: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    CapacityWorkbookProductLink:
+      type: object
+      additionalProperties: false
+      required: [sourceKey, productCode]
+      properties:
+        sourceKey:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        productCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+    CapacityWorkbookLinkPreview:
+      type: object
+      required: [sourceFamily, fileName, fileSha256, rows, products]
+      properties:
+        sourceFamily:
+          type: string
+          enum: [dough-procedure, shipping-guide]
+        fileName:
+          type: string
+        fileSha256:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        rows:
+          type: array
+          maxItems: 2000
+          items:
+            type: object
+            required: [sourceKey, name, row, reason, productCode]
+            properties:
+              sourceKey:
+                type: string
+                pattern: "^[0-9a-f]{64}$"
+              name:
+                type: string
+              row:
+                type: integer
+                minimum: 1
+              reason:
+                type: string
+                enum: [exact, remembered, unmatched, ambiguous]
+              productCode:
+                type: [string, "null"]
+        products:
+          type: array
+          maxItems: 2000
+          items:
+            type: object
+            required: [code, name]
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+    CapacityWorkbookImportPreview:
+      type: object
+      required:
+        - outcome
+        - importId
+        - kind
+        - rowCount
+        - replayed
+        - records
+        - sourceFamily
+        - fileName
+        - fileSha256
+        - linkedCount
+        - rememberedCount
+        - managerMappedCount
+        - unmatchedRows
+        - unmatchedCount
+        - invalidValueCount
+      properties:
+        outcome:
+          type: string
+          enum: [staged]
+        importId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [recipes, production-setups]
+        rowCount:
+          type: integer
+          minimum: 1
+          maximum: 2000
+        replayed:
+          type: boolean
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/SetupImportMasterRecord"
+        sourceFamily:
+          type: string
+          enum: [dough-procedure, shipping-guide]
+        fileName:
+          type: string
+        fileSha256:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        linkedCount:
+          type: integer
+          minimum: 1
+        rememberedCount:
+          type: integer
+          minimum: 0
+        managerMappedCount:
+          type: integer
+          minimum: 0
+        unmatchedRows:
+          type: array
+          maxItems: 100
+          items:
+            type: object
+            required: [sourceKey, name, row, reason]
+            properties:
+              sourceKey:
+                type: string
+                pattern: "^[0-9a-f]{64}$"
+              name:
+                type: string
+              row:
+                type: integer
+                minimum: 1
+              reason:
+                type: string
+                enum: [unmatched, ambiguous]
+        unmatchedCount:
+          type: integer
+          minimum: 0
+        invalidValueCount:
+          type: integer
+          minimum: 0
+    SetupImportProduct:
+      type: object
+      required: [code, name, unit]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        unit:
+          type: string
+    SetupImportMasterRecord:
+      type: object
+      required: [code, name, productCode, data]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        productCode:
+          type: string
+        data:
+          type: object
+    SetupImportPreview:
+      type: object
+      required: [outcome, importId, kind, rowCount, replayed, records]
+      properties:
+        outcome:
+          type: string
+          enum: [staged, applied, undone]
+        importId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [products, recipes, production-setups]
+        rowCount:
+          type: integer
+          minimum: 1
+          maximum: 2000
+        replayed:
+          type: boolean
+        records:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/SetupImportProduct"
+              - $ref: "#/components/schemas/SetupImportMasterRecord"
+    ImportResult:
+      type: object
+      required: [outcome, importId, kind, replayed]
+      properties:
+        outcome:
+          type: string
+          enum: [applied, undone]
+        importId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [products, recipes, production-setups]
+        replayed:
+          type: boolean
+    ImportHistoryItem:
+      type: object
+      required: [id, kind, status, rowCount, createdBy, appliedBy, undoneBy, createdAt, appliedAt, undoneAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [products, recipes, production-setups]
+        status:
+          type: string
+          enum: [staged, applied, undone]
+        rowCount:
+          type: integer
+        createdBy:
+          type: string
+          format: uuid
+        appliedBy:
+          type: [string, "null"]
+          format: uuid
+        undoneBy:
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        appliedAt:
+          type: [string, "null"]
+          format: date-time
+        undoneAt:
+          type: [string, "null"]
+          format: date-time
+    SetupImportDetail:
+      type: object
+      required: [id, kind, status, records, createdBy, appliedBy, undoneBy, createdAt, appliedAt, undoneAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [products, recipes, production-setups]
+        status:
+          type: string
+          enum: [staged, applied, undone]
+        records:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/SetupImportProduct"
+              - $ref: "#/components/schemas/SetupImportMasterRecord"
+        createdBy:
+          type: string
+          format: uuid
+        appliedBy:
+          type: [string, "null"]
+          format: uuid
+        undoneBy:
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        appliedAt:
+          type: [string, "null"]
+          format: date-time
+        undoneAt:
+          type: [string, "null"]
+          format: date-time
+    CreateWarehouseRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, name]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+    Warehouse:
+      type: object
+      required: [id, name, active, isProduction, createdAt, openingCountApplied]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        active:
+          type: boolean
+        isProduction:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        openingCountApplied:
+          type: boolean
+    WarehouseCreated:
+      type: object
+      required: [outcome, replayed, warehouse]
+      properties:
+        outcome:
+          const: created
+        replayed:
+          type: boolean
+        warehouse:
+          $ref: "#/components/schemas/Warehouse"
+    SetProductionWarehouseRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, warehouseId]
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+    ProductionWarehouseSelection:
+      type: object
+      required: [outcome, replayed, warehouse]
+      properties:
+        outcome:
+          const: accepted
+        replayed:
+          type: boolean
+        warehouse:
+          $ref: "#/components/schemas/Warehouse"
+    InventoryProduct:
+      type: object
+      required: [id, code, name, unit, active]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        unit:
+          type: string
+        active:
+          type: boolean
+    StockItem:
+      type: object
+      required: [productId, code, name, unit, quantity, revision]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        unit:
+          type: string
+        quantity:
+          type: string
+          pattern: "^[0-9]+(\\.[0-9]{1,6})?$"
+        revision:
+          type: integer
+          minimum: 0
+    InventoryMovement:
+      type: object
+      required: [id, movementGroupId, productCode, productName, unit, type, quantityDelta, reason, actorId, occurredAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        movementGroupId:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+        productName:
+          type: string
+        unit:
+          type: string
+        type:
+          type: string
+          enum: [receipt, adjustment, transfer_out, transfer_in, opening_count]
+        quantityDelta:
+          type: string
+        reason:
+          type: string
+        actorId:
+          type: string
+          format: uuid
+        occurredAt:
+          type: string
+          format: date-time
+    InventoryMovementRequest:
+      type: object
+      additionalProperties: false
+      required: [commandId, warehouseId, productCode, type, quantity, reason]
+      properties:
+        commandId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        warehouseId:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+        type:
+          type: string
+          enum: [receipt, adjustment]
+        quantity:
+          type: string
+          pattern: "^-?[0-9]+(\\.[0-9]{1,6})?$"
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+    InventoryMovementResult:
+      type: object
+      required: [outcome, replayed, movementId, warehouseId, productCode, quantity, revision]
+      properties:
+        outcome:
+          const: accepted
+        replayed:
+          type: boolean
+        movementId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+        quantity:
+          type: string
+        revision:
+          type: integer
+    InventoryTransferRequest:
+      type: object
+      additionalProperties: false
+      required: [commandId, sourceWarehouseId, targetWarehouseId, productCode, quantity, reason]
+      properties:
+        commandId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        sourceWarehouseId:
+          type: string
+          format: uuid
+        targetWarehouseId:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+        quantity:
+          type: string
+          pattern: "^[1-9][0-9]*(\\.[0-9]{1,6})?$"
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+    InventoryTransferResult:
+      type: object
+      required:
+        - outcome
+        - replayed
+        - transferId
+        - productCode
+        - quantity
+        - sourceWarehouseId
+        - sourceQuantity
+        - sourceRevision
+        - targetWarehouseId
+        - targetQuantity
+        - targetRevision
+      properties:
+        outcome:
+          const: accepted
+        replayed:
+          type: boolean
+        transferId:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+        quantity:
+          type: string
+        sourceWarehouseId:
+          type: string
+          format: uuid
+        sourceQuantity:
+          type: string
+        sourceRevision:
+          type: integer
+        targetWarehouseId:
+          type: string
+          format: uuid
+        targetQuantity:
+          type: string
+        targetRevision:
+          type: integer
+    OpeningCountRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, warehouseId, csv]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        warehouseId:
+          type: string
+          format: uuid
+        csv:
+          type: string
+          maxLength: 1048576
+    OpeningCount:
+      type: object
+      required: [outcome, countId, warehouseId, rowCount, replayed, rows]
+      properties:
+        outcome:
+          type: string
+          enum: [staged, reviewed, applied]
+        countId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        rowCount:
+          type: integer
+          minimum: 1
+        replayed:
+          type: boolean
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpeningCountRow"
+    OpeningCountRow:
+      type: object
+      required: [productCode, quantity]
+      properties:
+        productCode:
+          type: string
+        quantity:
+          type: string
+    OpeningCountRecord:
+      type: object
+      required: [id, warehouseId, status, rows, createdBy, reviewedBy, appliedBy, createdAt, reviewedAt, appliedAt, result]
+      properties:
+        id:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [staged, reviewed, applied]
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpeningCountRow"
+        createdBy:
+          type: string
+          format: uuid
+        reviewedBy:
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        reviewedAt:
+          type: [string, "null"]
+          format: date-time
+        appliedAt:
+          type: [string, "null"]
+          format: date-time
+        appliedBy:
+          type: [string, "null"]
+          format: uuid
+        result:
+          type: [object, "null"]
+    OpeningCountSummary:
+      type: object
+      required: [id, warehouseId, warehouseName, status, rowCount, createdBy, reviewedBy, appliedBy, createdAt, reviewedAt, appliedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        warehouseName:
+          type: string
+        status:
+          type: string
+          enum: [staged, reviewed, applied]
+        rowCount:
+          type: integer
+          minimum: 1
+        createdBy:
+          type: string
+          format: uuid
+        reviewedBy:
+          type: [string, "null"]
+          format: uuid
+        appliedBy:
+          type: [string, "null"]
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        reviewedAt:
+          type: [string, "null"]
+          format: date-time
+        appliedAt:
+          type: [string, "null"]
+          format: date-time
+    OpeningCountResult:
+      type: object
+      required: [outcome, countId, warehouseId, rowCount, replayed]
+      properties:
+        outcome:
+          type: string
+          enum: [reviewed, applied]
+        countId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        rowCount:
+          type: integer
+        replayed:
+          type: boolean
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+  responses:
+    Error:
+      description: Safe error message
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

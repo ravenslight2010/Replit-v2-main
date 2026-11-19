@@ -17,6 +17,14 @@ corepack enable --install-directory "$pnpm_shim_dir" pnpm
 
 CI=true pnpm install --frozen-lockfile
 
+# Restoring V2 source does not authorize mutating either database schema.
+# Keep legacy schema reconciliation available only in a legacy-only checkout.
+if [ -f v2/package.json ]; then
+  pnpm --filter @workspace/lucia-v2 run build
+  echo "V2 source reconciled. Database changes require separate review and approval."
+  exit 0
+fi
+
 # drizzle push can hit transient "too many clients already" on the dev DB
 # (leftover backends from killed test/validation runs). Retry a few times.
 attempts=0

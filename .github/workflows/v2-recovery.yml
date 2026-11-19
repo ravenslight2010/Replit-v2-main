@@ -1,0 +1,58 @@
+name: V2 recovery checks
+
+on:
+  push:
+    paths:
+      - "v2/**"
+      - "scripts/start-v2.sh"
+      - "process-compose.yaml"
+      - ".nvmrc"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/v2-recovery.yml"
+  pull_request:
+    paths:
+      - "v2/**"
+      - "scripts/start-v2.sh"
+      - "process-compose.yaml"
+      - ".nvmrc"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/v2-recovery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v2-recovery-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-v2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install supported browser runtimes
+        run: pnpm --filter @workspace/lucia-v2 exec playwright install --with-deps chromium webkit
+      - name: Select browser and PostgreSQL binaries
+        run: |
+          echo "CHROMIUM_PATH=$(pnpm --filter @workspace/lucia-v2 exec node --input-type=module -e 'import { chromium } from "playwright"; console.log(chromium.executablePath())')" >> "$GITHUB_ENV"
+          echo "/usr/lib/postgresql/16/bin" >> "$GITHUB_PATH"
+      - run: pnpm run build:v2
+      - run: pnpm run test:v2
+      - name: Chromium and required WebKit operational journeys
+        env:
+          V2_REQUIRE_WEBKIT: "true"
+        run: pnpm --filter @workspace/lucia-v2 run test:browser
+      - name: Disposable PostgreSQL authorization and inventory checks
+        run: bash v2/db/run-local-tests.sh

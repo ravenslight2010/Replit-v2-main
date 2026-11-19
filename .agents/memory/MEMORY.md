@@ -21,7 +21,7 @@
 - [Render clock split](render-clock-split.md) — mobile per-second tick/calc/activeStoppage live in a separate useRunClock() context; non-live screens must snapshot computeCalc, not subscribe.
 - [Daily reset trigger](daily-reset-trigger.md) — reset is client-driven at LOCAL midnight; both apps need a live timer+foreground check, not just on-load, or a device left open never resets.
 - [Web auth identity cache](auth-identity-cache.md) — set ["me"] directly on sign-in/up/out; never qc.clear() it (its observer refetch races and bounces the user).
-- [Post-merge setup](post-merge-setup.md) — post-merge.sh must use `db push-force` (plain push hangs on TTY rename prompt) + generous timeout (~70s real runtime).
+- [Post-merge setup](post-merge-setup.md) — V2 source reconciliation is not migration approval; legacy-only approved pushes must be non-interactive.
 - [Ingredient merge](ingredient-merge.md) — user-driven merge of ingredient names across web+mobile+server; inventory-first-or-abort invariant; recipe rows renamed not combined.
 - [Inventory concurrency](inventory-settings-concurrency.md) + [consume idempotency](inventory-consume-idempotency.md) — drawDown needs FOR UPDATE locks; marker even at 0-consume; EVERY run-finalization path must consume; keys identical web+mobile.
 - [Packaging settings](packaging-settings.md) — 6 single-select + numeric `cartonsPerCase`; `cartoned` (default yes) gates warehouse roll-up (circles/pizza, shippers/case, cartons=pizzas÷cartonsPerCase ceil) & Cartoned/Labeled badge.
@@ -158,3 +158,4 @@
 - [Deterministic AI gates](deterministic-ai-gates.md) — route boundaries must re-run local resolution and cache stable optional AI outcomes so callers cannot force redundant model work.
 - [Browser fixture seeding](browser-fixture-seeding.md) — reloads can replace browser-only master-data seeds during server hydration; seed through server fixtures or use stable built-ins.
 - [Shell lint inventory](shell-lint-inventory.md) — scripts/src shell files stay explicitly listed in check:shell; only documented fixture/generated files are excluded.
+- [V2 product boundaries](v2-product-boundaries.md) — upgraded successor, one facility with multiple warehouses, server-owned shared state, offline read-only, and fresh V2 sessions.

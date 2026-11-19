@@ -54,3 +54,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Temporary recovery comparisons and regenerated verification output.
+/generated-artifacts/

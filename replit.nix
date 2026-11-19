@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.process-compose
     pkgs.shellcheck
     pkgs.libgbm
     pkgs.wayland

@@ -5,7 +5,15 @@ description: Package-manager, non-interactive schema-push, and timeout rules for
 
 # Post-merge setup (scripts/post-merge.sh)
 
-The post-merge script runs `pnpm install --frozen-lockfile` then a Drizzle schema push.
+V2 source reconciliation is not approval to migrate either managed database.
+
+**Why:** V2 shares a project database with legacy schemas, and its functions,
+triggers and permissions require a separate reviewed database step. A legacy
+Drizzle push is neither a V2 migration nor a safe substitute.
+
+**How to apply:** V2 reconciliation may install locked dependencies and build
+source. Do not automatically push legacy schemas or apply restored SQL. The
+schema-push rules below apply only to explicitly approved legacy-only work.
 
 ## Rules
 
