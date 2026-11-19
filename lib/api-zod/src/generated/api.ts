@@ -232,13 +232,13 @@ export const DeclinePasswordResetResponse = zod.void()
  * @summary List saved production runs
  */
 export const ListRunsResponseItem = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
-  "casesNeeded": zod.number().int(),
-  "casesLeft": zod.number().int(),
-  "skidsCompleted": zod.number().int(),
+  "casesNeeded": zod.int(),
+  "casesLeft": zod.int(),
+  "skidsCompleted": zod.int(),
   "pizzasPerMin": zod.string(),
-  "totalTimeSec": zod.number().int(),
+  "totalTimeSec": zod.int(),
   "batchesNeeded": zod.string(),
   "inputs": zod.record(zod.string(), zod.unknown()),
   "notes": zod.string().optional(),
@@ -252,24 +252,24 @@ export const ListRunsResponse = zod.array(ListRunsResponseItem)
  */
 export const CreateRunBody = zod.object({
   "label": zod.string().optional(),
-  "casesNeeded": zod.number().int(),
-  "casesLeft": zod.number().int(),
-  "skidsCompleted": zod.number().int(),
+  "casesNeeded": zod.int(),
+  "casesLeft": zod.int(),
+  "skidsCompleted": zod.int(),
   "pizzasPerMin": zod.string(),
-  "totalTimeSec": zod.number().int(),
+  "totalTimeSec": zod.int(),
   "batchesNeeded": zod.string(),
   "inputs": zod.record(zod.string(), zod.unknown()),
   "notes": zod.string().optional()
 })
 
 export const CreateRunResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
-  "casesNeeded": zod.number().int(),
-  "casesLeft": zod.number().int(),
-  "skidsCompleted": zod.number().int(),
+  "casesNeeded": zod.int(),
+  "casesLeft": zod.int(),
+  "skidsCompleted": zod.int(),
   "pizzasPerMin": zod.string(),
-  "totalTimeSec": zod.number().int(),
+  "totalTimeSec": zod.int(),
   "batchesNeeded": zod.string(),
   "inputs": zod.record(zod.string(), zod.unknown()),
   "notes": zod.string().optional(),
@@ -291,7 +291,7 @@ export const DeleteRunResponse = zod.void()
  * @summary List inventory items with lots and on-hand
  */
 export const ListInventoryResponseItem = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "key": zod.string(),
   "category": zod.string(),
   "name": zod.string(),
@@ -299,9 +299,9 @@ export const ListInventoryResponseItem = zod.object({
   "reorderThreshold": zod.number(),
   "onHand": zod.number(),
   "lots": zod.array(zod.object({
-  "id": zod.number().int(),
-  "itemId": zod.number().int(),
-  "locationId": zod.number().int().nullish(),
+  "id": zod.int(),
+  "itemId": zod.int(),
+  "locationId": zod.int().nullish(),
   "lotNumber": zod.string(),
   "qtyReceived": zod.number(),
   "qtyRemaining": zod.number(),
@@ -310,7 +310,7 @@ export const ListInventoryResponseItem = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "byLocation": zod.array(zod.object({
-  "locationId": zod.number().int(),
+  "locationId": zod.int(),
   "locationName": zod.string(),
   "isOnsite": zod.boolean(),
   "onHand": zod.number()
@@ -320,7 +320,7 @@ export const ListInventoryResponseItem = zod.object({
   "productionIngredientMergedInto": zod.string().nullish(),
   "conversionFactor": zod.number().nullable(),
   "conversionConfirmed": zod.boolean(),
-  "consumptionPriority": zod.number().int(),
+  "consumptionPriority": zod.int(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -338,11 +338,11 @@ export const CreateInventoryItemBody = zod.object({
   "reorderThreshold": zod.number().optional(),
   "productionIngredientId": zod.string().nullish(),
   "conversionFactor": zod.number().nullish(),
-  "consumptionPriority": zod.number().int().optional()
+  "consumptionPriority": zod.int().optional()
 })
 
 export const CreateInventoryItemResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "key": zod.string(),
   "category": zod.string(),
   "name": zod.string(),
@@ -350,9 +350,9 @@ export const CreateInventoryItemResponse = zod.object({
   "reorderThreshold": zod.number(),
   "onHand": zod.number(),
   "lots": zod.array(zod.object({
-  "id": zod.number().int(),
-  "itemId": zod.number().int(),
-  "locationId": zod.number().int().nullish(),
+  "id": zod.int(),
+  "itemId": zod.int(),
+  "locationId": zod.int().nullish(),
   "lotNumber": zod.string(),
   "qtyReceived": zod.number(),
   "qtyRemaining": zod.number(),
@@ -361,7 +361,7 @@ export const CreateInventoryItemResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "byLocation": zod.array(zod.object({
-  "locationId": zod.number().int(),
+  "locationId": zod.int(),
   "locationName": zod.string(),
   "isOnsite": zod.boolean(),
   "onHand": zod.number()
@@ -371,7 +371,7 @@ export const CreateInventoryItemResponse = zod.object({
   "productionIngredientMergedInto": zod.string().nullish(),
   "conversionFactor": zod.number().nullable(),
   "conversionConfirmed": zod.boolean(),
-  "consumptionPriority": zod.number().int(),
+  "consumptionPriority": zod.int(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -390,7 +390,7 @@ export const UpdateInventoryItemBody = zod.object({
 })
 
 export const UpdateInventoryItemResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "key": zod.string(),
   "category": zod.string(),
   "name": zod.string(),
@@ -398,9 +398,9 @@ export const UpdateInventoryItemResponse = zod.object({
   "reorderThreshold": zod.number(),
   "onHand": zod.number(),
   "lots": zod.array(zod.object({
-  "id": zod.number().int(),
-  "itemId": zod.number().int(),
-  "locationId": zod.number().int().nullish(),
+  "id": zod.int(),
+  "itemId": zod.int(),
+  "locationId": zod.int().nullish(),
   "lotNumber": zod.string(),
   "qtyReceived": zod.number(),
   "qtyRemaining": zod.number(),
@@ -409,7 +409,7 @@ export const UpdateInventoryItemResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "byLocation": zod.array(zod.object({
-  "locationId": zod.number().int(),
+  "locationId": zod.int(),
   "locationName": zod.string(),
   "isOnsite": zod.boolean(),
   "onHand": zod.number()
@@ -419,7 +419,7 @@ export const UpdateInventoryItemResponse = zod.object({
   "productionIngredientMergedInto": zod.string().nullish(),
   "conversionFactor": zod.number().nullable(),
   "conversionConfirmed": zod.boolean(),
-  "consumptionPriority": zod.number().int(),
+  "consumptionPriority": zod.int(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -445,11 +445,11 @@ export const LinkInventoryProductParams = zod.object({
 export const LinkInventoryProductBody = zod.object({
   "productionIngredientId": zod.string().nullable(),
   "conversionFactor": zod.number().nullable(),
-  "consumptionPriority": zod.number().int().optional()
+  "consumptionPriority": zod.int().optional()
 })
 
 export const LinkInventoryProductResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "key": zod.string(),
   "category": zod.string(),
   "name": zod.string(),
@@ -457,9 +457,9 @@ export const LinkInventoryProductResponse = zod.object({
   "reorderThreshold": zod.number(),
   "onHand": zod.number(),
   "lots": zod.array(zod.object({
-  "id": zod.number().int(),
-  "itemId": zod.number().int(),
-  "locationId": zod.number().int().nullish(),
+  "id": zod.int(),
+  "itemId": zod.int(),
+  "locationId": zod.int().nullish(),
   "lotNumber": zod.string(),
   "qtyReceived": zod.number(),
   "qtyRemaining": zod.number(),
@@ -468,7 +468,7 @@ export const LinkInventoryProductResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "byLocation": zod.array(zod.object({
-  "locationId": zod.number().int(),
+  "locationId": zod.int(),
   "locationName": zod.string(),
   "isOnsite": zod.boolean(),
   "onHand": zod.number()
@@ -478,7 +478,7 @@ export const LinkInventoryProductResponse = zod.object({
   "productionIngredientMergedInto": zod.string().nullish(),
   "conversionFactor": zod.number().nullable(),
   "conversionConfirmed": zod.boolean(),
-  "consumptionPriority": zod.number().int(),
+  "consumptionPriority": zod.int(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -496,11 +496,11 @@ export const RestockInventoryBody = zod.object({
   "lotNumber": zod.string().optional(),
   "receivedDate": zod.string().nullish(),
   "expirationDate": zod.string().nullish(),
-  "locationId": zod.number().int().optional()
+  "locationId": zod.int().optional()
 })
 
 export const RestockInventoryResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "key": zod.string(),
   "category": zod.string(),
   "name": zod.string(),
@@ -508,9 +508,9 @@ export const RestockInventoryResponse = zod.object({
   "reorderThreshold": zod.number(),
   "onHand": zod.number(),
   "lots": zod.array(zod.object({
-  "id": zod.number().int(),
-  "itemId": zod.number().int(),
-  "locationId": zod.number().int().nullish(),
+  "id": zod.int(),
+  "itemId": zod.int(),
+  "locationId": zod.int().nullish(),
   "lotNumber": zod.string(),
   "qtyReceived": zod.number(),
   "qtyRemaining": zod.number(),
@@ -519,7 +519,7 @@ export const RestockInventoryResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "byLocation": zod.array(zod.object({
-  "locationId": zod.number().int(),
+  "locationId": zod.int(),
   "locationName": zod.string(),
   "isOnsite": zod.boolean(),
   "onHand": zod.number()
@@ -529,7 +529,7 @@ export const RestockInventoryResponse = zod.object({
   "productionIngredientMergedInto": zod.string().nullish(),
   "conversionFactor": zod.number().nullable(),
   "conversionConfirmed": zod.boolean(),
-  "consumptionPriority": zod.number().int(),
+  "consumptionPriority": zod.int(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -539,13 +539,13 @@ export const RestockInventoryResponse = zod.object({
  * @summary Manually adjust on-hand quantity (delta-based)
  */
 export const AdjustInventoryBody = zod.object({
-  "itemId": zod.number().int(),
+  "itemId": zod.int(),
   "qtyDelta": zod.number(),
   "note": zod.string().optional()
 })
 
 export const AdjustInventoryResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "key": zod.string(),
   "category": zod.string(),
   "name": zod.string(),
@@ -553,9 +553,9 @@ export const AdjustInventoryResponse = zod.object({
   "reorderThreshold": zod.number(),
   "onHand": zod.number(),
   "lots": zod.array(zod.object({
-  "id": zod.number().int(),
-  "itemId": zod.number().int(),
-  "locationId": zod.number().int().nullish(),
+  "id": zod.int(),
+  "itemId": zod.int(),
+  "locationId": zod.int().nullish(),
   "lotNumber": zod.string(),
   "qtyReceived": zod.number(),
   "qtyRemaining": zod.number(),
@@ -564,7 +564,7 @@ export const AdjustInventoryResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "byLocation": zod.array(zod.object({
-  "locationId": zod.number().int(),
+  "locationId": zod.int(),
   "locationName": zod.string(),
   "isOnsite": zod.boolean(),
   "onHand": zod.number()
@@ -574,7 +574,7 @@ export const AdjustInventoryResponse = zod.object({
   "productionIngredientMergedInto": zod.string().nullish(),
   "conversionFactor": zod.number().nullable(),
   "conversionConfirmed": zod.boolean(),
-  "consumptionPriority": zod.number().int(),
+  "consumptionPriority": zod.int(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -593,7 +593,7 @@ export const ConsumeInventoryBody = zod.object({
 
 export const ConsumeInventoryResponse = zod.object({
   "applied": zod.boolean(),
-  "consumed": zod.number().int().optional()
+  "consumed": zod.int().optional()
 })
 
 
@@ -611,7 +611,7 @@ export const MergeInventoryBody = zod.object({
 })
 
 export const MergeInventoryResponse = zod.object({
-  "merged": zod.number().int(),
+  "merged": zod.int(),
   "results": zod.array(zod.object({
   "fromKey": zod.string(),
   "toKey": zod.string(),
@@ -625,7 +625,7 @@ export const MergeInventoryResponse = zod.object({
  * @summary List stock locations (onsite first)
  */
 export const ListInventoryLocationsResponseItem = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "name": zod.string(),
   "isOnsite": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -642,7 +642,7 @@ export const CreateInventoryLocationBody = zod.object({
 })
 
 export const CreateInventoryLocationResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "name": zod.string(),
   "isOnsite": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -662,7 +662,7 @@ export const UpdateInventoryLocationBody = zod.object({
 })
 
 export const UpdateInventoryLocationResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "name": zod.string(),
   "isOnsite": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -683,14 +683,14 @@ export const DeleteInventoryLocationResponse = zod.void()
  * @summary Move stock from one location to another (preserves lots)
  */
 export const TransferInventoryBody = zod.object({
-  "itemId": zod.number().int(),
-  "fromLocationId": zod.number().int(),
-  "toLocationId": zod.number().int(),
+  "itemId": zod.int(),
+  "fromLocationId": zod.int(),
+  "toLocationId": zod.int(),
   "qty": zod.number()
 })
 
 export const TransferInventoryResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "key": zod.string(),
   "category": zod.string(),
   "name": zod.string(),
@@ -698,9 +698,9 @@ export const TransferInventoryResponse = zod.object({
   "reorderThreshold": zod.number(),
   "onHand": zod.number(),
   "lots": zod.array(zod.object({
-  "id": zod.number().int(),
-  "itemId": zod.number().int(),
-  "locationId": zod.number().int().nullish(),
+  "id": zod.int(),
+  "itemId": zod.int(),
+  "locationId": zod.int().nullish(),
   "lotNumber": zod.string(),
   "qtyReceived": zod.number(),
   "qtyRemaining": zod.number(),
@@ -709,7 +709,7 @@ export const TransferInventoryResponse = zod.object({
   "createdAt": zod.coerce.date()
 })),
   "byLocation": zod.array(zod.object({
-  "locationId": zod.number().int(),
+  "locationId": zod.int(),
   "locationName": zod.string(),
   "isOnsite": zod.boolean(),
   "onHand": zod.number()
@@ -719,7 +719,7 @@ export const TransferInventoryResponse = zod.object({
   "productionIngredientMergedInto": zod.string().nullish(),
   "conversionFactor": zod.number().nullable(),
   "conversionConfirmed": zod.boolean(),
-  "consumptionPriority": zod.number().int(),
+  "consumptionPriority": zod.int(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -733,9 +733,9 @@ export const ListInventoryLedgerQueryParams = zod.object({
 })
 
 export const ListInventoryLedgerResponseItem = zod.object({
-  "id": zod.number().int(),
-  "itemId": zod.number().int(),
-  "lotId": zod.number().int().nullish(),
+  "id": zod.int(),
+  "itemId": zod.int(),
+  "lotId": zod.int().nullish(),
   "type": zod.string(),
   "qtyDelta": zod.number(),
   "runId": zod.string().nullish(),
@@ -749,7 +749,7 @@ export const ListInventoryLedgerResponse = zod.array(ListInventoryLedgerResponse
  * @summary Get global inventory settings (expiry lead time)
  */
 export const GetInventorySettingsResponse = zod.object({
-  "expirySoonDays": zod.number().int()
+  "expirySoonDays": zod.int()
 })
 
 
@@ -757,11 +757,11 @@ export const GetInventorySettingsResponse = zod.object({
  * @summary Update global inventory settings
  */
 export const UpdateInventorySettingsBody = zod.object({
-  "expirySoonDays": zod.number().int()
+  "expirySoonDays": zod.int()
 })
 
 export const UpdateInventorySettingsResponse = zod.object({
-  "expirySoonDays": zod.number().int()
+  "expirySoonDays": zod.int()
 })
 
 
@@ -926,7 +926,7 @@ export const RecordQualityCheckBody = zod.object({
 }).describe('A reviewed-and-confirmed quality check to persist into the manager history.')
 
 export const RecordQualityCheckResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "productType": zod.enum(['pizza', 'crust', 'other']),
   "status": zod.enum(['pass', 'warn', 'fail']),
   "confidence": zod.number(),
@@ -953,7 +953,7 @@ export const ListQualityChecksQueryParams = zod.object({
 })
 
 export const ListQualityChecksResponseItem = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "productType": zod.enum(['pizza', 'crust', 'other']),
   "status": zod.enum(['pass', 'warn', 'fail']),
   "confidence": zod.number(),
@@ -1310,7 +1310,7 @@ export const AiRecipeAssistantResponse = zod.object({
  * @summary Cross-reference a saved spec sheet against the current recipes (AI summary); read-only
  */
 export const AiSpecReconcileBody = zod.object({
-  "specSheetId": zod.number().int().describe('The id of the saved spec sheet to check against'),
+  "specSheetId": zod.int().describe('The id of the saved spec sheet to check against'),
   "currentRecipes": zod.array(zod.object({
   "kind": zod.enum(['dough', 'sauce', 'cheese']),
   "name": zod.string(),
@@ -1337,7 +1337,7 @@ export const AiSpecReconcileBody = zod.object({
 })
 
 export const AiSpecReconcileResponse = zod.object({
-  "specSheetId": zod.number().int(),
+  "specSheetId": zod.int(),
   "discrepancies": zod.array(zod.object({
   "kind": zod.enum(['dough', 'sauce', 'cheese']),
   "recipeName": zod.string(),
@@ -1493,8 +1493,8 @@ export const AiProactiveAlertResponse = zod.object({
  */
 export const GetProactiveAlertSettingsResponse = zod.object({
   "enabled": zod.boolean(),
-  "pollSeconds": zod.number().int(),
-  "cooldownSeconds": zod.number().int()
+  "pollSeconds": zod.int(),
+  "cooldownSeconds": zod.int()
 })
 
 
@@ -1503,14 +1503,14 @@ export const GetProactiveAlertSettingsResponse = zod.object({
  */
 export const UpdateProactiveAlertSettingsBody = zod.object({
   "enabled": zod.boolean(),
-  "pollSeconds": zod.number().int(),
-  "cooldownSeconds": zod.number().int()
+  "pollSeconds": zod.int(),
+  "cooldownSeconds": zod.int()
 })
 
 export const UpdateProactiveAlertSettingsResponse = zod.object({
   "enabled": zod.boolean(),
-  "pollSeconds": zod.number().int(),
-  "cooldownSeconds": zod.number().int()
+  "pollSeconds": zod.int(),
+  "cooldownSeconds": zod.int()
 })
 
 
@@ -1524,7 +1524,7 @@ export const aiForecastBodyHorizonDaysMax = 7;
 
 export const AiForecastBody = zod.object({
   "targetDate": zod.string().describe('ISO date (YYYY-MM-DD) of the first upcoming day to forecast'),
-  "horizonDays": zod.number().int().min(1).max(aiForecastBodyHorizonDaysMax).optional().describe('How many consecutive days to forecast starting at targetDate (1-7, default 1). Each day gets its own plan grounded in that weekday\'s history.'),
+  "horizonDays": zod.int().min(1).max(aiForecastBodyHorizonDaysMax).optional().describe('How many consecutive days to forecast starting at targetDate (1-7, default 1). Each day gets its own plan grounded in that weekday\'s history.'),
   "nowMs": zod.number().describe('Client clock in epoch ms (for relative reasoning)'),
   "history": zod.array(zod.object({
   "date": zod.string().describe('ISO date (YYYY-MM-DD) of the production day'),
@@ -1675,25 +1675,25 @@ export const ExportOperationalReportResponse = zod.object({
   "quality": zod.object({
   "availability": zod.enum(['available', 'unavailable']),
   "value": zod.object({
-  "checks": zod.number().int().optional(),
-  "issues": zod.number().int().optional(),
-  "failed": zod.number().int().optional(),
-  "warnings": zod.number().int().optional()
+  "checks": zod.int().optional(),
+  "issues": zod.int().optional(),
+  "failed": zod.int().optional(),
+  "warnings": zod.int().optional()
 }).nullable(),
   "note": zod.string().optional()
 }),
   "incidents": zod.object({
   "availability": zod.enum(['available', 'unavailable']),
   "value": zod.object({
-  "total": zod.number().int().optional(),
-  "unresolved": zod.number().int().optional()
+  "total": zod.int().optional(),
+  "unresolved": zod.int().optional()
 }).nullable(),
   "note": zod.string().optional()
 }),
   "inventory": zod.object({
   "availability": zod.enum(['available', 'unavailable']),
   "value": zod.object({
-  "flaggedItems": zod.number().int().optional()
+  "flaggedItems": zod.int().optional()
 }).nullable(),
   "note": zod.string().optional()
 })
@@ -1729,27 +1729,27 @@ export const GetShiftHandoffDigestResponse = zod.object({
   "incidents": zod.object({
   "availability": zod.enum(['available', 'unavailable']),
   "note": zod.string().optional(),
-  "itemCount": zod.number().int()
+  "itemCount": zod.int()
 }),
   "quality": zod.object({
   "availability": zod.enum(['available', 'unavailable']),
   "note": zod.string().optional(),
-  "itemCount": zod.number().int()
+  "itemCount": zod.int()
 }),
   "inventory": zod.object({
   "availability": zod.enum(['available', 'unavailable']),
   "note": zod.string().optional(),
-  "itemCount": zod.number().int()
+  "itemCount": zod.int()
 }),
   "sync": zod.object({
   "availability": zod.enum(['available', 'unavailable']),
   "note": zod.string().optional(),
-  "itemCount": zod.number().int()
+  "itemCount": zod.int()
 }),
   "data-health": zod.object({
   "availability": zod.enum(['available', 'unavailable']),
   "note": zod.string().optional(),
-  "itemCount": zod.number().int()
+  "itemCount": zod.int()
 })
 })
 })
@@ -2414,7 +2414,7 @@ export const ListFreezerPullItemsResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "ingredient": zod.string().describe('Ingredient name, matched case-insensitively against run need rows'),
-  "daysEarly": zod.number().int().describe('Days before the run this item must be pulled (default 3)'),
+  "daysEarly": zod.int().describe('Days before the run this item must be pulled (default 3)'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide freezer-pull item: an ingredient that must be pulled from the freezer `daysEarly` days before the run that uses it. Disabled items are kept but produce no warehouse notice.'))
 })
@@ -2428,7 +2428,7 @@ export const SaveFreezerPullItemsBody = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "ingredient": zod.string().describe('Ingredient name, matched case-insensitively against run need rows'),
-  "daysEarly": zod.number().int().describe('Days before the run this item must be pulled (default 3)'),
+  "daysEarly": zod.int().describe('Days before the run this item must be pulled (default 3)'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide freezer-pull item: an ingredient that must be pulled from the freezer `daysEarly` days before the run that uses it. Disabled items are kept but produce no warehouse notice.')).describe('The batch of freezer-pull items to create or update (by id)')
 })
@@ -2437,7 +2437,7 @@ export const SaveFreezerPullItemsResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "ingredient": zod.string().describe('Ingredient name, matched case-insensitively against run need rows'),
-  "daysEarly": zod.number().int().describe('Days before the run this item must be pulled (default 3)'),
+  "daysEarly": zod.int().describe('Days before the run this item must be pulled (default 3)'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide freezer-pull item: an ingredient that must be pulled from the freezer `daysEarly` days before the run that uses it. Disabled items are kept but produce no warehouse notice.'))
 })
@@ -2455,7 +2455,7 @@ export const DeleteFreezerPullItemsResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "ingredient": zod.string().describe('Ingredient name, matched case-insensitively against run need rows'),
-  "daysEarly": zod.number().int().describe('Days before the run this item must be pulled (default 3)'),
+  "daysEarly": zod.int().describe('Days before the run this item must be pulled (default 3)'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide freezer-pull item: an ingredient that must be pulled from the freezer `daysEarly` days before the run that uses it. Disabled items are kept but produce no warehouse notice.'))
 })
@@ -2478,8 +2478,8 @@ export const ListFreezerSurplusResponse = zod.object({
   "flavor": zod.string(),
   "productKey": zod.string(),
   "productionDate": zod.coerce.date(),
-  "totalCases": zod.number().int().min(1),
-  "remainingCases": zod.number().int().min(listFreezerSurplusResponseLotsItemRemainingCasesMin)
+  "totalCases": zod.int().min(1),
+  "remainingCases": zod.int().min(listFreezerSurplusResponseLotsItemRemainingCasesMin)
 })),
   "allocations": zod.array(zod.object({
   "id": zod.string(),
@@ -2489,7 +2489,7 @@ export const ListFreezerSurplusResponse = zod.object({
   "brand": zod.string(),
   "flavor": zod.string(),
   "productKey": zod.string(),
-  "cases": zod.number().int().min(1)
+  "cases": zod.int().min(1)
 }))
 })
 
@@ -2509,7 +2509,7 @@ export const ConfirmFreezerSurplusBody = zod.object({
   "brand": zod.string().min(1).max(confirmFreezerSurplusBodyBrandMax),
   "flavor": zod.string().max(confirmFreezerSurplusBodyFlavorMax),
   "productionDate": zod.coerce.date(),
-  "cases": zod.number().int().min(1).max(confirmFreezerSurplusBodyCasesMax)
+  "cases": zod.int().min(1).max(confirmFreezerSurplusBodyCasesMax)
 })
 
 
@@ -2528,8 +2528,8 @@ export const ConfirmFreezerSurplusResponse = zod.object({
   "flavor": zod.string(),
   "productKey": zod.string(),
   "productionDate": zod.coerce.date(),
-  "totalCases": zod.number().int().min(1),
-  "remainingCases": zod.number().int().min(confirmFreezerSurplusResponseLotsItemRemainingCasesMin)
+  "totalCases": zod.int().min(1),
+  "remainingCases": zod.int().min(confirmFreezerSurplusResponseLotsItemRemainingCasesMin)
 })),
   "allocations": zod.array(zod.object({
   "id": zod.string(),
@@ -2539,7 +2539,7 @@ export const ConfirmFreezerSurplusResponse = zod.object({
   "brand": zod.string(),
   "flavor": zod.string(),
   "productKey": zod.string(),
-  "cases": zod.number().int().min(1)
+  "cases": zod.int().min(1)
 })),
   "createdLot": zod.object({
   "id": zod.string(),
@@ -2547,8 +2547,8 @@ export const ConfirmFreezerSurplusResponse = zod.object({
   "flavor": zod.string(),
   "productKey": zod.string(),
   "productionDate": zod.coerce.date(),
-  "totalCases": zod.number().int().min(1),
-  "remainingCases": zod.number().int().min(confirmFreezerSurplusResponseCreatedLotOneRemainingCasesMin)
+  "totalCases": zod.int().min(1),
+  "remainingCases": zod.int().min(confirmFreezerSurplusResponseCreatedLotOneRemainingCasesMin)
 }).nullish()
 })
 
@@ -2582,7 +2582,7 @@ export const ReplaceFreezerSurplusAllocationBody = zod.object({
   "flavor": zod.string().max(replaceFreezerSurplusAllocationBodyFlavorMax),
   "allocations": zod.array(zod.object({
   "lotId": zod.string().min(1).max(replaceFreezerSurplusAllocationBodyAllocationsItemLotIdMax),
-  "cases": zod.number().int().min(1).max(replaceFreezerSurplusAllocationBodyAllocationsItemCasesMax)
+  "cases": zod.int().min(1).max(replaceFreezerSurplusAllocationBodyAllocationsItemCasesMax)
 })).max(replaceFreezerSurplusAllocationBodyAllocationsMax)
 })
 
@@ -2602,8 +2602,8 @@ export const ReplaceFreezerSurplusAllocationResponse = zod.object({
   "flavor": zod.string(),
   "productKey": zod.string(),
   "productionDate": zod.coerce.date(),
-  "totalCases": zod.number().int().min(1),
-  "remainingCases": zod.number().int().min(replaceFreezerSurplusAllocationResponseLotsItemRemainingCasesMin)
+  "totalCases": zod.int().min(1),
+  "remainingCases": zod.int().min(replaceFreezerSurplusAllocationResponseLotsItemRemainingCasesMin)
 })),
   "allocations": zod.array(zod.object({
   "id": zod.string(),
@@ -2613,7 +2613,7 @@ export const ReplaceFreezerSurplusAllocationResponse = zod.object({
   "brand": zod.string(),
   "flavor": zod.string(),
   "productKey": zod.string(),
-  "cases": zod.number().int().min(1)
+  "cases": zod.int().min(1)
 })),
   "createdLot": zod.object({
   "id": zod.string(),
@@ -2621,8 +2621,8 @@ export const ReplaceFreezerSurplusAllocationResponse = zod.object({
   "flavor": zod.string(),
   "productKey": zod.string(),
   "productionDate": zod.coerce.date(),
-  "totalCases": zod.number().int().min(1),
-  "remainingCases": zod.number().int().min(replaceFreezerSurplusAllocationResponseCreatedLotOneRemainingCasesMin)
+  "totalCases": zod.int().min(1),
+  "remainingCases": zod.int().min(replaceFreezerSurplusAllocationResponseCreatedLotOneRemainingCasesMin)
 }).nullish()
 })
 
@@ -2713,7 +2713,7 @@ export const ListRunSuggestionsResponse = zod.object({
   "configuredValue": zod.number(),
   "recommendedValue": zod.number(),
   "unit": zod.string(),
-  "runCount": zod.number().int(),
+  "runCount": zod.int(),
   "statsLine": zod.string(),
   "narrative": zod.string(),
   "status": zod.enum(['pending', 'accepted', 'dismissed']),
@@ -2736,7 +2736,7 @@ export const ObserveRunSuggestionBody = zod.object({
   "configuredValue": zod.number(),
   "recommendedValue": zod.number(),
   "unit": zod.string(),
-  "runCount": zod.number().int(),
+  "runCount": zod.int(),
   "statsLine": zod.string().describe('Deterministic plain-English stats summary built client-side')
 })
 
@@ -2753,7 +2753,7 @@ export const ObserveRunSuggestionResponse = zod.object({
   "configuredValue": zod.number(),
   "recommendedValue": zod.number(),
   "unit": zod.string(),
-  "runCount": zod.number().int(),
+  "runCount": zod.int(),
   "statsLine": zod.string(),
   "narrative": zod.string(),
   "status": zod.enum(['pending', 'accepted', 'dismissed']),
@@ -2784,7 +2784,7 @@ export const UpdateRunSuggestionResponse = zod.object({
   "configuredValue": zod.number(),
   "recommendedValue": zod.number(),
   "unit": zod.string(),
-  "runCount": zod.number().int(),
+  "runCount": zod.int(),
   "statsLine": zod.string(),
   "narrative": zod.string(),
   "status": zod.enum(['pending', 'accepted', 'dismissed']),
@@ -2939,7 +2939,7 @@ export const ListMixesResponse = zod.object({
   "brand": zod.string().describe('Product brand, matched case-insensitively against scheduled runs'),
   "flavor": zod.string().describe('Product flavor, matched case-insensitively against scheduled runs'),
   "batchSize": zod.number().describe('Pounds of finished mix per batch'),
-  "daysEarly": zod.number().int().describe('Days before the run this mix may be made ahead (default 0)'),
+  "daysEarly": zod.int().describe('Days before the run this mix may be made ahead (default 0)'),
   "notes": zod.string().optional().describe('Optional free-form notes'),
   "amountAlreadyMade": zod.number().describe('Pounds already made\/on hand, subtracted from the total'),
   "components": zod.array(zod.object({
@@ -2964,7 +2964,7 @@ export const SaveMixesBody = zod.object({
   "brand": zod.string().describe('Product brand, matched case-insensitively against scheduled runs'),
   "flavor": zod.string().describe('Product flavor, matched case-insensitively against scheduled runs'),
   "batchSize": zod.number().describe('Pounds of finished mix per batch'),
-  "daysEarly": zod.number().int().describe('Days before the run this mix may be made ahead (default 0)'),
+  "daysEarly": zod.int().describe('Days before the run this mix may be made ahead (default 0)'),
   "notes": zod.string().optional().describe('Optional free-form notes'),
   "amountAlreadyMade": zod.number().describe('Pounds already made\/on hand, subtracted from the total'),
   "components": zod.array(zod.object({
@@ -2984,7 +2984,7 @@ export const SaveMixesResponse = zod.object({
   "brand": zod.string().describe('Product brand, matched case-insensitively against scheduled runs'),
   "flavor": zod.string().describe('Product flavor, matched case-insensitively against scheduled runs'),
   "batchSize": zod.number().describe('Pounds of finished mix per batch'),
-  "daysEarly": zod.number().int().describe('Days before the run this mix may be made ahead (default 0)'),
+  "daysEarly": zod.int().describe('Days before the run this mix may be made ahead (default 0)'),
   "notes": zod.string().optional().describe('Optional free-form notes'),
   "amountAlreadyMade": zod.number().describe('Pounds already made\/on hand, subtracted from the total'),
   "components": zod.array(zod.object({
@@ -3013,7 +3013,7 @@ export const DeleteMixesResponse = zod.object({
   "brand": zod.string().describe('Product brand, matched case-insensitively against scheduled runs'),
   "flavor": zod.string().describe('Product flavor, matched case-insensitively against scheduled runs'),
   "batchSize": zod.number().describe('Pounds of finished mix per batch'),
-  "daysEarly": zod.number().int().describe('Days before the run this mix may be made ahead (default 0)'),
+  "daysEarly": zod.int().describe('Days before the run this mix may be made ahead (default 0)'),
   "notes": zod.string().optional().describe('Optional free-form notes'),
   "amountAlreadyMade": zod.number().describe('Pounds already made\/on hand, subtracted from the total'),
   "components": zod.array(zod.object({
@@ -3520,7 +3520,7 @@ export const ListCycleCountSchedulesResponse = zod.object({
   "schedules": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "section": zod.string().describe('The warehouse section\/area to count'),
-  "cadenceDays": zod.number().int().describe('How many days may elapse between counts (default 7)'),
+  "cadenceDays": zod.int().describe('How many days may elapse between counts (default 7)'),
   "lastCountedAt": zod.string().nullable().describe('Date last counted (YYYY-MM-DD), or null if never counted'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide cycle-count schedule: a warehouse section that must be counted every `cadenceDays` days. `lastCountedAt` is the date it was last counted (null = never). Disabled schedules are kept but produce no reminder.'))
@@ -3535,7 +3535,7 @@ export const SaveCycleCountSchedulesBody = zod.object({
   "schedules": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "section": zod.string().describe('The warehouse section\/area to count'),
-  "cadenceDays": zod.number().int().describe('How many days may elapse between counts (default 7)'),
+  "cadenceDays": zod.int().describe('How many days may elapse between counts (default 7)'),
   "lastCountedAt": zod.string().nullable().describe('Date last counted (YYYY-MM-DD), or null if never counted'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide cycle-count schedule: a warehouse section that must be counted every `cadenceDays` days. `lastCountedAt` is the date it was last counted (null = never). Disabled schedules are kept but produce no reminder.')).describe('The batch of cycle-count schedules to create or update (by id)')
@@ -3545,7 +3545,7 @@ export const SaveCycleCountSchedulesResponse = zod.object({
   "schedules": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "section": zod.string().describe('The warehouse section\/area to count'),
-  "cadenceDays": zod.number().int().describe('How many days may elapse between counts (default 7)'),
+  "cadenceDays": zod.int().describe('How many days may elapse between counts (default 7)'),
   "lastCountedAt": zod.string().nullable().describe('Date last counted (YYYY-MM-DD), or null if never counted'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide cycle-count schedule: a warehouse section that must be counted every `cadenceDays` days. `lastCountedAt` is the date it was last counted (null = never). Disabled schedules are kept but produce no reminder.'))
@@ -3564,7 +3564,7 @@ export const DeleteCycleCountSchedulesResponse = zod.object({
   "schedules": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "section": zod.string().describe('The warehouse section\/area to count'),
-  "cadenceDays": zod.number().int().describe('How many days may elapse between counts (default 7)'),
+  "cadenceDays": zod.int().describe('How many days may elapse between counts (default 7)'),
   "lastCountedAt": zod.string().nullable().describe('Date last counted (YYYY-MM-DD), or null if never counted'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide cycle-count schedule: a warehouse section that must be counted every `cadenceDays` days. `lastCountedAt` is the date it was last counted (null = never). Disabled schedules are kept but produce no reminder.'))
@@ -3587,7 +3587,7 @@ export const MarkCycleCountCountedResponse = zod.object({
   "schedules": zod.array(zod.object({
   "id": zod.string().describe('Stable client-generated id'),
   "section": zod.string().describe('The warehouse section\/area to count'),
-  "cadenceDays": zod.number().int().describe('How many days may elapse between counts (default 7)'),
+  "cadenceDays": zod.int().describe('How many days may elapse between counts (default 7)'),
   "lastCountedAt": zod.string().nullable().describe('Date last counted (YYYY-MM-DD), or null if never counted'),
   "enabled": zod.boolean()
 }).describe('A manager-defined factory-wide cycle-count schedule: a warehouse section that must be counted every `cadenceDays` days. `lastCountedAt` is the date it was last counted (null = never). Disabled schedules are kept but produce no reminder.'))
@@ -3640,7 +3640,7 @@ export const AuditAiMemoryHealthResponse = zod.object({
   "fromText": zod.string().describe('The messy\/wrong name that was corrected (matched case-insensitively)'),
   "toText": zod.string().describe('The canonical name it should be read as')
 }).describe('A factory-wide confirmed name correction: read fromText as toText. Tagged by domain (ingredient, brand, flavor, die, item). Shared across every AI helper so a fix learned once is honored everywhere.').and(zod.object({
-  "id": zod.number().int()
+  "id": zod.int()
 })),
   "status": zod.enum(['healthy', 'duplicate', 'covered-by-merge', 'outdated-target', 'chain', 'cycle', 'orphaned', 'needs-review']),
   "evidence": zod.array(zod.string()),
@@ -3652,14 +3652,14 @@ export const AuditAiMemoryHealthResponse = zod.object({
   "key": zod.string().describe('Stable identity within a domain (matched case-insensitively for upsert)'),
   "fact": zod.string().describe('The durable observation in plain language')
 }).describe('A durable, plain-language operational fact in the shared facility-wide AI knowledge pool. Tagged by domain (a coarse topic such as downtime, throughput, incident, ingredient, general) with a stable key so re-recording the same observation updates it in place. Read by every AI feature, so a pattern learned once is known everywhere.').and(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "source": zod.string().nullish()
 })),
   "status": zod.enum(['exact-duplicate', 'stale-source-reference', 'superseded-name-reference', 'needs-review']),
   "evidence": zod.array(zod.string())
 })),
   "safeRepairs": zod.array(zod.record(zod.string(), zod.unknown())),
-  "summary": zod.record(zod.string(), zod.number().int()),
+  "summary": zod.record(zod.string(), zod.int()),
   "conversationHistoryExcluded": zod.literal(true)
 })
 })
@@ -3677,7 +3677,7 @@ export const ApplyAiMemorySafeFixesResponse = zod.object({
   "fromText": zod.string().describe('The messy\/wrong name that was corrected (matched case-insensitively)'),
   "toText": zod.string().describe('The canonical name it should be read as')
 }).describe('A factory-wide confirmed name correction: read fromText as toText. Tagged by domain (ingredient, brand, flavor, die, item). Shared across every AI helper so a fix learned once is honored everywhere.').and(zod.object({
-  "id": zod.number().int()
+  "id": zod.int()
 })),
   "status": zod.enum(['healthy', 'duplicate', 'covered-by-merge', 'outdated-target', 'chain', 'cycle', 'orphaned', 'needs-review']),
   "evidence": zod.array(zod.string()),
@@ -3689,14 +3689,14 @@ export const ApplyAiMemorySafeFixesResponse = zod.object({
   "key": zod.string().describe('Stable identity within a domain (matched case-insensitively for upsert)'),
   "fact": zod.string().describe('The durable observation in plain language')
 }).describe('A durable, plain-language operational fact in the shared facility-wide AI knowledge pool. Tagged by domain (a coarse topic such as downtime, throughput, incident, ingredient, general) with a stable key so re-recording the same observation updates it in place. Read by every AI feature, so a pattern learned once is known everywhere.').and(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "source": zod.string().nullish()
 })),
   "status": zod.enum(['exact-duplicate', 'stale-source-reference', 'superseded-name-reference', 'needs-review']),
   "evidence": zod.array(zod.string())
 })),
   "safeRepairs": zod.array(zod.record(zod.string(), zod.unknown())),
-  "summary": zod.record(zod.string(), zod.number().int()),
+  "summary": zod.record(zod.string(), zod.int()),
   "conversationHistoryExcluded": zod.literal(true)
 }),
   "after": zod.object({
@@ -3706,7 +3706,7 @@ export const ApplyAiMemorySafeFixesResponse = zod.object({
   "fromText": zod.string().describe('The messy\/wrong name that was corrected (matched case-insensitively)'),
   "toText": zod.string().describe('The canonical name it should be read as')
 }).describe('A factory-wide confirmed name correction: read fromText as toText. Tagged by domain (ingredient, brand, flavor, die, item). Shared across every AI helper so a fix learned once is honored everywhere.').and(zod.object({
-  "id": zod.number().int()
+  "id": zod.int()
 })),
   "status": zod.enum(['healthy', 'duplicate', 'covered-by-merge', 'outdated-target', 'chain', 'cycle', 'orphaned', 'needs-review']),
   "evidence": zod.array(zod.string()),
@@ -3718,20 +3718,20 @@ export const ApplyAiMemorySafeFixesResponse = zod.object({
   "key": zod.string().describe('Stable identity within a domain (matched case-insensitively for upsert)'),
   "fact": zod.string().describe('The durable observation in plain language')
 }).describe('A durable, plain-language operational fact in the shared facility-wide AI knowledge pool. Tagged by domain (a coarse topic such as downtime, throughput, incident, ingredient, general) with a stable key so re-recording the same observation updates it in place. Read by every AI feature, so a pattern learned once is known everywhere.').and(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "source": zod.string().nullish()
 })),
   "status": zod.enum(['exact-duplicate', 'stale-source-reference', 'superseded-name-reference', 'needs-review']),
   "evidence": zod.array(zod.string())
 })),
   "safeRepairs": zod.array(zod.record(zod.string(), zod.unknown())),
-  "summary": zod.record(zod.string(), zod.number().int()),
+  "summary": zod.record(zod.string(), zod.int()),
   "conversationHistoryExcluded": zod.literal(true)
 }),
   "applied": zod.array(zod.record(zod.string(), zod.unknown())),
   "summary": zod.object({
-  "deleted": zod.number().int(),
-  "retargeted": zod.number().int()
+  "deleted": zod.int(),
+  "retargeted": zod.int()
 })
 })
 
@@ -3764,7 +3764,7 @@ export const AuditProfileDataHealthResponse = zod.object({
   "previousValues": zod.record(zod.string(), zod.unknown()),
   "nextValues": zod.record(zod.string(), zod.unknown())
 })),
-  "summary": zod.record(zod.string(), zod.number().int())
+  "summary": zod.record(zod.string(), zod.int())
 })
 })
 
@@ -3797,7 +3797,7 @@ export const ApplyProfileDataHealthRepairsResponse = zod.object({
   "previousValues": zod.record(zod.string(), zod.unknown()),
   "nextValues": zod.record(zod.string(), zod.unknown())
 })),
-  "summary": zod.record(zod.string(), zod.number().int())
+  "summary": zod.record(zod.string(), zod.int())
 }),
   "after": zod.object({
   "findings": zod.array(zod.object({
@@ -3822,7 +3822,7 @@ export const ApplyProfileDataHealthRepairsResponse = zod.object({
   "previousValues": zod.record(zod.string(), zod.unknown()),
   "nextValues": zod.record(zod.string(), zod.unknown())
 })),
-  "summary": zod.record(zod.string(), zod.number().int())
+  "summary": zod.record(zod.string(), zod.int())
 }),
   "applied": zod.array(zod.object({
   "id": zod.string(),
@@ -3835,8 +3835,8 @@ export const ApplyProfileDataHealthRepairsResponse = zod.object({
 })),
   "batchId": zod.string().nullish(),
   "summary": zod.object({
-  "repairedProfiles": zod.number().int(),
-  "repairedRuns": zod.number().int()
+  "repairedProfiles": zod.int(),
+  "repairedRuns": zod.int()
 })
 })
 
@@ -3866,14 +3866,14 @@ export const GetProfileNameLinkCleanupAuditResponse = zod.object({
   "id": zod.string(),
   "appliedAt": zod.coerce.date(),
   "summary": zod.object({
-  "scannedProfiles": zod.number().int(),
-  "correctedProfiles": zod.number().int(),
-  "skippedStarted": zod.number().int(),
+  "scannedProfiles": zod.int(),
+  "correctedProfiles": zod.int(),
+  "skippedStarted": zod.int(),
   "removedStubs": zod.object({
-  "dough": zod.number().int(),
-  "sauce": zod.number().int(),
-  "cheese": zod.number().int(),
-  "mix": zod.number().int()
+  "dough": zod.int(),
+  "sauce": zod.int(),
+  "cheese": zod.int(),
+  "mix": zod.int()
 })
 })
 }).nullable()
@@ -4012,7 +4012,7 @@ export const DeleteSpecImportAliasesResponse = zod.object({
  */
 export const ListSpecSheetsResponse = zod.object({
   "specSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "sourceHash": zod.string().nullish().describe('SHA-256 content fingerprint of the imported file bytes (per-file hashes sorted and re-hashed for multi-file imports). A re-import of the exact same file reuses this snapshot\'s parse instead of re-running the AI. Null for legacy snapshots.'),
@@ -4043,7 +4043,7 @@ export const SaveSpecSheetBody = zod.object({
 
 export const SaveSpecSheetResponse = zod.object({
   "specSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "sourceHash": zod.string().nullish().describe('SHA-256 content fingerprint of the imported file bytes (per-file hashes sorted and re-hashed for multi-file imports). A re-import of the exact same file reuses this snapshot\'s parse instead of re-running the AI. Null for legacy snapshots.'),
@@ -4066,7 +4066,7 @@ export const DeleteSpecSheetParams = zod.object({
 
 export const DeleteSpecSheetResponse = zod.object({
   "specSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "sourceHash": zod.string().nullish().describe('SHA-256 content fingerprint of the imported file bytes (per-file hashes sorted and re-hashed for multi-file imports). A re-import of the exact same file reuses this snapshot\'s parse instead of re-running the AI. Null for legacy snapshots.'),
@@ -4086,7 +4086,7 @@ export const DeleteSpecSheetResponse = zod.object({
  */
 export const ListShippingGuidesResponse = zod.object({
   "shippingGuides": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "sourceHash": zod.string().nullish().describe('SHA-256 content fingerprint of the imported file bytes. Null for legacy snapshots.'),
@@ -4135,7 +4135,7 @@ export const SaveShippingGuideBody = zod.object({
 
 export const SaveShippingGuideResponse = zod.object({
   "shippingGuides": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "sourceHash": zod.string().nullish().describe('SHA-256 content fingerprint of the imported file bytes. Null for legacy snapshots.'),
@@ -4167,7 +4167,7 @@ export const DeleteShippingGuideParams = zod.object({
 
 export const DeleteShippingGuideResponse = zod.object({
   "shippingGuides": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "sourceHash": zod.string().nullish().describe('SHA-256 content fingerprint of the imported file bytes. Null for legacy snapshots.'),
@@ -4196,7 +4196,7 @@ export const DeleteShippingGuideResponse = zod.object({
  */
 export const ListPremixSheetsResponse = zod.object({
   "premixSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "createdAt": zod.number().describe('Epoch milliseconds the snapshot was saved'),
@@ -4249,7 +4249,7 @@ export const SavePremixSheetBody = zod.object({
 
 export const SavePremixSheetResponse = zod.object({
   "premixSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "createdAt": zod.number().describe('Epoch milliseconds the snapshot was saved'),
@@ -4272,7 +4272,7 @@ export const SavePremixSheetResponse = zod.object({
 }).describe('A single manager-defined mix, as stored factory-wide. Extra fields are allowed so a snapshot round-trips unchanged.')).describe('The Mix[] snapshot captured when a premix workbook was imported.')
 }))
 }).and(zod.object({
-  "snapshotId": zod.number().int()
+  "snapshotId": zod.int()
 }))
 
 
@@ -4282,7 +4282,7 @@ export const SavePremixSheetResponse = zod.object({
  */
 export const ListCheeseSheetsResponse = zod.object({
   "cheeseSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity; retention keeps two versions per source key.'),
   "createdAt": zod.number().describe('Epoch milliseconds the snapshot was saved'),
@@ -4332,7 +4332,7 @@ export const SaveCheeseSheetBody = zod.object({
 
 export const SaveCheeseSheetResponse = zod.object({
   "cheeseSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity; retention keeps two versions per source key.'),
   "createdAt": zod.number().describe('Epoch milliseconds the snapshot was saved'),
@@ -4354,7 +4354,7 @@ export const SaveCheeseSheetResponse = zod.object({
 }))
 }))
 }).and(zod.object({
-  "snapshotId": zod.number().int()
+  "snapshotId": zod.int()
 }))
 
 
@@ -4367,7 +4367,7 @@ export const DeleteCheeseSheetParams = zod.object({
 
 export const DeleteCheeseSheetResponse = zod.object({
   "cheeseSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity; retention keeps two versions per source key.'),
   "createdAt": zod.number().describe('Epoch milliseconds the snapshot was saved'),
@@ -4400,7 +4400,7 @@ export const DeletePremixSheetParams = zod.object({
 
 export const DeletePremixSheetResponse = zod.object({
   "premixSheets": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "label": zod.string(),
   "sourceKey": zod.string().nullish().describe('Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.'),
   "createdAt": zod.number().describe('Epoch milliseconds the snapshot was saved'),
@@ -4440,7 +4440,7 @@ export const listImportHistoryResponseImportsItemSummaryCountsMinOne = 0;
 
 export const ListImportHistoryResponse = zod.object({
   "imports": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "importType": zod.enum(['spec', 'premix', 'cheese', 'sauce', 'dough', 'schedule', 'shipping', 'recipe']),
   "sourceKey": zod.string().nullish(),
   "sourceLabel": zod.string(),
@@ -4448,16 +4448,16 @@ export const ListImportHistoryResponse = zod.object({
   "status": zod.enum(['complete', 'partial', 'failed']),
   "summary": zod.object({
   "phases": zod.record(zod.string(), zod.string()).optional(),
-  "counts": zod.record(zod.string(), zod.number().int().min(listImportHistoryResponseImportsItemSummaryCountsMinOne)).optional(),
+  "counts": zod.record(zod.string(), zod.int().min(listImportHistoryResponseImportsItemSummaryCountsMinOne)).optional(),
   "warnings": zod.array(zod.string()).optional(),
   "unresolved": zod.array(zod.string()).optional(),
   "skipped": zod.array(zod.string()).optional(),
   "followUp": zod.array(zod.string()).optional(),
-  "snapshotId": zod.number().int().nullish()
+  "snapshotId": zod.int().nullish()
 }),
-  "snapshotId": zod.number().int().nullish(),
+  "snapshotId": zod.int().nullish(),
   "operationId": zod.string().nullish(),
-  "createdAt": zod.number().int().describe('Epoch milliseconds')
+  "createdAt": zod.int().describe('Epoch milliseconds')
 }))
 })
 
@@ -4478,12 +4478,12 @@ export const RecordImportHistoryBody = zod.object({
   "operationId": zod.string().describe('Client-generated idempotency key for safely retrying an audit write.'),
   "summary": zod.object({
   "phases": zod.record(zod.string(), zod.string()).optional(),
-  "counts": zod.record(zod.string(), zod.number().int().min(recordImportHistoryBodySummaryCountsMinOne)).optional(),
+  "counts": zod.record(zod.string(), zod.int().min(recordImportHistoryBodySummaryCountsMinOne)).optional(),
   "warnings": zod.array(zod.string()).optional(),
   "unresolved": zod.array(zod.string()).optional(),
   "skipped": zod.array(zod.string()).optional(),
   "followUp": zod.array(zod.string()).optional(),
-  "snapshotId": zod.number().int().nullish()
+  "snapshotId": zod.int().nullish()
 })
 })
 
@@ -4493,7 +4493,7 @@ export const recordImportHistoryResponseImportSummaryCountsMinOne = 0;
 
 export const RecordImportHistoryResponse = zod.object({
   "import": zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "importType": zod.enum(['spec', 'premix', 'cheese', 'sauce', 'dough', 'schedule', 'shipping', 'recipe']),
   "sourceKey": zod.string().nullish(),
   "sourceLabel": zod.string(),
@@ -4501,16 +4501,16 @@ export const RecordImportHistoryResponse = zod.object({
   "status": zod.enum(['complete', 'partial', 'failed']),
   "summary": zod.object({
   "phases": zod.record(zod.string(), zod.string()).optional(),
-  "counts": zod.record(zod.string(), zod.number().int().min(recordImportHistoryResponseImportSummaryCountsMinOne)).optional(),
+  "counts": zod.record(zod.string(), zod.int().min(recordImportHistoryResponseImportSummaryCountsMinOne)).optional(),
   "warnings": zod.array(zod.string()).optional(),
   "unresolved": zod.array(zod.string()).optional(),
   "skipped": zod.array(zod.string()).optional(),
   "followUp": zod.array(zod.string()).optional(),
-  "snapshotId": zod.number().int().nullish()
+  "snapshotId": zod.int().nullish()
 }),
-  "snapshotId": zod.number().int().nullish(),
+  "snapshotId": zod.int().nullish(),
   "operationId": zod.string().nullish(),
-  "createdAt": zod.number().int().describe('Epoch milliseconds')
+  "createdAt": zod.int().describe('Epoch milliseconds')
 })
 })
 
@@ -4685,7 +4685,7 @@ export const ReportIncidentResponse = zod.object({
   "diagnosis": zod.string().describe('Plain-language explanation of what likely went wrong'),
   "workaround": zod.string().describe('Suggested next step \/ workaround for the user'),
   "recurrence": zod.union([zod.object({
-  "count": zod.number().int().describe('How many prior similar incidents were found'),
+  "count": zod.int().describe('How many prior similar incidents were found'),
   "lastWorkaround": zod.string().nullable().describe('The recovery step that helped previously, if any')
 }).describe('\"Seen before\" signal computed at report time from past similar incidents in the shared facility-memory pool. Null on the incident\/diagnosis when the problem has no precedent.'),zod.null()]).describe('Recurrence signal, or null when this problem has no precedent')
 })
@@ -4713,7 +4713,7 @@ export const ListIncidentsResponseItem = zod.object({
   "diagnosis": zod.string().nullable(),
   "workaround": zod.string().nullable(),
   "recurrence": zod.union([zod.object({
-  "count": zod.number().int().describe('How many prior similar incidents were found'),
+  "count": zod.int().describe('How many prior similar incidents were found'),
   "lastWorkaround": zod.string().nullable().describe('The recovery step that helped previously, if any')
 }).describe('\"Seen before\" signal computed at report time from past similar incidents in the shared facility-memory pool. Null on the incident\/diagnosis when the problem has no precedent.'),zod.null()]).describe('Recurrence signal, or null when this problem has no precedent'),
   "status": zod.enum(['new', 'reviewed', 'resolved']),
@@ -4746,7 +4746,7 @@ export const ListIncidentsResponse = zod.array(ListIncidentsResponseItem)
  * @summary Count of unreviewed incidents (manager only)
  */
 export const GetUnreviewedIncidentCountResponse = zod.object({
-  "count": zod.number().int()
+  "count": zod.int()
 })
 
 
@@ -4754,7 +4754,7 @@ export const GetUnreviewedIncidentCountResponse = zod.object({
  * @summary Count unresolved actionable incident work
  */
 export const GetActionableIncidentCountResponse = zod.object({
-  "count": zod.number().int()
+  "count": zod.int()
 })
 
 
@@ -4794,7 +4794,7 @@ export const GetIncidentResponse = zod.object({
   "diagnosis": zod.string().nullable(),
   "workaround": zod.string().nullable(),
   "recurrence": zod.union([zod.object({
-  "count": zod.number().int().describe('How many prior similar incidents were found'),
+  "count": zod.int().describe('How many prior similar incidents were found'),
   "lastWorkaround": zod.string().nullable().describe('The recovery step that helped previously, if any')
 }).describe('\"Seen before\" signal computed at report time from past similar incidents in the shared facility-memory pool. Null on the incident\/diagnosis when the problem has no precedent.'),zod.null()]).describe('Recurrence signal, or null when this problem has no precedent'),
   "status": zod.enum(['new', 'reviewed', 'resolved']),
@@ -4846,7 +4846,7 @@ export const ReviewIncidentResponse = zod.object({
   "diagnosis": zod.string().nullable(),
   "workaround": zod.string().nullable(),
   "recurrence": zod.union([zod.object({
-  "count": zod.number().int().describe('How many prior similar incidents were found'),
+  "count": zod.int().describe('How many prior similar incidents were found'),
   "lastWorkaround": zod.string().nullable().describe('The recovery step that helped previously, if any')
 }).describe('\"Seen before\" signal computed at report time from past similar incidents in the shared facility-memory pool. Null on the incident\/diagnosis when the problem has no precedent.'),zod.null()]).describe('Recurrence signal, or null when this problem has no precedent'),
   "status": zod.enum(['new', 'reviewed', 'resolved']),
@@ -4899,7 +4899,7 @@ export const ResolveIncidentResponse = zod.object({
   "diagnosis": zod.string().nullable(),
   "workaround": zod.string().nullable(),
   "recurrence": zod.union([zod.object({
-  "count": zod.number().int().describe('How many prior similar incidents were found'),
+  "count": zod.int().describe('How many prior similar incidents were found'),
   "lastWorkaround": zod.string().nullable().describe('The recovery step that helped previously, if any')
 }).describe('\"Seen before\" signal computed at report time from past similar incidents in the shared facility-memory pool. Null on the incident\/diagnosis when the problem has no precedent.'),zod.null()]).describe('Recurrence signal, or null when this problem has no precedent'),
   "status": zod.enum(['new', 'reviewed', 'resolved']),
@@ -4937,7 +4937,7 @@ export const ListManagerActionQueueQueryParams = zod.object({
 
 export const ListManagerActionQueueResponse = zod.object({
   "items": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "scope": zod.string(),
   "dedupKey": zod.string(),
   "category": zod.enum(['incident', 'import', 'data-health', 'sync', 'production-rule', 'report']),
@@ -4954,9 +4954,9 @@ export const ListManagerActionQueueResponse = zod.object({
   "resolutionNote": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
-  "version": zod.number().int()
+  "version": zod.int()
 })),
-  "counts": zod.record(zod.string(), zod.number().int()),
+  "counts": zod.record(zod.string(), zod.int()),
   "nextCursor": zod.string().nullable()
 })
 
@@ -4975,7 +4975,7 @@ export const updateManagerActionItemBodyResolutionNoteMax = 2000;
 
 
 export const UpdateManagerActionItemBody = zod.object({
-  "version": zod.number().int(),
+  "version": zod.int(),
   "status": zod.enum(['open', 'in_progress', 'deferred', 'resolved']).optional(),
   "assigneeId": zod.string().nullish(),
   "deferReason": zod.string().max(updateManagerActionItemBodyDeferReasonMax).optional(),
@@ -4984,7 +4984,7 @@ export const UpdateManagerActionItemBody = zod.object({
 
 export const UpdateManagerActionItemResponse = zod.object({
   "item": zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "scope": zod.string(),
   "dedupKey": zod.string(),
   "category": zod.enum(['incident', 'import', 'data-health', 'sync', 'production-rule', 'report']),
@@ -5001,7 +5001,7 @@ export const UpdateManagerActionItemResponse = zod.object({
   "resolutionNote": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date(),
-  "version": zod.number().int()
+  "version": zod.int()
 })
 })
 
@@ -5042,7 +5042,7 @@ export const UpdateIncidentWorkflowResponse = zod.object({
   "diagnosis": zod.string().nullable(),
   "workaround": zod.string().nullable(),
   "recurrence": zod.union([zod.object({
-  "count": zod.number().int().describe('How many prior similar incidents were found'),
+  "count": zod.int().describe('How many prior similar incidents were found'),
   "lastWorkaround": zod.string().nullable().describe('The recovery step that helped previously, if any')
 }).describe('\"Seen before\" signal computed at report time from past similar incidents in the shared facility-memory pool. Null on the incident\/diagnosis when the problem has no precedent.'),zod.null()]).describe('Recurrence signal, or null when this problem has no precedent'),
   "status": zod.enum(['new', 'reviewed', 'resolved']),
@@ -5374,7 +5374,7 @@ export const PutSyncTodayResponse = zod.object({
   "unchanged": zod.boolean().optional(),
   "snapshotId": zod.string().regex(putSyncTodayResponseSnapshotIdRegExp).optional(),
   "stale": zod.boolean().optional(),
-  "epoch": zod.number().int().optional()
+  "epoch": zod.int().optional()
 })
 
 
@@ -5421,12 +5421,12 @@ export const ClaimAutoTrackEventBody = zod.object({
   "runId": zod.string().min(1).max(claimAutoTrackEventBodyClaimRunIdMax),
   "channel": zod.enum(['case', 'tray-consume', 'tray-produce', 'batch-consume', 'batch-produce', 'hopper']),
   "generation": zod.string().min(1).max(claimAutoTrackEventBodyClaimGenerationMax),
-  "sequence": zod.number().int().min(1).max(claimAutoTrackEventBodyClaimSequenceMax),
+  "sequence": zod.int().min(1).max(claimAutoTrackEventBodyClaimSequenceMax),
   "eventId": zod.string().min(1).max(claimAutoTrackEventBodyClaimEventIdMax),
   "dueAt": zod.number(),
   "nextDueAt": zod.number(),
   "baseUpdatedAt": zod.number().min(claimAutoTrackEventBodyClaimBaseUpdatedAtMin),
-  "correctionGeneration": zod.number().int().min(claimAutoTrackEventBodyClaimCorrectionGenerationMin).optional(),
+  "correctionGeneration": zod.int().min(claimAutoTrackEventBodyClaimCorrectionGenerationMin).optional(),
   "mutations": zod.array(zod.object({
   "field": zod.enum(['skidsCompleted', 'casesOnCurrentSkid', 'traysOnLine', 'batchesReady']),
   "from": zod.number().min(claimAutoTrackEventBodyClaimMutationsItemFromMin).max(claimAutoTrackEventBodyClaimMutationsItemFromMax),
@@ -5445,7 +5445,7 @@ export const ClaimAutoTrackEventResponse = zod.object({
   "outcome": zod.enum(['accepted', 'duplicate', 'stale', 'conflict']),
   "state": zod.object({
   "generation": zod.string(),
-  "sequence": zod.number().int(),
+  "sequence": zod.int(),
   "nextDueAt": zod.number(),
   "acceptedEventId": zod.string().optional(),
   "acceptedRunValuesUpdatedAt": zod.number().min(claimAutoTrackEventResponseStateAcceptedRunValuesUpdatedAtMin).optional(),

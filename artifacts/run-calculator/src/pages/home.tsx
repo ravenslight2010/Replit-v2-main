@@ -14,9 +14,8 @@ import { ManualOverrideBanner, manualOverrideBannerShow } from "../components/Ma
 import { MixAlreadyMadeInput } from "../components/MixAlreadyMadeInput";
 import { PrepMixMissingAmountsWarning } from "../components/PrepMixMissingAmountsWarning";
 import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { formResolver } from "../formResolver";
 import {
-  formSchema,
   type FormValues,
   type RecipeRow,
   type Stoppage,
@@ -3831,7 +3830,7 @@ export default function Home() {
   }
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: formResolver,
     defaultValues: (() => {
       const ds = loadDayState();
       return loadRunValues(ds.runs[ds.currentIndex]?.id ?? "");

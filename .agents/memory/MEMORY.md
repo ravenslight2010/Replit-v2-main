@@ -146,7 +146,7 @@
 - [Release evidence verifier mode](release-evidence-verifier-mode.md) — full releases need explicit full-mode verification; the default verifier checks a separate standard directory.
 - [Browser coverage contract](release-browser-coverage-contract.md) — when the full suite’s enumerated cases change, update reporter, verifier, and fixtures together or passing runs cannot produce retained evidence.
 - [Source-audit reports](large-source-audit-captures.md) + [versions](source-audit-report-versions.md) — keep hashed source captures shard-safe and dispatch persisted comparisons by supported read version.
-- [Development esbuild override placement](esbuild-override-placement.md) — pnpm security overrides belong in the root package manifest; verify the lock graph rather than trusting workspace YAML alone.
+- [Dependency override placement](esbuild-override-placement.md) — override configuration changed with pnpm major versions; verify the resolved graph and audit after updates.
 - [Importer audit recovery](importer-audit-recovery.md) — retryable audit writes must be user/scope-bound and server-idempotent; never replay source imports automatically.
 - [Schedule move canonical writes](schedule-move-canonical-writes.md) — moves built from canonical reads must not reuse partial-sync snapshot markers; reject fallback responses before source cleanup.
 - [Cross-channel auto-track claims](cross-channel-auto-track-claims.md) — shared run stamps require queued deltas to distinguish peer auto accepts from manual edits before rebasing.
