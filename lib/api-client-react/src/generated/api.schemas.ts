@@ -712,8 +712,11 @@ export interface QualityCheckRecord {
   confidence: number;
   summary: string;
   issues: QualityIssue[];
+  /** @nullable */
   notes?: string | null;
+  /** @nullable */
   thumbnail?: string | null;
+  /** @nullable */
   reviewerName?: string | null;
   /** ISO-8601 timestamp the check was recorded */
   createdAt: string;
@@ -1312,9 +1315,15 @@ export interface SavedSpecSheetData {
 export interface SavedSpecSheet {
   id: number;
   label: string;
-  /** Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots. */
+  /**
+     * Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.
+     * @nullable
+     */
   sourceKey?: string | null;
-  /** SHA-256 content fingerprint of the imported file bytes (per-file hashes sorted and re-hashed for multi-file imports). A re-import of the exact same file reuses this snapshot's parse instead of re-running the AI. Null for legacy snapshots. */
+  /**
+     * SHA-256 content fingerprint of the imported file bytes (per-file hashes sorted and re-hashed for multi-file imports). A re-import of the exact same file reuses this snapshot's parse instead of re-running the AI. Null for legacy snapshots.
+     * @nullable
+     */
   sourceHash?: string | null;
   /** Epoch milliseconds the snapshot was saved */
   createdAt: number;
@@ -1364,9 +1373,15 @@ export interface SavedShippingGuideData {
 export interface SavedShippingGuide {
   id: number;
   label: string;
-  /** Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots. */
+  /**
+     * Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.
+     * @nullable
+     */
   sourceKey?: string | null;
-  /** SHA-256 content fingerprint of the imported file bytes. Null for legacy snapshots. */
+  /**
+     * SHA-256 content fingerprint of the imported file bytes. Null for legacy snapshots.
+     * @nullable
+     */
   sourceHash?: string | null;
   /** Epoch milliseconds the snapshot was saved */
   createdAt: number;
@@ -1490,7 +1505,10 @@ export type SavedPremixSheetData = SavedMix[];
 export interface SavedPremixSheet {
   id: number;
   label: string;
-  /** Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots. */
+  /**
+     * Stable per-file identity (normalized uploaded filename). Retention keeps the two most recent snapshots per sourceKey. Null for legacy snapshots.
+     * @nullable
+     */
   sourceKey?: string | null;
   /** Epoch milliseconds the snapshot was saved */
   createdAt: number;
@@ -1523,7 +1541,10 @@ export interface SavedCheeseRecipe {
 export interface SavedCheeseSheet {
   id: number;
   label: string;
-  /** Stable per-file identity; retention keeps two versions per source key. */
+  /**
+     * Stable per-file identity; retention keeps two versions per source key.
+     * @nullable
+     */
   sourceKey?: string | null;
   /** Epoch milliseconds the snapshot was saved */
   createdAt: number;
@@ -1870,6 +1891,9 @@ export const OperationalReportQualityAvailability = {
   unavailable: 'unavailable',
 } as const;
 
+/**
+ * @nullable
+ */
 export type OperationalReportQualityValue = {
   checks?: number;
   issues?: number;
@@ -1879,6 +1903,7 @@ export type OperationalReportQualityValue = {
 
 export type OperationalReportQuality = {
   availability: OperationalReportQualityAvailability;
+  /** @nullable */
   value: OperationalReportQualityValue;
   note?: string;
 };
@@ -1891,6 +1916,9 @@ export const OperationalReportIncidentsAvailability = {
   unavailable: 'unavailable',
 } as const;
 
+/**
+ * @nullable
+ */
 export type OperationalReportIncidentsValue = {
   total?: number;
   unresolved?: number;
@@ -1898,6 +1926,7 @@ export type OperationalReportIncidentsValue = {
 
 export type OperationalReportIncidents = {
   availability: OperationalReportIncidentsAvailability;
+  /** @nullable */
   value: OperationalReportIncidentsValue;
   note?: string;
 };
@@ -1910,12 +1939,16 @@ export const OperationalReportInventoryAvailability = {
   unavailable: 'unavailable',
 } as const;
 
+/**
+ * @nullable
+ */
 export type OperationalReportInventoryValue = {
   flaggedItems?: number;
 } | null;
 
 export type OperationalReportInventory = {
   availability: OperationalReportInventoryAvailability;
+  /** @nullable */
   value: OperationalReportInventoryValue;
   note?: string;
 };
@@ -1972,8 +2005,11 @@ export interface ShiftHandoffItem {
   status: ShiftHandoffItemStatus;
   title: string;
   detail: string;
+  /** @nullable */
   affectedRun: string | null;
+  /** @nullable */
   affectedProduct: string | null;
+  /** @nullable */
   occurredAt: string | null;
   sourcePath: string;
   historical: boolean;
@@ -2471,7 +2507,10 @@ export interface ImportAlias {
   externalName: string;
   /** The saved name the imported name resolves to */
   canonicalName: string;
-  /** For flavor aliases, the canonical parent brand the flavor belongs to; null/omitted for brand aliases. */
+  /**
+     * For flavor aliases, the canonical parent brand the flavor belongs to; null/omitted for brand aliases.
+     * @nullable
+     */
   brandContext?: string | null;
 }
 
@@ -2490,6 +2529,7 @@ export interface ImportHistorySummary {
   unresolved?: string[];
   skipped?: string[];
   followUp?: string[];
+  /** @nullable */
   snapshotId?: number | null;
   [key: string]: unknown;
  }
@@ -2520,12 +2560,16 @@ export const ImportHistoryStatus = {
 export interface ImportHistory {
   id: number;
   importType: ImportHistoryImportType;
+  /** @nullable */
   sourceKey?: string | null;
   sourceLabel: string;
+  /** @nullable */
   customerScope?: string | null;
   status: ImportHistoryStatus;
   summary: ImportHistorySummary;
+  /** @nullable */
   snapshotId?: number | null;
+  /** @nullable */
   operationId?: string | null;
   /** Epoch milliseconds */
   createdAt: number;
@@ -2705,6 +2749,7 @@ export interface FacilityKnowledge {
 
 export type FacilityKnowledgeHealthFindingEntry = FacilityKnowledge & ({
   id: number;
+  /** @nullable */
   source?: string | null;
 });
 
@@ -2822,12 +2867,16 @@ export interface ProfileDataHealthApplyResult {
   before: ProfileDataHealthReport;
   after: ProfileDataHealthReport;
   applied: ProfileDataHealthRepair[];
+  /** @nullable */
   batchId?: string | null;
   summary: ProfileDataHealthApplyResultSummary;
 }
 
 export type ProfileDataHealthWorkspaceSummary = {[key: string]: number};
 
+/**
+ * @nullable
+ */
 export type ProfileDataHealthWorkspaceCleanupHistory = { [key: string]: unknown } | null;
 
 export type ProfileDataHealthWorkspaceRepairBatchesItem = { [key: string]: unknown };
@@ -2836,6 +2885,7 @@ export interface ProfileDataHealthWorkspace {
   findings: ProfileDataHealthFinding[];
   safeRepairs: ProfileDataHealthRepair[];
   summary: ProfileDataHealthWorkspaceSummary;
+  /** @nullable */
   cleanupHistory: ProfileDataHealthWorkspaceCleanupHistory;
   repairBatches: ProfileDataHealthWorkspaceRepairBatchesItem[];
 }
@@ -2987,21 +3037,45 @@ export interface ProductionRule {
   type: ProductionRuleType;
   enforcement: ProductionRuleEnforcement;
   enabled: boolean;
-  /** Run field key (required-field, numeric-range) */
+  /**
+     * Run field key (required-field, numeric-range)
+     * @nullable
+     */
   field?: string | null;
-  /** Inclusive lower bound (numeric-range) */
+  /**
+     * Inclusive lower bound (numeric-range)
+     * @nullable
+     */
   min?: number | null;
-  /** Inclusive upper bound (numeric-range) */
+  /**
+     * Inclusive upper bound (numeric-range)
+     * @nullable
+     */
   max?: number | null;
-  /** Run attribute key for the transition (sequence) */
+  /**
+     * Run attribute key for the transition (sequence)
+     * @nullable
+     */
   attribute?: string | null;
-  /** Disallowed preceding attribute value (sequence) */
+  /**
+     * Disallowed preceding attribute value (sequence)
+     * @nullable
+     */
   before?: string | null;
-  /** Disallowed following attribute value (sequence) */
+  /**
+     * Disallowed following attribute value (sequence)
+     * @nullable
+     */
   after?: string | null;
-  /** Exceptions: when the current run matches any of these conditions the rule is waived entirely (no warning, no block). Applies to any type. */
+  /**
+     * Exceptions: when the current run matches any of these conditions the rule is waived entirely (no warning, no block). Applies to any type.
+     * @nullable
+     */
   bypass?: RuleBypassCondition[] | null;
-  /** Exceptions: ordered step labels a manager attaches to a (strict) rule. When the rule is violated and not bypassed, the operator must acknowledge every step before Start unblocks for that run. */
+  /**
+     * Exceptions: ordered step labels a manager attaches to a (strict) rule. When the rule is violated and not bypassed, the operator must acknowledge every step before Start unblocks for that run.
+     * @nullable
+     */
   checklist?: string[] | null;
 }
 
@@ -3142,9 +3216,15 @@ export interface DieLineDefaultsEntry {
   freezerTime: number;
   /** "Extra Case Buffer" in the UI */
   casesPerLayer: number;
-  /** Pre-tunnel dwell time override in minutes. Absent = use the app's built-in per-die-size default (3.5 min for 7", 2.0 min for 12"). */
+  /**
+     * Pre-tunnel dwell time override in minutes. Absent = use the app's built-in per-die-size default (3.5 min for 7", 2.0 min for 12").
+     * @nullable
+     */
   preTunnelMin?: number | null;
-  /** Post-tunnel dwell time override in minutes. Absent = use the app's built-in per-die-size default (3.0 min for 7", 2.0 min for 12"). */
+  /**
+     * Post-tunnel dwell time override in minutes. Absent = use the app's built-in per-die-size default (3.0 min for 7", 2.0 min for 12").
+     * @nullable
+     */
   postTunnelMin?: number | null;
 }
 
@@ -3373,7 +3453,10 @@ export interface Ingredient {
   /** Current display name */
   name: string;
   categories: IngredientCategory[];
-  /** When set, this ingredient was merged into another ingredient's id; resolve display name by following this pointer. */
+  /**
+     * When set, this ingredient was merged into another ingredient's id; resolve display name by following this pointer.
+     * @nullable
+     */
   mergedInto?: string | null;
   /** false = soft-deleted (kept so old rows still resolve) */
   enabled: boolean;
@@ -3578,7 +3661,10 @@ export interface CycleCountSchedule {
   section: string;
   /** How many days may elapse between counts (default 7) */
   cadenceDays: number;
-  /** Date last counted (YYYY-MM-DD), or null if never counted */
+  /**
+     * Date last counted (YYYY-MM-DD), or null if never counted
+     * @nullable
+     */
   lastCountedAt: string | null;
   enabled: boolean;
 }
@@ -3659,7 +3745,10 @@ export interface SpecImportAlias {
   externalName: string;
   /** The saved canonical name the label resolves to */
   canonicalName: string;
-  /** Disambiguator within a kind (e.g. the canonical brand for a flavor alias); null/omitted otherwise. */
+  /**
+     * Disambiguator within a kind (e.g. the canonical brand for a flavor alias); null/omitted otherwise.
+     * @nullable
+     */
   context?: string | null;
 }
 
@@ -4166,26 +4255,22 @@ export type ClientTodayParameter = string;
 export type SyncSnapshotParameter = string;
 
 export type CheckUsernameAvailableParams = {
-/**
- * @minLength 1
- * @maxLength 64
- */
-username: string;
+  /**
+   * @minLength 1
+   * @maxLength 64
+   */
+  username: string;
 };
 
 export type ListInventoryLedgerParams = {
-itemId?: number;
+  itemId?: number;
 };
 
 export type ListQualityChecksParams = {
-/**
- * Only return checks for this product type
- */
-productType?: ListQualityChecksProductType;
-/**
- * Only return checks with this verdict
- */
-status?: ListQualityChecksStatus;
+  /** Only return checks for this product type */
+  productType?: ListQualityChecksProductType;
+  /** Only return checks with this verdict */
+  status?: ListQualityChecksStatus;
 };
 
 export type ListQualityChecksProductType = typeof ListQualityChecksProductType[keyof typeof ListQualityChecksProductType];
@@ -4207,29 +4292,21 @@ export const ListQualityChecksStatus = {
 } as const;
 
 export type GetShiftHandoffDigestParams = {
-date: string;
+  date: string;
 };
 
 export type ListMergeAliasesParams = {
-/**
- * Which merge tab's pool to scope the alias list to. Defaults to "ingredient" for backward compatibility.
- */
-category?: MergeSuggestCategory;
-/**
- * When category is "flavor", scopes the alias list to a single brand's flavor pool. Ignored for every other category.
- */
-brand?: string;
+  /** Which merge tab's pool to scope the alias list to. Defaults to "ingredient" for backward compatibility. */
+  category?: MergeSuggestCategory;
+  /** When category is "flavor", scopes the alias list to a single brand's flavor pool. Ignored for every other category. */
+  brand?: string;
 };
 
 export type ListDeniedMergesParams = {
-/**
- * Which merge tab's pool to scope the denied-pair list to. Defaults to "ingredient" for backward compatibility.
- */
-category?: MergeSuggestCategory;
-/**
- * When category is "flavor", scopes the denied-pair list to a single brand's flavor pool. Ignored for every other category.
- */
-brand?: string;
+  /** Which merge tab's pool to scope the denied-pair list to. Defaults to "ingredient" for backward compatibility. */
+  category?: MergeSuggestCategory;
+  /** When category is "flavor", scopes the denied-pair list to a single brand's flavor pool. Ignored for every other category. */
+  brand?: string;
 };
 
 export type ObserveRunSuggestion200 = {
@@ -4259,9 +4336,9 @@ export type SavePremixSheet200 = SavedPremixSheetList & {
 };
 
 export type ListImportHistoryParams = {
-type?: ListImportHistoryType;
-status?: ListImportHistoryStatus;
-customer?: string;
+  type?: ListImportHistoryType;
+  status?: ListImportHistoryStatus;
+  customer?: string;
 };
 
 export type ListImportHistoryType = typeof ListImportHistoryType[keyof typeof ListImportHistoryType];
@@ -4294,12 +4371,10 @@ export type ListIncidentAssignees200Item = {
 };
 
 export type ListManagerActionQueueParams = {
-status?: ListManagerActionQueueStatus;
-category?: ListManagerActionQueueCategory;
-/**
- * Opaque cursor for loading the next page of resolved history.
- */
-cursor?: string;
+  status?: ListManagerActionQueueStatus;
+  category?: ListManagerActionQueueCategory;
+  /** Opaque cursor for loading the next page of resolved history. */
+  cursor?: string;
 };
 
 export type ListManagerActionQueueStatus = typeof ListManagerActionQueueStatus[keyof typeof ListManagerActionQueueStatus];
@@ -4331,19 +4406,15 @@ export type UpdateManagerActionItem200 = {
 };
 
 export type GetSyncTodayParams = {
-today?: ClientTodayParameter;
-/**
- * @pattern ^[a-f0-9]{64}$
- */
-snapshot?: SyncSnapshotParameter;
+  today?: ClientTodayParameter;
+  /** @pattern ^[a-f0-9]{64}$ */
+  snapshot?: SyncSnapshotParameter;
 };
 
 export type PutSyncTodayParams = {
-today?: ClientTodayParameter;
-/**
- * @minimum 0
- */
-epoch?: number;
+  today?: ClientTodayParameter;
+  /** @minimum 0 */
+  epoch?: number;
 };
 
 export type PutSyncToday200 = {
@@ -4357,10 +4428,8 @@ export type PutSyncToday200 = {
 };
 
 export type ClaimAutoTrackEventParams = {
-today?: ClientTodayParameter;
-/**
- * @minimum 0
- */
-epoch?: number;
+  today?: ClientTodayParameter;
+  /** @minimum 0 */
+  epoch?: number;
 };
 

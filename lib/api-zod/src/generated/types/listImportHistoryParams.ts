@@ -9,7 +9,7 @@ import type { ListImportHistoryStatus } from './listImportHistoryStatus';
 import type { ListImportHistoryType } from './listImportHistoryType';
 
 export type ListImportHistoryParams = {
-type?: ListImportHistoryType;
-status?: ListImportHistoryStatus;
-customer?: string;
+  type?: ListImportHistoryType;
+  status?: ListImportHistoryStatus;
+  customer?: string;
 };

@@ -15,6 +15,7 @@ export interface ProfileDataHealthWorkspace {
   findings: ProfileDataHealthFinding[];
   safeRepairs: ProfileDataHealthRepair[];
   summary: ProfileDataHealthWorkspaceSummary;
+  /** @nullable */
   cleanupHistory: ProfileDataHealthWorkspaceCleanupHistory;
   repairBatches: ProfileDataHealthWorkspaceRepairBatchesItem[];
 }

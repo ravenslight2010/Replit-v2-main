@@ -239,6 +239,26 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+const getHeaders = (...sources: (RequestInit['headers'] | Record<string, string | undefined>)[]) => {
+  const seen = new Set<string>();
+  const layers: [string, string | readonly string[]][][] = [];
+  for (const source of sources.reverse()) {
+    if (!source) continue;
+    const entries = source instanceof Headers
+      ? source.entries()
+      : Symbol.iterator in source
+        ? Array.from(source as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string])
+        : Object.entries<string | readonly string[] | undefined>(source);
+    const layer: [string, string | readonly string[]][] = [];
+    for (const [name, value] of entries) {
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+    }
+    for (const [name] of layer) seen.add(name.toLowerCase());
+    layers.push(layer);
+  }
+  return Object.fromEntries(layers.reverse().flat()) as Extract<RequestInit['headers'], Record<string, unknown>>;
+};
+
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
@@ -312,9 +332,9 @@ export type HealthCheckQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns server health status
  * @summary Health check
  */
-
 export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -347,17 +367,11 @@ export const getSignUpUrl = () => {
  */
 export const signUp = async (signUpCredentials: SignUpCredentials, options?: Parameters<typeof customFetch>[1]): Promise<AuthResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<AuthResponse>(getSignUpUrl(),
+  return customFetch<AuthResponse>(getSignUpUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(signUpCredentials)
   }
 );}
@@ -366,11 +380,13 @@ return customFetch<AuthResponse>(getSignUpUrl(),
 
 
 
+export const getSignUpMutationKey = () => ['signUp'] as const;
+
 export const getSignUpMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,SignUpMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof signUp>>, TError,SignUpMutationVariables, TContext> => {
 
-const mutationKey = ['signUp'];
+const mutationKey = getSignUpMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -399,6 +415,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SignUpMutationVariables = {data: BodyType<SignUpCredentials>}
 
     /**
+ * Creates a new username + password account. Requires a facility access code (configured server-side out of band and shared only with legitimate staff) — sign-up is otherwise closed to the public internet. The very first account ever created becomes a manager; all later accounts default to operator.
  * @summary Create a staff account and start a session
  */
 export const useSignUp = <TError = ErrorType<void>,
@@ -476,9 +493,9 @@ export type CheckUsernameAvailableQueryError = ErrorType<void>
 
 
 /**
+ * Lightweight, read-only lookup used by the sign-up form to tell users in real time whether a username is still free. Public — sign-up is itself public. The check is case-insensitive, mirroring account creation.
  * @summary Check whether a username is available for sign-up
  */
-
 export function useCheckUsernameAvailable<TData = Awaited<ReturnType<typeof checkUsernameAvailable>>, TError = ErrorType<void>>(
  params: CheckUsernameAvailableParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkUsernameAvailable>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -510,17 +527,11 @@ export const getSignInUrl = () => {
  */
 export const signIn = async (authCredentials: AuthCredentials, options?: Parameters<typeof customFetch>[1]): Promise<AuthResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<AuthResponse>(getSignInUrl(),
+  return customFetch<AuthResponse>(getSignInUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(authCredentials)
   }
 );}
@@ -529,11 +540,13 @@ return customFetch<AuthResponse>(getSignInUrl(),
 
 
 
+export const getSignInMutationKey = () => ['signIn'] as const;
+
 export const getSignInMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,SignInMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,SignInMutationVariables, TContext> => {
 
-const mutationKey = ['signIn'];
+const mutationKey = getSignInMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -561,9 +574,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SignInMutationError = ErrorType<void>
     export type SignInMutationVariables = {data: BodyType<AuthCredentials>}
 
-    /**
- * @summary Sign in with username and password
- */
+    /** @summary Sign in with username and password */
 export const useSignIn = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signIn>>, TError,SignInMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -601,11 +612,13 @@ export const signOut = async ( options?: Parameters<typeof customFetch>[1]): Pro
 
 
 
+export const getSignOutMutationKey = () => ['signOut'] as const;
+
 export const getSignOutMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signOut>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof signOut>>, TError,void, TContext> => {
 
-const mutationKey = ['signOut'];
+const mutationKey = getSignOutMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -633,9 +646,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SignOutMutationError = ErrorType<unknown>
 
 
-    /**
- * @summary Sign out (clears the session cookie)
- */
+    /** @summary Sign out (clears the session cookie) */
 export const useSignOut = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signOut>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -661,17 +672,11 @@ export const getChangePasswordUrl = () => {
  */
 export const changePassword = async (changePasswordCredentials: ChangePasswordCredentials, options?: Parameters<typeof customFetch>[1]): Promise<AuthResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<AuthResponse>(getChangePasswordUrl(),
+  return customFetch<AuthResponse>(getChangePasswordUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(changePasswordCredentials)
   }
 );}
@@ -680,11 +685,13 @@ return customFetch<AuthResponse>(getChangePasswordUrl(),
 
 
 
+export const getChangePasswordMutationKey = () => ['changePassword'] as const;
+
 export const getChangePasswordMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,ChangePasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,ChangePasswordMutationVariables, TContext> => {
 
-const mutationKey = ['changePassword'];
+const mutationKey = getChangePasswordMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -713,6 +720,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ChangePasswordMutationVariables = {data: BodyType<ChangePasswordCredentials>}
 
     /**
+ * Updates the signed-in user's password. The current password must be provided and is verified before the stored scrypt hash is replaced. Changing the password invalidates every previously-issued session token (including the one used for this request), so a fresh token is returned and must replace the caller's stored session.
  * @summary Change the signed-in user's password
  */
 export const useChangePassword = <TError = ErrorType<void>,
@@ -740,17 +748,11 @@ export const getForgotPasswordUrl = () => {
  */
 export const forgotPassword = async (forgotPasswordRequest: ForgotPasswordRequest, options?: Parameters<typeof customFetch>[1]): Promise<OkResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<OkResponse>(getForgotPasswordUrl(),
+  return customFetch<OkResponse>(getForgotPasswordUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(forgotPasswordRequest)
   }
 );}
@@ -759,11 +761,13 @@ return customFetch<OkResponse>(getForgotPasswordUrl(),
 
 
 
+export const getForgotPasswordMutationKey = () => ['forgotPassword'] as const;
+
 export const getForgotPasswordMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,ForgotPasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof forgotPassword>>, TError,ForgotPasswordMutationVariables, TContext> => {
 
-const mutationKey = ['forgotPassword'];
+const mutationKey = getForgotPasswordMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -792,6 +796,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ForgotPasswordMutationVariables = {data: BodyType<ForgotPasswordRequest>}
 
     /**
+ * A signed-out user requests recovery for a forgotten password. Always responds 200 regardless of whether the username exists, so the endpoint never reveals which accounts are real. When the account exists a pending reset request is recorded for a manager to approve.
  * @summary Request a manager-approved password reset
  */
 export const useForgotPassword = <TError = ErrorType<void>,
@@ -819,17 +824,11 @@ export const getResetPasswordUrl = () => {
  */
 export const resetPassword = async (resetPasswordRequest: ResetPasswordRequest, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<void>(getResetPasswordUrl(),
+  return customFetch<void>(getResetPasswordUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(resetPasswordRequest)
   }
 );}
@@ -838,11 +837,13 @@ return customFetch<void>(getResetPasswordUrl(),
 
 
 
+export const getResetPasswordMutationKey = () => ['resetPassword'] as const;
+
 export const getResetPasswordMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,ResetPasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof resetPassword>>, TError,ResetPasswordMutationVariables, TContext> => {
 
-const mutationKey = ['resetPassword'];
+const mutationKey = getResetPasswordMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -871,6 +872,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ResetPasswordMutationVariables = {data: BodyType<ResetPasswordRequest>}
 
     /**
+ * Verifies the single-use, short-lived code a manager issued for the account and, if valid and unexpired, replaces the password. The code is consumed on success so it can never be reused.
  * @summary Complete a password reset using a manager-issued code
  */
 export const useResetPassword = <TError = ErrorType<void>,
@@ -941,9 +943,9 @@ export type ListPasswordResetRequestsQueryError = ErrorType<void>
 
 
 /**
+ * Returns the staff members currently waiting for a manager to approve a forgotten-password reset.
  * @summary List pending password reset requests (manager only)
  */
-
 export function useListPasswordResetRequests<TData = Awaited<ReturnType<typeof listPasswordResetRequests>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPasswordResetRequests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -989,11 +991,13 @@ export const approvePasswordReset = async (id: string, options?: Parameters<type
 
 
 
+export const getApprovePasswordResetMutationKey = () => ['approvePasswordReset'] as const;
+
 export const getApprovePasswordResetMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approvePasswordReset>>, TError,ApprovePasswordResetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof approvePasswordReset>>, TError,ApprovePasswordResetMutationVariables, TContext> => {
 
-const mutationKey = ['approvePasswordReset'];
+const mutationKey = getApprovePasswordResetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1022,6 +1026,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApprovePasswordResetMutationVariables = {id: string}
 
     /**
+ * Approves a pending reset request and returns a short-lived single-use code shown to the manager exactly once. The manager relays it to the locked-out staff member, who uses it with /auth/reset-password.
  * @summary Approve a password reset and mint a relay code (manager only)
  */
 export const useApprovePasswordReset = <TError = ErrorType<void>,
@@ -1062,11 +1067,13 @@ export const declinePasswordReset = async (id: string, options?: Parameters<type
 
 
 
+export const getDeclinePasswordResetMutationKey = () => ['declinePasswordReset'] as const;
+
 export const getDeclinePasswordResetMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof declinePasswordReset>>, TError,DeclinePasswordResetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof declinePasswordReset>>, TError,DeclinePasswordResetMutationVariables, TContext> => {
 
-const mutationKey = ['declinePasswordReset'];
+const mutationKey = getDeclinePasswordResetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1095,6 +1102,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeclinePasswordResetMutationVariables = {id: string}
 
     /**
+ * Declines a pending reset request, removing it from the pending list without issuing a code. Useful for rejecting a suspicious or mistaken request.
  * @summary Decline a pending password reset request (manager only)
  */
 export const useDeclinePasswordReset = <TError = ErrorType<void>,
@@ -1163,10 +1171,7 @@ export type ListRunsQueryResult = NonNullable<Awaited<ReturnType<typeof listRuns
 export type ListRunsQueryError = ErrorType<unknown>
 
 
-/**
- * @summary List saved production runs
- */
-
+/** @summary List saved production runs */
 export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -1198,17 +1203,11 @@ export const getCreateRunUrl = () => {
  */
 export const createRun = async (productionRunInput: ProductionRunInput, options?: Parameters<typeof customFetch>[1]): Promise<ProductionRun> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ProductionRun>(getCreateRunUrl(),
+  return customFetch<ProductionRun>(getCreateRunUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(productionRunInput)
   }
 );}
@@ -1217,11 +1216,13 @@ return customFetch<ProductionRun>(getCreateRunUrl(),
 
 
 
+export const getCreateRunMutationKey = () => ['createRun'] as const;
+
 export const getCreateRunMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRun>>, TError,CreateRunMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createRun>>, TError,CreateRunMutationVariables, TContext> => {
 
-const mutationKey = ['createRun'];
+const mutationKey = getCreateRunMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1249,9 +1250,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateRunMutationError = ErrorType<void>
     export type CreateRunMutationVariables = {data: BodyType<ProductionRunInput>}
 
-    /**
- * @summary Save a production run
- */
+    /** @summary Save a production run */
 export const useCreateRun = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRun>>, TError,CreateRunMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1289,11 +1288,13 @@ export const deleteRun = async (id: number, options?: Parameters<typeof customFe
 
 
 
+export const getDeleteRunMutationKey = () => ['deleteRun'] as const;
+
 export const getDeleteRunMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRun>>, TError,DeleteRunMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteRun>>, TError,DeleteRunMutationVariables, TContext> => {
 
-const mutationKey = ['deleteRun'];
+const mutationKey = getDeleteRunMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1321,9 +1322,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteRunMutationError = ErrorType<void>
     export type DeleteRunMutationVariables = {id: number}
 
-    /**
- * @summary Delete a saved run
- */
+    /** @summary Delete a saved run */
 export const useDeleteRun = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRun>>, TError,DeleteRunMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1390,10 +1389,7 @@ export type ListInventoryQueryResult = NonNullable<Awaited<ReturnType<typeof lis
 export type ListInventoryQueryError = ErrorType<unknown>
 
 
-/**
- * @summary List inventory items with lots and on-hand
- */
-
+/** @summary List inventory items with lots and on-hand */
 export function useListInventory<TData = Awaited<ReturnType<typeof listInventory>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listInventory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -1425,17 +1421,11 @@ export const getCreateInventoryItemUrl = () => {
  */
 export const createInventoryItem = async (createInventoryItemInput: CreateInventoryItemInput, options?: Parameters<typeof customFetch>[1]): Promise<InventoryItem> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventoryItem>(getCreateInventoryItemUrl(),
+  return customFetch<InventoryItem>(getCreateInventoryItemUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(createInventoryItemInput)
   }
 );}
@@ -1444,11 +1434,13 @@ return customFetch<InventoryItem>(getCreateInventoryItemUrl(),
 
 
 
+export const getCreateInventoryItemMutationKey = () => ['createInventoryItem'] as const;
+
 export const getCreateInventoryItemMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInventoryItem>>, TError,CreateInventoryItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createInventoryItem>>, TError,CreateInventoryItemMutationVariables, TContext> => {
 
-const mutationKey = ['createInventoryItem'];
+const mutationKey = getCreateInventoryItemMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1476,9 +1468,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateInventoryItemMutationError = ErrorType<void>
     export type CreateInventoryItemMutationVariables = {data: BodyType<CreateInventoryItemInput>}
 
-    /**
- * @summary Create an inventory item
- */
+    /** @summary Create an inventory item */
 export const useCreateInventoryItem = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInventoryItem>>, TError,CreateInventoryItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1504,17 +1494,11 @@ export const getUpdateInventoryItemUrl = (id: number,) => {
 export const updateInventoryItem = async (id: number,
     updateInventoryItemInput: UpdateInventoryItemInput, options?: Parameters<typeof customFetch>[1]): Promise<InventoryItem> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventoryItem>(getUpdateInventoryItemUrl(id),
+  return customFetch<InventoryItem>(getUpdateInventoryItemUrl(id),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(updateInventoryItemInput)
   }
 );}
@@ -1523,11 +1507,13 @@ return customFetch<InventoryItem>(getUpdateInventoryItemUrl(id),
 
 
 
+export const getUpdateInventoryItemMutationKey = () => ['updateInventoryItem'] as const;
+
 export const getUpdateInventoryItemMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateInventoryItem>>, TError,UpdateInventoryItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateInventoryItem>>, TError,UpdateInventoryItemMutationVariables, TContext> => {
 
-const mutationKey = ['updateInventoryItem'];
+const mutationKey = getUpdateInventoryItemMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1555,9 +1541,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateInventoryItemMutationError = ErrorType<void>
     export type UpdateInventoryItemMutationVariables = {id: number;data: BodyType<UpdateInventoryItemInput>}
 
-    /**
- * @summary Update an inventory item (name, reorder threshold)
- */
+    /** @summary Update an inventory item (name, reorder threshold) */
 export const useUpdateInventoryItem = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateInventoryItem>>, TError,UpdateInventoryItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1595,11 +1579,13 @@ export const deleteInventoryItem = async (id: number, options?: Parameters<typeo
 
 
 
+export const getDeleteInventoryItemMutationKey = () => ['deleteInventoryItem'] as const;
+
 export const getDeleteInventoryItemMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteInventoryItem>>, TError,DeleteInventoryItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteInventoryItem>>, TError,DeleteInventoryItemMutationVariables, TContext> => {
 
-const mutationKey = ['deleteInventoryItem'];
+const mutationKey = getDeleteInventoryItemMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1627,9 +1613,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteInventoryItemMutationError = ErrorType<void>
     export type DeleteInventoryItemMutationVariables = {id: number}
 
-    /**
- * @summary Delete an inventory item
- */
+    /** @summary Delete an inventory item */
 export const useDeleteInventoryItem = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteInventoryItem>>, TError,DeleteInventoryItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1655,17 +1639,11 @@ export const getLinkInventoryProductUrl = (id: number,) => {
 export const linkInventoryProduct = async (id: number,
     inventoryProductLinkInput: InventoryProductLinkInput, options?: Parameters<typeof customFetch>[1]): Promise<InventoryItem> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventoryItem>(getLinkInventoryProductUrl(id),
+  return customFetch<InventoryItem>(getLinkInventoryProductUrl(id),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(inventoryProductLinkInput)
   }
 );}
@@ -1674,11 +1652,13 @@ return customFetch<InventoryItem>(getLinkInventoryProductUrl(id),
 
 
 
+export const getLinkInventoryProductMutationKey = () => ['linkInventoryProduct'] as const;
+
 export const getLinkInventoryProductMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkInventoryProduct>>, TError,LinkInventoryProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof linkInventoryProduct>>, TError,LinkInventoryProductMutationVariables, TContext> => {
 
-const mutationKey = ['linkInventoryProduct'];
+const mutationKey = getLinkInventoryProductMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1706,9 +1686,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type LinkInventoryProductMutationError = ErrorType<void>
     export type LinkInventoryProductMutationVariables = {id: number;data: BodyType<InventoryProductLinkInput>}
 
-    /**
- * @summary Link a warehouse product to a production ingredient
- */
+    /** @summary Link a warehouse product to a production ingredient */
 export const useLinkInventoryProduct = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkInventoryProduct>>, TError,LinkInventoryProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1733,17 +1711,11 @@ export const getRestockInventoryUrl = () => {
  */
 export const restockInventory = async (restockInput: RestockInput, options?: Parameters<typeof customFetch>[1]): Promise<InventoryItem> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventoryItem>(getRestockInventoryUrl(),
+  return customFetch<InventoryItem>(getRestockInventoryUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(restockInput)
   }
 );}
@@ -1752,11 +1724,13 @@ return customFetch<InventoryItem>(getRestockInventoryUrl(),
 
 
 
+export const getRestockInventoryMutationKey = () => ['restockInventory'] as const;
+
 export const getRestockInventoryMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restockInventory>>, TError,RestockInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof restockInventory>>, TError,RestockInventoryMutationVariables, TContext> => {
 
-const mutationKey = ['restockInventory'];
+const mutationKey = getRestockInventoryMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1784,9 +1758,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RestockInventoryMutationError = ErrorType<void>
     export type RestockInventoryMutationVariables = {data: BodyType<RestockInput>}
 
-    /**
- * @summary Add a received lot (creates the item if missing)
- */
+    /** @summary Add a received lot (creates the item if missing) */
 export const useRestockInventory = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restockInventory>>, TError,RestockInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1811,17 +1783,11 @@ export const getAdjustInventoryUrl = () => {
  */
 export const adjustInventory = async (adjustInput: AdjustInput, options?: Parameters<typeof customFetch>[1]): Promise<InventoryItem> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventoryItem>(getAdjustInventoryUrl(),
+  return customFetch<InventoryItem>(getAdjustInventoryUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(adjustInput)
   }
 );}
@@ -1830,11 +1796,13 @@ return customFetch<InventoryItem>(getAdjustInventoryUrl(),
 
 
 
+export const getAdjustInventoryMutationKey = () => ['adjustInventory'] as const;
+
 export const getAdjustInventoryMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adjustInventory>>, TError,AdjustInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adjustInventory>>, TError,AdjustInventoryMutationVariables, TContext> => {
 
-const mutationKey = ['adjustInventory'];
+const mutationKey = getAdjustInventoryMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1862,9 +1830,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdjustInventoryMutationError = ErrorType<void>
     export type AdjustInventoryMutationVariables = {data: BodyType<AdjustInput>}
 
-    /**
- * @summary Manually adjust on-hand quantity (delta-based)
- */
+    /** @summary Manually adjust on-hand quantity (delta-based) */
 export const useAdjustInventory = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adjustInventory>>, TError,AdjustInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1889,17 +1855,11 @@ export const getConsumeInventoryUrl = () => {
  */
 export const consumeInventory = async (consumeInput: ConsumeInput, options?: Parameters<typeof customFetch>[1]): Promise<ConsumeResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ConsumeResult>(getConsumeInventoryUrl(),
+  return customFetch<ConsumeResult>(getConsumeInventoryUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(consumeInput)
   }
 );}
@@ -1908,11 +1868,13 @@ return customFetch<ConsumeResult>(getConsumeInventoryUrl(),
 
 
 
+export const getConsumeInventoryMutationKey = () => ['consumeInventory'] as const;
+
 export const getConsumeInventoryMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof consumeInventory>>, TError,ConsumeInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof consumeInventory>>, TError,ConsumeInventoryMutationVariables, TContext> => {
 
-const mutationKey = ['consumeInventory'];
+const mutationKey = getConsumeInventoryMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1940,9 +1902,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ConsumeInventoryMutationError = ErrorType<void>
     export type ConsumeInventoryMutationVariables = {data: BodyType<ConsumeInput>}
 
-    /**
- * @summary Deduct stock for a completed run (idempotent by runId)
- */
+    /** @summary Deduct stock for a completed run (idempotent by runId) */
 export const useConsumeInventory = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof consumeInventory>>, TError,ConsumeInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -1967,17 +1927,11 @@ export const getMergeInventoryUrl = () => {
  */
 export const mergeInventory = async (mergeInventoryInput: MergeInventoryInput, options?: Parameters<typeof customFetch>[1]): Promise<MergeInventoryResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MergeInventoryResult>(getMergeInventoryUrl(),
+  return customFetch<MergeInventoryResult>(getMergeInventoryUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(mergeInventoryInput)
   }
 );}
@@ -1986,11 +1940,13 @@ return customFetch<MergeInventoryResult>(getMergeInventoryUrl(),
 
 
 
+export const getMergeInventoryMutationKey = () => ['mergeInventory'] as const;
+
 export const getMergeInventoryMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeInventory>>, TError,MergeInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof mergeInventory>>, TError,MergeInventoryMutationVariables, TContext> => {
 
-const mutationKey = ['mergeInventory'];
+const mutationKey = getMergeInventoryMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2018,9 +1974,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type MergeInventoryMutationError = ErrorType<void>
     export type MergeInventoryMutationVariables = {data: BodyType<MergeInventoryInput>}
 
-    /**
- * @summary Fold one or more source items' stock into a target item
- */
+    /** @summary Fold one or more source items' stock into a target item */
 export const useMergeInventory = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeInventory>>, TError,MergeInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -2087,10 +2041,7 @@ export type ListInventoryLocationsQueryResult = NonNullable<Awaited<ReturnType<t
 export type ListInventoryLocationsQueryError = ErrorType<unknown>
 
 
-/**
- * @summary List stock locations (onsite first)
- */
-
+/** @summary List stock locations (onsite first) */
 export function useListInventoryLocations<TData = Awaited<ReturnType<typeof listInventoryLocations>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listInventoryLocations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -2122,17 +2073,11 @@ export const getCreateInventoryLocationUrl = () => {
  */
 export const createInventoryLocation = async (createInventoryLocationInput: CreateInventoryLocationInput, options?: Parameters<typeof customFetch>[1]): Promise<InventoryLocation> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventoryLocation>(getCreateInventoryLocationUrl(),
+  return customFetch<InventoryLocation>(getCreateInventoryLocationUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(createInventoryLocationInput)
   }
 );}
@@ -2141,11 +2086,13 @@ return customFetch<InventoryLocation>(getCreateInventoryLocationUrl(),
 
 
 
+export const getCreateInventoryLocationMutationKey = () => ['createInventoryLocation'] as const;
+
 export const getCreateInventoryLocationMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInventoryLocation>>, TError,CreateInventoryLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createInventoryLocation>>, TError,CreateInventoryLocationMutationVariables, TContext> => {
 
-const mutationKey = ['createInventoryLocation'];
+const mutationKey = getCreateInventoryLocationMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2173,9 +2120,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateInventoryLocationMutationError = ErrorType<void>
     export type CreateInventoryLocationMutationVariables = {data: BodyType<CreateInventoryLocationInput>}
 
-    /**
- * @summary Create a stock location
- */
+    /** @summary Create a stock location */
 export const useCreateInventoryLocation = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInventoryLocation>>, TError,CreateInventoryLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -2201,17 +2146,11 @@ export const getUpdateInventoryLocationUrl = (id: number,) => {
 export const updateInventoryLocation = async (id: number,
     updateInventoryLocationInput: UpdateInventoryLocationInput, options?: Parameters<typeof customFetch>[1]): Promise<InventoryLocation> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventoryLocation>(getUpdateInventoryLocationUrl(id),
+  return customFetch<InventoryLocation>(getUpdateInventoryLocationUrl(id),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(updateInventoryLocationInput)
   }
 );}
@@ -2220,11 +2159,13 @@ return customFetch<InventoryLocation>(getUpdateInventoryLocationUrl(id),
 
 
 
+export const getUpdateInventoryLocationMutationKey = () => ['updateInventoryLocation'] as const;
+
 export const getUpdateInventoryLocationMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateInventoryLocation>>, TError,UpdateInventoryLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateInventoryLocation>>, TError,UpdateInventoryLocationMutationVariables, TContext> => {
 
-const mutationKey = ['updateInventoryLocation'];
+const mutationKey = getUpdateInventoryLocationMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2252,9 +2193,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateInventoryLocationMutationError = ErrorType<void>
     export type UpdateInventoryLocationMutationVariables = {id: number;data: BodyType<UpdateInventoryLocationInput>}
 
-    /**
- * @summary Rename a location or set it as onsite
- */
+    /** @summary Rename a location or set it as onsite */
 export const useUpdateInventoryLocation = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateInventoryLocation>>, TError,UpdateInventoryLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -2292,11 +2231,13 @@ export const deleteInventoryLocation = async (id: number, options?: Parameters<t
 
 
 
+export const getDeleteInventoryLocationMutationKey = () => ['deleteInventoryLocation'] as const;
+
 export const getDeleteInventoryLocationMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteInventoryLocation>>, TError,DeleteInventoryLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteInventoryLocation>>, TError,DeleteInventoryLocationMutationVariables, TContext> => {
 
-const mutationKey = ['deleteInventoryLocation'];
+const mutationKey = getDeleteInventoryLocationMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2324,9 +2265,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteInventoryLocationMutationError = ErrorType<void>
     export type DeleteInventoryLocationMutationVariables = {id: number}
 
-    /**
- * @summary Delete an empty, non-onsite location
- */
+    /** @summary Delete an empty, non-onsite location */
 export const useDeleteInventoryLocation = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteInventoryLocation>>, TError,DeleteInventoryLocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -2351,17 +2290,11 @@ export const getTransferInventoryUrl = () => {
  */
 export const transferInventory = async (transferInput: TransferInput, options?: Parameters<typeof customFetch>[1]): Promise<InventoryItem> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventoryItem>(getTransferInventoryUrl(),
+  return customFetch<InventoryItem>(getTransferInventoryUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(transferInput)
   }
 );}
@@ -2370,11 +2303,13 @@ return customFetch<InventoryItem>(getTransferInventoryUrl(),
 
 
 
+export const getTransferInventoryMutationKey = () => ['transferInventory'] as const;
+
 export const getTransferInventoryMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transferInventory>>, TError,TransferInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof transferInventory>>, TError,TransferInventoryMutationVariables, TContext> => {
 
-const mutationKey = ['transferInventory'];
+const mutationKey = getTransferInventoryMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2402,9 +2337,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type TransferInventoryMutationError = ErrorType<void>
     export type TransferInventoryMutationVariables = {data: BodyType<TransferInput>}
 
-    /**
- * @summary Move stock from one location to another (preserves lots)
- */
+    /** @summary Move stock from one location to another (preserves lots) */
 export const useTransferInventory = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transferInventory>>, TError,TransferInventoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -2478,10 +2411,7 @@ export type ListInventoryLedgerQueryResult = NonNullable<Awaited<ReturnType<type
 export type ListInventoryLedgerQueryError = ErrorType<unknown>
 
 
-/**
- * @summary List movement history (optionally filtered by item)
- */
-
+/** @summary List movement history (optionally filtered by item) */
 export function useListInventoryLedger<TData = Awaited<ReturnType<typeof listInventoryLedger>>, TError = ErrorType<unknown>>(
  params?: ListInventoryLedgerParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listInventoryLedger>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -2555,10 +2485,7 @@ export type GetInventorySettingsQueryResult = NonNullable<Awaited<ReturnType<typ
 export type GetInventorySettingsQueryError = ErrorType<unknown>
 
 
-/**
- * @summary Get global inventory settings (expiry lead time)
- */
-
+/** @summary Get global inventory settings (expiry lead time) */
 export function useGetInventorySettings<TData = Awaited<ReturnType<typeof getInventorySettings>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInventorySettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -2590,17 +2517,11 @@ export const getUpdateInventorySettingsUrl = () => {
  */
 export const updateInventorySettings = async (updateInventorySettingsInput: UpdateInventorySettingsInput, options?: Parameters<typeof customFetch>[1]): Promise<InventorySettings> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<InventorySettings>(getUpdateInventorySettingsUrl(),
+  return customFetch<InventorySettings>(getUpdateInventorySettingsUrl(),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(updateInventorySettingsInput)
   }
 );}
@@ -2609,11 +2530,13 @@ return customFetch<InventorySettings>(getUpdateInventorySettingsUrl(),
 
 
 
+export const getUpdateInventorySettingsMutationKey = () => ['updateInventorySettings'] as const;
+
 export const getUpdateInventorySettingsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateInventorySettings>>, TError,UpdateInventorySettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateInventorySettings>>, TError,UpdateInventorySettingsMutationVariables, TContext> => {
 
-const mutationKey = ['updateInventorySettings'];
+const mutationKey = getUpdateInventorySettingsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2641,9 +2564,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateInventorySettingsMutationError = ErrorType<void>
     export type UpdateInventorySettingsMutationVariables = {data: BodyType<UpdateInventorySettingsInput>}
 
-    /**
- * @summary Update global inventory settings
- */
+    /** @summary Update global inventory settings */
 export const useUpdateInventorySettings = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateInventorySettings>>, TError,UpdateInventorySettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -2668,17 +2589,11 @@ export const getIdentifyInventoryPhotoUrl = () => {
  */
 export const identifyInventoryPhoto = async (identifyPhotoInput: IdentifyPhotoInput, options?: Parameters<typeof customFetch>[1]): Promise<IdentifyPhotoResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<IdentifyPhotoResult>(getIdentifyInventoryPhotoUrl(),
+  return customFetch<IdentifyPhotoResult>(getIdentifyInventoryPhotoUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(identifyPhotoInput)
   }
 );}
@@ -2687,11 +2602,13 @@ return customFetch<IdentifyPhotoResult>(getIdentifyInventoryPhotoUrl(),
 
 
 
+export const getIdentifyInventoryPhotoMutationKey = () => ['identifyInventoryPhoto'] as const;
+
 export const getIdentifyInventoryPhotoMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identifyInventoryPhoto>>, TError,IdentifyInventoryPhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof identifyInventoryPhoto>>, TError,IdentifyInventoryPhotoMutationVariables, TContext> => {
 
-const mutationKey = ['identifyInventoryPhoto'];
+const mutationKey = getIdentifyInventoryPhotoMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2719,9 +2636,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type IdentifyInventoryPhotoMutationError = ErrorType<void>
     export type IdentifyInventoryPhotoMutationVariables = {data: BodyType<IdentifyPhotoInput>}
 
-    /**
- * @summary Identify incoming stock items from a photo (AI vision); read-only
- */
+    /** @summary Identify incoming stock items from a photo (AI vision); read-only */
 export const useIdentifyInventoryPhoto = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identifyInventoryPhoto>>, TError,IdentifyInventoryPhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -2747,17 +2662,11 @@ export const getQualityCheckPhotoUrl = () => {
  */
 export const qualityCheckPhoto = async (qualityCheckPhotoInput: QualityCheckPhotoInput, options?: Parameters<typeof customFetch>[1]): Promise<QualityCheckResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<QualityCheckResult>(getQualityCheckPhotoUrl(),
+  return customFetch<QualityCheckResult>(getQualityCheckPhotoUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(qualityCheckPhotoInput)
   }
 );}
@@ -2766,11 +2675,13 @@ return customFetch<QualityCheckResult>(getQualityCheckPhotoUrl(),
 
 
 
+export const getQualityCheckPhotoMutationKey = () => ['qualityCheckPhoto'] as const;
+
 export const getQualityCheckPhotoMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof qualityCheckPhoto>>, TError,QualityCheckPhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof qualityCheckPhoto>>, TError,QualityCheckPhotoMutationVariables, TContext> => {
 
-const mutationKey = ['qualityCheckPhoto'];
+const mutationKey = getQualityCheckPhotoMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2799,6 +2710,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type QualityCheckPhotoMutationVariables = {data: BodyType<QualityCheckPhotoInput>}
 
     /**
+ * Looks at a photo of a finished pizza or crust and returns a plain-language quality assessment (size, topping coverage, appearance defects) plus a confidence score. Read-only — never records anything; the manager reviews the assessment and decides whether to confirm it. A confirmed outcome is written back into the shared facility memory by the client through the existing facility-knowledge write path.
  * @summary Assess finished-product quality from a photo (AI vision); read-only
  */
 export const useQualityCheckPhoto = <TError = ErrorType<void>,
@@ -2826,17 +2738,11 @@ export const getProductionSheetPhotoUrl = () => {
  */
 export const productionSheetPhoto = async (productionSheetPhotoInput: ProductionSheetPhotoInput, options?: Parameters<typeof customFetch>[1]): Promise<ProductionSheetPhotoResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ProductionSheetPhotoResult>(getProductionSheetPhotoUrl(),
+  return customFetch<ProductionSheetPhotoResult>(getProductionSheetPhotoUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(productionSheetPhotoInput)
   }
 );}
@@ -2845,11 +2751,13 @@ return customFetch<ProductionSheetPhotoResult>(getProductionSheetPhotoUrl(),
 
 
 
+export const getProductionSheetPhotoMutationKey = () => ['productionSheetPhoto'] as const;
+
 export const getProductionSheetPhotoMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof productionSheetPhoto>>, TError,ProductionSheetPhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof productionSheetPhoto>>, TError,ProductionSheetPhotoMutationVariables, TContext> => {
 
-const mutationKey = ['productionSheetPhoto'];
+const mutationKey = getProductionSheetPhotoMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2878,6 +2786,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ProductionSheetPhotoMutationVariables = {data: BodyType<ProductionSheetPhotoInput>}
 
     /**
+ * Looks at a photo of a paper production/run sheet and extracts the distinct run rows it can read (brand, flavor, die size, cases needed, and an optional date) so they can be reviewed and added to the schedule. Read-only — never writes anything; each extracted row requires explicit user confirmation before it is applied through the existing schedule path.
  * @summary Extract a production/run plan from a photo of a paper run sheet (AI vision); read-only
  */
 export const useProductionSheetPhoto = <TError = ErrorType<void>,
@@ -2905,17 +2814,11 @@ export const getParseSpecImagesUrl = () => {
  */
 export const parseSpecImages = async (parseSpecImagesInput: ParseSpecImagesInput, options?: Parameters<typeof customFetch>[1]): Promise<ParseSpecImagesResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ParseSpecImagesResult>(getParseSpecImagesUrl(),
+  return customFetch<ParseSpecImagesResult>(getParseSpecImagesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(parseSpecImagesInput)
   }
 );}
@@ -2924,11 +2827,13 @@ return customFetch<ParseSpecImagesResult>(getParseSpecImagesUrl(),
 
 
 
+export const getParseSpecImagesMutationKey = () => ['parseSpecImages'] as const;
+
 export const getParseSpecImagesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof parseSpecImages>>, TError,ParseSpecImagesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof parseSpecImages>>, TError,ParseSpecImagesMutationVariables, TContext> => {
 
-const mutationKey = ['parseSpecImages'];
+const mutationKey = getParseSpecImagesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -2957,6 +2862,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ParseSpecImagesMutationVariables = {data: BodyType<ParseSpecImagesInput>}
 
     /**
+ * Transcribes one or more photographed spec-sheet or recipe pages into bounded workbook-style text. The result is advisory and must be sent through the existing spec import review before anything is changed.
  * @summary Read photographed spec sheets into workbook text (AI vision); read-only
  */
 export const useParseSpecImages = <TError = ErrorType<void>,
@@ -2984,17 +2890,11 @@ export const getVerifyLabelPhotoUrl = () => {
  */
 export const verifyLabelPhoto = async (labelVerifyInput: LabelVerifyInput, options?: Parameters<typeof customFetch>[1]): Promise<LabelVerifyResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<LabelVerifyResult>(getVerifyLabelPhotoUrl(),
+  return customFetch<LabelVerifyResult>(getVerifyLabelPhotoUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(labelVerifyInput)
   }
 );}
@@ -3003,11 +2903,13 @@ return customFetch<LabelVerifyResult>(getVerifyLabelPhotoUrl(),
 
 
 
+export const getVerifyLabelPhotoMutationKey = () => ['verifyLabelPhoto'] as const;
+
 export const getVerifyLabelPhotoMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyLabelPhoto>>, TError,VerifyLabelPhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof verifyLabelPhoto>>, TError,VerifyLabelPhotoMutationVariables, TContext> => {
 
-const mutationKey = ['verifyLabelPhoto'];
+const mutationKey = getVerifyLabelPhotoMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3036,6 +2938,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type VerifyLabelPhotoMutationVariables = {data: BodyType<LabelVerifyInput>}
 
     /**
+ * Looks at a photo of a finished-product label or pallet placard, reads the visible fields, and compares them against the expected values the client provides (brand, flavor, die size, date, lot code, case count). Returns a per-field match/mismatch breakdown plus an overall verdict. Read-only — never writes anything; a person reviews the result and decides what to do.
  * @summary Verify a finished-product label or pallet placard against expected values (AI vision); read-only
  */
 export const useVerifyLabelPhoto = <TError = ErrorType<void>,
@@ -3063,17 +2966,11 @@ export const getRecordQualityCheckUrl = () => {
  */
 export const recordQualityCheck = async (qualityCheckRecordInput: QualityCheckRecordInput, options?: Parameters<typeof customFetch>[1]): Promise<QualityCheckRecord> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<QualityCheckRecord>(getRecordQualityCheckUrl(),
+  return customFetch<QualityCheckRecord>(getRecordQualityCheckUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(qualityCheckRecordInput)
   }
 );}
@@ -3082,11 +2979,13 @@ return customFetch<QualityCheckRecord>(getRecordQualityCheckUrl(),
 
 
 
+export const getRecordQualityCheckMutationKey = () => ['recordQualityCheck'] as const;
+
 export const getRecordQualityCheckMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordQualityCheck>>, TError,RecordQualityCheckMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof recordQualityCheck>>, TError,RecordQualityCheckMutationVariables, TContext> => {
 
-const mutationKey = ['recordQualityCheck'];
+const mutationKey = getRecordQualityCheckMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3115,6 +3014,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RecordQualityCheckMutationVariables = {data: BodyType<QualityCheckRecordInput>}
 
     /**
+ * Persists a structured record of a quality check a manager reviewed and confirmed (product type, verdict, confidence, summary, specific issues, optional notes and a small photo thumbnail). This builds a browsable history managers can audit and use to spot trends over time. The advisory /inventory/quality-photo endpoint never writes — this is the deliberate, user-driven save.
  * @summary Record a reviewed-and-confirmed quality check (manager only)
  */
 export const useRecordQualityCheck = <TError = ErrorType<void>,
@@ -3192,9 +3092,9 @@ export type ListQualityChecksQueryError = ErrorType<void>
 
 
 /**
+ * Returns recorded quality checks (newest first) for a manager to review, optionally filtered by product type and/or status.
  * @summary List past quality checks (manager only)
  */
-
 export function useListQualityChecks<TData = Awaited<ReturnType<typeof listQualityChecks>>, TError = ErrorType<void>>(
  params?: ListQualityChecksParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listQualityChecks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -3227,17 +3127,11 @@ export const getWasteInsightUrl = () => {
  */
 export const wasteInsight = async (wasteInsightInput: WasteInsightInput, options?: Parameters<typeof customFetch>[1]): Promise<WasteInsightResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<WasteInsightResult>(getWasteInsightUrl(),
+  return customFetch<WasteInsightResult>(getWasteInsightUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(wasteInsightInput)
   }
 );}
@@ -3246,11 +3140,13 @@ return customFetch<WasteInsightResult>(getWasteInsightUrl(),
 
 
 
+export const getWasteInsightMutationKey = () => ['wasteInsight'] as const;
+
 export const getWasteInsightMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof wasteInsight>>, TError,WasteInsightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof wasteInsight>>, TError,WasteInsightMutationVariables, TContext> => {
 
-const mutationKey = ['wasteInsight'];
+const mutationKey = getWasteInsightMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3279,6 +3175,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type WasteInsightMutationVariables = {data: BodyType<WasteInsightInput>}
 
     /**
+ * Reads current inventory and the configured expiry lead time, flags lots that are expired or expiring soon, and (when anything is flagged) asks the AI for a plain-language run-order suggestion to consume the at-risk stock first. Grounded in the real inventory data and the shared facility memory. Read-only — never applies any change.
  * @summary Flag items trending toward expiry and suggest run-order to use them first
  */
 export const useWasteInsight = <TError = ErrorType<void>,
@@ -3306,17 +3203,11 @@ export const getAiOptimizeUrl = () => {
  */
 export const aiOptimize = async (optimizeInput: OptimizeInput, options?: Parameters<typeof customFetch>[1]): Promise<OptimizeResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<OptimizeResult>(getAiOptimizeUrl(),
+  return customFetch<OptimizeResult>(getAiOptimizeUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(optimizeInput)
   }
 );}
@@ -3325,11 +3216,13 @@ return customFetch<OptimizeResult>(getAiOptimizeUrl(),
 
 
 
+export const getAiOptimizeMutationKey = () => ['aiOptimize'] as const;
+
 export const getAiOptimizeMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiOptimize>>, TError,AiOptimizeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiOptimize>>, TError,AiOptimizeMutationVariables, TContext> => {
 
-const mutationKey = ['aiOptimize'];
+const mutationKey = getAiOptimizeMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3358,6 +3251,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiOptimizeMutationVariables = {data: BodyType<OptimizeInput>}
 
     /**
+ * Analyzes the current day's runs, scheduled runs, and recent history and returns grouped/ranked recommendation cards. Read-only — never applies any change.
  * @summary AI optimization recommendations for runs and break timing
  */
 export const useAiOptimize = <TError = ErrorType<void>,
@@ -3385,17 +3279,11 @@ export const getAiAskUrl = () => {
  */
 export const aiAsk = async (askInput: AskInput, options?: Parameters<typeof customFetch>[1]): Promise<AskResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<AskResult>(getAiAskUrl(),
+  return customFetch<AskResult>(getAiAskUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(askInput)
   }
 );}
@@ -3404,11 +3292,13 @@ return customFetch<AskResult>(getAiAskUrl(),
 
 
 
+export const getAiAskMutationKey = () => ['aiAsk'] as const;
+
 export const getAiAskMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiAsk>>, TError,AiAskMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiAsk>>, TError,AiAskMutationVariables, TContext> => {
 
-const mutationKey = ['aiAsk'];
+const mutationKey = getAiAskMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3437,6 +3327,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiAskMutationVariables = {data: BodyType<AskInput>}
 
     /**
+ * Answers a plain-language question grounded strictly in the day's real run data, the shared facility memory, and the asking user's recent conversation turns. Keeps per-user follow-up context, never invents data (says so when it can't answer), and records the exchange back into that user's conversation memory. Read-only — never applies any change.
  * @summary Ask the AI a free-form question about the day
  */
 export const useAiAsk = <TError = ErrorType<void>,
@@ -3464,17 +3355,11 @@ export const getAiCommandUrl = () => {
  */
 export const aiCommand = async (commandInput: CommandInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<void>(getAiCommandUrl(),
+  return customFetch<void>(getAiCommandUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(commandInput)
   }
 );}
@@ -3483,11 +3368,13 @@ return customFetch<void>(getAiCommandUrl(),
 
 
 
+export const getAiCommandMutationKey = () => ['aiCommand'] as const;
+
 export const getAiCommandMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiCommand>>, TError,AiCommandMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiCommand>>, TError,AiCommandMutationVariables, TContext> => {
 
-const mutationKey = ['aiCommand'];
+const mutationKey = getAiCommandMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3516,6 +3403,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiCommandMutationVariables = {data: BodyType<CommandInput>}
 
     /**
+ * Takes a single spoken utterance plus the live day-state and classifies it as either a QUESTION (the client routes it to /ai/ask, unchanged) or a COMMAND. For a command, returns one or more structured actions drawn from a fixed vocabulary, with every fuzzy reference already resolved against the grounding (a run by brand/flavor → run id, an inventory item by name → item key/id) and a friendly label attached. Returns an explicit "none" when nothing actionable was understood. This endpoint never mutates anything itself — the client runs the actions through its existing handlers (with role gating and Undo).
  * @summary Classify a spoken phrase as a question or an executable command
  */
 export const useAiCommand = <TError = ErrorType<void>,
@@ -3543,17 +3431,11 @@ export const getAiRecipeAssistantUrl = () => {
  */
 export const aiRecipeAssistant = async (recipeAssistInput: RecipeAssistInput, options?: Parameters<typeof customFetch>[1]): Promise<RecipeAssistResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<RecipeAssistResult>(getAiRecipeAssistantUrl(),
+  return customFetch<RecipeAssistResult>(getAiRecipeAssistantUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(recipeAssistInput)
   }
 );}
@@ -3562,11 +3444,13 @@ return customFetch<RecipeAssistResult>(getAiRecipeAssistantUrl(),
 
 
 
+export const getAiRecipeAssistantMutationKey = () => ['aiRecipeAssistant'] as const;
+
 export const getAiRecipeAssistantMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiRecipeAssistant>>, TError,AiRecipeAssistantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiRecipeAssistant>>, TError,AiRecipeAssistantMutationVariables, TContext> => {
 
-const mutationKey = ['aiRecipeAssistant'];
+const mutationKey = getAiRecipeAssistantMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3595,6 +3479,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiRecipeAssistantMutationVariables = {data: BodyType<RecipeAssistInput>}
 
     /**
+ * Answers a plain-language question about the current run's recipes and ingredients — scaling a recipe, suggesting a substitution, or explaining a formula — grounded strictly in the supplied recipe rows, the known ingredient pool, the shared name-corrections, and the facility memory. Advisory only: never edits or commits a recipe, never invents ingredients or quantities (says so plainly when the data is insufficient). Read-only.
  * @summary Recipe & ingredient helper — scale, substitute, explain (AI); read-only
  */
 export const useAiRecipeAssistant = <TError = ErrorType<void>,
@@ -3622,17 +3507,11 @@ export const getAiSpecReconcileUrl = () => {
  */
 export const aiSpecReconcile = async (specReconcileInput: SpecReconcileInput, options?: Parameters<typeof customFetch>[1]): Promise<SpecReconcileResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SpecReconcileResult>(getAiSpecReconcileUrl(),
+  return customFetch<SpecReconcileResult>(getAiSpecReconcileUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(specReconcileInput)
   }
 );}
@@ -3641,11 +3520,13 @@ return customFetch<SpecReconcileResult>(getAiSpecReconcileUrl(),
 
 
 
+export const getAiSpecReconcileMutationKey = () => ['aiSpecReconcile'] as const;
+
 export const getAiSpecReconcileMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiSpecReconcile>>, TError,AiSpecReconcileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiSpecReconcile>>, TError,AiSpecReconcileMutationVariables, TContext> => {
 
-const mutationKey = ['aiSpecReconcile'];
+const mutationKey = getAiSpecReconcileMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3674,6 +3555,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiSpecReconcileMutationVariables = {data: BodyType<SpecReconcileInput>}
 
     /**
+ * Loads the saved spec sheet by id, deterministically diffs its recipes against the supplied current recipe library (missing recipes, missing / extra ingredients, pound mismatches), then asks the AI for a short plain-language summary of what's off. Read-only and fail-safe: the deterministic discrepancy list is always returned even if the AI summary is unavailable. Available to any signed-in user.
  * @summary Cross-reference a saved spec sheet against the current recipes (AI summary); read-only
  */
 export const useAiSpecReconcile = <TError = ErrorType<void>,
@@ -3701,17 +3583,11 @@ export const getAiMixReconcileUrl = () => {
  */
 export const aiMixReconcile = async (mixReconcileInput: MixReconcileInput, options?: Parameters<typeof customFetch>[1]): Promise<MixReconcileResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MixReconcileResult>(getAiMixReconcileUrl(),
+  return customFetch<MixReconcileResult>(getAiMixReconcileUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(mixReconcileInput)
   }
 );}
@@ -3720,11 +3596,13 @@ return customFetch<MixReconcileResult>(getAiMixReconcileUrl(),
 
 
 
+export const getAiMixReconcileMutationKey = () => ['aiMixReconcile'] as const;
+
 export const getAiMixReconcileMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiMixReconcile>>, TError,AiMixReconcileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiMixReconcile>>, TError,AiMixReconcileMutationVariables, TContext> => {
 
-const mutationKey = ['aiMixReconcile'];
+const mutationKey = getAiMixReconcileMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3753,6 +3631,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiMixReconcileMutationVariables = {data: BodyType<MixReconcileInput>}
 
     /**
+ * The deterministic diff of the current mixes against the imported premix and spec sheets runs on the client (the shared @workspace/mix-reconcile lib). This endpoint takes that exact discrepancy list and asks the AI for a short plain-language summary of what's off. Read-only and fail-safe: an AI error simply yields an empty summary, never an error. It never invents or applies anything. Available to any signed-in user.
  * @summary Narrate already-computed mix discrepancies (AI summary); read-only
  */
 export const useAiMixReconcile = <TError = ErrorType<void>,
@@ -3780,17 +3659,11 @@ export const getAiMixAssistantUrl = () => {
  */
 export const aiMixAssistant = async (mixAssistInput: MixAssistInput, options?: Parameters<typeof customFetch>[1]): Promise<MixAssistResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MixAssistResult>(getAiMixAssistantUrl(),
+  return customFetch<MixAssistResult>(getAiMixAssistantUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(mixAssistInput)
   }
 );}
@@ -3799,11 +3672,13 @@ return customFetch<MixAssistResult>(getAiMixAssistantUrl(),
 
 
 
+export const getAiMixAssistantMutationKey = () => ['aiMixAssistant'] as const;
+
 export const getAiMixAssistantMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiMixAssistant>>, TError,AiMixAssistantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiMixAssistant>>, TError,AiMixAssistantMutationVariables, TContext> => {
 
-const mutationKey = ['aiMixAssistant'];
+const mutationKey = getAiMixAssistantMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3832,6 +3707,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiMixAssistantMutationVariables = {data: BodyType<MixAssistInput>}
 
     /**
+ * Answers a plain-language question grounded strictly in the current mix definitions and the facility memory. Advisory only: it explains and computes but never edits a mix or applies anything (no structured suggestion). Available to any signed-in user.
  * @summary Mixes helper — answer plain-language questions about the mixes (AI); read-only
  */
 export const useAiMixAssistant = <TError = ErrorType<void>,
@@ -3859,17 +3735,11 @@ export const getAiProactiveAlertUrl = () => {
  */
 export const aiProactiveAlert = async (optimizeInput: OptimizeInput, options?: Parameters<typeof customFetch>[1]): Promise<ProactiveAlertResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ProactiveAlertResult>(getAiProactiveAlertUrl(),
+  return customFetch<ProactiveAlertResult>(getAiProactiveAlertUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(optimizeInput)
   }
 );}
@@ -3878,11 +3748,13 @@ return customFetch<ProactiveAlertResult>(getAiProactiveAlertUrl(),
 
 
 
+export const getAiProactiveAlertMutationKey = () => ['aiProactiveAlert'] as const;
+
 export const getAiProactiveAlertMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiProactiveAlert>>, TError,AiProactiveAlertMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiProactiveAlert>>, TError,AiProactiveAlertMutationVariables, TContext> => {
 
-const mutationKey = ['aiProactiveAlert'];
+const mutationKey = getAiProactiveAlertMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3911,6 +3783,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiProactiveAlertMutationVariables = {data: BodyType<OptimizeInput>}
 
     /**
+ * Same live-day input as /ai/optimize, but evaluated on a cadence while a day is running. Returns at most a single timely, dismissible nudge (falling behind plan, or a natural break/changeover window) — or null when nothing is worth surfacing right now. Read-only; the client owns de-duplication and cooldown via the returned stable alert key.
  * @summary At-most-one proactive shift alert (AI); read-only
  */
 export const useAiProactiveAlert = <TError = ErrorType<void>,
@@ -3979,10 +3852,7 @@ export type GetProactiveAlertSettingsQueryResult = NonNullable<Awaited<ReturnTyp
 export type GetProactiveAlertSettingsQueryError = ErrorType<unknown>
 
 
-/**
- * @summary Get global proactive-alert settings (cadence, cooldown, on/off)
- */
-
+/** @summary Get global proactive-alert settings (cadence, cooldown, on/off) */
 export function useGetProactiveAlertSettings<TData = Awaited<ReturnType<typeof getProactiveAlertSettings>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProactiveAlertSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -4014,17 +3884,11 @@ export const getUpdateProactiveAlertSettingsUrl = () => {
  */
 export const updateProactiveAlertSettings = async (updateProactiveAlertSettingsInput: UpdateProactiveAlertSettingsInput, options?: Parameters<typeof customFetch>[1]): Promise<ProactiveAlertSettings> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ProactiveAlertSettings>(getUpdateProactiveAlertSettingsUrl(),
+  return customFetch<ProactiveAlertSettings>(getUpdateProactiveAlertSettingsUrl(),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(updateProactiveAlertSettingsInput)
   }
 );}
@@ -4033,11 +3897,13 @@ return customFetch<ProactiveAlertSettings>(getUpdateProactiveAlertSettingsUrl(),
 
 
 
+export const getUpdateProactiveAlertSettingsMutationKey = () => ['updateProactiveAlertSettings'] as const;
+
 export const getUpdateProactiveAlertSettingsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProactiveAlertSettings>>, TError,UpdateProactiveAlertSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProactiveAlertSettings>>, TError,UpdateProactiveAlertSettingsMutationVariables, TContext> => {
 
-const mutationKey = ['updateProactiveAlertSettings'];
+const mutationKey = getUpdateProactiveAlertSettingsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4065,9 +3931,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateProactiveAlertSettingsMutationError = ErrorType<void>
     export type UpdateProactiveAlertSettingsMutationVariables = {data: BodyType<UpdateProactiveAlertSettingsInput>}
 
-    /**
- * @summary Update global proactive-alert settings (manager only)
- */
+    /** @summary Update global proactive-alert settings (manager only) */
 export const useUpdateProactiveAlertSettings = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProactiveAlertSettings>>, TError,UpdateProactiveAlertSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -4093,17 +3957,11 @@ export const getAiForecastUrl = () => {
  */
 export const aiForecast = async (forecastInput: ForecastInput, options?: Parameters<typeof customFetch>[1]): Promise<ForecastResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ForecastResult>(getAiForecastUrl(),
+  return customFetch<ForecastResult>(getAiForecastUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(forecastInput)
   }
 );}
@@ -4112,11 +3970,13 @@ return customFetch<ForecastResult>(getAiForecastUrl(),
 
 
 
+export const getAiForecastMutationKey = () => ['aiForecast'] as const;
+
 export const getAiForecastMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiForecast>>, TError,AiForecastMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiForecast>>, TError,AiForecastMutationVariables, TContext> => {
 
-const mutationKey = ['aiForecast'];
+const mutationKey = getAiForecastMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4145,6 +4005,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiForecastMutationVariables = {data: BodyType<ForecastInput>}
 
     /**
+ * Given recent finished production history (grouped by day) and any already-scheduled future runs, predicts a suggested run plan for one upcoming day — what to run, rough case quantities, and a sensible sequence — plus a plain-language rationale and an honest confidence level. Grounded strictly in the supplied history and shared facility memory; explicit about uncertainty and returns a null forecast (with a note) when history is too thin to predict responsibly. Read-only — never writes or commits anything; the manager reviews and adjusts the suggestion into the editable schedule.
  * @summary Predict an upcoming day's run plan (AI); read-only
  */
 export const useAiForecast = <TError = ErrorType<void>,
@@ -4172,17 +4033,11 @@ export const getAiSummaryUrl = () => {
  */
 export const aiSummary = async (summaryInput: SummaryInput, options?: Parameters<typeof customFetch>[1]): Promise<SummaryResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SummaryResult>(getAiSummaryUrl(),
+  return customFetch<SummaryResult>(getAiSummaryUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(summaryInput)
   }
 );}
@@ -4191,11 +4046,13 @@ return customFetch<SummaryResult>(getAiSummaryUrl(),
 
 
 
+export const getAiSummaryMutationKey = () => ['aiSummary'] as const;
+
 export const getAiSummaryMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiSummary>>, TError,AiSummaryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiSummary>>, TError,AiSummaryMutationVariables, TContext> => {
 
-const mutationKey = ['aiSummary'];
+const mutationKey = getAiSummaryMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4224,6 +4081,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiSummaryMutationVariables = {data: BodyType<SummaryInput>}
 
     /**
+ * Given a day's (or rolling week's) runs — planned vs. produced cases, downtime/stoppages, unfinished runs, and any reported issues — returns a short, plain-language recap for floor staff and managers. The numeric stats are computed deterministically server-side; the AI only narrates them and never invents figures. Read-only — never writes or commits run data. Fail-safe: if the AI is unavailable or returns nothing usable, a deterministic plain-language summary built from the same stats is returned instead, so the caller always gets a usable recap.
  * @summary Plain-language end-of-day / weekly production recap (AI); read-only
  */
 export const useAiSummary = <TError = ErrorType<void>,
@@ -4251,17 +4109,11 @@ export const getExportOperationalReportUrl = () => {
  */
 export const exportOperationalReport = async (operationalReportInput: OperationalReportInput, options?: Parameters<typeof customFetch>[1]): Promise<OperationalReport> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<OperationalReport>(getExportOperationalReportUrl(),
+  return customFetch<OperationalReport>(getExportOperationalReportUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(operationalReportInput)
   }
 );}
@@ -4270,11 +4122,13 @@ return customFetch<OperationalReport>(getExportOperationalReportUrl(),
 
 
 
+export const getExportOperationalReportMutationKey = () => ['exportOperationalReport'] as const;
+
 export const getExportOperationalReportMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportOperationalReport>>, TError,ExportOperationalReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof exportOperationalReport>>, TError,ExportOperationalReportMutationVariables, TContext> => {
 
-const mutationKey = ['exportOperationalReport'];
+const mutationKey = getExportOperationalReportMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4303,6 +4157,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ExportOperationalReportMutationVariables = {data: BodyType<OperationalReportInput>}
 
     /**
+ * Deterministically aggregates the supplied production run facts and enriches them with date-filtered quality and incident records plus a clearly labeled current inventory snapshot plus date-scoped inventory ledger events. No AI is required and source statistics are authoritative.
  * @summary Export a manager-only operational day or week report
  */
 export const useExportOperationalReport = <TError = ErrorType<void>,
@@ -4380,9 +4235,9 @@ export type GetShiftHandoffDigestQueryError = ErrorType<void>
 
 
 /**
+ * Collects unresolved incidents, quality exceptions, inventory risk and historical adjustments, sync conflicts, and pending data-health findings for one facility and production date. Source history that cannot be read is reported as unavailable rather than as zero.
  * @summary Read a manager-facing daily shift handoff digest
  */
-
 export function useGetShiftHandoffDigest<TData = Awaited<ReturnType<typeof getShiftHandoffDigest>>, TError = ErrorType<void>>(
  params: GetShiftHandoffDigestParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getShiftHandoffDigest>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -4415,17 +4270,11 @@ export const getAiForecastAccuracyUrl = () => {
  */
 export const aiForecastAccuracy = async (forecastAccuracyInput: ForecastAccuracyInput, options?: Parameters<typeof customFetch>[1]): Promise<ForecastAccuracyResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ForecastAccuracyResult>(getAiForecastAccuracyUrl(),
+  return customFetch<ForecastAccuracyResult>(getAiForecastAccuracyUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(forecastAccuracyInput)
   }
 );}
@@ -4434,11 +4283,13 @@ return customFetch<ForecastAccuracyResult>(getAiForecastAccuracyUrl(),
 
 
 
+export const getAiForecastAccuracyMutationKey = () => ['aiForecastAccuracy'] as const;
+
 export const getAiForecastAccuracyMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiForecastAccuracy>>, TError,AiForecastAccuracyMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiForecastAccuracy>>, TError,AiForecastAccuracyMutationVariables, TContext> => {
 
-const mutationKey = ['aiForecastAccuracy'];
+const mutationKey = getAiForecastAccuracyMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4467,6 +4318,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiForecastAccuracyMutationVariables = {data: BodyType<ForecastAccuracyInput>}
 
     /**
+ * Compares previously recorded demand forecasts (kept in shared facility memory) against the supplied actual finished production history for those dates. Returns a per-date review of predicted vs. actual products and case quantities plus a lightweight accuracy signal, so managers can see how well the forecaster has been doing and the AI can learn from misses. Read-only — never writes or commits run data; only the deterministic comparison is computed (no AI call).
  * @summary Review how accurate past forecasts were vs. what actually ran; read-only
  */
 export const useAiForecastAccuracy = <TError = ErrorType<void>,
@@ -4494,17 +4346,11 @@ export const getAiIncidentClustersUrl = () => {
  */
 export const aiIncidentClusters = async (incidentClustersInput?: IncidentClustersInput, options?: Parameters<typeof customFetch>[1]): Promise<IncidentClustersResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<IncidentClustersResult>(getAiIncidentClustersUrl(),
+  return customFetch<IncidentClustersResult>(getAiIncidentClustersUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(incidentClustersInput)
   }
 );}
@@ -4513,11 +4359,13 @@ return customFetch<IncidentClustersResult>(getAiIncidentClustersUrl(),
 
 
 
+export const getAiIncidentClustersMutationKey = () => ['aiIncidentClusters'] as const;
+
 export const getAiIncidentClustersMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiIncidentClusters>>, TError,AiIncidentClustersMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiIncidentClusters>>, TError,AiIncidentClustersMutationVariables, TContext> => {
 
-const mutationKey = ['aiIncidentClusters'];
+const mutationKey = getAiIncidentClustersMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4546,6 +4394,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiIncidentClustersMutationVariables = {data?: BodyType<IncidentClustersInput>}
 
     /**
+ * Reads the recorded incident log (manager-only) and groups recurring reports and crashes into a small number of root-cause themes, each with a plain-language hypothesis and a suggested next step. The AI only proposes groupings and narration; the server verifies every incident id, recomputes the per-theme counts deterministically, and never invents incidents or edits anything. Read-only and advisory. Fail-safe: if the AI is unavailable or returns nothing usable, a deterministic grouping (by screen and platform) is returned instead so managers always get a useful view.
  * @summary Group reported issues / crashes into root-cause themes (AI); manager-only, read-only
  */
 export const useAiIncidentClusters = <TError = ErrorType<void>,
@@ -4573,17 +4422,11 @@ export const getAiAnomaliesUrl = () => {
  */
 export const aiAnomalies = async (anomalyInput: AnomalyInput, options?: Parameters<typeof customFetch>[1]): Promise<AnomalyResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<AnomalyResult>(getAiAnomaliesUrl(),
+  return customFetch<AnomalyResult>(getAiAnomaliesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(anomalyInput)
   }
 );}
@@ -4592,11 +4435,13 @@ return customFetch<AnomalyResult>(getAiAnomaliesUrl(),
 
 
 
+export const getAiAnomaliesMutationKey = () => ['aiAnomalies'] as const;
+
 export const getAiAnomaliesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiAnomalies>>, TError,AiAnomaliesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiAnomalies>>, TError,AiAnomaliesMutationVariables, TContext> => {
 
-const mutationKey = ['aiAnomalies'];
+const mutationKey = getAiAnomaliesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4625,6 +4470,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiAnomaliesMutationVariables = {data: BodyType<AnomalyInput>}
 
     /**
+ * Given today's finished runs plus recent finished-run history, deterministically flags runs whose downtime, yield (cases attained vs. planned), or stoppage count drifted meaningfully from a per-product baseline. The drift detection is computed server-side and is fully deterministic; the AI is only asked to NARRATE a short plain-language summary, and only when at least one anomaly is flagged (no flags → no AI call). Read-only and advisory — never edits or commits run data. Fail-safe: if the AI is unavailable, the deterministic anomaly list is still returned with an empty narration.
  * @summary Flag production runs that drifted from their historical norm (AI narration); read-only
  */
 export const useAiAnomalies = <TError = ErrorType<void>,
@@ -4652,17 +4498,11 @@ export const getAiScheduleOptimizeUrl = () => {
  */
 export const aiScheduleOptimize = async (scheduleOptimizeInput: ScheduleOptimizeInput, options?: Parameters<typeof customFetch>[1]): Promise<ScheduleOptimizeResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ScheduleOptimizeResponse>(getAiScheduleOptimizeUrl(),
+  return customFetch<ScheduleOptimizeResponse>(getAiScheduleOptimizeUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(scheduleOptimizeInput)
   }
 );}
@@ -4671,11 +4511,13 @@ return customFetch<ScheduleOptimizeResponse>(getAiScheduleOptimizeUrl(),
 
 
 
+export const getAiScheduleOptimizeMutationKey = () => ['aiScheduleOptimize'] as const;
+
 export const getAiScheduleOptimizeMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiScheduleOptimize>>, TError,AiScheduleOptimizeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiScheduleOptimize>>, TError,AiScheduleOptimizeMutationVariables, TContext> => {
 
-const mutationKey = ['aiScheduleOptimize'];
+const mutationKey = getAiScheduleOptimizeMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4704,6 +4546,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiScheduleOptimizeMutationVariables = {data: BodyType<ScheduleOptimizeInput>}
 
     /**
+ * Given the runs planned for one day, deterministically proposes an ordering that schedules allergen runs at the end of the day, groups same brand/die together to minimize line changeovers, and honors factory sequence production rules. The ordering and all before/after metrics are computed server-side and are fully deterministic (shared @workspace/schedule-optimize lib); the AI is only asked to NARRATE a short plain-language explanation, and only when a better order exists (no improvement → no AI call). Read-only and advisory — never edits or commits the schedule. Fail-safe: if the AI is unavailable, the deterministic suggested order is still returned with an empty narration.
  * @summary Suggest an optimal run order for the day (AI narration); read-only
  */
 export const useAiScheduleOptimize = <TError = ErrorType<void>,
@@ -4731,17 +4574,11 @@ export const getAiFillMissingUrl = () => {
  */
 export const aiFillMissing = async (fillMissingInput: FillMissingInput, options?: Parameters<typeof customFetch>[1]): Promise<FillMissingResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<FillMissingResult>(getAiFillMissingUrl(),
+  return customFetch<FillMissingResult>(getAiFillMissingUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(fillMissingInput)
   }
 );}
@@ -4750,11 +4587,13 @@ return customFetch<FillMissingResult>(getAiFillMissingUrl(),
 
 
 
+export const getAiFillMissingMutationKey = () => ['aiFillMissing'] as const;
+
 export const getAiFillMissingMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiFillMissing>>, TError,AiFillMissingMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiFillMissing>>, TError,AiFillMissingMutationVariables, TContext> => {
 
-const mutationKey = ['aiFillMissing'];
+const mutationKey = getAiFillMissingMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4783,6 +4622,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiFillMissingMutationVariables = {data: BodyType<FillMissingInput>}
 
     /**
+ * Given a run's known brand/flavor/context and a list of still-blank scalar fields, returns a suggested value plus a short rationale for each. Read-only — never writes anything; the client decides what (if anything) to commit. Used by the "Fill in missing data" setup assistant for fields that have no known profile/spec/default source.
  * @summary Suggest values for blank run-setup fields (AI); read-only
  */
 export const useAiFillMissing = <TError = ErrorType<void>,
@@ -4810,17 +4650,11 @@ export const getAiMatchImportUrl = () => {
  */
 export const aiMatchImport = async (matchImportInput: MatchImportInput, options?: Parameters<typeof customFetch>[1]): Promise<MatchImportResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MatchImportResult>(getAiMatchImportUrl(),
+  return customFetch<MatchImportResult>(getAiMatchImportUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(matchImportInput)
   }
 );}
@@ -4829,11 +4663,13 @@ return customFetch<MatchImportResult>(getAiMatchImportUrl(),
 
 
 
+export const getAiMatchImportMutationKey = () => ['aiMatchImport'] as const;
+
 export const getAiMatchImportMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiMatchImport>>, TError,AiMatchImportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiMatchImport>>, TError,AiMatchImportMutationVariables, TContext> => {
 
-const mutationKey = ['aiMatchImport'];
+const mutationKey = getAiMatchImportMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4862,6 +4698,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiMatchImportMutationVariables = {data: BodyType<MatchImportInput>}
 
     /**
+ * Given the saved brands and their flavors plus a list of imported brand/flavor names that did NOT exactly match, returns the best saved match for each (only when confident). Read-only — never writes anything; the client uses the matches as pre-selected suggestions in the Excel import dialog and the user can still override. Falls back silently to the client's fuzzy matching when unavailable.
  * @summary Match imported brand/flavor names to saved ones (AI); read-only
  */
 export const useAiMatchImport = <TError = ErrorType<void>,
@@ -4889,17 +4726,11 @@ export const getAiMatchPremixUrl = () => {
  */
 export const aiMatchPremix = async (matchPremixInput: MatchPremixInput, options?: Parameters<typeof customFetch>[1]): Promise<MatchPremixResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MatchPremixResult>(getAiMatchPremixUrl(),
+  return customFetch<MatchPremixResult>(getAiMatchPremixUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(matchPremixInput)
   }
 );}
@@ -4908,11 +4739,13 @@ return customFetch<MatchPremixResult>(getAiMatchPremixUrl(),
 
 
 
+export const getAiMatchPremixMutationKey = () => ['aiMatchPremix'] as const;
+
 export const getAiMatchPremixMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiMatchPremix>>, TError,AiMatchPremixMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiMatchPremix>>, TError,AiMatchPremixMutationVariables, TContext> => {
 
-const mutationKey = ['aiMatchPremix'];
+const mutationKey = getAiMatchPremixMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -4941,6 +4774,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiMatchPremixMutationVariables = {data: BodyType<MatchPremixInput>}
 
     /**
+ * Given the saved brands and their flavors plus a list of imported premix PRODUCT names that did NOT ground to a saved product locally, returns the best saved brand (and flavor when clear) for each (only when confident). Read-only — never writes anything; the client uses the matches as pre-selected suggestions in the premix import dialog and the user can still override. Falls back silently to the client's local grounding when unavailable.
  * @summary Match imported premix product names to saved brand+flavor (AI); read-only
  */
 export const useAiMatchPremix = <TError = ErrorType<void>,
@@ -4968,17 +4802,11 @@ export const getAiParseSpecSheetUrl = () => {
  */
 export const aiParseSpecSheet = async (parseSpecSheetInput: ParseSpecSheetInput, options?: Parameters<typeof customFetch>[1]): Promise<ParseSpecSheetResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ParseSpecSheetResult>(getAiParseSpecSheetUrl(),
+  return customFetch<ParseSpecSheetResult>(getAiParseSpecSheetUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(parseSpecSheetInput)
   }
 );}
@@ -4987,11 +4815,13 @@ return customFetch<ParseSpecSheetResult>(getAiParseSpecSheetUrl(),
 
 
 
+export const getAiParseSpecSheetMutationKey = () => ['aiParseSpecSheet'] as const;
+
 export const getAiParseSpecSheetMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiParseSpecSheet>>, TError,AiParseSpecSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiParseSpecSheet>>, TError,AiParseSpecSheetMutationVariables, TContext> => {
 
-const mutationKey = ['aiParseSpecSheet'];
+const mutationKey = getAiParseSpecSheetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5020,6 +4850,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiParseSpecSheetMutationVariables = {data: BodyType<ParseSpecSheetInput>}
 
     /**
+ * Given the flattened text of an uploaded .xlsx workbook plus the app's known canonical lists (brands, flavors, applicator/pepperoni types, recipe ingredients) and learned aliases, returns structured spec profiles and dough/sauce/cheese recipes. Read-only — never writes anything; the client canonicalizes names and applies the import.
  * @summary Interpret an uploaded Excel spec sheet / recipe workbook (AI)
  */
 export const useAiParseSpecSheet = <TError = ErrorType<void>,
@@ -5047,17 +4878,11 @@ export const getAiSuggestMergesUrl = () => {
  */
 export const aiSuggestMerges = async (suggestMergesInput: SuggestMergesInput, options?: Parameters<typeof customFetch>[1]): Promise<SuggestMergesResult> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SuggestMergesResult>(getAiSuggestMergesUrl(),
+  return customFetch<SuggestMergesResult>(getAiSuggestMergesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(suggestMergesInput)
   }
 );}
@@ -5066,11 +4891,13 @@ return customFetch<SuggestMergesResult>(getAiSuggestMergesUrl(),
 
 
 
+export const getAiSuggestMergesMutationKey = () => ['aiSuggestMerges'] as const;
+
 export const getAiSuggestMergesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiSuggestMerges>>, TError,AiSuggestMergesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof aiSuggestMerges>>, TError,AiSuggestMergesMutationVariables, TContext> => {
 
-const mutationKey = ['aiSuggestMerges'];
+const mutationKey = getAiSuggestMergesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5099,6 +4926,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AiSuggestMergesMutationVariables = {data: BodyType<SuggestMergesInput>}
 
     /**
+ * Given the app's full pool of mergeable ingredient/die names (plus any learned merge aliases), returns groups of likely duplicates, each with a recommended canonical name to keep. Read-only — never writes anything; the user reviews the suggestions and applies merges through the existing merge path. Falls back silently to remembered (alias-derived) suggestions when unavailable.
  * @summary Suggest groups of duplicate ingredient names to merge (AI)
  */
 export const useAiSuggestMerges = <TError = ErrorType<void>,
@@ -5176,9 +5004,9 @@ export type ListMergeAliasesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every learned merge alias — a saved mapping from an ingredient name that was merged away to the canonical name it was folded into. Clients supply these to the AI suggester and surface remembered suggestions deterministically. Available to any signed-in user.
  * @summary List learned ingredient-merge aliases (merged-away name -> kept name)
  */
-
 export function useListMergeAliases<TData = Awaited<ReturnType<typeof listMergeAliases>>, TError = ErrorType<unknown>>(
  params?: ListMergeAliasesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMergeAliases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -5211,17 +5039,11 @@ export const getSaveMergeAliasesUrl = () => {
  */
 export const saveMergeAliases = async (saveMergeAliasesInput: SaveMergeAliasesInput, options?: Parameters<typeof customFetch>[1]): Promise<MergeAliasList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MergeAliasList>(getSaveMergeAliasesUrl(),
+  return customFetch<MergeAliasList>(getSaveMergeAliasesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveMergeAliasesInput)
   }
 );}
@@ -5230,11 +5052,13 @@ return customFetch<MergeAliasList>(getSaveMergeAliasesUrl(),
 
 
 
+export const getSaveMergeAliasesMutationKey = () => ['saveMergeAliases'] as const;
+
 export const getSaveMergeAliasesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveMergeAliases>>, TError,SaveMergeAliasesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveMergeAliases>>, TError,SaveMergeAliasesMutationVariables, TContext> => {
 
-const mutationKey = ['saveMergeAliases'];
+const mutationKey = getSaveMergeAliasesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5263,6 +5087,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveMergeAliasesMutationVariables = {data: BodyType<SaveMergeAliasesInput>}
 
     /**
+ * Persists a batch of merged-away -> kept name mappings recorded when a merge is confirmed. Existing aliases (matched case-insensitively on externalName, within the same category/brand) are updated; new ones are inserted. Available to any signed-in user.
  * @summary Save learned ingredient-merge aliases (case-insensitive upsert)
  */
 export const useSaveMergeAliases = <TError = ErrorType<void>,
@@ -5340,9 +5165,9 @@ export type ListDeniedMergesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every denied merge pair — an unordered pair of ingredient names the user explicitly told the app to never propose merging together. The merge suggester filters these out of both AI and remembered suggestions. Available to any signed-in user.
  * @summary List denied (ignored) ingredient-merge pairs
  */
-
 export function useListDeniedMerges<TData = Awaited<ReturnType<typeof listDeniedMerges>>, TError = ErrorType<unknown>>(
  params?: ListDeniedMergesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeniedMerges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -5375,17 +5200,11 @@ export const getSaveDeniedMergesUrl = () => {
  */
 export const saveDeniedMerges = async (saveDeniedMergesInput: SaveDeniedMergesInput, options?: Parameters<typeof customFetch>[1]): Promise<DeniedMergeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<DeniedMergeList>(getSaveDeniedMergesUrl(),
+  return customFetch<DeniedMergeList>(getSaveDeniedMergesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveDeniedMergesInput)
   }
 );}
@@ -5394,11 +5213,13 @@ return customFetch<DeniedMergeList>(getSaveDeniedMergesUrl(),
 
 
 
+export const getSaveDeniedMergesMutationKey = () => ['saveDeniedMerges'] as const;
+
 export const getSaveDeniedMergesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDeniedMerges>>, TError,SaveDeniedMergesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveDeniedMerges>>, TError,SaveDeniedMergesMutationVariables, TContext> => {
 
-const mutationKey = ['saveDeniedMerges'];
+const mutationKey = getSaveDeniedMergesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5427,6 +5248,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveDeniedMergesMutationVariables = {data: BodyType<SaveDeniedMergesInput>}
 
     /**
+ * Persists a batch of unordered name pairs the user denied, scoped to a category (and brand, for flavors). Pairs are normalized (trimmed, lowercased, sorted) and deduped; a pair that already exists is left as-is. Available to any signed-in user.
  * @summary Save denied (ignored) ingredient-merge pairs
  */
 export const useSaveDeniedMerges = <TError = ErrorType<void>,
@@ -5454,17 +5276,11 @@ export const getDeleteDeniedMergesUrl = () => {
  */
 export const deleteDeniedMerges = async (saveDeniedMergesInput: SaveDeniedMergesInput, options?: Parameters<typeof customFetch>[1]): Promise<DeniedMergeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<DeniedMergeList>(getDeleteDeniedMergesUrl(),
+  return customFetch<DeniedMergeList>(getDeleteDeniedMergesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveDeniedMergesInput)
   }
 );}
@@ -5473,11 +5289,13 @@ return customFetch<DeniedMergeList>(getDeleteDeniedMergesUrl(),
 
 
 
+export const getDeleteDeniedMergesMutationKey = () => ['deleteDeniedMerges'] as const;
+
 export const getDeleteDeniedMergesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDeniedMerges>>, TError,DeleteDeniedMergesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteDeniedMerges>>, TError,DeleteDeniedMergesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteDeniedMerges'];
+const mutationKey = getDeleteDeniedMergesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5506,6 +5324,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteDeniedMergesMutationVariables = {data: BodyType<SaveDeniedMergesInput>}
 
     /**
+ * Removes a batch of denied pairs so they may be suggested again. Pairs are matched case-insensitively regardless of order. Available to any signed-in user.
  * @summary Un-deny (remove) ingredient-merge pairs
  */
 export const useDeleteDeniedMerges = <TError = ErrorType<void>,
@@ -5576,9 +5395,9 @@ export type ListMergedAwayQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns the factory-wide tombstone of names that were merged away. The list never silently shrinks (only an explicit re-add removes a name), so every device can fetch it on load and strip these names from its master lists regardless of which device seeded the current day. Available to any signed-in user.
  * @summary List durable merged-away ingredient/die names
  */
-
 export function useListMergedAway<TData = Awaited<ReturnType<typeof listMergedAway>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMergedAway>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -5611,17 +5430,11 @@ export const getSaveMergedAwayUrl = () => {
  */
 export const saveMergedAway = async (saveMergedAwayInput: SaveMergedAwayInput, options?: Parameters<typeof customFetch>[1]): Promise<MergedAwayList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MergedAwayList>(getSaveMergedAwayUrl(),
+  return customFetch<MergedAwayList>(getSaveMergedAwayUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveMergedAwayInput)
   }
 );}
@@ -5630,11 +5443,13 @@ return customFetch<MergedAwayList>(getSaveMergedAwayUrl(),
 
 
 
+export const getSaveMergedAwayMutationKey = () => ['saveMergedAway'] as const;
+
 export const getSaveMergedAwayMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveMergedAway>>, TError,SaveMergedAwayMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveMergedAway>>, TError,SaveMergedAwayMutationVariables, TContext> => {
 
-const mutationKey = ['saveMergedAway'];
+const mutationKey = getSaveMergedAwayMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5663,6 +5478,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveMergedAwayMutationVariables = {data: BodyType<SaveMergedAwayInput>}
 
     /**
+ * Persists a batch of names that were merged away. Names are normalized (trimmed, lowercased) and deduped; a name that already exists is left as is. Available to any signed-in user.
  * @summary Record merged-away ingredient/die names
  */
 export const useSaveMergedAway = <TError = ErrorType<void>,
@@ -5690,17 +5506,11 @@ export const getDeleteMergedAwayUrl = () => {
  */
 export const deleteMergedAway = async (saveMergedAwayInput: SaveMergedAwayInput, options?: Parameters<typeof customFetch>[1]): Promise<MergedAwayList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MergedAwayList>(getDeleteMergedAwayUrl(),
+  return customFetch<MergedAwayList>(getDeleteMergedAwayUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveMergedAwayInput)
   }
 );}
@@ -5709,11 +5519,13 @@ return customFetch<MergedAwayList>(getDeleteMergedAwayUrl(),
 
 
 
+export const getDeleteMergedAwayMutationKey = () => ['deleteMergedAway'] as const;
+
 export const getDeleteMergedAwayMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMergedAway>>, TError,DeleteMergedAwayMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteMergedAway>>, TError,DeleteMergedAwayMutationVariables, TContext> => {
 
-const mutationKey = ['deleteMergedAway'];
+const mutationKey = getDeleteMergedAwayMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5742,6 +5554,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteMergedAwayMutationVariables = {data: BodyType<SaveMergedAwayInput>}
 
     /**
+ * Removes a batch of names from the tombstone so they may be used again — called when the user explicitly re-adds a previously merged-away name. Matched case-insensitively. Available to any signed-in user.
  * @summary Un-tombstone (remove) merged-away names
  */
 export const useDeleteMergedAway = <TError = ErrorType<void>,
@@ -5812,9 +5625,9 @@ export type ListProductionRulesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide production rule. Rules are global policy (not part of the per-day sync payload). Reading is available to any signed-in user so both apps can evaluate them; editing is manager-only.
  * @summary List manager-defined production rules
  */
-
 export function useListProductionRules<TData = Awaited<ReturnType<typeof listProductionRules>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProductionRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -5847,17 +5660,11 @@ export const getSaveProductionRulesUrl = () => {
  */
 export const saveProductionRules = async (saveProductionRulesInput: SaveProductionRulesInput, options?: Parameters<typeof customFetch>[1]): Promise<ProductionRuleList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ProductionRuleList>(getSaveProductionRulesUrl(),
+  return customFetch<ProductionRuleList>(getSaveProductionRulesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveProductionRulesInput)
   }
 );}
@@ -5866,11 +5673,13 @@ return customFetch<ProductionRuleList>(getSaveProductionRulesUrl(),
 
 
 
+export const getSaveProductionRulesMutationKey = () => ['saveProductionRules'] as const;
+
 export const getSaveProductionRulesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveProductionRules>>, TError,SaveProductionRulesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveProductionRules>>, TError,SaveProductionRulesMutationVariables, TContext> => {
 
-const mutationKey = ['saveProductionRules'];
+const mutationKey = getSaveProductionRulesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5899,6 +5708,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveProductionRulesMutationVariables = {data: BodyType<SaveProductionRulesInput>}
 
     /**
+ * Upserts a batch of production rules by id. Each rule is normalized and validated server-side; malformed rules are dropped. Manager role required.
  * @summary Create or update production rules (manager only)
  */
 export const useSaveProductionRules = <TError = ErrorType<void>,
@@ -5926,17 +5736,11 @@ export const getDeleteProductionRulesUrl = () => {
  */
 export const deleteProductionRules = async (deleteProductionRulesInput: DeleteProductionRulesInput, options?: Parameters<typeof customFetch>[1]): Promise<ProductionRuleList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ProductionRuleList>(getDeleteProductionRulesUrl(),
+  return customFetch<ProductionRuleList>(getDeleteProductionRulesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteProductionRulesInput)
   }
 );}
@@ -5945,11 +5749,13 @@ return customFetch<ProductionRuleList>(getDeleteProductionRulesUrl(),
 
 
 
+export const getDeleteProductionRulesMutationKey = () => ['deleteProductionRules'] as const;
+
 export const getDeleteProductionRulesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProductionRules>>, TError,DeleteProductionRulesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteProductionRules>>, TError,DeleteProductionRulesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteProductionRules'];
+const mutationKey = getDeleteProductionRulesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5978,6 +5784,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteProductionRulesMutationVariables = {data: BodyType<DeleteProductionRulesInput>}
 
     /**
+ * Removes a batch of production rules by id. Manager role required.
  * @summary Delete production rules by id (manager only)
  */
 export const useDeleteProductionRules = <TError = ErrorType<void>,
@@ -6048,9 +5855,9 @@ export type ListFreezerPullItemsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide freezer-pull item (ingredients that must be pulled from the freezer a set number of days before the run that uses them). These are global policy (not part of the per-day sync payload). Reading is available to any signed-in user so both apps can build the warehouse pull notices; editing is manager-only.
  * @summary List manager-defined freezer-pull items
  */
-
 export function useListFreezerPullItems<TData = Awaited<ReturnType<typeof listFreezerPullItems>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFreezerPullItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -6083,17 +5890,11 @@ export const getSaveFreezerPullItemsUrl = () => {
  */
 export const saveFreezerPullItems = async (saveFreezerPullItemsInput: SaveFreezerPullItemsInput, options?: Parameters<typeof customFetch>[1]): Promise<FreezerPullItemList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<FreezerPullItemList>(getSaveFreezerPullItemsUrl(),
+  return customFetch<FreezerPullItemList>(getSaveFreezerPullItemsUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveFreezerPullItemsInput)
   }
 );}
@@ -6102,11 +5903,13 @@ return customFetch<FreezerPullItemList>(getSaveFreezerPullItemsUrl(),
 
 
 
+export const getSaveFreezerPullItemsMutationKey = () => ['saveFreezerPullItems'] as const;
+
 export const getSaveFreezerPullItemsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveFreezerPullItems>>, TError,SaveFreezerPullItemsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveFreezerPullItems>>, TError,SaveFreezerPullItemsMutationVariables, TContext> => {
 
-const mutationKey = ['saveFreezerPullItems'];
+const mutationKey = getSaveFreezerPullItemsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6135,6 +5938,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveFreezerPullItemsMutationVariables = {data: BodyType<SaveFreezerPullItemsInput>}
 
     /**
+ * Upserts a batch of freezer-pull items by id. Each item is normalized and validated server-side; malformed items are dropped. Manager role required.
  * @summary Create or update freezer-pull items (manager only)
  */
 export const useSaveFreezerPullItems = <TError = ErrorType<void>,
@@ -6162,17 +5966,11 @@ export const getDeleteFreezerPullItemsUrl = () => {
  */
 export const deleteFreezerPullItems = async (deleteFreezerPullItemsInput: DeleteFreezerPullItemsInput, options?: Parameters<typeof customFetch>[1]): Promise<FreezerPullItemList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<FreezerPullItemList>(getDeleteFreezerPullItemsUrl(),
+  return customFetch<FreezerPullItemList>(getDeleteFreezerPullItemsUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteFreezerPullItemsInput)
   }
 );}
@@ -6181,11 +5979,13 @@ return customFetch<FreezerPullItemList>(getDeleteFreezerPullItemsUrl(),
 
 
 
+export const getDeleteFreezerPullItemsMutationKey = () => ['deleteFreezerPullItems'] as const;
+
 export const getDeleteFreezerPullItemsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteFreezerPullItems>>, TError,DeleteFreezerPullItemsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteFreezerPullItems>>, TError,DeleteFreezerPullItemsMutationVariables, TContext> => {
 
-const mutationKey = ['deleteFreezerPullItems'];
+const mutationKey = getDeleteFreezerPullItemsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6214,6 +6014,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteFreezerPullItemsMutationVariables = {data: BodyType<DeleteFreezerPullItemsInput>}
 
     /**
+ * Removes a batch of freezer-pull items by id. Manager role required.
  * @summary Delete freezer-pull items by id (manager only)
  */
 export const useDeleteFreezerPullItems = <TError = ErrorType<void>,
@@ -6284,9 +6085,9 @@ export type ListFreezerSurplusQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns scoped finished-case freezer lots and explicit run allocations. Lots remain separately dated and only their remaining balance can be allocated.
  * @summary List dated finished-case freezer surplus
  */
-
 export function useListFreezerSurplus<TData = Awaited<ReturnType<typeof listFreezerSurplus>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFreezerSurplus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -6318,17 +6119,11 @@ export const getConfirmFreezerSurplusUrl = () => {
  */
 export const confirmFreezerSurplus = async (confirmFreezerSurplusInput: ConfirmFreezerSurplusInput, options?: Parameters<typeof customFetch>[1]): Promise<FreezerSurplusMutationResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<FreezerSurplusMutationResponse>(getConfirmFreezerSurplusUrl(),
+  return customFetch<FreezerSurplusMutationResponse>(getConfirmFreezerSurplusUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(confirmFreezerSurplusInput)
   }
 );}
@@ -6337,11 +6132,13 @@ return customFetch<FreezerSurplusMutationResponse>(getConfirmFreezerSurplusUrl()
 
 
 
+export const getConfirmFreezerSurplusMutationKey = () => ['confirmFreezerSurplus'] as const;
+
 export const getConfirmFreezerSurplusMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmFreezerSurplus>>, TError,ConfirmFreezerSurplusMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof confirmFreezerSurplus>>, TError,ConfirmFreezerSurplusMutationVariables, TContext> => {
 
-const mutationKey = ['confirmFreezerSurplus'];
+const mutationKey = getConfirmFreezerSurplusMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6369,9 +6166,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ConfirmFreezerSurplusMutationError = ErrorType<void>
     export type ConfirmFreezerSurplusMutationVariables = {data: BodyType<ConfirmFreezerSurplusInput>}
 
-    /**
- * @summary Confirm a new dated finished-case surplus lot
- */
+    /** @summary Confirm a new dated finished-case surplus lot */
 export const useConfirmFreezerSurplus = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmFreezerSurplus>>, TError,ConfirmFreezerSurplusMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -6397,17 +6192,11 @@ export const getReplaceFreezerSurplusAllocationUrl = (runId: string,) => {
 export const replaceFreezerSurplusAllocation = async (runId: string,
     replaceFreezerSurplusAllocationInput: ReplaceFreezerSurplusAllocationInput, options?: Parameters<typeof customFetch>[1]): Promise<FreezerSurplusMutationResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<FreezerSurplusMutationResponse>(getReplaceFreezerSurplusAllocationUrl(runId),
+  return customFetch<FreezerSurplusMutationResponse>(getReplaceFreezerSurplusAllocationUrl(runId),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(replaceFreezerSurplusAllocationInput)
   }
 );}
@@ -6416,11 +6205,13 @@ return customFetch<FreezerSurplusMutationResponse>(getReplaceFreezerSurplusAlloc
 
 
 
+export const getReplaceFreezerSurplusAllocationMutationKey = () => ['replaceFreezerSurplusAllocation'] as const;
+
 export const getReplaceFreezerSurplusAllocationMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceFreezerSurplusAllocation>>, TError,ReplaceFreezerSurplusAllocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof replaceFreezerSurplusAllocation>>, TError,ReplaceFreezerSurplusAllocationMutationVariables, TContext> => {
 
-const mutationKey = ['replaceFreezerSurplusAllocation'];
+const mutationKey = getReplaceFreezerSurplusAllocationMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6448,9 +6239,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReplaceFreezerSurplusAllocationMutationError = ErrorType<void>
     export type ReplaceFreezerSurplusAllocationMutationVariables = {runId: string;data: BodyType<ReplaceFreezerSurplusAllocationInput>}
 
-    /**
- * @summary Apply or revise dated surplus for an unstarted run
- */
+    /** @summary Apply or revise dated surplus for an unstarted run */
 export const useReplaceFreezerSurplusAllocation = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceFreezerSurplusAllocation>>, TError,ReplaceFreezerSurplusAllocationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -6519,9 +6308,9 @@ export type ListDieLineDefaultsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every stored per-die line-setting default (crusts per cycle, cycle speed, speed adjustment, freezer time, extra case buffer). Factory-wide master-data (not part of the per-day sync payload). Reading is available to any signed-in user so the run form / setup editor can pre-fill line settings; editing is manager-only. Dies with no stored entry fall back to the app's built-in defaults.
  * @summary List manager-set per-die line-setting defaults
  */
-
 export function useListDieLineDefaults<TData = Awaited<ReturnType<typeof listDieLineDefaults>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDieLineDefaults>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -6554,17 +6343,11 @@ export const getSaveDieLineDefaultsUrl = () => {
  */
 export const saveDieLineDefaults = async (saveDieLineDefaultsInput: SaveDieLineDefaultsInput, options?: Parameters<typeof customFetch>[1]): Promise<DieLineDefaultsList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<DieLineDefaultsList>(getSaveDieLineDefaultsUrl(),
+  return customFetch<DieLineDefaultsList>(getSaveDieLineDefaultsUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveDieLineDefaultsInput)
   }
 );}
@@ -6573,11 +6356,13 @@ return customFetch<DieLineDefaultsList>(getSaveDieLineDefaultsUrl(),
 
 
 
+export const getSaveDieLineDefaultsMutationKey = () => ['saveDieLineDefaults'] as const;
+
 export const getSaveDieLineDefaultsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDieLineDefaults>>, TError,SaveDieLineDefaultsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveDieLineDefaults>>, TError,SaveDieLineDefaultsMutationVariables, TContext> => {
 
-const mutationKey = ['saveDieLineDefaults'];
+const mutationKey = getSaveDieLineDefaultsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6606,6 +6391,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveDieLineDefaultsMutationVariables = {data: BodyType<SaveDieLineDefaultsInput>}
 
     /**
+ * Upserts a batch of per-die line-setting defaults keyed by die name (case-insensitive). Malformed entries are dropped. Manager role required.
  * @summary Create or update per-die line-setting defaults (manager only)
  */
 export const useSaveDieLineDefaults = <TError = ErrorType<void>,
@@ -6633,17 +6419,11 @@ export const getDeleteDieLineDefaultsUrl = () => {
  */
 export const deleteDieLineDefaults = async (deleteDieLineDefaultsInput: DeleteDieLineDefaultsInput, options?: Parameters<typeof customFetch>[1]): Promise<DieLineDefaultsList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<DieLineDefaultsList>(getDeleteDieLineDefaultsUrl(),
+  return customFetch<DieLineDefaultsList>(getDeleteDieLineDefaultsUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteDieLineDefaultsInput)
   }
 );}
@@ -6652,11 +6432,13 @@ return customFetch<DieLineDefaultsList>(getDeleteDieLineDefaultsUrl(),
 
 
 
+export const getDeleteDieLineDefaultsMutationKey = () => ['deleteDieLineDefaults'] as const;
+
 export const getDeleteDieLineDefaultsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDieLineDefaults>>, TError,DeleteDieLineDefaultsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteDieLineDefaults>>, TError,DeleteDieLineDefaultsMutationVariables, TContext> => {
 
-const mutationKey = ['deleteDieLineDefaults'];
+const mutationKey = getDeleteDieLineDefaultsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6685,6 +6467,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteDieLineDefaultsMutationVariables = {data: BodyType<DeleteDieLineDefaultsInput>}
 
     /**
+ * Removes stored per-die defaults by die name (case-insensitive), so those dies fall back to the app's built-in defaults. Manager role required.
  * @summary Delete per-die line-setting defaults by die name (manager only)
  */
 export const useDeleteDieLineDefaults = <TError = ErrorType<void>,
@@ -6755,9 +6538,9 @@ export type ListRunSuggestionsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns stored run-coaching suggestions (pending, accepted, dismissed). These are deterministic, math-driven recommendations to adjust a setting (cycle speed or tunnel time) generated after runs complete; nothing is ever auto-applied. Reading is open to any signed-in user; acting on them is manager-only.
  * @summary List run-coaching suggestions (Run Insights)
  */
-
 export function useListRunSuggestions<TData = Awaited<ReturnType<typeof listRunSuggestions>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRunSuggestions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -6790,17 +6573,11 @@ export const getObserveRunSuggestionUrl = () => {
  */
 export const observeRunSuggestion = async (observeRunSuggestionInput: ObserveRunSuggestionInput, options?: Parameters<typeof customFetch>[1]): Promise<ObserveRunSuggestion200> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ObserveRunSuggestion200>(getObserveRunSuggestionUrl(),
+  return customFetch<ObserveRunSuggestion200>(getObserveRunSuggestionUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(observeRunSuggestionInput)
   }
 );}
@@ -6809,11 +6586,13 @@ return customFetch<ObserveRunSuggestion200>(getObserveRunSuggestionUrl(),
 
 
 
+export const getObserveRunSuggestionMutationKey = () => ['observeRunSuggestion'] as const;
+
 export const getObserveRunSuggestionMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof observeRunSuggestion>>, TError,ObserveRunSuggestionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof observeRunSuggestion>>, TError,ObserveRunSuggestionMutationVariables, TContext> => {
 
-const mutationKey = ['observeRunSuggestion'];
+const mutationKey = getObserveRunSuggestionMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6842,6 +6621,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ObserveRunSuggestionMutationVariables = {data: BodyType<ObserveRunSuggestionInput>}
 
     /**
+ * Called after a run finalizes when the client's deterministic analysis found a significant, consistent deviation between observed and configured values. Upserts one row per pattern (type + product + die). A dismissed pattern is only reopened when the drift has worsened or the configured value changed. Best-effort AI narration is attached server-side; on provider failure a deterministic explanation is kept.
  * @summary Report a run-coaching suggestion candidate
  */
 export const useObserveRunSuggestion = <TError = ErrorType<void>,
@@ -6869,17 +6649,11 @@ export const getUpdateRunSuggestionUrl = () => {
  */
 export const updateRunSuggestion = async (updateRunSuggestionInput: UpdateRunSuggestionInput, options?: Parameters<typeof customFetch>[1]): Promise<RunSuggestionsList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<RunSuggestionsList>(getUpdateRunSuggestionUrl(),
+  return customFetch<RunSuggestionsList>(getUpdateRunSuggestionUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(updateRunSuggestionInput)
   }
 );}
@@ -6888,11 +6662,13 @@ return customFetch<RunSuggestionsList>(getUpdateRunSuggestionUrl(),
 
 
 
+export const getUpdateRunSuggestionMutationKey = () => ['updateRunSuggestion'] as const;
+
 export const getUpdateRunSuggestionMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRunSuggestion>>, TError,UpdateRunSuggestionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateRunSuggestion>>, TError,UpdateRunSuggestionMutationVariables, TContext> => {
 
-const mutationKey = ['updateRunSuggestion'];
+const mutationKey = getUpdateRunSuggestionMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -6921,6 +6697,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateRunSuggestionMutationVariables = {data: BodyType<UpdateRunSuggestionInput>}
 
     /**
+ * Manager decision on a pending suggestion — accept (the client applies the setting change) or dismiss (pattern suppressed until it recurs). Can also clear a delivered follow-up note.
  * @summary Accept or dismiss a run suggestion (manager only)
  */
 export const useUpdateRunSuggestion = <TError = ErrorType<void>,
@@ -6948,17 +6725,11 @@ export const getFollowUpRunSuggestionUrl = () => {
  */
 export const followUpRunSuggestion = async (runSuggestionFollowUpInput: RunSuggestionFollowUpInput, options?: Parameters<typeof customFetch>[1]): Promise<FollowUpRunSuggestion200> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<FollowUpRunSuggestion200>(getFollowUpRunSuggestionUrl(),
+  return customFetch<FollowUpRunSuggestion200>(getFollowUpRunSuggestionUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(runSuggestionFollowUpInput)
   }
 );}
@@ -6967,11 +6738,13 @@ return customFetch<FollowUpRunSuggestion200>(getFollowUpRunSuggestionUrl(),
 
 
 
+export const getFollowUpRunSuggestionMutationKey = () => ['followUpRunSuggestion'] as const;
+
 export const getFollowUpRunSuggestionMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof followUpRunSuggestion>>, TError,FollowUpRunSuggestionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof followUpRunSuggestion>>, TError,FollowUpRunSuggestionMutationVariables, TContext> => {
 
-const mutationKey = ['followUpRunSuggestion'];
+const mutationKey = getFollowUpRunSuggestionMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7000,6 +6773,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type FollowUpRunSuggestionMutationVariables = {data: BodyType<RunSuggestionFollowUpInput>}
 
     /**
+ * After a suggestion was accepted, the next finished run of the same product/die reports whether the adjusted setting tracked reality. Only writes onto an accepted suggestion that has no note yet.
  * @summary Record a post-accept follow-up note for a suggestion
  */
 export const useFollowUpRunSuggestion = <TError = ErrorType<void>,
@@ -7070,9 +6844,9 @@ export type ListDieTypesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide die type (the selectable Die Type master list). These are shared master-data (not part of the per-day sync payload), so they survive factory data resets and fresh devices. Any signed-in user can read and write them — the list is a shared convenience edited from the run form pickers, like run templates.
  * @summary List factory-wide die types
  */
-
 export function useListDieTypes<TData = Awaited<ReturnType<typeof listDieTypes>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDieTypes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -7105,17 +6879,11 @@ export const getSaveDieTypesUrl = () => {
  */
 export const saveDieTypes = async (saveDieTypesInput: SaveDieTypesInput, options?: Parameters<typeof customFetch>[1]): Promise<DieTypeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<DieTypeList>(getSaveDieTypesUrl(),
+  return customFetch<DieTypeList>(getSaveDieTypesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveDieTypesInput)
   }
 );}
@@ -7124,11 +6892,13 @@ return customFetch<DieTypeList>(getSaveDieTypesUrl(),
 
 
 
+export const getSaveDieTypesMutationKey = () => ['saveDieTypes'] as const;
+
 export const getSaveDieTypesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDieTypes>>, TError,SaveDieTypesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveDieTypes>>, TError,SaveDieTypesMutationVariables, TContext> => {
 
-const mutationKey = ['saveDieTypes'];
+const mutationKey = getSaveDieTypesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7157,6 +6927,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveDieTypesMutationVariables = {data: BodyType<SaveDieTypesInput>}
 
     /**
+ * Upserts a batch of die types by name. Names are trimmed and folded to their canonical id case-insensitively; malformed/empty names are dropped.
  * @summary Create or update die types
  */
 export const useSaveDieTypes = <TError = ErrorType<void>,
@@ -7184,17 +6955,11 @@ export const getDeleteDieTypesUrl = () => {
  */
 export const deleteDieTypes = async (deleteDieTypesInput: DeleteDieTypesInput, options?: Parameters<typeof customFetch>[1]): Promise<DieTypeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<DieTypeList>(getDeleteDieTypesUrl(),
+  return customFetch<DieTypeList>(getDeleteDieTypesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteDieTypesInput)
   }
 );}
@@ -7203,11 +6968,13 @@ return customFetch<DieTypeList>(getDeleteDieTypesUrl(),
 
 
 
+export const getDeleteDieTypesMutationKey = () => ['deleteDieTypes'] as const;
+
 export const getDeleteDieTypesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDieTypes>>, TError,DeleteDieTypesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteDieTypes>>, TError,DeleteDieTypesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteDieTypes'];
+const mutationKey = getDeleteDieTypesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7236,6 +7003,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteDieTypesMutationVariables = {data: BodyType<DeleteDieTypesInput>}
 
     /**
+ * Removes a batch of die types by name (case-insensitive). Deletions are deliberate user actions and are honored factory-wide — clients keep their own deletion tombstones so a removed die is never resurrected.
  * @summary Delete die types by name
  */
 export const useDeleteDieTypes = <TError = ErrorType<void>,
@@ -7306,9 +7074,9 @@ export type ListRunTemplatesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every facility-wide saved run template (a named run-setup preset). These are global master-data (not part of the per-day sync payload). Any signed-in user can read and write them — templates are a shared convenience, not a policy control.
  * @summary List facility-wide run templates
  */
-
 export function useListRunTemplates<TData = Awaited<ReturnType<typeof listRunTemplates>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRunTemplates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -7341,17 +7109,11 @@ export const getSaveRunTemplatesUrl = () => {
  */
 export const saveRunTemplates = async (saveRunTemplatesInput: SaveRunTemplatesInput, options?: Parameters<typeof customFetch>[1]): Promise<RunTemplateList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<RunTemplateList>(getSaveRunTemplatesUrl(),
+  return customFetch<RunTemplateList>(getSaveRunTemplatesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveRunTemplatesInput)
   }
 );}
@@ -7360,11 +7122,13 @@ return customFetch<RunTemplateList>(getSaveRunTemplatesUrl(),
 
 
 
+export const getSaveRunTemplatesMutationKey = () => ['saveRunTemplates'] as const;
+
 export const getSaveRunTemplatesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveRunTemplates>>, TError,SaveRunTemplatesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveRunTemplates>>, TError,SaveRunTemplatesMutationVariables, TContext> => {
 
-const mutationKey = ['saveRunTemplates'];
+const mutationKey = getSaveRunTemplatesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7393,6 +7157,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveRunTemplatesMutationVariables = {data: BodyType<SaveRunTemplatesInput>}
 
     /**
+ * Upserts a batch of run templates by id. Each template is normalized and validated server-side; malformed templates are dropped. Any signed-in user may save (matching the previous local behavior where anyone could create a template).
  * @summary Create or update run templates
  */
 export const useSaveRunTemplates = <TError = ErrorType<void>,
@@ -7420,17 +7185,11 @@ export const getDeleteRunTemplatesUrl = () => {
  */
 export const deleteRunTemplates = async (deleteRunTemplatesInput: DeleteRunTemplatesInput, options?: Parameters<typeof customFetch>[1]): Promise<RunTemplateList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<RunTemplateList>(getDeleteRunTemplatesUrl(),
+  return customFetch<RunTemplateList>(getDeleteRunTemplatesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteRunTemplatesInput)
   }
 );}
@@ -7439,11 +7198,13 @@ return customFetch<RunTemplateList>(getDeleteRunTemplatesUrl(),
 
 
 
+export const getDeleteRunTemplatesMutationKey = () => ['deleteRunTemplates'] as const;
+
 export const getDeleteRunTemplatesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRunTemplates>>, TError,DeleteRunTemplatesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteRunTemplates>>, TError,DeleteRunTemplatesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteRunTemplates'];
+const mutationKey = getDeleteRunTemplatesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7472,6 +7233,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteRunTemplatesMutationVariables = {data: BodyType<DeleteRunTemplatesInput>}
 
     /**
+ * Removes a batch of run templates by id. Any signed-in user may delete.
  * @summary Delete run templates by id
  */
 export const useDeleteRunTemplates = <TError = ErrorType<void>,
@@ -7542,9 +7304,9 @@ export type GetSupervisorPinQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns the facility supervisor PIN. Reading is available to any signed-in user so both apps can perform the local PIN compare that gates supervisor actions (the PIN is a low-security convenience gate, not a secret).
  * @summary Get the facility-wide supervisor PIN
  */
-
 export function useGetSupervisorPin<TData = Awaited<ReturnType<typeof getSupervisorPin>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupervisorPin>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -7577,17 +7339,11 @@ export const getUpdateSupervisorPinUrl = () => {
  */
 export const updateSupervisorPin = async (supervisorPin: SupervisorPin, options?: Parameters<typeof customFetch>[1]): Promise<SupervisorPin> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SupervisorPin>(getUpdateSupervisorPinUrl(),
+  return customFetch<SupervisorPin>(getUpdateSupervisorPinUrl(),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(supervisorPin)
   }
 );}
@@ -7596,11 +7352,13 @@ return customFetch<SupervisorPin>(getUpdateSupervisorPinUrl(),
 
 
 
+export const getUpdateSupervisorPinMutationKey = () => ['updateSupervisorPin'] as const;
+
 export const getUpdateSupervisorPinMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupervisorPin>>, TError,UpdateSupervisorPinMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateSupervisorPin>>, TError,UpdateSupervisorPinMutationVariables, TContext> => {
 
-const mutationKey = ['updateSupervisorPin'];
+const mutationKey = getUpdateSupervisorPinMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7629,6 +7387,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateSupervisorPinMutationVariables = {data: BodyType<SupervisorPin>}
 
     /**
+ * Sets the facility supervisor PIN. Manager capability required so the facility-wide gate isn't changed out from under everyone by any user.
  * @summary Update the facility-wide supervisor PIN (manager only)
  */
 export const useUpdateSupervisorPin = <TError = ErrorType<void>,
@@ -7699,9 +7458,9 @@ export type ListMixesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide mix (a pre-blended recipe — veggie/topping, cheese, sauce, … — made ahead for a given product). These are global policy (not part of the per-day sync payload). Reading is available to any signed-in user so both apps can build the mix make-day plan; editing is manager-only.
  * @summary List manager-defined mixes
  */
-
 export function useListMixes<TData = Awaited<ReturnType<typeof listMixes>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMixes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -7734,17 +7493,11 @@ export const getSaveMixesUrl = () => {
  */
 export const saveMixes = async (saveMixesInput: SaveMixesInput, options?: Parameters<typeof customFetch>[1]): Promise<MixList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MixList>(getSaveMixesUrl(),
+  return customFetch<MixList>(getSaveMixesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveMixesInput)
   }
 );}
@@ -7753,11 +7506,13 @@ return customFetch<MixList>(getSaveMixesUrl(),
 
 
 
+export const getSaveMixesMutationKey = () => ['saveMixes'] as const;
+
 export const getSaveMixesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveMixes>>, TError,SaveMixesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveMixes>>, TError,SaveMixesMutationVariables, TContext> => {
 
-const mutationKey = ['saveMixes'];
+const mutationKey = getSaveMixesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7786,6 +7541,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveMixesMutationVariables = {data: BodyType<SaveMixesInput>}
 
     /**
+ * Upserts a batch of mixes by id. Each mix is normalized and validated server-side; malformed mixes are dropped. Manager role required.
  * @summary Create or update mixes (manager only)
  */
 export const useSaveMixes = <TError = ErrorType<void>,
@@ -7813,17 +7569,11 @@ export const getDeleteMixesUrl = () => {
  */
 export const deleteMixes = async (deleteMixesInput: DeleteMixesInput, options?: Parameters<typeof customFetch>[1]): Promise<MixList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<MixList>(getDeleteMixesUrl(),
+  return customFetch<MixList>(getDeleteMixesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteMixesInput)
   }
 );}
@@ -7832,11 +7582,13 @@ return customFetch<MixList>(getDeleteMixesUrl(),
 
 
 
+export const getDeleteMixesMutationKey = () => ['deleteMixes'] as const;
+
 export const getDeleteMixesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMixes>>, TError,DeleteMixesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteMixes>>, TError,DeleteMixesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteMixes'];
+const mutationKey = getDeleteMixesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -7865,6 +7617,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteMixesMutationVariables = {data: BodyType<DeleteMixesInput>}
 
     /**
+ * Removes a batch of mixes by id. Manager role required.
  * @summary Delete mixes by id (manager only)
  */
 export const useDeleteMixes = <TError = ErrorType<void>,
@@ -7935,9 +7688,9 @@ export type ListIngredientsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every ingredient in the factory-wide catalog (Task #102). This is global master-data (not part of the per-day sync payload); reading is available to any signed-in user so both apps can resolve recipe rows and build category-scoped pickers, while editing is manager-only.
  * @summary List the factory-wide ingredient catalog
  */
-
 export function useListIngredients<TData = Awaited<ReturnType<typeof listIngredients>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listIngredients>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -7970,17 +7723,11 @@ export const getSaveIngredientsUrl = () => {
  */
 export const saveIngredients = async (saveIngredientsInput: SaveIngredientsInput, options?: Parameters<typeof customFetch>[1]): Promise<IngredientList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<IngredientList>(getSaveIngredientsUrl(),
+  return customFetch<IngredientList>(getSaveIngredientsUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveIngredientsInput)
   }
 );}
@@ -7989,11 +7736,13 @@ return customFetch<IngredientList>(getSaveIngredientsUrl(),
 
 
 
+export const getSaveIngredientsMutationKey = () => ['saveIngredients'] as const;
+
 export const getSaveIngredientsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveIngredients>>, TError,SaveIngredientsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveIngredients>>, TError,SaveIngredientsMutationVariables, TContext> => {
 
-const mutationKey = ['saveIngredients'];
+const mutationKey = getSaveIngredientsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8022,6 +7771,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveIngredientsMutationVariables = {data: BodyType<SaveIngredientsInput>}
 
     /**
+ * Upserts a batch of ingredients by id. Each ingredient is normalized and validated server-side; malformed entries are dropped. Renaming is just an upsert of an existing id with a new name — since recipe rows reference the id, the new name is picked up everywhere with no client-side rewrite. Manager role required.
  * @summary Create or rename ingredients (manager only)
  */
 export const useSaveIngredients = <TError = ErrorType<void>,
@@ -8049,17 +7799,11 @@ export const getDeleteIngredientsUrl = () => {
  */
 export const deleteIngredients = async (deleteIngredientsInput: DeleteIngredientsInput, options?: Parameters<typeof customFetch>[1]): Promise<IngredientList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<IngredientList>(getDeleteIngredientsUrl(),
+  return customFetch<IngredientList>(getDeleteIngredientsUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteIngredientsInput)
   }
 );}
@@ -8068,11 +7812,13 @@ return customFetch<IngredientList>(getDeleteIngredientsUrl(),
 
 
 
+export const getDeleteIngredientsMutationKey = () => ['deleteIngredients'] as const;
+
 export const getDeleteIngredientsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteIngredients>>, TError,DeleteIngredientsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteIngredients>>, TError,DeleteIngredientsMutationVariables, TContext> => {
 
-const mutationKey = ['deleteIngredients'];
+const mutationKey = getDeleteIngredientsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8101,6 +7847,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteIngredientsMutationVariables = {data: BodyType<DeleteIngredientsInput>}
 
     /**
+ * Marks a batch of ingredients disabled by id (soft delete — the id may still be referenced by historical recipe rows, which keep resolving to its last known name). Manager role required.
  * @summary Soft-delete ingredients by id (manager only)
  */
 export const useDeleteIngredients = <TError = ErrorType<void>,
@@ -8128,17 +7875,11 @@ export const getMergeIngredientsUrl = () => {
  */
 export const mergeIngredients = async (mergeIngredientsInput: MergeIngredientsInput, options?: Parameters<typeof customFetch>[1]): Promise<IngredientList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<IngredientList>(getMergeIngredientsUrl(),
+  return customFetch<IngredientList>(getMergeIngredientsUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(mergeIngredientsInput)
   }
 );}
@@ -8147,11 +7888,13 @@ return customFetch<IngredientList>(getMergeIngredientsUrl(),
 
 
 
+export const getMergeIngredientsMutationKey = () => ['mergeIngredients'] as const;
+
 export const getMergeIngredientsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mergeIngredients>>, TError,MergeIngredientsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof mergeIngredients>>, TError,MergeIngredientsMutationVariables, TContext> => {
 
-const mutationKey = ['mergeIngredients'];
+const mutationKey = getMergeIngredientsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8180,6 +7923,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type MergeIngredientsMutationVariables = {data: BodyType<MergeIngredientsInput>}
 
     /**
+ * Collapses each source ingredient into the target: sets the source's `mergedInto` pointer to the target id and disables the source. Any recipe row still referencing a merged-away id resolves to the target's current name via the pointer. Manager role required.
  * @summary Merge one or more ingredients into a target ingredient (manager only)
  */
 export const useMergeIngredients = <TError = ErrorType<void>,
@@ -8250,9 +7994,9 @@ export type ListCheeseRecipesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide cheese recipe (a named cheese blend a customer uses on the line, with per-batch component pounds, the flavors it is assigned to, and the customer's shredder setting). These are global master data (not part of the per-day sync payload). Reading is available to any signed-in user so the run applicator "Cheese" cards can hydrate their rows from a chosen recipe; editing is manager-only.
  * @summary List manager-defined cheese recipes
  */
-
 export function useListCheeseRecipes<TData = Awaited<ReturnType<typeof listCheeseRecipes>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCheeseRecipes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -8285,17 +8029,11 @@ export const getSaveCheeseRecipesUrl = () => {
  */
 export const saveCheeseRecipes = async (saveCheeseRecipesInput: SaveCheeseRecipesInput, options?: Parameters<typeof customFetch>[1]): Promise<CheeseRecipeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<CheeseRecipeList>(getSaveCheeseRecipesUrl(),
+  return customFetch<CheeseRecipeList>(getSaveCheeseRecipesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveCheeseRecipesInput)
   }
 );}
@@ -8304,11 +8042,13 @@ return customFetch<CheeseRecipeList>(getSaveCheeseRecipesUrl(),
 
 
 
+export const getSaveCheeseRecipesMutationKey = () => ['saveCheeseRecipes'] as const;
+
 export const getSaveCheeseRecipesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCheeseRecipes>>, TError,SaveCheeseRecipesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveCheeseRecipes>>, TError,SaveCheeseRecipesMutationVariables, TContext> => {
 
-const mutationKey = ['saveCheeseRecipes'];
+const mutationKey = getSaveCheeseRecipesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8337,6 +8077,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveCheeseRecipesMutationVariables = {data: BodyType<SaveCheeseRecipesInput>}
 
     /**
+ * Upserts a batch of cheese recipes by id. Each recipe is normalized and validated server-side; malformed recipes are dropped. Manager role required.
  * @summary Create or update cheese recipes (manager only)
  */
 export const useSaveCheeseRecipes = <TError = ErrorType<void>,
@@ -8364,17 +8105,11 @@ export const getDeleteCheeseRecipesUrl = () => {
  */
 export const deleteCheeseRecipes = async (deleteCheeseRecipesInput: DeleteCheeseRecipesInput, options?: Parameters<typeof customFetch>[1]): Promise<CheeseRecipeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<CheeseRecipeList>(getDeleteCheeseRecipesUrl(),
+  return customFetch<CheeseRecipeList>(getDeleteCheeseRecipesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteCheeseRecipesInput)
   }
 );}
@@ -8383,11 +8118,13 @@ return customFetch<CheeseRecipeList>(getDeleteCheeseRecipesUrl(),
 
 
 
+export const getDeleteCheeseRecipesMutationKey = () => ['deleteCheeseRecipes'] as const;
+
 export const getDeleteCheeseRecipesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCheeseRecipes>>, TError,DeleteCheeseRecipesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteCheeseRecipes>>, TError,DeleteCheeseRecipesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteCheeseRecipes'];
+const mutationKey = getDeleteCheeseRecipesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8416,6 +8153,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteCheeseRecipesMutationVariables = {data: BodyType<DeleteCheeseRecipesInput>}
 
     /**
+ * Removes a batch of cheese recipes by id. Manager role required.
  * @summary Delete cheese recipes by id (manager only)
  */
 export const useDeleteCheeseRecipes = <TError = ErrorType<void>,
@@ -8486,9 +8224,9 @@ export type ListDoughRecipesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide dough recipe (a named recipe plus a list of components — each an ingredient and its pounds). These are global master data (not part of the per-day sync payload). Reading is available to any signed-in user so the run form's Dough card can hydrate its rows from a chosen recipe; editing is manager-only.
  * @summary List manager-defined dough recipes
  */
-
 export function useListDoughRecipes<TData = Awaited<ReturnType<typeof listDoughRecipes>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDoughRecipes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -8521,17 +8259,11 @@ export const getSaveDoughRecipesUrl = () => {
  */
 export const saveDoughRecipes = async (saveNamedRecipesInput: SaveNamedRecipesInput, options?: Parameters<typeof customFetch>[1]): Promise<NamedRecipeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<NamedRecipeList>(getSaveDoughRecipesUrl(),
+  return customFetch<NamedRecipeList>(getSaveDoughRecipesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveNamedRecipesInput)
   }
 );}
@@ -8540,11 +8272,13 @@ return customFetch<NamedRecipeList>(getSaveDoughRecipesUrl(),
 
 
 
+export const getSaveDoughRecipesMutationKey = () => ['saveDoughRecipes'] as const;
+
 export const getSaveDoughRecipesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveDoughRecipes>>, TError,SaveDoughRecipesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveDoughRecipes>>, TError,SaveDoughRecipesMutationVariables, TContext> => {
 
-const mutationKey = ['saveDoughRecipes'];
+const mutationKey = getSaveDoughRecipesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8573,6 +8307,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveDoughRecipesMutationVariables = {data: BodyType<SaveNamedRecipesInput>}
 
     /**
+ * Upserts a batch of dough recipes by id. Each recipe is normalized and validated server-side; malformed recipes are dropped. Manager role required.
  * @summary Create or update dough recipes (manager only)
  */
 export const useSaveDoughRecipes = <TError = ErrorType<void>,
@@ -8600,17 +8335,11 @@ export const getDeleteDoughRecipesUrl = () => {
  */
 export const deleteDoughRecipes = async (deleteNamedRecipesInput: DeleteNamedRecipesInput, options?: Parameters<typeof customFetch>[1]): Promise<NamedRecipeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<NamedRecipeList>(getDeleteDoughRecipesUrl(),
+  return customFetch<NamedRecipeList>(getDeleteDoughRecipesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteNamedRecipesInput)
   }
 );}
@@ -8619,11 +8348,13 @@ return customFetch<NamedRecipeList>(getDeleteDoughRecipesUrl(),
 
 
 
+export const getDeleteDoughRecipesMutationKey = () => ['deleteDoughRecipes'] as const;
+
 export const getDeleteDoughRecipesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDoughRecipes>>, TError,DeleteDoughRecipesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteDoughRecipes>>, TError,DeleteDoughRecipesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteDoughRecipes'];
+const mutationKey = getDeleteDoughRecipesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8652,6 +8383,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteDoughRecipesMutationVariables = {data: BodyType<DeleteNamedRecipesInput>}
 
     /**
+ * Removes a batch of dough recipes by id. Manager role required.
  * @summary Delete dough recipes by id (manager only)
  */
 export const useDeleteDoughRecipes = <TError = ErrorType<void>,
@@ -8722,9 +8454,9 @@ export type ListSauceRecipesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide sauce (frontline) recipe (a named recipe plus a list of components — each an ingredient and its pounds). These are global master data (not part of the per-day sync payload). Reading is available to any signed-in user so the run form's Sauce card can hydrate its rows from a chosen recipe; editing is manager-only.
  * @summary List manager-defined sauce recipes
  */
-
 export function useListSauceRecipes<TData = Awaited<ReturnType<typeof listSauceRecipes>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSauceRecipes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -8757,17 +8489,11 @@ export const getSaveSauceRecipesUrl = () => {
  */
 export const saveSauceRecipes = async (saveNamedRecipesInput: SaveNamedRecipesInput, options?: Parameters<typeof customFetch>[1]): Promise<NamedRecipeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<NamedRecipeList>(getSaveSauceRecipesUrl(),
+  return customFetch<NamedRecipeList>(getSaveSauceRecipesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveNamedRecipesInput)
   }
 );}
@@ -8776,11 +8502,13 @@ return customFetch<NamedRecipeList>(getSaveSauceRecipesUrl(),
 
 
 
+export const getSaveSauceRecipesMutationKey = () => ['saveSauceRecipes'] as const;
+
 export const getSaveSauceRecipesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSauceRecipes>>, TError,SaveSauceRecipesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveSauceRecipes>>, TError,SaveSauceRecipesMutationVariables, TContext> => {
 
-const mutationKey = ['saveSauceRecipes'];
+const mutationKey = getSaveSauceRecipesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8809,6 +8537,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveSauceRecipesMutationVariables = {data: BodyType<SaveNamedRecipesInput>}
 
     /**
+ * Upserts a batch of sauce recipes by id. Each recipe is normalized and validated server-side; malformed recipes are dropped. Manager role required.
  * @summary Create or update sauce recipes (manager only)
  */
 export const useSaveSauceRecipes = <TError = ErrorType<void>,
@@ -8836,17 +8565,11 @@ export const getDeleteSauceRecipesUrl = () => {
  */
 export const deleteSauceRecipes = async (deleteNamedRecipesInput: DeleteNamedRecipesInput, options?: Parameters<typeof customFetch>[1]): Promise<NamedRecipeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<NamedRecipeList>(getDeleteSauceRecipesUrl(),
+  return customFetch<NamedRecipeList>(getDeleteSauceRecipesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteNamedRecipesInput)
   }
 );}
@@ -8855,11 +8578,13 @@ return customFetch<NamedRecipeList>(getDeleteSauceRecipesUrl(),
 
 
 
+export const getDeleteSauceRecipesMutationKey = () => ['deleteSauceRecipes'] as const;
+
 export const getDeleteSauceRecipesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSauceRecipes>>, TError,DeleteSauceRecipesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteSauceRecipes>>, TError,DeleteSauceRecipesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteSauceRecipes'];
+const mutationKey = getDeleteSauceRecipesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -8888,6 +8613,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteSauceRecipesMutationVariables = {data: BodyType<DeleteNamedRecipesInput>}
 
     /**
+ * Removes a batch of sauce recipes by id. Manager role required.
  * @summary Delete sauce recipes by id (manager only)
  */
 export const useDeleteSauceRecipes = <TError = ErrorType<void>,
@@ -8958,9 +8684,9 @@ export type ListBrandProfilesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide brand+flavor setup profile (the saved run form for a product: applicators, pep types, die type, recipes, packaging, crust settings). These are global master data (not part of the per-day sync payload). Reading is available to any signed-in user so the run form and Setup Profiles editor can hydrate from them.
  * @summary List factory-wide brand+flavor setup profiles
  */
-
 export function useListBrandProfiles<TData = Awaited<ReturnType<typeof listBrandProfiles>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBrandProfiles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -8993,17 +8719,11 @@ export const getSaveBrandProfilesUrl = () => {
  */
 export const saveBrandProfiles = async (saveBrandProfilesInput: SaveBrandProfilesInput, options?: Parameters<typeof customFetch>[1]): Promise<BrandProfileList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<BrandProfileList>(getSaveBrandProfilesUrl(),
+  return customFetch<BrandProfileList>(getSaveBrandProfilesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveBrandProfilesInput)
   }
 );}
@@ -9012,11 +8732,13 @@ return customFetch<BrandProfileList>(getSaveBrandProfilesUrl(),
 
 
 
+export const getSaveBrandProfilesMutationKey = () => ['saveBrandProfiles'] as const;
+
 export const getSaveBrandProfilesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveBrandProfiles>>, TError,SaveBrandProfilesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveBrandProfiles>>, TError,SaveBrandProfilesMutationVariables, TContext> => {
 
-const mutationKey = ['saveBrandProfiles'];
+const mutationKey = getSaveBrandProfilesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9045,6 +8767,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveBrandProfilesMutationVariables = {data: BodyType<SaveBrandProfilesInput>}
 
     /**
+ * Upserts a batch of setup profiles by key. Each profile carries a client edit stamp (`updatedAt`, ms epoch); the server keeps the existing row unless the incoming stamp is strictly newer (per-profile last-write wins), so a stale device re-publishing an old form cannot clobber a fresher edit. Items may set `force: true` for explicit, authoritative manager actions (e.g. applying a spec import): a forced item always overwrites the stored row regardless of its stamp, and the stored stamp is advanced past the previous one so the write also wins future LWW comparisons. ALL profile writes require the `manage-profiles` capability (rejected with 403 otherwise): profiles are manager-configured setup data, and the only allowed write paths are explicit manager actions (Setup Profile editor, AI recommendation acceptance) and spec imports/reimports. Requests containing any forced item additionally require the `use-ai-tools` capability (the same gate as the spec-import parse flow) and are rejected with 403 otherwise, before any write.
  * @summary Create or update brand+flavor setup profiles (stamp-guarded)
  */
 export const useSaveBrandProfiles = <TError = ErrorType<void>,
@@ -9072,17 +8795,11 @@ export const getDeleteBrandProfilesUrl = () => {
  */
 export const deleteBrandProfiles = async (deleteBrandProfilesInput: DeleteBrandProfilesInput, options?: Parameters<typeof customFetch>[1]): Promise<BrandProfileList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<BrandProfileList>(getDeleteBrandProfilesUrl(),
+  return customFetch<BrandProfileList>(getDeleteBrandProfilesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteBrandProfilesInput)
   }
 );}
@@ -9091,11 +8808,13 @@ return customFetch<BrandProfileList>(getDeleteBrandProfilesUrl(),
 
 
 
+export const getDeleteBrandProfilesMutationKey = () => ['deleteBrandProfiles'] as const;
+
 export const getDeleteBrandProfilesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBrandProfiles>>, TError,DeleteBrandProfilesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteBrandProfiles>>, TError,DeleteBrandProfilesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteBrandProfiles'];
+const mutationKey = getDeleteBrandProfilesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9124,6 +8843,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteBrandProfilesMutationVariables = {data: BodyType<DeleteBrandProfilesInput>}
 
     /**
+ * Removes a batch of setup profiles by key. Requires the `manage-profiles` capability (403 otherwise) — profile deletion is a manager action, like every other profile write.
  * @summary Delete brand+flavor setup profiles by key
  */
 export const useDeleteBrandProfiles = <TError = ErrorType<void>,
@@ -9194,9 +8914,9 @@ export type ListCycleCountSchedulesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every factory-wide cycle-count schedule (warehouse sections to count on a cadence, with the date each was last counted). These are global policy (not part of the per-day sync payload). Reading is available to any signed-in user so both apps can build the warehouse "Time to Count" card; editing is manager-only.
  * @summary List manager-defined cycle-count schedules
  */
-
 export function useListCycleCountSchedules<TData = Awaited<ReturnType<typeof listCycleCountSchedules>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCycleCountSchedules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -9229,17 +8949,11 @@ export const getSaveCycleCountSchedulesUrl = () => {
  */
 export const saveCycleCountSchedules = async (saveCycleCountSchedulesInput: SaveCycleCountSchedulesInput, options?: Parameters<typeof customFetch>[1]): Promise<CycleCountScheduleList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<CycleCountScheduleList>(getSaveCycleCountSchedulesUrl(),
+  return customFetch<CycleCountScheduleList>(getSaveCycleCountSchedulesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveCycleCountSchedulesInput)
   }
 );}
@@ -9248,11 +8962,13 @@ return customFetch<CycleCountScheduleList>(getSaveCycleCountSchedulesUrl(),
 
 
 
+export const getSaveCycleCountSchedulesMutationKey = () => ['saveCycleCountSchedules'] as const;
+
 export const getSaveCycleCountSchedulesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCycleCountSchedules>>, TError,SaveCycleCountSchedulesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveCycleCountSchedules>>, TError,SaveCycleCountSchedulesMutationVariables, TContext> => {
 
-const mutationKey = ['saveCycleCountSchedules'];
+const mutationKey = getSaveCycleCountSchedulesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9281,6 +8997,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveCycleCountSchedulesMutationVariables = {data: BodyType<SaveCycleCountSchedulesInput>}
 
     /**
+ * Upserts a batch of cycle-count schedules by id. Each schedule is normalized and validated server-side; malformed schedules are dropped. The `lastCountedAt` field is preserved from the existing row on update (only the mark-counted endpoint changes it). Manager role required.
  * @summary Create or update cycle-count schedules (manager only)
  */
 export const useSaveCycleCountSchedules = <TError = ErrorType<void>,
@@ -9308,17 +9025,11 @@ export const getDeleteCycleCountSchedulesUrl = () => {
  */
 export const deleteCycleCountSchedules = async (deleteCycleCountSchedulesInput: DeleteCycleCountSchedulesInput, options?: Parameters<typeof customFetch>[1]): Promise<CycleCountScheduleList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<CycleCountScheduleList>(getDeleteCycleCountSchedulesUrl(),
+  return customFetch<CycleCountScheduleList>(getDeleteCycleCountSchedulesUrl(),
   {
     ...options,
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteCycleCountSchedulesInput)
   }
 );}
@@ -9327,11 +9038,13 @@ return customFetch<CycleCountScheduleList>(getDeleteCycleCountSchedulesUrl(),
 
 
 
+export const getDeleteCycleCountSchedulesMutationKey = () => ['deleteCycleCountSchedules'] as const;
+
 export const getDeleteCycleCountSchedulesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCycleCountSchedules>>, TError,DeleteCycleCountSchedulesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteCycleCountSchedules>>, TError,DeleteCycleCountSchedulesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteCycleCountSchedules'];
+const mutationKey = getDeleteCycleCountSchedulesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9360,6 +9073,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteCycleCountSchedulesMutationVariables = {data: BodyType<DeleteCycleCountSchedulesInput>}
 
     /**
+ * Removes a batch of cycle-count schedules by id. Manager role required.
  * @summary Delete cycle-count schedules by id (manager only)
  */
 export const useDeleteCycleCountSchedules = <TError = ErrorType<void>,
@@ -9388,17 +9102,11 @@ export const getMarkCycleCountCountedUrl = (id: string,) => {
 export const markCycleCountCounted = async (id: string,
     markCycleCountCountedInput?: MarkCycleCountCountedInput, options?: Parameters<typeof customFetch>[1]): Promise<CycleCountScheduleList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<CycleCountScheduleList>(getMarkCycleCountCountedUrl(id),
+  return customFetch<CycleCountScheduleList>(getMarkCycleCountCountedUrl(id),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(markCycleCountCountedInput)
   }
 );}
@@ -9407,11 +9115,13 @@ return customFetch<CycleCountScheduleList>(getMarkCycleCountCountedUrl(id),
 
 
 
+export const getMarkCycleCountCountedMutationKey = () => ['markCycleCountCounted'] as const;
+
 export const getMarkCycleCountCountedMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markCycleCountCounted>>, TError,MarkCycleCountCountedMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof markCycleCountCounted>>, TError,MarkCycleCountCountedMutationVariables, TContext> => {
 
-const mutationKey = ['markCycleCountCounted'];
+const mutationKey = getMarkCycleCountCountedMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9440,6 +9150,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type MarkCycleCountCountedMutationVariables = {id: string;data?: BodyType<MarkCycleCountCountedInput>}
 
     /**
+ * Stamps the schedule's `lastCountedAt` to the current date, clearing it from the "Time to Count" due list until its cadence elapses again. Available to any signed-in user (floor staff perform the counts), unlike the manager-only schedule edits.
  * @summary Mark a cycle-count section counted
  */
 export const useMarkCycleCountCounted = <TError = ErrorType<void>,
@@ -9510,9 +9221,9 @@ export type ListAiCorrectionsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every confirmed name correction in the shared pool (domain-tagged fromText -> toText), recorded whenever staff confirm a correction in any AI helper. Clients supply these to the AI helpers to ground name resolution. Available to any signed-in user.
  * @summary List the shared factory-wide AI name corrections
  */
-
 export function useListAiCorrections<TData = Awaited<ReturnType<typeof listAiCorrections>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAiCorrections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -9545,17 +9256,11 @@ export const getSaveAiCorrectionsUrl = () => {
  */
 export const saveAiCorrections = async (saveAiCorrectionsInput: SaveAiCorrectionsInput, options?: Parameters<typeof customFetch>[1]): Promise<AiCorrectionList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<AiCorrectionList>(getSaveAiCorrectionsUrl(),
+  return customFetch<AiCorrectionList>(getSaveAiCorrectionsUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveAiCorrectionsInput)
   }
 );}
@@ -9564,11 +9269,13 @@ return customFetch<AiCorrectionList>(getSaveAiCorrectionsUrl(),
 
 
 
+export const getSaveAiCorrectionsMutationKey = () => ['saveAiCorrections'] as const;
+
 export const getSaveAiCorrectionsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveAiCorrections>>, TError,SaveAiCorrectionsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveAiCorrections>>, TError,SaveAiCorrectionsMutationVariables, TContext> => {
 
-const mutationKey = ['saveAiCorrections'];
+const mutationKey = getSaveAiCorrectionsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9597,6 +9304,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveAiCorrectionsMutationVariables = {data: BodyType<SaveAiCorrectionsInput>}
 
     /**
+ * Persists a batch of confirmed name corrections recorded when staff apply a suggestion in any AI helper. Existing entries (matched case-insensitively on domain + fromText) are updated; new ones inserted. Additive — each helper keeps its own alias table too. Available to any signed-in user.
  * @summary Save confirmed AI name corrections (case-insensitive upsert)
  */
 export const useSaveAiCorrections = <TError = ErrorType<void>,
@@ -9667,9 +9375,9 @@ export type AuditAiMemoryHealthQueryError = ErrorType<void>
 
 
 /**
+ * Manager-only, read-only audit of factory-wide correction memory and facility knowledge. It compares corrections to confirmed merge aliases, merged-away names, and active master-data names. Per-user conversation history is explicitly excluded from the audit and cleanup.
  * @summary Preview AI memory health and deterministic safe repairs
  */
-
 export function useAuditAiMemoryHealth<TData = Awaited<ReturnType<typeof auditAiMemoryHealth>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof auditAiMemoryHealth>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -9715,11 +9423,13 @@ export const applyAiMemorySafeFixes = async ( options?: Parameters<typeof custom
 
 
 
+export const getApplyAiMemorySafeFixesMutationKey = () => ['applyAiMemorySafeFixes'] as const;
+
 export const getApplyAiMemorySafeFixesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applyAiMemorySafeFixes>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof applyAiMemorySafeFixes>>, TError,void, TContext> => {
 
-const mutationKey = ['applyAiMemorySafeFixes'];
+const mutationKey = getApplyAiMemorySafeFixesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9748,6 +9458,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
     /**
+ * Manager-only atomic repair. The server re-runs the health audit inside the transaction and applies only its listed duplicate, chain, cycle, or canonical-target correction repairs. It never changes facility facts or per-user conversation history.
  * @summary Apply only the current deterministic AI correction repairs
  */
 export const useApplyAiMemorySafeFixes = <TError = ErrorType<void>,
@@ -9818,9 +9529,9 @@ export type AuditProfileDataHealthQueryError = ErrorType<void>
 
 
 /**
+ * Manager-only, read-only audit of saved brand profiles against the current dough and sauce recipe pools and the latest saved spec-sheet profile for each product. Only exact missing links and empty recipe rows are listed as safe repairs.
  * @summary Preview production profile and recipe data health
  */
-
 export function useAuditProfileDataHealth<TData = Awaited<ReturnType<typeof auditProfileDataHealth>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof auditProfileDataHealth>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -9866,11 +9577,13 @@ export const applyProfileDataHealthRepairs = async ( options?: Parameters<typeof
 
 
 
+export const getApplyProfileDataHealthRepairsMutationKey = () => ['applyProfileDataHealthRepairs'] as const;
+
 export const getApplyProfileDataHealthRepairsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof applyProfileDataHealthRepairs>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof applyProfileDataHealthRepairs>>, TError,void, TContext> => {
 
-const mutationKey = ['applyProfileDataHealthRepairs'];
+const mutationKey = getApplyProfileDataHealthRepairsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -9899,6 +9612,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
     /**
+ * Manager-only atomic repair. The server re-runs and revalidates each candidate inside the transaction, updates profile LWW stamps, and copies changed fields only to future unstarted run snapshots. Started and ended runs are never changed.
  * @summary Apply deterministic production profile repairs
  */
 export const useApplyProfileDataHealthRepairs = <TError = ErrorType<void>,
@@ -9967,10 +9681,7 @@ export type GetProfileDataHealthWorkspaceQueryResult = NonNullable<Awaited<Retur
 export type GetProfileDataHealthWorkspaceQueryError = ErrorType<void>
 
 
-/**
- * @summary Read the manager data-health workspace
- */
-
+/** @summary Read the manager data-health workspace */
 export function useGetProfileDataHealthWorkspace<TData = Awaited<ReturnType<typeof getProfileDataHealthWorkspace>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfileDataHealthWorkspace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -10015,11 +9726,13 @@ export const undoProfileDataHealthRepairBatch = async (batchId: string, options?
 
 
 
+export const getUndoProfileDataHealthRepairBatchMutationKey = () => ['undoProfileDataHealthRepairBatch'] as const;
+
 export const getUndoProfileDataHealthRepairBatchMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoProfileDataHealthRepairBatch>>, TError,UndoProfileDataHealthRepairBatchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof undoProfileDataHealthRepairBatch>>, TError,UndoProfileDataHealthRepairBatchMutationVariables, TContext> => {
 
-const mutationKey = ['undoProfileDataHealthRepairBatch'];
+const mutationKey = getUndoProfileDataHealthRepairBatchMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -10047,9 +9760,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UndoProfileDataHealthRepairBatchMutationError = ErrorType<void>
     export type UndoProfileDataHealthRepairBatchMutationVariables = {batchId: string}
 
-    /**
- * @summary Undo an unchanged profile data repair batch
- */
+    /** @summary Undo an unchanged profile data repair batch */
 export const useUndoProfileDataHealthRepairBatch = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undoProfileDataHealthRepairBatch>>, TError,UndoProfileDataHealthRepairBatchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -10118,9 +9829,9 @@ export type GetProfileNameLinkCleanupAuditQueryError = ErrorType<void>
 
 
 /**
+ * Manager-only, read-only view of the one-time cleanup that aligned saved profile dough and sauce names to verified spec-sheet links and deleted unreferenced empty recipe stubs. Older historical markers return zero for result fields that were not recorded at the time.
  * @summary View the completed name-link cleanup result
  */
-
 export function useGetProfileNameLinkCleanupAudit<TData = Awaited<ReturnType<typeof getProfileNameLinkCleanupAudit>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfileNameLinkCleanupAudit>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -10196,9 +9907,9 @@ export type ListFacilityKnowledgeQueryError = ErrorType<void>
 
 
 /**
+ * Returns every durable operational fact in the shared facility-knowledge pool (domain-tagged plain-language observations the whole team and every AI feature have learned over time). Distinct from the name-corrections pool. AI helpers fold this into their prompts via a shared context builder, so a pattern learned in one feature is visible to all. Requires the `use-ai-tools` capability — reading the raw pool is a bulk-disclosure risk, and no client feature reads it directly (prompts are grounded server-side).
  * @summary List the shared facility-wide AI knowledge pool
  */
-
 export function useListFacilityKnowledge<TData = Awaited<ReturnType<typeof listFacilityKnowledge>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFacilityKnowledge>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -10231,17 +9942,11 @@ export const getSaveFacilityKnowledgeUrl = () => {
  */
 export const saveFacilityKnowledge = async (saveFacilityKnowledgeInput: SaveFacilityKnowledgeInput, options?: Parameters<typeof customFetch>[1]): Promise<FacilityKnowledgeList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<FacilityKnowledgeList>(getSaveFacilityKnowledgeUrl(),
+  return customFetch<FacilityKnowledgeList>(getSaveFacilityKnowledgeUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveFacilityKnowledgeInput)
   }
 );}
@@ -10250,11 +9955,13 @@ return customFetch<FacilityKnowledgeList>(getSaveFacilityKnowledgeUrl(),
 
 
 
+export const getSaveFacilityKnowledgeMutationKey = () => ['saveFacilityKnowledge'] as const;
+
 export const getSaveFacilityKnowledgeMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveFacilityKnowledge>>, TError,SaveFacilityKnowledgeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveFacilityKnowledge>>, TError,SaveFacilityKnowledgeMutationVariables, TContext> => {
 
-const mutationKey = ['saveFacilityKnowledge'];
+const mutationKey = getSaveFacilityKnowledgeMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -10283,6 +9990,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveFacilityKnowledgeMutationVariables = {data: BodyType<SaveFacilityKnowledgeInput>}
 
     /**
+ * Persists a batch of durable operational facts into the shared facility-knowledge pool. Existing entries (matched case-insensitively on domain + key) are updated in place; new ones are inserted. Available to any signed-in user, but every entry must match the exact domain + key shape AND the fixed fact template one of the handful of real client features produces (e.g. proactive-alert dismissals, quality-check confirmations), with only a short bounded substring left free — anything else, including a well-formed domain/key with an out-of-template fact, is rejected. Some domains additionally require the same capability their own UI already gates the feature behind. This keeps the route from being usable as an open-ended facility-wide prompt-injection primitive.
  * @summary Record facility knowledge (case-insensitive upsert by domain + key)
  */
 export const useSaveFacilityKnowledge = <TError = ErrorType<void>,
@@ -10353,9 +10061,9 @@ export type GetConversationHistoryQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns the signed-in user's most recent AI conversation turns (oldest first), a rolling per-user window so follow-up questions keep context. Scoped to the caller only — never another user's history.
  * @summary Get the current user's recent AI conversation turns
  */
-
 export function useGetConversationHistory<TData = Awaited<ReturnType<typeof getConversationHistory>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConversationHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -10388,17 +10096,11 @@ export const getAppendConversationUrl = () => {
  */
 export const appendConversation = async (appendConversationInput: AppendConversationInput, options?: Parameters<typeof customFetch>[1]): Promise<ConversationHistory> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ConversationHistory>(getAppendConversationUrl(),
+  return customFetch<ConversationHistory>(getAppendConversationUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(appendConversationInput)
   }
 );}
@@ -10407,11 +10109,13 @@ return customFetch<ConversationHistory>(getAppendConversationUrl(),
 
 
 
+export const getAppendConversationMutationKey = () => ['appendConversation'] as const;
+
 export const getAppendConversationMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof appendConversation>>, TError,AppendConversationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof appendConversation>>, TError,AppendConversationMutationVariables, TContext> => {
 
-const mutationKey = ['appendConversation'];
+const mutationKey = getAppendConversationMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -10440,6 +10144,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AppendConversationMutationVariables = {data: BodyType<AppendConversationInput>}
 
     /**
+ * Appends one or more turns (user and/or assistant messages) to the signed-in user's conversation memory, then trims to the rolling window so the log never grows without bound. Scoped to the caller only.
  * @summary Append turns to the current user's AI conversation memory
  */
 export const useAppendConversation = <TError = ErrorType<void>,
@@ -10510,9 +10215,9 @@ export type ListSpecImportAliasesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every learned spec-import alias — a saved mapping from a raw spreadsheet label to the app's canonical name it resolves to, across all name-kinds (brand, flavor, applicator type, pepperoni type, recipe ingredients). Clients supply these to the AI parser and apply them deterministically. Available to any signed-in user (operators included).
  * @summary List learned spec-import aliases (messy label -> canonical name)
  */
-
 export function useListSpecImportAliases<TData = Awaited<ReturnType<typeof listSpecImportAliases>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSpecImportAliases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -10545,17 +10250,11 @@ export const getSaveSpecImportAliasesUrl = () => {
  */
 export const saveSpecImportAliases = async (saveSpecImportAliasesInput: SaveSpecImportAliasesInput, options?: Parameters<typeof customFetch>[1]): Promise<SpecImportAliasList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SpecImportAliasList>(getSaveSpecImportAliasesUrl(),
+  return customFetch<SpecImportAliasList>(getSaveSpecImportAliasesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveSpecImportAliasesInput)
   }
 );}
@@ -10564,11 +10263,13 @@ return customFetch<SpecImportAliasList>(getSaveSpecImportAliasesUrl(),
 
 
 
+export const getSaveSpecImportAliasesMutationKey = () => ['saveSpecImportAliases'] as const;
+
 export const getSaveSpecImportAliasesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSpecImportAliases>>, TError,SaveSpecImportAliasesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveSpecImportAliases>>, TError,SaveSpecImportAliasesMutationVariables, TContext> => {
 
-const mutationKey = ['saveSpecImportAliases'];
+const mutationKey = getSaveSpecImportAliasesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -10597,6 +10298,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveSpecImportAliasesMutationVariables = {data: BodyType<SaveSpecImportAliasesInput>}
 
     /**
+ * Persists a batch of label mappings resolved during a spec-sheet import. Existing aliases (matched case-insensitively on kind + externalName + context) are updated; new ones are inserted. Available to any signed-in user (operators included).
  * @summary Save learned spec-import aliases (case-insensitive upsert)
  */
 export const useSaveSpecImportAliases = <TError = ErrorType<void>,
@@ -10624,17 +10326,11 @@ export const getDeleteSpecImportAliasesUrl = () => {
  */
 export const deleteSpecImportAliases = async (deleteSpecImportAliasesInput: DeleteSpecImportAliasesInput, options?: Parameters<typeof customFetch>[1]): Promise<SpecImportAliasList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SpecImportAliasList>(getDeleteSpecImportAliasesUrl(),
+  return customFetch<SpecImportAliasList>(getDeleteSpecImportAliasesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(deleteSpecImportAliasesInput)
   }
 );}
@@ -10643,11 +10339,13 @@ return customFetch<SpecImportAliasList>(getDeleteSpecImportAliasesUrl(),
 
 
 
+export const getDeleteSpecImportAliasesMutationKey = () => ['deleteSpecImportAliases'] as const;
+
 export const getDeleteSpecImportAliasesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSpecImportAliases>>, TError,DeleteSpecImportAliasesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteSpecImportAliases>>, TError,DeleteSpecImportAliasesMutationVariables, TContext> => {
 
-const mutationKey = ['deleteSpecImportAliases'];
+const mutationKey = getDeleteSpecImportAliasesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -10676,6 +10374,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteSpecImportAliasesMutationVariables = {data: BodyType<DeleteSpecImportAliasesInput>}
 
     /**
+ * Deletes alias rows that exactly match the given kind + externalName + canonicalName (case-insensitive). Used after a correcting re-import to remove a bad alias that mapped a sheet label onto a wrong stored name, so the next import doesn't re-apply the mistake. By default, an entry's null/omitted context matches rows with ANY context; set exactContext to true to match null contexts exactly. A provided context always matches only that context (case-insensitive). Available to any signed-in user (operators included).
  * @summary Delete specific learned spec-import aliases (bad-mapping cleanup)
  */
 export const useDeleteSpecImportAliases = <TError = ErrorType<void>,
@@ -10746,9 +10445,9 @@ export type ListSpecSheetsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns the saved spec-sheet snapshots (the canonicalized ParsedSpecImport captured when a spec sheet was imported), most recent first. At most two are kept. Available to any signed-in user.
  * @summary List saved spec sheets (most recent first, up to two)
  */
-
 export function useListSpecSheets<TData = Awaited<ReturnType<typeof listSpecSheets>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSpecSheets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -10781,17 +10480,11 @@ export const getSaveSpecSheetUrl = () => {
  */
 export const saveSpecSheet = async (saveSpecSheetInput: SaveSpecSheetInput, options?: Parameters<typeof customFetch>[1]): Promise<SavedSpecSheetList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SavedSpecSheetList>(getSaveSpecSheetUrl(),
+  return customFetch<SavedSpecSheetList>(getSaveSpecSheetUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveSpecSheetInput)
   }
 );}
@@ -10800,11 +10493,13 @@ return customFetch<SavedSpecSheetList>(getSaveSpecSheetUrl(),
 
 
 
+export const getSaveSpecSheetMutationKey = () => ['saveSpecSheet'] as const;
+
 export const getSaveSpecSheetMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSpecSheet>>, TError,SaveSpecSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveSpecSheet>>, TError,SaveSpecSheetMutationVariables, TContext> => {
 
-const mutationKey = ['saveSpecSheet'];
+const mutationKey = getSaveSpecSheetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -10833,6 +10528,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveSpecSheetMutationVariables = {data: BodyType<SaveSpecSheetInput>}
 
     /**
+ * Persists a snapshot of an imported spec sheet so it can later be cross-referenced against the current recipes. After insert, older snapshots beyond the two most recent are pruned. Available to any signed-in user.
  * @summary Save a spec-sheet snapshot (keeps only the two most recent)
  */
 export const useSaveSpecSheet = <TError = ErrorType<void>,
@@ -10872,11 +10568,13 @@ export const deleteSpecSheet = async (id: number, options?: Parameters<typeof cu
 
 
 
+export const getDeleteSpecSheetMutationKey = () => ['deleteSpecSheet'] as const;
+
 export const getDeleteSpecSheetMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSpecSheet>>, TError,DeleteSpecSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteSpecSheet>>, TError,DeleteSpecSheetMutationVariables, TContext> => {
 
-const mutationKey = ['deleteSpecSheet'];
+const mutationKey = getDeleteSpecSheetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -10904,9 +10602,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteSpecSheetMutationError = ErrorType<unknown>
     export type DeleteSpecSheetMutationVariables = {id: number}
 
-    /**
- * @summary Delete a saved spec sheet by id
- */
+    /** @summary Delete a saved spec sheet by id */
 export const useDeleteSpecSheet = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSpecSheet>>, TError,DeleteSpecSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -10975,9 +10671,9 @@ export type ListShippingGuidesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns the saved shipping/palletizing-guide snapshots (the reviewed brand + flavor + packaging rows captured when a guide was imported), most recent first. At most two are kept per distinct file. Available to any signed-in user.
  * @summary List saved shipping & palletizing guides (most recent first, up to two per file)
  */
-
 export function useListShippingGuides<TData = Awaited<ReturnType<typeof listShippingGuides>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listShippingGuides>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -11010,17 +10706,11 @@ export const getSaveShippingGuideUrl = () => {
  */
 export const saveShippingGuide = async (saveShippingGuideInput: SaveShippingGuideInput, options?: Parameters<typeof customFetch>[1]): Promise<SavedShippingGuideList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SavedShippingGuideList>(getSaveShippingGuideUrl(),
+  return customFetch<SavedShippingGuideList>(getSaveShippingGuideUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveShippingGuideInput)
   }
 );}
@@ -11029,11 +10719,13 @@ return customFetch<SavedShippingGuideList>(getSaveShippingGuideUrl(),
 
 
 
+export const getSaveShippingGuideMutationKey = () => ['saveShippingGuide'] as const;
+
 export const getSaveShippingGuideMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveShippingGuide>>, TError,SaveShippingGuideMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveShippingGuide>>, TError,SaveShippingGuideMutationVariables, TContext> => {
 
-const mutationKey = ['saveShippingGuide'];
+const mutationKey = getSaveShippingGuideMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -11062,6 +10754,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveShippingGuideMutationVariables = {data: BodyType<SaveShippingGuideInput>}
 
     /**
+ * Persists a snapshot of an imported shipping/palletizing guide so its stated packaging values can later be cross-referenced against the current recipes and spec sheets in the Setup Profiles auto-fill panel. After insert, older snapshots beyond the two most recent per distinct file are pruned. Available to any signed-in user.
  * @summary Save a shipping-guide snapshot (keeps only the two most recent per file)
  */
 export const useSaveShippingGuide = <TError = ErrorType<void>,
@@ -11101,11 +10794,13 @@ export const deleteShippingGuide = async (id: number, options?: Parameters<typeo
 
 
 
+export const getDeleteShippingGuideMutationKey = () => ['deleteShippingGuide'] as const;
+
 export const getDeleteShippingGuideMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteShippingGuide>>, TError,DeleteShippingGuideMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteShippingGuide>>, TError,DeleteShippingGuideMutationVariables, TContext> => {
 
-const mutationKey = ['deleteShippingGuide'];
+const mutationKey = getDeleteShippingGuideMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -11133,9 +10828,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteShippingGuideMutationError = ErrorType<unknown>
     export type DeleteShippingGuideMutationVariables = {id: number}
 
-    /**
- * @summary Delete a saved shipping guide by id
- */
+    /** @summary Delete a saved shipping guide by id */
 export const useDeleteShippingGuide = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteShippingGuide>>, TError,DeleteShippingGuideMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -11204,9 +10897,9 @@ export type ListPremixSheetsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns the saved premix-sheet snapshots (the Mix[] captured when a premix workbook was imported), most recent first. At most two are kept. Available to any signed-in user.
  * @summary List saved premix sheets (most recent first, up to two)
  */
-
 export function useListPremixSheets<TData = Awaited<ReturnType<typeof listPremixSheets>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPremixSheets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -11239,17 +10932,11 @@ export const getSavePremixSheetUrl = () => {
  */
 export const savePremixSheet = async (savePremixSheetInput: SavePremixSheetInput, options?: Parameters<typeof customFetch>[1]): Promise<SavePremixSheet200> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SavePremixSheet200>(getSavePremixSheetUrl(),
+  return customFetch<SavePremixSheet200>(getSavePremixSheetUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(savePremixSheetInput)
   }
 );}
@@ -11258,11 +10945,13 @@ return customFetch<SavePremixSheet200>(getSavePremixSheetUrl(),
 
 
 
+export const getSavePremixSheetMutationKey = () => ['savePremixSheet'] as const;
+
 export const getSavePremixSheetMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savePremixSheet>>, TError,SavePremixSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof savePremixSheet>>, TError,SavePremixSheetMutationVariables, TContext> => {
 
-const mutationKey = ['savePremixSheet'];
+const mutationKey = getSavePremixSheetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -11291,6 +10980,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SavePremixSheetMutationVariables = {data: BodyType<SavePremixSheetInput>}
 
     /**
+ * Persists a snapshot of an imported premix workbook (its Mix[]) so the current mixes can later be reconciled against it. After insert, older snapshots beyond the two most recent are pruned. Available to any signed-in user.
  * @summary Save a premix-sheet snapshot (keeps only the two most recent)
  */
 export const useSavePremixSheet = <TError = ErrorType<void>,
@@ -11361,9 +11051,9 @@ export type ListCheeseSheetsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns parsed Cheese Mix Recipe Specs retained after reviewed imports, newest first, with at most two versions per distinct source filename. Original workbook bytes are never stored.
  * @summary List retained cheese recipe workbook snapshots
  */
-
 export function useListCheeseSheets<TData = Awaited<ReturnType<typeof listCheeseSheets>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCheeseSheets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -11395,17 +11085,11 @@ export const getSaveCheeseSheetUrl = () => {
  */
 export const saveCheeseSheet = async (saveCheeseSheetInput: SaveCheeseSheetInput, options?: Parameters<typeof customFetch>[1]): Promise<SavedCheeseSheetSaveResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<SavedCheeseSheetSaveResponse>(getSaveCheeseSheetUrl(),
+  return customFetch<SavedCheeseSheetSaveResponse>(getSaveCheeseSheetUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveCheeseSheetInput)
   }
 );}
@@ -11414,11 +11098,13 @@ return customFetch<SavedCheeseSheetSaveResponse>(getSaveCheeseSheetUrl(),
 
 
 
+export const getSaveCheeseSheetMutationKey = () => ['saveCheeseSheet'] as const;
+
 export const getSaveCheeseSheetMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCheeseSheet>>, TError,SaveCheeseSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveCheeseSheet>>, TError,SaveCheeseSheetMutationVariables, TContext> => {
 
-const mutationKey = ['saveCheeseSheet'];
+const mutationKey = getSaveCheeseSheetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -11446,9 +11132,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveCheeseSheetMutationError = ErrorType<void>
     export type SaveCheeseSheetMutationVariables = {data: BodyType<SaveCheeseSheetInput>}
 
-    /**
- * @summary Retain a parsed cheese recipe workbook snapshot
- */
+    /** @summary Retain a parsed cheese recipe workbook snapshot */
 export const useSaveCheeseSheet = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCheeseSheet>>, TError,SaveCheeseSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -11486,11 +11170,13 @@ export const deleteCheeseSheet = async (id: number, options?: Parameters<typeof 
 
 
 
+export const getDeleteCheeseSheetMutationKey = () => ['deleteCheeseSheet'] as const;
+
 export const getDeleteCheeseSheetMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCheeseSheet>>, TError,DeleteCheeseSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteCheeseSheet>>, TError,DeleteCheeseSheetMutationVariables, TContext> => {
 
-const mutationKey = ['deleteCheeseSheet'];
+const mutationKey = getDeleteCheeseSheetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -11518,9 +11204,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteCheeseSheetMutationError = ErrorType<unknown>
     export type DeleteCheeseSheetMutationVariables = {id: number}
 
-    /**
- * @summary Delete a retained cheese recipe workbook snapshot
- */
+    /** @summary Delete a retained cheese recipe workbook snapshot */
 export const useDeleteCheeseSheet = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCheeseSheet>>, TError,DeleteCheeseSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -11558,11 +11242,13 @@ export const deletePremixSheet = async (id: number, options?: Parameters<typeof 
 
 
 
+export const getDeletePremixSheetMutationKey = () => ['deletePremixSheet'] as const;
+
 export const getDeletePremixSheetMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePremixSheet>>, TError,DeletePremixSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deletePremixSheet>>, TError,DeletePremixSheetMutationVariables, TContext> => {
 
-const mutationKey = ['deletePremixSheet'];
+const mutationKey = getDeletePremixSheetMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -11590,9 +11276,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeletePremixSheetMutationError = ErrorType<unknown>
     export type DeletePremixSheetMutationVariables = {id: number}
 
-    /**
- * @summary Delete a saved premix sheet by id
- */
+    /** @summary Delete a saved premix sheet by id */
 export const useDeletePremixSheet = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePremixSheet>>, TError,DeletePremixSheetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -11666,10 +11350,7 @@ export type ListImportHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof
 export type ListImportHistoryQueryError = ErrorType<unknown>
 
 
-/**
- * @summary List recent workbook import review records
- */
-
+/** @summary List recent workbook import review records */
 export function useListImportHistory<TData = Awaited<ReturnType<typeof listImportHistory>>, TError = ErrorType<unknown>>(
  params?: ListImportHistoryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listImportHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -11701,17 +11382,11 @@ export const getRecordImportHistoryUrl = () => {
  */
 export const recordImportHistory = async (importHistoryInput: ImportHistoryInput, options?: Parameters<typeof customFetch>[1]): Promise<ImportHistoryResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ImportHistoryResponse>(getRecordImportHistoryUrl(),
+  return customFetch<ImportHistoryResponse>(getRecordImportHistoryUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(importHistoryInput)
   }
 );}
@@ -11720,11 +11395,13 @@ return customFetch<ImportHistoryResponse>(getRecordImportHistoryUrl(),
 
 
 
+export const getRecordImportHistoryMutationKey = () => ['recordImportHistory'] as const;
+
 export const getRecordImportHistoryMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordImportHistory>>, TError,RecordImportHistoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof recordImportHistory>>, TError,RecordImportHistoryMutationVariables, TContext> => {
 
-const mutationKey = ['recordImportHistory'];
+const mutationKey = getRecordImportHistoryMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -11752,9 +11429,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RecordImportHistoryMutationError = ErrorType<void>
     export type RecordImportHistoryMutationVariables = {data: BodyType<ImportHistoryInput>}
 
-    /**
- * @summary Record a sanitized workbook import outcome
- */
+    /** @summary Record a sanitized workbook import outcome */
 export const useRecordImportHistory = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordImportHistory>>, TError,RecordImportHistoryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -11823,9 +11498,9 @@ export type ListImportAliasesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every learned import alias — a saved mapping from a raw imported brand/flavor name to the saved (canonical) name a user previously confirmed it matches. Clients use these to auto-apply remembered matches in the Excel import dialog before falling back to AI/fuzzy matching. Available to any signed-in user (operators included).
  * @summary List learned import aliases (brand/flavor name mappings)
  */
-
 export function useListImportAliases<TData = Awaited<ReturnType<typeof listImportAliases>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listImportAliases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -11858,17 +11533,11 @@ export const getSaveImportAliasesUrl = () => {
  */
 export const saveImportAliases = async (saveImportAliasesInput: SaveImportAliasesInput, options?: Parameters<typeof customFetch>[1]): Promise<ImportAliasList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<ImportAliasList>(getSaveImportAliasesUrl(),
+  return customFetch<ImportAliasList>(getSaveImportAliasesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveImportAliasesInput)
   }
 );}
@@ -11877,11 +11546,13 @@ return customFetch<ImportAliasList>(getSaveImportAliasesUrl(),
 
 
 
+export const getSaveImportAliasesMutationKey = () => ['saveImportAliases'] as const;
+
 export const getSaveImportAliasesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveImportAliases>>, TError,SaveImportAliasesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveImportAliases>>, TError,SaveImportAliasesMutationVariables, TContext> => {
 
-const mutationKey = ['saveImportAliases'];
+const mutationKey = getSaveImportAliasesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -11910,6 +11581,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveImportAliasesMutationVariables = {data: BodyType<SaveImportAliasesInput>}
 
     /**
+ * Persists a batch of brand/flavor name mappings confirmed by the user during an Excel import. Existing aliases (matched case-insensitively on type + externalName + brandContext) are updated; new ones are inserted. Available to any signed-in user (operators included).
  * @summary Save learned import aliases (case-insensitive upsert)
  */
 export const useSaveImportAliases = <TError = ErrorType<void>,
@@ -11980,9 +11652,9 @@ export type ListFillMissingValuesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every learned "fill in missing data" value — a value a user previously confirmed for a blank run-setup field, keyed by the run's product (brand + flavor) and the field. Clients use these to propose the remembered value as a top-priority source before falling back to profile/spec/default/AI. Available to any signed-in user.
  * @summary List learned fill-missing values (per product + field)
  */
-
 export function useListFillMissingValues<TData = Awaited<ReturnType<typeof listFillMissingValues>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFillMissingValues>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -12015,17 +11687,11 @@ export const getSaveFillMissingValuesUrl = () => {
  */
 export const saveFillMissingValues = async (saveFillMissingValuesInput: SaveFillMissingValuesInput, options?: Parameters<typeof customFetch>[1]): Promise<FillMissingValueList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<FillMissingValueList>(getSaveFillMissingValuesUrl(),
+  return customFetch<FillMissingValueList>(getSaveFillMissingValuesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveFillMissingValuesInput)
   }
 );}
@@ -12034,11 +11700,13 @@ return customFetch<FillMissingValueList>(getSaveFillMissingValuesUrl(),
 
 
 
+export const getSaveFillMissingValuesMutationKey = () => ['saveFillMissingValues'] as const;
+
 export const getSaveFillMissingValuesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveFillMissingValues>>, TError,SaveFillMissingValuesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveFillMissingValues>>, TError,SaveFillMissingValuesMutationVariables, TContext> => {
 
-const mutationKey = ['saveFillMissingValues'];
+const mutationKey = getSaveFillMissingValuesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -12067,6 +11735,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveFillMissingValuesMutationVariables = {data: BodyType<SaveFillMissingValuesInput>}
 
     /**
+ * Persists a batch of confirmed field values, keyed case-insensitively on brand + flavor + fieldKey. Existing entries are updated; new ones are inserted. Available to any signed-in user.
  * @summary Save learned fill-missing values (case-insensitive upsert)
  */
 export const useSaveFillMissingValues = <TError = ErrorType<void>,
@@ -12137,9 +11806,9 @@ export type ListIngredientBatchWeightsQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every learned ingredient batch weight — the "Batch Weight (lbs)" a user previously entered for a plain ingredient (applicator topping, non-default pep type, or ready-made sauce barrel), keyed by ingredient name. Clients auto-fill the remembered weight when that ingredient is picked again, the same way mixes and cheese recipes carry their own batch weight. Available to any signed-in user.
  * @summary List learned per-ingredient batch weights
  */
-
 export function useListIngredientBatchWeights<TData = Awaited<ReturnType<typeof listIngredientBatchWeights>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listIngredientBatchWeights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -12172,17 +11841,11 @@ export const getSaveIngredientBatchWeightsUrl = () => {
  */
 export const saveIngredientBatchWeights = async (saveIngredientBatchWeightsInput: SaveIngredientBatchWeightsInput, options?: Parameters<typeof customFetch>[1]): Promise<IngredientBatchWeightList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<IngredientBatchWeightList>(getSaveIngredientBatchWeightsUrl(),
+  return customFetch<IngredientBatchWeightList>(getSaveIngredientBatchWeightsUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(saveIngredientBatchWeightsInput)
   }
 );}
@@ -12191,11 +11854,13 @@ return customFetch<IngredientBatchWeightList>(getSaveIngredientBatchWeightsUrl()
 
 
 
+export const getSaveIngredientBatchWeightsMutationKey = () => ['saveIngredientBatchWeights'] as const;
+
 export const getSaveIngredientBatchWeightsMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveIngredientBatchWeights>>, TError,SaveIngredientBatchWeightsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveIngredientBatchWeights>>, TError,SaveIngredientBatchWeightsMutationVariables, TContext> => {
 
-const mutationKey = ['saveIngredientBatchWeights'];
+const mutationKey = getSaveIngredientBatchWeightsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -12224,6 +11889,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SaveIngredientBatchWeightsMutationVariables = {data: BodyType<SaveIngredientBatchWeightsInput>}
 
     /**
+ * Persists a batch of entered batch weights, keyed case-insensitively on ingredient name. Existing entries are updated; new ones are inserted. Available to any signed-in user.
  * @summary Save learned ingredient batch weights (case-insensitive upsert)
  */
 export const useSaveIngredientBatchWeights = <TError = ErrorType<void>,
@@ -12294,9 +11960,9 @@ export type ListPhotoAliasesQueryError = ErrorType<unknown>
 
 
 /**
+ * Returns every learned photo-intake alias — a saved mapping from a vision model's guessed item name to the inventory item key a user confirmed it matches. Clients use these to auto-apply remembered matches when identifying inventory from a photo. Available to any signed-in user.
  * @summary List learned photo-intake aliases (guessName -> itemKey)
  */
-
 export function useListPhotoAliases<TData = Awaited<ReturnType<typeof listPhotoAliases>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPhotoAliases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -12329,17 +11995,11 @@ export const getSavePhotoAliasesUrl = () => {
  */
 export const savePhotoAliases = async (savePhotoAliasesInput: SavePhotoAliasesInput, options?: Parameters<typeof customFetch>[1]): Promise<PhotoAliasList> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<PhotoAliasList>(getSavePhotoAliasesUrl(),
+  return customFetch<PhotoAliasList>(getSavePhotoAliasesUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(savePhotoAliasesInput)
   }
 );}
@@ -12348,11 +12008,13 @@ return customFetch<PhotoAliasList>(getSavePhotoAliasesUrl(),
 
 
 
+export const getSavePhotoAliasesMutationKey = () => ['savePhotoAliases'] as const;
+
 export const getSavePhotoAliasesMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof savePhotoAliases>>, TError,SavePhotoAliasesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof savePhotoAliases>>, TError,SavePhotoAliasesMutationVariables, TContext> => {
 
-const mutationKey = ['savePhotoAliases'];
+const mutationKey = getSavePhotoAliasesMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -12381,6 +12043,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SavePhotoAliasesMutationVariables = {data: BodyType<SavePhotoAliasesInput>}
 
     /**
+ * Persists a batch of guessName -> itemKey mappings confirmed by the user during photo intake. Existing entries (matched case-insensitively on guessName) are updated; new ones are inserted. Available to any signed-in user.
  * @summary Save learned photo-intake aliases (case-insensitive upsert)
  */
 export const useSavePhotoAliases = <TError = ErrorType<void>,
@@ -12408,17 +12071,11 @@ export const getReportIncidentUrl = () => {
  */
 export const reportIncident = async (reportIncidentInput: ReportIncidentInput, options?: Parameters<typeof customFetch>[1]): Promise<IncidentDiagnosis> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<IncidentDiagnosis>(getReportIncidentUrl(),
+  return customFetch<IncidentDiagnosis>(getReportIncidentUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(reportIncidentInput)
   }
 );}
@@ -12427,11 +12084,13 @@ return customFetch<IncidentDiagnosis>(getReportIncidentUrl(),
 
 
 
+export const getReportIncidentMutationKey = () => ['reportIncident'] as const;
+
 export const getReportIncidentMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportIncident>>, TError,ReportIncidentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof reportIncident>>, TError,ReportIncidentMutationVariables, TContext> => {
 
-const mutationKey = ['reportIncident'];
+const mutationKey = getReportIncidentMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -12460,6 +12119,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReportIncidentMutationVariables = {data: BodyType<ReportIncidentInput>}
 
     /**
+ * Records an incident (a user-reported problem or an auto-captured crash) and returns a plain-language AI diagnosis plus a suggested workaround. Allowed for any signed-in user. The diagnosis is also stored on the incident for managers to review later. Rate-limited per user.
  * @summary Report an issue or a crash and get an AI diagnosis
  */
 export const useReportIncident = <TError = ErrorType<void>,
@@ -12530,9 +12190,9 @@ export type ListIncidentsQueryError = ErrorType<void>
 
 
 /**
+ * Returns recorded incidents (newest first) for a manager to review, including the captured context and the AI diagnosis.
  * @summary List incidents (manager only)
  */
-
 export function useListIncidents<TData = Awaited<ReturnType<typeof listIncidents>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listIncidents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -12608,9 +12268,9 @@ export type GetUnreviewedIncidentCountQueryError = ErrorType<void>
 
 
 /**
+ * Returns the number of incidents still marked new/unreviewed, used to drive the manager nav badge.
  * @summary Count of unreviewed incidents (manager only)
  */
-
 export function useGetUnreviewedIncidentCount<TData = Awaited<ReturnType<typeof getUnreviewedIncidentCount>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUnreviewedIncidentCount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -12684,10 +12344,7 @@ export type GetActionableIncidentCountQueryResult = NonNullable<Awaited<ReturnTy
 export type GetActionableIncidentCountQueryError = ErrorType<void>
 
 
-/**
- * @summary Count unresolved actionable incident work
- */
-
+/** @summary Count unresolved actionable incident work */
 export function useGetActionableIncidentCount<TData = Awaited<ReturnType<typeof getActionableIncidentCount>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActionableIncidentCount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -12761,10 +12418,7 @@ export type ListIncidentAssigneesQueryResult = NonNullable<Awaited<ReturnType<ty
 export type ListIncidentAssigneesQueryError = ErrorType<void>
 
 
-/**
- * @summary List eligible incident owners
- */
-
+/** @summary List eligible incident owners */
 export function useListIncidentAssignees<TData = Awaited<ReturnType<typeof listIncidentAssignees>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listIncidentAssignees>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -12838,10 +12492,7 @@ export type GetIncidentQueryResult = NonNullable<Awaited<ReturnType<typeof getIn
 export type GetIncidentQueryError = ErrorType<void>
 
 
-/**
- * @summary Get one incident (manager only)
- */
-
+/** @summary Get one incident (manager only) */
 export function useGetIncident<TData = Awaited<ReturnType<typeof getIncident>>, TError = ErrorType<void>>(
  id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIncident>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -12886,11 +12537,13 @@ export const reviewIncident = async (id: string, options?: Parameters<typeof cus
 
 
 
+export const getReviewIncidentMutationKey = () => ['reviewIncident'] as const;
+
 export const getReviewIncidentMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewIncident>>, TError,ReviewIncidentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof reviewIncident>>, TError,ReviewIncidentMutationVariables, TContext> => {
 
-const mutationKey = ['reviewIncident'];
+const mutationKey = getReviewIncidentMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -12918,9 +12571,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReviewIncidentMutationError = ErrorType<void>
     export type ReviewIncidentMutationVariables = {id: string}
 
-    /**
- * @summary Mark an incident reviewed (manager only)
- */
+    /** @summary Mark an incident reviewed (manager only) */
 export const useReviewIncident = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewIncident>>, TError,ReviewIncidentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -12959,11 +12610,13 @@ export const resolveIncident = async (id: string, options?: Parameters<typeof cu
 
 
 
+export const getResolveIncidentMutationKey = () => ['resolveIncident'] as const;
+
 export const getResolveIncidentMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveIncident>>, TError,ResolveIncidentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof resolveIncident>>, TError,ResolveIncidentMutationVariables, TContext> => {
 
-const mutationKey = ['resolveIncident'];
+const mutationKey = getResolveIncidentMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -12992,6 +12645,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ResolveIncidentMutationVariables = {id: string}
 
     /**
+ * Marks an incident resolved (its underlying problem is considered fixed/handled). "resolved" implies "reviewed".
  * @summary Mark an incident resolved (manager only)
  */
 export const useResolveIncident = <TError = ErrorType<void>,
@@ -13067,10 +12721,7 @@ export type ListManagerActionQueueQueryResult = NonNullable<Awaited<ReturnType<t
 export type ListManagerActionQueueQueryError = ErrorType<void>
 
 
-/**
- * @summary List the facility-scoped manager action queue
- */
-
+/** @summary List the facility-scoped manager action queue */
 export function useListManagerActionQueue<TData = Awaited<ReturnType<typeof listManagerActionQueue>>, TError = ErrorType<void>>(
  params?: ListManagerActionQueueParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listManagerActionQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -13103,17 +12754,11 @@ export const getUpdateManagerActionItemUrl = (id: number,) => {
 export const updateManagerActionItem = async (id: number,
     managerActionItemUpdate: ManagerActionItemUpdate, options?: Parameters<typeof customFetch>[1]): Promise<UpdateManagerActionItem200> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<UpdateManagerActionItem200>(getUpdateManagerActionItemUrl(id),
+  return customFetch<UpdateManagerActionItem200>(getUpdateManagerActionItemUrl(id),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(managerActionItemUpdate)
   }
 );}
@@ -13122,11 +12767,13 @@ return customFetch<UpdateManagerActionItem200>(getUpdateManagerActionItemUrl(id)
 
 
 
+export const getUpdateManagerActionItemMutationKey = () => ['updateManagerActionItem'] as const;
+
 export const getUpdateManagerActionItemMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateManagerActionItem>>, TError,UpdateManagerActionItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateManagerActionItem>>, TError,UpdateManagerActionItemMutationVariables, TContext> => {
 
-const mutationKey = ['updateManagerActionItem'];
+const mutationKey = getUpdateManagerActionItemMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13154,9 +12801,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateManagerActionItemMutationError = ErrorType<void>
     export type UpdateManagerActionItemMutationVariables = {id: number;data: BodyType<ManagerActionItemUpdate>}
 
-    /**
- * @summary Update a manager action item with optimistic version checking
- */
+    /** @summary Update a manager action item with optimistic version checking */
 export const useUpdateManagerActionItem = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateManagerActionItem>>, TError,UpdateManagerActionItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -13182,17 +12827,11 @@ export const getUpdateIncidentWorkflowUrl = (id: string,) => {
 export const updateIncidentWorkflow = async (id: string,
     incidentWorkflowUpdate: IncidentWorkflowUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Incident> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<Incident>(getUpdateIncidentWorkflowUrl(id),
+  return customFetch<Incident>(getUpdateIncidentWorkflowUrl(id),
   {
     ...options,
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(incidentWorkflowUpdate)
   }
 );}
@@ -13201,11 +12840,13 @@ return customFetch<Incident>(getUpdateIncidentWorkflowUrl(id),
 
 
 
+export const getUpdateIncidentWorkflowMutationKey = () => ['updateIncidentWorkflow'] as const;
+
 export const getUpdateIncidentWorkflowMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateIncidentWorkflow>>, TError,UpdateIncidentWorkflowMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateIncidentWorkflow>>, TError,UpdateIncidentWorkflowMutationVariables, TContext> => {
 
-const mutationKey = ['updateIncidentWorkflow'];
+const mutationKey = getUpdateIncidentWorkflowMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13233,9 +12874,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateIncidentWorkflowMutationError = ErrorType<void>
     export type UpdateIncidentWorkflowMutationVariables = {id: string;data: BodyType<IncidentWorkflowUpdate>}
 
-    /**
- * @summary Update incident ownership, priority, state, or add a note
- */
+    /** @summary Update incident ownership, priority, state, or add a note */
 export const useUpdateIncidentWorkflow = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateIncidentWorkflow>>, TError,UpdateIncidentWorkflowMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -13302,10 +12941,7 @@ export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>
 export type GetMeQueryError = ErrorType<unknown>
 
 
-/**
- * @summary Current signed-in user's identity and role
- */
-
+/** @summary Current signed-in user's identity and role */
 export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = ErrorType<unknown>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -13351,11 +12987,13 @@ export const markOnboardingSeen = async ( options?: Parameters<typeof customFetc
 
 
 
+export const getMarkOnboardingSeenMutationKey = () => ['markOnboardingSeen'] as const;
+
 export const getMarkOnboardingSeenMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markOnboardingSeen>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof markOnboardingSeen>>, TError,void, TContext> => {
 
-const mutationKey = ['markOnboardingSeen'];
+const mutationKey = getMarkOnboardingSeenMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13384,6 +13022,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
     /**
+ * Sets the current user's onboardingSeen flag so the "Get Started" overview never auto-opens again on any of their devices. Idempotent.
  * @summary Mark the first-login "Get Started" overview as seen
  */
 export const useMarkOnboardingSeen = <TError = ErrorType<unknown>,
@@ -13424,11 +13063,13 @@ export const markTourCompleted = async ( options?: Parameters<typeof customFetch
 
 
 
+export const getMarkTourCompletedMutationKey = () => ['markTourCompleted'] as const;
+
 export const getMarkTourCompletedMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markTourCompleted>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof markTourCompleted>>, TError,void, TContext> => {
 
-const mutationKey = ['markTourCompleted'];
+const mutationKey = getMarkTourCompletedMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13457,6 +13098,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
     /**
+ * Sets the current user's tourCompleted flag once they reach the guided tour's final step, so the app can tell a brand-new user from one who has already finished the tour. Idempotent.
  * @summary Mark the guided tour as completed
  */
 export const useMarkTourCompleted = <TError = ErrorType<unknown>,
@@ -13484,17 +13126,11 @@ export const getSetNotificationPrefsUrl = () => {
  */
 export const setNotificationPrefs = async (setNotificationPrefsBody: SetNotificationPrefs, options?: Parameters<typeof customFetch>[1]): Promise<StaffMember> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<StaffMember>(getSetNotificationPrefsUrl(),
+  return customFetch<StaffMember>(getSetNotificationPrefsUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(setNotificationPrefsBody)
   }
 );}
@@ -13503,11 +13139,13 @@ return customFetch<StaffMember>(getSetNotificationPrefsUrl(),
 
 
 
+export const getSetNotificationPrefsMutationKey = () => ['setNotificationPrefs'] as const;
+
 export const getSetNotificationPrefsMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setNotificationPrefs>>, TError,SetNotificationPrefsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setNotificationPrefs>>, TError,SetNotificationPrefsMutationVariables, TContext> => {
 
-const mutationKey = ['setNotificationPrefs'];
+const mutationKey = getSetNotificationPrefsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13536,6 +13174,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SetNotificationPrefsMutationVariables = {data: BodyType<SetNotificationPrefs>}
 
     /**
+ * Merges the supplied alert-kind → enabled toggles into the current user's notification preferences so they follow them across devices. Unknown alert kinds are ignored; keys not supplied are left unchanged.
  * @summary Set the current user's per-alert notification preferences
  */
 export const useSetNotificationPrefs = <TError = ErrorType<unknown>,
@@ -13563,17 +13202,11 @@ export const getSetFloorModeUrl = () => {
  */
 export const setFloorMode = async (setFloorModeBody: SetFloorMode, options?: Parameters<typeof customFetch>[1]): Promise<StaffMember> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<StaffMember>(getSetFloorModeUrl(),
+  return customFetch<StaffMember>(getSetFloorModeUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(setFloorModeBody)
   }
 );}
@@ -13582,11 +13215,13 @@ return customFetch<StaffMember>(getSetFloorModeUrl(),
 
 
 
+export const getSetFloorModeMutationKey = () => ['setFloorMode'] as const;
+
 export const getSetFloorModeMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setFloorMode>>, TError,SetFloorModeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setFloorMode>>, TError,SetFloorModeMutationVariables, TContext> => {
 
-const mutationKey = ['setFloorMode'];
+const mutationKey = getSetFloorModeMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13615,6 +13250,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SetFloorModeMutationVariables = {data: BodyType<SetFloorMode>}
 
     /**
+ * Stores whether Floor Mode (the idle big-numbers monitor) is enabled for the current user, so the preference follows them across devices.
  * @summary Set the current user's Floor Mode on/off preference
  */
 export const useSetFloorMode = <TError = ErrorType<unknown>,
@@ -13683,10 +13319,7 @@ export type ListRolesQueryResult = NonNullable<Awaited<ReturnType<typeof listRol
 export type ListRolesQueryError = ErrorType<void>
 
 
-/**
- * @summary List all defined roles and their capabilities (manage-staff)
- */
-
+/** @summary List all defined roles and their capabilities (manage-staff) */
 export function useListRoles<TData = Awaited<ReturnType<typeof listRoles>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRoles>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -13718,17 +13351,11 @@ export const getCreateRoleUrl = () => {
  */
 export const createRole = async (createRoleBody: CreateRole, options?: Parameters<typeof customFetch>[1]): Promise<RoleDefinition> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<RoleDefinition>(getCreateRoleUrl(),
+  return customFetch<RoleDefinition>(getCreateRoleUrl(),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(createRoleBody)
   }
 );}
@@ -13737,11 +13364,13 @@ return customFetch<RoleDefinition>(getCreateRoleUrl(),
 
 
 
+export const getCreateRoleMutationKey = () => ['createRole'] as const;
+
 export const getCreateRoleMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRole>>, TError,CreateRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createRole>>, TError,CreateRoleMutationVariables, TContext> => {
 
-const mutationKey = ['createRole'];
+const mutationKey = getCreateRoleMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13769,9 +13398,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateRoleMutationError = ErrorType<void>
     export type CreateRoleMutationVariables = {data: BodyType<CreateRole>}
 
-    /**
- * @summary Create a new role (manage-staff)
- */
+    /** @summary Create a new role (manage-staff) */
 export const useCreateRole = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRole>>, TError,CreateRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -13797,17 +13424,11 @@ export const getUpdateRoleUrl = (name: string,) => {
 export const updateRole = async (name: string,
     roleCapabilitiesUpdate: RoleCapabilitiesUpdate, options?: Parameters<typeof customFetch>[1]): Promise<RoleDefinition> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<RoleDefinition>(getUpdateRoleUrl(name),
+  return customFetch<RoleDefinition>(getUpdateRoleUrl(name),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(roleCapabilitiesUpdate)
   }
 );}
@@ -13816,11 +13437,13 @@ return customFetch<RoleDefinition>(getUpdateRoleUrl(name),
 
 
 
+export const getUpdateRoleMutationKey = () => ['updateRole'] as const;
+
 export const getUpdateRoleMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRole>>, TError,UpdateRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateRole>>, TError,UpdateRoleMutationVariables, TContext> => {
 
-const mutationKey = ['updateRole'];
+const mutationKey = getUpdateRoleMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13848,9 +13471,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateRoleMutationError = ErrorType<void>
     export type UpdateRoleMutationVariables = {name: string;data: BodyType<RoleCapabilitiesUpdate>}
 
-    /**
- * @summary Update a role's capabilities (manage-staff)
- */
+    /** @summary Update a role's capabilities (manage-staff) */
 export const useUpdateRole = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRole>>, TError,UpdateRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -13888,11 +13509,13 @@ export const deleteRole = async (name: string, options?: Parameters<typeof custo
 
 
 
+export const getDeleteRoleMutationKey = () => ['deleteRole'] as const;
+
 export const getDeleteRoleMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRole>>, TError,DeleteRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteRole>>, TError,DeleteRoleMutationVariables, TContext> => {
 
-const mutationKey = ['deleteRole'];
+const mutationKey = getDeleteRoleMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -13920,9 +13543,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteRoleMutationError = ErrorType<void>
     export type DeleteRoleMutationVariables = {name: string}
 
-    /**
- * @summary Delete a role (manage-staff)
- */
+    /** @summary Delete a role (manage-staff) */
 export const useDeleteRole = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRole>>, TError,DeleteRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -13989,10 +13610,7 @@ export type ListStaffQueryResult = NonNullable<Awaited<ReturnType<typeof listSta
 export type ListStaffQueryError = ErrorType<void>
 
 
-/**
- * @summary List staff members and their roles (manager only)
- */
-
+/** @summary List staff members and their roles (manager only) */
 export function useListStaff<TData = Awaited<ReturnType<typeof listStaff>>, TError = ErrorType<void>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStaff>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -14025,17 +13643,11 @@ export const getSetStaffRoleUrl = (userId: string,) => {
 export const setStaffRole = async (userId: string,
     staffRoleUpdate: StaffRoleUpdate, options?: Parameters<typeof customFetch>[1]): Promise<StaffMember> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<StaffMember>(getSetStaffRoleUrl(userId),
+  return customFetch<StaffMember>(getSetStaffRoleUrl(userId),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(staffRoleUpdate)
   }
 );}
@@ -14044,11 +13656,13 @@ return customFetch<StaffMember>(getSetStaffRoleUrl(userId),
 
 
 
+export const getSetStaffRoleMutationKey = () => ['setStaffRole'] as const;
+
 export const getSetStaffRoleMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setStaffRole>>, TError,SetStaffRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setStaffRole>>, TError,SetStaffRoleMutationVariables, TContext> => {
 
-const mutationKey = ['setStaffRole'];
+const mutationKey = getSetStaffRoleMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -14076,9 +13690,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SetStaffRoleMutationError = ErrorType<void>
     export type SetStaffRoleMutationVariables = {userId: string;data: BodyType<StaffRoleUpdate>}
 
-    /**
- * @summary Change a staff member's role (manager only)
- */
+    /** @summary Change a staff member's role (manager only) */
 export const useSetStaffRole = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setStaffRole>>, TError,SetStaffRoleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -14104,17 +13716,11 @@ export const getResetStaffPasswordUrl = (userId: string,) => {
 export const resetStaffPassword = async (userId: string,
     resetStaffPasswordBody: ResetStaffPassword, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<void>(getResetStaffPasswordUrl(userId),
+  return customFetch<void>(getResetStaffPasswordUrl(userId),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(resetStaffPasswordBody)
   }
 );}
@@ -14123,11 +13729,13 @@ return customFetch<void>(getResetStaffPasswordUrl(userId),
 
 
 
+export const getResetStaffPasswordMutationKey = () => ['resetStaffPassword'] as const;
+
 export const getResetStaffPasswordMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetStaffPassword>>, TError,ResetStaffPasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof resetStaffPassword>>, TError,ResetStaffPasswordMutationVariables, TContext> => {
 
-const mutationKey = ['resetStaffPassword'];
+const mutationKey = getResetStaffPasswordMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -14155,9 +13763,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ResetStaffPasswordMutationError = ErrorType<void>
     export type ResetStaffPasswordMutationVariables = {userId: string;data: BodyType<ResetStaffPassword>}
 
-    /**
- * @summary Reset a staff member's password (manager only)
- */
+    /** @summary Reset a staff member's password (manager only) */
 export const useResetStaffPassword = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetStaffPassword>>, TError,ResetStaffPasswordMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -14195,11 +13801,13 @@ export const deleteStaffMember = async (userId: string, options?: Parameters<typ
 
 
 
+export const getDeleteStaffMemberMutationKey = () => ['deleteStaffMember'] as const;
+
 export const getDeleteStaffMemberMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStaffMember>>, TError,DeleteStaffMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteStaffMember>>, TError,DeleteStaffMemberMutationVariables, TContext> => {
 
-const mutationKey = ['deleteStaffMember'];
+const mutationKey = getDeleteStaffMemberMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -14227,9 +13835,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteStaffMemberMutationError = ErrorType<void>
     export type DeleteStaffMemberMutationVariables = {userId: string}
 
-    /**
- * @summary Remove a staff member (manager only)
- */
+    /** @summary Remove a staff member (manager only) */
 export const useDeleteStaffMember = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStaffMember>>, TError,DeleteStaffMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -14303,10 +13909,7 @@ export type GetSyncTodayQueryResult = NonNullable<Awaited<ReturnType<typeof getS
 export type GetSyncTodayQueryError = ErrorType<unknown>
 
 
-/**
- * @summary Read the client-local current-day sync snapshot
- */
-
+/** @summary Read the client-local current-day sync snapshot */
 export function useGetSyncToday<TData = Awaited<ReturnType<typeof getSyncToday>>, TError = ErrorType<unknown>>(
  params?: GetSyncTodayParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSyncToday>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
@@ -14346,17 +13949,11 @@ export const getPutSyncTodayUrl = (params?: PutSyncTodayParams,) => {
 export const putSyncToday = async (syncWriteRequest: SyncWriteRequest,
     params?: PutSyncTodayParams, options?: Parameters<typeof customFetch>[1]): Promise<PutSyncToday200> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<PutSyncToday200>(getPutSyncTodayUrl(params),
+  return customFetch<PutSyncToday200>(getPutSyncTodayUrl(params),
   {
     ...options,
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(syncWriteRequest)
   }
 );}
@@ -14365,11 +13962,13 @@ return customFetch<PutSyncToday200>(getPutSyncTodayUrl(params),
 
 
 
+export const getPutSyncTodayMutationKey = () => ['putSyncToday'] as const;
+
 export const getPutSyncTodayMutationOptions = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putSyncToday>>, TError,PutSyncTodayMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof putSyncToday>>, TError,PutSyncTodayMutationVariables, TContext> => {
 
-const mutationKey = ['putSyncToday'];
+const mutationKey = getPutSyncTodayMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -14397,9 +13996,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type PutSyncTodayMutationError = ErrorType<unknown>
     export type PutSyncTodayMutationVariables = {data: BodyType<SyncWriteRequest>;params?: PutSyncTodayParams}
 
-    /**
- * @summary Merge the client-local current-day sync snapshot
- */
+    /** @summary Merge the client-local current-day sync snapshot */
 export const usePutSyncToday = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putSyncToday>>, TError,PutSyncTodayMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
@@ -14432,17 +14029,11 @@ export const getClaimAutoTrackEventUrl = (params?: ClaimAutoTrackEventParams,) =
 export const claimAutoTrackEvent = async (autoTrackClaimRequest: AutoTrackClaimRequest,
     params?: ClaimAutoTrackEventParams, options?: Parameters<typeof customFetch>[1]): Promise<AutoTrackClaimResponse> => {
 
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
-  };
-return customFetch<AutoTrackClaimResponse>(getClaimAutoTrackEventUrl(params),
+  return customFetch<AutoTrackClaimResponse>(getClaimAutoTrackEventUrl(params),
   {
     ...options,
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    headers: getHeaders({ 'Content-Type': 'application/json' }, options?.headers),
     body: JSON.stringify(autoTrackClaimRequest)
   }
 );}
@@ -14451,11 +14042,13 @@ return customFetch<AutoTrackClaimResponse>(getClaimAutoTrackEventUrl(params),
 
 
 
+export const getClaimAutoTrackEventMutationKey = () => ['claimAutoTrackEvent'] as const;
+
 export const getClaimAutoTrackEventMutationOptions = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimAutoTrackEvent>>, TError,ClaimAutoTrackEventMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof claimAutoTrackEvent>>, TError,ClaimAutoTrackEventMutationVariables, TContext> => {
 
-const mutationKey = ['claimAutoTrackEvent'];
+const mutationKey = getClaimAutoTrackEventMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -14483,9 +14076,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ClaimAutoTrackEventMutationError = ErrorType<void>
     export type ClaimAutoTrackEventMutationVariables = {data: BodyType<AutoTrackClaimRequest>;params?: ClaimAutoTrackEventParams}
 
-    /**
- * @summary Atomically claim one due automatic production event
- */
+    /** @summary Atomically claim one due automatic production event */
 export const useClaimAutoTrackEvent = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimAutoTrackEvent>>, TError,ClaimAutoTrackEventMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
