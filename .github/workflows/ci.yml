@@ -9,9 +9,6 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  CI_PUBLIC_SOURCE: '1'
-
 jobs:
   typecheck:
     name: Typecheck
@@ -25,8 +22,6 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Build composite libs
-        run: pnpm exec tsc --build lib/recipe-guide-import --pretty false
       - name: Typecheck (workspace + libs)
         run: pnpm run typecheck
       - name: Validate skill catalog
@@ -47,7 +42,17 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Run web unit tests
-        run: pnpm --filter @workspace/run-calculator test
+        run: |
+          if [ ! -d attached_assets/source-library ]; then
+            echo "Private source-library absent; skipping workbook-backed tests"
+            pnpm --filter @workspace/run-calculator exec vitest run \
+              --exclude '**/*Reimport*' \
+              --exclude '**/*Workbook*' \
+              --exclude '**/*CheeseDuplication*' \
+              --exclude '**/*BlendTypeAlias*'
+          else
+            pnpm --filter @workspace/run-calculator test
+          fi
       - name: Run all shared-library unit tests (including spec-import)
         # This is the broad CI sweep. The release check intentionally runs a
         # smaller, explicit set of high-value library gates.
@@ -149,7 +154,6 @@ jobs:
 
       - name: Build + push api image (schema + runtime)
         uses: docker/build-push-action@v6
-        continue-on-error: true
         with:
           context: .
           target: api
