@@ -61,7 +61,14 @@ jobs:
       - name: Run all shared-library unit tests (including spec-import)
         # This is the broad CI sweep. The release check intentionally runs a
         # smaller, explicit set of high-value library gates.
-        run: pnpm -r --filter "./lib/**" --if-present test
+        # corpus-harness needs private attached_assets; skip it when absent.
+        run: |
+          if [ ! -d attached_assets/source-library ]; then
+            echo "Skipping corpus-harness (private source-library absent)"
+            pnpm -r --filter "./lib/**" --filter "!@workspace/corpus-harness" --if-present test
+          else
+            pnpm -r --filter "./lib/**" --if-present test
+          fi
 
   test-release-concurrency:
     name: Release concurrency fixture tests
@@ -162,7 +169,7 @@ jobs:
         with:
           context: .
           target: api
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          push: false
           platforms: linux/amd64
           tags: |
             ghcr.io/${{ github.repository_owner }}/runcalc-api:latest
@@ -175,7 +182,7 @@ jobs:
         with:
           context: .
           target: web
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          push: false
           platforms: linux/amd64
           tags: |
             ghcr.io/${{ github.repository_owner }}/runcalc-web:latest
