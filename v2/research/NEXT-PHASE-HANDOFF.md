@@ -77,18 +77,18 @@ This is a planning handoff. It does not authorize cutover or data transfer.
 ## 4. Die Defaults
 
 **V1 reference:** Die defaults in Manage Lists & Settings; used by run setup.  
-**V2 status:** Limited or not surfaced.
+**V2 status:** Implemented as manager-reviewed, facility-scoped die defaults connected to run setup.
 
-### What to build
-- Manager-editable die defaults (per die type or line).
-- Used when creating or editing a run setup.
-- Server-validated; changes are audited.
-- Scope-isolated to the facility.
+### Delivered
+- Imported die defaults remain suggestions until a manager explicitly saves reviewed values.
+- Managers can create, revise, re-enable, and retire defaults. The server validates revisions and records append-only actor-attributed changes.
+- Dough-line run setup applies active reviewed defaults with blank-fill-only and switch-aware behavior; unreviewed or disabled defaults remain explicit.
+- Bought-crust/non-dough setups cannot select or persist a die. Run snapshots retain their creation-time die revision and line values.
 
 ### Acceptance
-- CRUD tests.
-- Run setup picks up the current default.
-- Role denial for non-managers.
+- Disposable PostgreSQL checks cover create/retry, history attribution, stale writes, retirement, explicit unreviewed/disabled state, bought-crust rejection, and active-run snapshot stability.
+- Chromium manager-to-run flow covers save/reload, switching, operator values, offline read-only state, and run snapshot persistence at desktop and emulated phone/tablet sizes.
+- Non-manager denial is covered at the API boundary. WebKit/Safari and physical Android/iOS verification remain environment-dependent.
 
 ---
 

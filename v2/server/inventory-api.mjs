@@ -17,11 +17,13 @@ import {
   WorkbookCapacityImportError,
   workbookCapacityImportLimits,
 } from "../core/workbook-capacity-import.mjs";
+import { DIE_DEFAULT_FIELDS, REQUIRED_DIE_DEFAULT_FIELDS, isDieLineSettings } from "../core/die-defaults.mjs";
 
 const IMPORTS_PATH = "/api/v2/imports";
 const SETUP_CATALOG_PATH = "/api/v2/setup-catalog/imports";
 const SOURCE_WORKBOOK_PREVIEW_PATH = `${SETUP_CATALOG_PATH}/workbooks/preview`;
 const INVENTORY_PATH = "/api/v2/inventory";
+const DIE_DEFAULTS_PATH = `${INVENTORY_PATH}/die-defaults`;
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_WORKBOOK_BODY_BYTES = 7_250 * 1024;
 const REQUEST_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/;
@@ -119,6 +121,17 @@ function validateQuantity(value, { positive = false, nonzero = false } = {}) {
 
 function hashRequest(value) {
   return createHash("sha256").update(JSON.stringify(value), "utf8").digest("hex");
+}
+
+function validateDieDefaults(value) {
+  const keys = [...DIE_DEFAULT_FIELDS].sort();
+  if (!value || typeof value !== "object" || Array.isArray(value)
+    || Object.keys(value).sort().join("\u0000") !== keys.join("\u0000")
+    || !isDieLineSettings(value)
+    || REQUIRED_DIE_DEFAULT_FIELDS.some((key) => typeof value[key] !== "number")) {
+    throw new InventoryApiError(400, "Enter all die default fields as non-negative numbers or leave optional fields blank.");
+  }
+  return value;
 }
 
 function parseLimit(url, { extra = [] } = {}) {
@@ -393,6 +406,52 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
           [...scope, parseLimit(url)],
         );
         sendJson(response, 200, { imports: resultValue(result) });
+        return true;
+      }
+
+      if (isInventory && url.pathname === DIE_DEFAULTS_PATH && request.method === "GET") {
+        operation = "list_die_defaults";
+        const limit = parseLimit(url);
+        const [defaultsResult, historyResult] = await Promise.all([
+          pool.query("SELECT v2.list_die_defaults($1::uuid) AS result", scope),
+          pool.query("SELECT v2.list_die_default_events($1::uuid, $2::integer) AS result", [...scope, limit]),
+        ]);
+        const defaults = resultValue(defaultsResult);
+        const history = resultValue(historyResult);
+        if (!Array.isArray(defaults) || !Array.isArray(history)) {
+          throw new InventoryApiError(502, "Reviewed die defaults are unavailable. Refresh and try again.");
+        }
+        sendJson(response, 200, { defaults, history });
+        return true;
+      }
+
+      if (isInventory && url.pathname === DIE_DEFAULTS_PATH && request.method === "POST") {
+        operation = "save_die_default";
+        const body = await readJsonBody(request);
+        requireKeys(body, ["requestId", "dieCode", "expectedRevision", "defaults", "enabled"]);
+        const requestId = validateRequestId(body.requestId);
+        if (typeof body.dieCode !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(body.dieCode)
+          || !Number.isSafeInteger(body.expectedRevision) || body.expectedRevision < 0
+          || typeof body.enabled !== "boolean") {
+          throw new InventoryApiError(400, "Choose a die type and submit its current revision and status.");
+        }
+        const defaults = validateDieDefaults(body.defaults);
+        const requestHash = hashRequest({
+          dieCode: body.dieCode,
+          expectedRevision: body.expectedRevision,
+          defaults,
+          enabled: body.enabled,
+        });
+        const result = await pool.query(
+          "SELECT v2.save_die_default($1::uuid, $2::uuid, $3::text, $4::text, $5::text, $6::bigint, $7::jsonb, $8::boolean) AS result",
+          [...scope, actor, requestId, requestHash, body.dieCode, body.expectedRevision, JSON.stringify(defaults), body.enabled],
+        );
+        const saved = resultValue(result);
+        if (!saved || typeof saved !== "object" || !["created", "updated", "retired", "re-enabled"].includes(saved.outcome)
+          || !Number.isSafeInteger(saved.revision) || saved.revision < 1) {
+          throw new InventoryApiError(502, "The server did not confirm the die default change.");
+        }
+        sendJson(response, saved.replayed || saved.outcome !== "created" ? 200 : 201, saved);
         return true;
       }
 

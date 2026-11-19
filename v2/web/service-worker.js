@@ -8,6 +8,7 @@ const SHELL_ASSETS = [
   ["/v2/web/styles.css", "/v2/web/styles.css"],
   ["/v2/web/write-gate.mjs", "/v2/web/write-gate.mjs"],
   ["/v2/web/app.js", "/v2/web/app.js"],
+  ["/v2/core/die-defaults.mjs", "/v2/core/die-defaults.mjs"],
   ["/v2/web/inventory.js", "/v2/web/inventory.js"],
   ["/v2/web/setup-catalog.js", "/v2/web/setup-catalog.js"],
   ["/v2/core/import-csv-templates.mjs", "/v2/core/import-csv-templates.mjs"],

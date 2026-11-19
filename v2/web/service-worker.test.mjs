@@ -15,4 +15,5 @@ test("offline shell caches every approved setup-import module", async () => {
     assert.match(source, new RegExp(`["']${path.replaceAll(".", "\\.")}["']`, "u"), path);
   }
   assert.match(source, /fieldline-v2-shell-7/u);
+  assert.match(source, /\/v2\/core\/die-defaults\.mjs/u);
 });

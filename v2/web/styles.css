@@ -278,6 +278,10 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .manager-error[data-kind="success"] { border-color: var(--green); background: var(--success-bg); color: var(--success-text); }
 .manager-error[data-kind="warning"] { border-color: var(--warning-border); }
 .manager-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; align-items: start; }
+.die-setup-card { grid-column: 1 / -1; display: grid; gap: 10px; padding: 16px; border: 1px solid var(--line); background: var(--surface); }
+.die-setup-card h3 { margin: 5px 0 0; font-size: 18px; }
+.die-line-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.die-line-grid .field { min-width: 0; }
 .manager-card { min-width: 0; padding: clamp(18px, 2.5vw, 26px); border: 1px solid var(--line); background: var(--surface); }
 .manager-card-wide { grid-column: 1 / -1; }
 .manager-card > .eyebrow { color: var(--brand); }
@@ -339,7 +343,7 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .manager-form button:focus-visible, .manager-list button:focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
 
 @media (max-width: 860px) {
-  .workspace { grid-template-columns: minmax(0, 1.35fr) minmax(230px, .8fr); gap: 14px; }
+  .workspace { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .create-form { grid-template-columns: minmax(0, 1fr) 115px; }
   .button-create { grid-column: 1 / -1; }
   .staff-create-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -411,6 +415,7 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
   .manager-grid { grid-template-columns: 1fr; }
   .manager-card-wide { grid-column: auto; }
   .manager-inline-form { grid-template-columns: 1fr; }
+  .die-line-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .manager-inline-form .button { width: 100%; }
   .manager-list-item { align-items: start; }
   .manager-list-actions { flex-wrap: wrap; justify-content: end; }

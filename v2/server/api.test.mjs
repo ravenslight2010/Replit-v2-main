@@ -167,6 +167,11 @@ test("serves the V2 sign-in page and local assets with restrictive browser heade
     assert.match(appScript.headers.get("content-type"), /javascript/);
     assert.match(await appScript.text(), /\/api\/v2\/auth/);
 
+    const dieDefaults = await fetch(`${baseUrl}/v2/core/die-defaults.mjs`);
+    assert.equal(dieDefaults.status, 200);
+    assert.match(dieDefaults.headers.get("content-type"), /javascript/);
+    assert.match(await dieDefaults.text(), /resolveDieLineDefaultsOnSwitch/);
+
     const writeGate = await fetch(`${baseUrl}/v2/web/write-gate.mjs`);
     assert.equal(writeGate.status, 200);
     assert.match(await writeGate.text(), /canWriteRunState/);

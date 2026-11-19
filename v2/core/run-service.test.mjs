@@ -106,6 +106,47 @@ test("trims a run label before hashing and persistence", async () => {
   assert.equal(result.run.setupSnapshot.label, "Morning run");
 });
 
+test("persists a die setup snapshot and compares JSON values independent of key order", async () => {
+  const lineSettings = {
+    crustsPerCycle: 8, cycleSpeed: 77, speedAdjustment: 1, freezerTime: 22,
+    casesPerLayer: 4, preTunnelMin: null, postTunnelMin: null, pressOvenMin: null, frontlineMin: null,
+  };
+  const requestSetup = {
+    ...SETUP,
+    dieSetup: { dieTypeCode: "DIE-A", expectedRevision: 3, lineSettings },
+  };
+  const storedLineSettings = Object.fromEntries(Object.entries(lineSettings).reverse());
+  const service = makeService({
+    query: async (_sql, params) => {
+      const submitted = JSON.parse(params[4]);
+      return {
+        rows: [{
+          result: {
+            outcome: "created",
+            replayed: false,
+            run: {
+              ...RUN,
+              setupSnapshot: {
+                ...submitted,
+                productionPlan: PRODUCTION_PLAN,
+                dieSetup: {
+                  dieTypeCode: "DIE-A",
+                  dieTypeName: "Die A",
+                  defaultStatus: "active",
+                  defaultRevision: 3,
+                  lineSettings: storedLineSettings,
+                },
+              },
+            },
+          },
+        }],
+      };
+    },
+  });
+  const result = await service.create({ auth: AUTH, requestId: REQUEST_ID, setupSnapshot: requestSetup });
+  assert.deepEqual(JSON.parse(JSON.stringify(result.run.setupSnapshot.dieSetup.lineSettings)), lineSettings);
+});
+
 test("rejects unsupported setup fields and invalid values before database work", async () => {
   let queryCount = 0;
   const service = makeService({
@@ -175,6 +216,13 @@ test("returns idempotent creation replay and maps reused request IDs to conflict
   await assert.rejects(
     conflict.create({ auth: AUTH, requestId: REQUEST_ID, setupSnapshot: SETUP }),
     (error) => error.status === 409 && !error.message.includes("sensitive"),
+  );
+  const stale = makeService({
+    query: async () => { throw Object.assign(new Error("stale revision"), { code: "40001" }); },
+  });
+  await assert.rejects(
+    stale.create({ auth: AUTH, requestId: REQUEST_ID, setupSnapshot: SETUP }),
+    (error) => error.status === 409 && error.code === "STALE_DIE_DEFAULT",
   );
 });
 

@@ -699,12 +699,16 @@ fi
   GRANT EXECUTE ON FUNCTION v2.complete_run_with_inventory(uuid, uuid, uuid, text, text, text, bigint) TO v2_api_test;
 " >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-approved-setup-catalogs.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0008-reviewed-die-defaults.sql" >/dev/null
 "${PSQL[@]}" -c "
   GRANT EXECUTE ON FUNCTION v2.stage_setup_catalog_import(uuid, uuid, text, text, text, jsonb, jsonb) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.apply_setup_catalog_import(uuid, uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.undo_setup_catalog_import(uuid, uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_setup_catalog_imports(uuid, integer) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.get_setup_catalog_import(uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_die_defaults(uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_die_default_events(uuid, integer) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.save_die_default(uuid, uuid, text, text, text, bigint, jsonb, boolean) TO v2_api_test;
 " >/dev/null
 assert_no_direct_table_access "v2.run_inventory_consumptions"
 assert_no_direct_table_access "v2.inventory_movements"
@@ -719,6 +723,8 @@ assert_no_direct_table_access "v2.setup_freezer_pull_records"
 assert_no_direct_table_access "v2.setup_run_template_records"
 assert_no_direct_table_access "v2.setup_manager_list_records"
 assert_no_direct_table_access "v2.setup_alias_records"
+assert_no_direct_table_access "v2.die_default_settings"
+assert_no_direct_table_access "v2.die_default_events"
 INVENTORY_COMPLETION_PRIVILEGES="$("${PSQL[@]}" -c "
   SET ROLE v2_api_test;
   SELECT has_function_privilege(current_user,
@@ -745,9 +751,10 @@ V2_TEST_ADMIN_URL="postgresql://$ENCODED_DB_USER@127.0.0.1:$PORT/v2_test"
 V2_API_URL="postgresql://v2_api_login@127.0.0.1:$PORT/v2_test"
 V2_TEST_ADMIN_URL="$V2_TEST_ADMIN_URL" V2_DATABASE_URL="$V2_API_URL" \
   NODE_ENV=development PORT=0 node "$ROOT/v2/server/http-postgres.integration.mjs"
+"${PSQL[@]}" -f "$ROOT/v2/db/0006-run-inventory-linkage.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0008-reviewed-die-defaults.test.sql"
 V2_DATABASE_URL="$V2_API_URL" NODE_ENV=development \
   node "$ROOT/v2/server/http-postgres.browser.integration.mjs"
-"${PSQL[@]}" -f "$ROOT/v2/db/0006-run-inventory-linkage.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-staff-role-equivalents.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-staff-role-equivalents.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/cutover-transfer-rehearsal.test.sql"

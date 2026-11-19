@@ -534,7 +534,9 @@ async function main() {
       }),
     });
     if (createdResponse.status !== 201) {
-      throw new Error(`run creation failed (${createdResponse.status}): ${(await createdResponse.text()).slice(0, 500)}`);
+      const failureEvents = logs.filter((entry) => entry.event === "v2.run_api.error")
+        .map((entry) => `${entry.event}:${entry.errorName}:${entry.errorCode ?? "no-code"}`);
+      throw new Error(`run creation failed (${createdResponse.status}): ${(await createdResponse.text()).slice(0, 500)} ${failureEvents.join(",")}`);
     }
     const created = await jsonResponse(createdResponse);
     assert.equal(created.run.status, "planned");

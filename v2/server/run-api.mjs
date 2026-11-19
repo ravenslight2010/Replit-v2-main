@@ -230,6 +230,7 @@ export function createRunApi({
           requestId: request.v2RequestId ?? null,
           status,
           errorName: typeof error?.name === "string" ? error.name.slice(0, 80) : "UnknownError",
+          errorCode: typeof error?.code === "string" && /^[0-9A-Z]{5}$/u.test(error.code) ? error.code : null,
         });
       }
       const headers = Number.isSafeInteger(error?.retryAfterSeconds)

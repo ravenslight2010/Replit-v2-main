@@ -388,7 +388,7 @@ paths:
   /api/v2/runs/products:
     get:
       operationId: listRunProducts
-      summary: List active products and the production warehouse
+      summary: List active products, applicable dies, and the production warehouse
       responses:
         "200":
           description: Active products, compatible production setups, and the current production warehouse
@@ -396,7 +396,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [products, productionWarehouse]
+                required: [products, productionWarehouse, dieTypes]
                 properties:
                   products:
                     type: array
@@ -406,6 +406,10 @@ paths:
                     oneOf:
                       - $ref: "#/components/schemas/ProductionWarehouse"
                       - type: "null"
+                  dieTypes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RunDieType"
         "401":
           $ref: "#/components/responses/Error"
         "403":
@@ -995,6 +999,88 @@ paths:
         "403":
           $ref: "#/components/responses/Error"
         "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/die-defaults:
+    get:
+      operationId: listReviewedDieDefaults
+      summary: List catalog dies, reviewed defaults, and attributed change history
+      description: Manager-only. Imported defaults are suggestions until explicitly saved as reviewed.
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Facility-scoped die defaults and recent attributed changes
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [defaults, history]
+                properties:
+                  defaults:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReviewedDieDefault"
+                  history:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DieDefaultHistoryItem"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: saveReviewedDieDefaults
+      summary: Create, revise, re-enable, or retire reviewed die defaults
+      description: Manager-only. expectedRevision prevents stale writes; requestId makes retries idempotent.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [requestId, dieCode, expectedRevision, defaults, enabled]
+              properties:
+                requestId:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                dieCode:
+                  type: string
+                  pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+                expectedRevision:
+                  type: integer
+                  minimum: 0
+                  maximum: 9007199254740991
+                defaults:
+                  $ref: "#/components/schemas/ReviewedDieLineSettings"
+                enabled:
+                  type: boolean
+      responses:
+        "200":
+          description: Die defaults revised, re-enabled, retired, or previously saved change confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DieDefaultSaveResult"
+        "201":
+          description: Die defaults saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DieDefaultSaveResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
@@ -1644,6 +1730,8 @@ components:
           description: Stable link to the compatible imported production setup.
         productionPlan:
           $ref: "#/components/schemas/ProductionPlanSnapshot"
+        dieSetup:
+          $ref: "#/components/schemas/RunDieSetupSnapshot"
     RunCreateSetup:
       type: object
       additionalProperties: false
@@ -1663,6 +1751,173 @@ components:
         productionSetupCode:
           type: string
           pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        dieSetup:
+          $ref: "#/components/schemas/RunDieSetupInput"
+    RunDieSetupInput:
+      type: object
+      additionalProperties: false
+      required: [dieTypeCode, expectedRevision, lineSettings]
+      properties:
+        dieTypeCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        expectedRevision:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+        lineSettings:
+          $ref: "#/components/schemas/DieLineSettings"
+    RunDieSetupSnapshot:
+      type: object
+      additionalProperties: false
+      required: [dieTypeCode, dieTypeName, defaultStatus, defaultRevision, lineSettings]
+      properties:
+        dieTypeCode:
+          type: string
+        dieTypeName:
+          type: string
+        defaultStatus:
+          type: string
+          enum: [active, disabled, unreviewed]
+        defaultRevision:
+          type: integer
+          minimum: 0
+        lineSettings:
+          $ref: "#/components/schemas/DieLineSettings"
+    DieLineSettings:
+      type: object
+      additionalProperties: false
+      required: [crustsPerCycle, cycleSpeed, speedAdjustment, freezerTime, casesPerLayer, preTunnelMin, postTunnelMin, pressOvenMin, frontlineMin]
+      properties:
+        crustsPerCycle:
+          type: [number, "null"]
+          minimum: 0
+        cycleSpeed:
+          type: [number, "null"]
+          minimum: 0
+        speedAdjustment:
+          type: [number, "null"]
+          minimum: 0
+        freezerTime:
+          type: [number, "null"]
+          minimum: 0
+        casesPerLayer:
+          type: [number, "null"]
+          minimum: 0
+        preTunnelMin:
+          type: [number, "null"]
+          minimum: 0
+        postTunnelMin:
+          type: [number, "null"]
+          minimum: 0
+        pressOvenMin:
+          type: [number, "null"]
+          minimum: 0
+        frontlineMin:
+          type: [number, "null"]
+          minimum: 0
+    ReviewedDieLineSettings:
+      type: object
+      additionalProperties: false
+      required: [crustsPerCycle, cycleSpeed, speedAdjustment, freezerTime, casesPerLayer, preTunnelMin, postTunnelMin, pressOvenMin, frontlineMin]
+      properties:
+        crustsPerCycle:
+          type: number
+          minimum: 0
+        cycleSpeed:
+          type: number
+          minimum: 0
+        speedAdjustment:
+          type: number
+          minimum: 0
+        freezerTime:
+          type: number
+          minimum: 0
+        casesPerLayer:
+          type: number
+          minimum: 0
+        preTunnelMin:
+          type: [number, "null"]
+          minimum: 0
+        postTunnelMin:
+          type: [number, "null"]
+          minimum: 0
+        pressOvenMin:
+          type: [number, "null"]
+          minimum: 0
+        frontlineMin:
+          type: [number, "null"]
+          minimum: 0
+    ReviewedDieDefault:
+      type: object
+      required: [code, name, status, revision, defaults, suggestedDefaults]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [active, disabled, unreviewed]
+        revision:
+          type: integer
+          minimum: 0
+        defaults:
+          oneOf:
+            - $ref: "#/components/schemas/ReviewedDieLineSettings"
+            - type: "null"
+        suggestedDefaults:
+          oneOf:
+            - $ref: "#/components/schemas/ReviewedDieLineSettings"
+            - type: "null"
+    RunDieType:
+      $ref: "#/components/schemas/ReviewedDieDefault"
+    DieDefaultSaveResult:
+      type: object
+      required: [outcome, dieCode, revision, status, defaults, replayed]
+      properties:
+        outcome:
+          type: string
+          enum: [created, updated, retired, re-enabled]
+        dieCode:
+          type: string
+        revision:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [active, disabled]
+        defaults:
+          $ref: "#/components/schemas/ReviewedDieLineSettings"
+        replayed:
+          type: boolean
+    DieDefaultHistoryItem:
+      type: object
+      required: [id, dieCode, actorId, action, revision, before, after, occurredAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        dieCode:
+          type: string
+        actorId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [created, updated, retired, re-enabled]
+        revision:
+          type: integer
+          minimum: 1
+        before:
+          oneOf:
+            - type: object
+            - type: "null"
+        after:
+          type: object
+        occurredAt:
+          type: string
+          format: date-time
     DoughCapacity:
       type: object
       required: [status, reasons, doughballYield, pizzasPerCase]
@@ -1697,12 +1952,14 @@ components:
             $ref: "#/components/schemas/ProductionSetupOption"
     ProductionSetupOption:
       type: object
-      required: [code, name]
+      required: [code, name, hasDoughRecipe]
       properties:
         code:
           type: string
         name:
           type: string
+        hasDoughRecipe:
+          type: boolean
     ProductionWarehouse:
       type: object
       required: [id, name]

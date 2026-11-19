@@ -63,7 +63,7 @@ async function withApi(t, overrides = {}, options = {}) {
   const runs = {
     listProducts: async (input) => {
       calls.push(["listProducts", input]);
-      return { products: [], productionWarehouse: null };
+      return { products: [], productionWarehouse: null, dieTypes: [] };
     },
     list: async (input) => {
       calls.push(["list", input]);
@@ -320,6 +320,7 @@ test("composes the HTTP API with server services and a parameterized PostgreSQL 
             doughCapacity: { status: "unavailable", reasons: ["dough_source_missing"] },
             productionSetups: [],
           }],
+          dieTypes: [],
         } }] };
         if (sql.includes("v2.create_planned_run")) {
           const setupSnapshot = JSON.parse(params[4]);

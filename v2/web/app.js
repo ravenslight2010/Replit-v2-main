@@ -1,5 +1,6 @@
 import { canWriteRunState } from "./write-gate.mjs";
 import { STATIONS, calculateStationMetrics } from "/v2/core/station-workflows.mjs";
+import { DIE_DEFAULT_FIELDS, isDieLineSettings, resolveDieLineDefaults, resolveDieLineDefaultsOnSwitch } from "../core/die-defaults.mjs";
 import { initializeInventory, updateInventoryContext } from "./inventory.js";
 
 const API = "/api/v2/runs";
@@ -66,6 +67,10 @@ const el = {
   target: document.querySelector("#target-cases"),
   product: document.querySelector("#run-product"),
   productionSetup: document.querySelector("#run-production-setup"),
+  dieCard: document.querySelector("#die-setup-card"),
+  dieType: document.querySelector("#run-die-type"),
+  dieStatus: document.querySelector("#die-setup-status"),
+  dieFields: document.querySelector("#die-line-fields"),
   announcer: document.querySelector("#live-announcer"),
   stationPanel: document.querySelector("#station-panel"),
   stationTabs: document.querySelector("#station-tabs"),
@@ -91,6 +96,8 @@ let authInFlight = false;
 let signOutInFlight = false;
 let currentStaff = null;
 let runProducts = [];
+let dieTypes = [];
+let lastSelectedDieCode = "";
 let productionWarehouse = null;
 let authGeneration = 0;
 let bootstrapAvailable = false;
@@ -182,6 +189,20 @@ function validateRun(run) {
     && (!run.setupSnapshot.productCode || !run.setupSnapshot.productionSetupCode
       || !isProductionPlan(run.setupSnapshot.productionPlan))) {
     throw new Error("The server returned an invalid frozen production plan. Refresh to load the current state.");
+  }
+  if (run.setupSnapshot.dieSetup !== undefined) {
+    const die = run.setupSnapshot.dieSetup;
+    if (!isObject(die)
+      || typeof die.dieTypeCode !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(die.dieTypeCode)
+      || typeof die.dieTypeName !== "string" || !die.dieTypeName.trim() || die.dieTypeName.length > 120
+      || !["active", "disabled", "unreviewed"].includes(die.defaultStatus)
+      || !Number.isSafeInteger(die.defaultRevision) || die.defaultRevision < 0
+      || !isDieLineSettings(die.lineSettings)
+      || Object.keys(die.lineSettings).sort().join("\u0000") !== [...DIE_DEFAULT_FIELDS].sort().join("\u0000")
+      || Object.keys(die).sort().join(",")
+        !== ["defaultRevision", "defaultStatus", "dieTypeCode", "dieTypeName", "lineSettings"].sort().join(",")) {
+      throw new Error("The server returned invalid frozen die setup. Refresh to load the current state.");
+    }
   }
   if (run.doughCapacity !== undefined
     && (!isObject(run.doughCapacity)
@@ -433,6 +454,12 @@ function updateCreateFormForAuth() {
   const hasSetups = Array.isArray(selectedProduct?.productionSetups) && selectedProduct.productionSetups.length > 0;
   const hasProductionWarehouse = productionWarehouse !== null;
   const setupSelected = hasSetups && selectedProduct.productionSetups.some((setup) => setup.code === el.productionSetup.value);
+  const selectedSetup = selectedProduct?.productionSetups?.find((setup) => setup.code === el.productionSetup.value);
+  el.dieType.disabled = createInFlight || !writable || Boolean(pendingCreate)
+    || !selectedSetup?.hasDoughRecipe || dieTypes.length === 0;
+  el.dieFields.querySelectorAll("input").forEach((input) => {
+    input.disabled = createInFlight || !writable || Boolean(pendingCreate) || !selectedSetup?.hasDoughRecipe;
+  });
   if (!pendingCreate) {
     el.label.disabled = createInFlight || !writable;
     el.target.disabled = createInFlight || !writable;
@@ -938,7 +965,19 @@ function loadPendingCreate() {
            || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(pending.setupSnapshot.productCode)))
        || (pending.setupSnapshot.productionSetupCode !== undefined
          && (typeof pending.setupSnapshot.productionSetupCode !== "string"
-           || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(pending.setupSnapshot.productionSetupCode)))) return null;
+           || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(pending.setupSnapshot.productionSetupCode)))
+       || (pending.setupSnapshot.dieSetup !== undefined && (
+         !isObject(pending.setupSnapshot.dieSetup)
+         || typeof pending.setupSnapshot.dieSetup.dieTypeCode !== "string"
+         || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(pending.setupSnapshot.dieSetup.dieTypeCode)
+         || !Number.isSafeInteger(pending.setupSnapshot.dieSetup.expectedRevision)
+         || pending.setupSnapshot.dieSetup.expectedRevision < 0
+         || !isDieLineSettings(pending.setupSnapshot.dieSetup.lineSettings)
+         || Object.keys(pending.setupSnapshot.dieSetup).sort().join(",")
+           !== ["dieTypeCode", "expectedRevision", "lineSettings"].sort().join(",")
+         || Object.keys(pending.setupSnapshot.dieSetup.lineSettings).sort().join("\u0000")
+           !== [...DIE_DEFAULT_FIELDS].sort().join("\u0000")
+       ))) return null;
     return pending;
   } catch {
     return null;
@@ -1132,7 +1171,8 @@ function validateRunProduct(product) {
     && Array.isArray(product.productionSetups)
     && product.productionSetups.every((setup) => isObject(setup)
       && typeof setup.code === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(setup.code)
-      && typeof setup.name === "string" && setup.name.length >= 1 && setup.name.length <= 120)
+      && typeof setup.name === "string" && setup.name.length >= 1 && setup.name.length <= 120
+      && typeof setup.hasDoughRecipe === "boolean")
     && isObject(product.doughCapacity)
     && ["available", "unavailable"].includes(product.doughCapacity.status)
     && Array.isArray(product.doughCapacity.reasons)
@@ -1142,6 +1182,114 @@ function validateRunProduct(product) {
         && Number.isFinite(product.doughCapacity.doughballYield)
         && typeof product.doughCapacity.pizzasPerCase === "number"
         && Number.isSafeInteger(product.doughCapacity.pizzasPerCase)));
+}
+
+function validateDieType(die) {
+  const validDefaults = (value) => value === null || (
+    isDieLineSettings(value)
+    && Object.keys(value).sort().join("\u0000") === [...DIE_DEFAULT_FIELDS].sort().join("\u0000")
+  );
+  return isObject(die)
+    && typeof die.code === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(die.code)
+    && typeof die.name === "string" && die.name.length >= 1 && die.name.length <= 120
+    && ["active", "disabled", "unreviewed"].includes(die.status)
+    && Number.isSafeInteger(die.revision) && die.revision >= 0
+    && validDefaults(die.defaults)
+    && validDefaults(die.suggestedDefaults);
+}
+
+function readDieLineSettings() {
+  return Object.fromEntries(DIE_DEFAULT_FIELDS.map((key) => {
+    const input = el.dieFields.querySelector(`[data-die-field="${key}"]`);
+    return [key, input.value === "" ? "" : Number(input.value)];
+  }));
+}
+
+function writeDieLineSettings(values) {
+  for (const key of DIE_DEFAULT_FIELDS) {
+    const input = el.dieFields.querySelector(`[data-die-field="${key}"]`);
+    const value = values?.[key];
+    input.value = typeof value === "number" && Number.isFinite(value) ? String(value) : "";
+  }
+}
+
+function renderRunDieSetup() {
+  if (!el.dieType) return;
+  const product = runProducts.find((item) => item.code === el.product.value);
+  const setup = product?.productionSetups?.find((item) => item.code === el.productionSetup.value);
+  if (!setup?.hasDoughRecipe) {
+    const previous = dieTypes.find((die) => die.code === lastSelectedDieCode);
+    if (previous?.status === "active") {
+      const current = readDieLineSettings();
+      const cleared = resolveDieLineDefaultsOnSwitch(null, current, [previous.defaults]);
+      writeDieLineSettings({ ...current, ...cleared });
+    }
+    el.dieCard.hidden = true;
+    el.dieType.replaceChildren(new Option("No die selected", ""));
+    lastSelectedDieCode = "";
+    return;
+  }
+  el.dieCard.hidden = false;
+  const preferred = pendingCreate?.setupSnapshot.dieSetup?.dieTypeCode || el.dieType.value;
+  el.dieType.replaceChildren(new Option("No die selected", ""));
+  for (const die of dieTypes) {
+    const option = new Option(`${die.name} · ${die.status}`, die.code);
+    el.dieType.append(option);
+  }
+  if (dieTypes.some((die) => die.code === preferred)) el.dieType.value = preferred;
+  if (pendingCreate?.setupSnapshot.dieSetup) {
+    writeDieLineSettings(pendingCreate.setupSnapshot.dieSetup.lineSettings);
+    lastSelectedDieCode = pendingCreate.setupSnapshot.dieSetup.dieTypeCode;
+  }
+  const selected = dieTypes.find((die) => die.code === el.dieType.value);
+  if (!selected) {
+    lastSelectedDieCode = "";
+    el.dieStatus.textContent = "Choose a die only when this setup uses a dough line. Reviewed defaults fill blank fields; you can change any value.";
+  } else if (selected.status === "active") {
+    el.dieStatus.textContent = `Reviewed defaults for ${selected.name} are available. Blank fields are filled; values you change remain part of this run snapshot.`;
+    if (!pendingCreate) lastSelectedDieCode = selected.code;
+  } else {
+    el.dieStatus.textContent = selected.status === "disabled"
+      ? `Defaults for ${selected.name} are disabled. No defaults will be applied; enter any needed settings explicitly.`
+      : `Defaults for ${selected.name} have not been reviewed. Imported suggestions are not applied until a manager reviews them.`;
+    if (!pendingCreate) lastSelectedDieCode = selected.code;
+  }
+  const writable = canWriteNow() && !createInFlight && !pendingCreate;
+  el.dieType.disabled = !writable || dieTypes.length === 0;
+  el.dieFields.querySelectorAll("input").forEach((input) => { input.disabled = !writable; });
+}
+
+function selectRunDie() {
+  const selected = dieTypes.find((die) => die.code === el.dieType.value);
+  const current = readDieLineSettings();
+  const previous = dieTypes.find((die) => die.code === lastSelectedDieCode);
+  const knownDefaults = previous?.status === "active" ? [previous.defaults] : [];
+  if (!selected) {
+    if (knownDefaults.length) {
+      const cleared = resolveDieLineDefaultsOnSwitch(null, current, knownDefaults);
+      writeDieLineSettings({ ...current, ...cleared });
+    }
+    lastSelectedDieCode = "";
+    el.dieStatus.textContent = "No die is selected. Line values will not be attached to this run.";
+    return;
+  }
+  if (selected.status === "active" && !lastSelectedDieCode) {
+    const fills = resolveDieLineDefaults(selected.defaults, current);
+    writeDieLineSettings({ ...current, ...fills });
+    el.dieStatus.textContent = `Reviewed defaults for ${selected.name} are available. Blank fields are filled; values you change remain part of this run snapshot.`;
+  } else {
+    const targetDefaults = selected.status === "active" ? selected.defaults : null;
+    const fills = resolveDieLineDefaultsOnSwitch(targetDefaults, current, knownDefaults);
+    writeDieLineSettings({ ...current, ...fills });
+    if (selected.status === "active") {
+      el.dieStatus.textContent = `Reviewed defaults for ${selected.name} are available. Blank fields are filled; values you change remain part of this run snapshot.`;
+    } else {
+      el.dieStatus.textContent = selected.status === "disabled"
+        ? `Defaults for ${selected.name} are disabled. No defaults were applied; enter any needed settings explicitly.`
+        : `Defaults for ${selected.name} have not been reviewed. Imported suggestions are not applied until a manager reviews them.`;
+    }
+  }
+  lastSelectedDieCode = selected.code;
 }
 
 function productName(code) {
@@ -1197,6 +1345,7 @@ function renderRunProductionSetups() {
     else if (!pendingCreate) el.productionSetup.value = setups[0].code;
   }
   el.productionSetup.disabled = !canWriteNow() || createInFlight || Boolean(pendingCreate) || setups.length === 0;
+  renderRunDieSetup();
   updateCreateFormForAuth();
 }
 
@@ -1744,6 +1893,7 @@ async function fetchRuns({ quiet = false } = {}) {
     if (!Array.isArray(body.runs)) throw new Error("The server returned an unexpected run list. Refresh again to retry.");
     if (!isObject(productBody) || !Array.isArray(productBody.products)
       || !productBody.products.every(validateRunProduct)
+      || !Array.isArray(productBody.dieTypes) || !productBody.dieTypes.every(validateDieType)
       || (productBody.productionWarehouse !== null
         && (!isObject(productBody.productionWarehouse) || !UUID.test(productBody.productionWarehouse.id)
           || typeof productBody.productionWarehouse.name !== "string"
@@ -1751,6 +1901,7 @@ async function fetchRuns({ quiet = false } = {}) {
       throw new Error("The server returned an unexpected run setup list. Refresh again to retry.");
     }
     runProducts = productBody.products;
+    dieTypes = productBody.dieTypes;
     productionWarehouse = productBody.productionWarehouse;
     const nextRuns = body.runs.map(validateRun);
     runs = mergeServerRuns(nextRuns, runs);
@@ -1952,16 +2103,45 @@ async function createRun(event) {
   const productCode = pendingCreate?.setupSnapshot.productCode ?? el.product.value;
   const productionSetupCode = pendingCreate?.setupSnapshot.productionSetupCode ?? el.productionSetup.value;
   const selectedProduct = runProducts.find((product) => product.code === productCode);
+  const selectedSetup = selectedProduct?.productionSetups?.find((setup) => setup.code === productionSetupCode);
   if (!label || !Number.isSafeInteger(targetCases) || targetCases < 1
-    || !selectedProduct?.productionSetups?.some((setup) => setup.code === productionSetupCode)
+    || !selectedSetup
     || !productionWarehouse) {
     showError("Choose a product and linked production setup, and confirm a production warehouse is available.", "Check run details");
     return;
   }
+  let dieSetup = pendingCreate?.setupSnapshot.dieSetup;
+  if (!pendingCreate && el.dieType.value) {
+    const selectedDie = dieTypes.find((die) => die.code === el.dieType.value);
+    if (!selectedSetup.hasDoughRecipe || !selectedDie) {
+      showError("This die is not available for the selected production setup. Refresh and review the setup.", "Check die selection");
+      return;
+    }
+    const lineSettings = Object.fromEntries(DIE_DEFAULT_FIELDS.map((key) => {
+      const input = el.dieFields.querySelector(`[data-die-field="${key}"]`);
+      return [key, input.value === "" ? null : Number(input.value)];
+    }));
+    if (!isDieLineSettings(lineSettings)
+      || Object.keys(lineSettings).sort().join("\u0000") !== [...DIE_DEFAULT_FIELDS].sort().join("\u0000")) {
+      showError("Enter valid non-negative line settings before preparing this run.", "Check die settings");
+      return;
+    }
+    dieSetup = {
+      dieTypeCode: selectedDie.code,
+      expectedRevision: selectedDie.revision,
+      lineSettings,
+    };
+  }
   const request = pendingCreate || {
     requestId: crypto.randomUUID(),
     actorId: currentStaff.userId,
-    setupSnapshot: { label, targetCases, productCode, productionSetupCode },
+    setupSnapshot: {
+      label,
+      targetCases,
+      productCode,
+      productionSetupCode,
+      ...(dieSetup ? { dieSetup } : {}),
+    },
   };
   if (!pendingCreate) {
     savePendingCreate(request);
@@ -1984,7 +2164,13 @@ async function createRun(event) {
     if (run.status !== "planned" || run.setupSnapshot.label !== request.setupSnapshot.label
       || run.setupSnapshot.targetCases !== request.setupSnapshot.targetCases
       || run.setupSnapshot.productCode !== request.setupSnapshot.productCode
-      || run.setupSnapshot.productionSetupCode !== request.setupSnapshot.productionSetupCode) {
+      || run.setupSnapshot.productionSetupCode !== request.setupSnapshot.productionSetupCode
+      || (request.setupSnapshot.dieSetup && (
+        run.setupSnapshot.dieSetup?.dieTypeCode !== request.setupSnapshot.dieSetup.dieTypeCode
+        || run.setupSnapshot.dieSetup?.defaultRevision !== request.setupSnapshot.dieSetup.expectedRevision
+        || !DIE_DEFAULT_FIELDS.every((key) =>
+          run.setupSnapshot.dieSetup?.lineSettings?.[key] === request.setupSnapshot.dieSetup.lineSettings[key])
+      ))) {
       throw new Error("The server returned a run that does not match this request. Retry the same request to confirm it.");
     }
     upsertRun(run);
@@ -1993,6 +2179,8 @@ async function createRun(event) {
     clearPendingCreate();
     clearError();
     el.createForm.reset();
+    lastSelectedDieCode = "";
+    renderRunProducts();
     el.createNote.textContent = body.replayed
       ? "Existing server-created run confirmed. Start it when production is ready."
       : "Prepared by the server. Start the run when production is ready.";
@@ -2008,6 +2196,14 @@ async function createRun(event) {
     if (error instanceof ApiError && error.status === 422) {
       clearPendingCreate();
       showError(error.message, "Production rules require review");
+      return;
+    }
+    if (error instanceof ApiError && error.status === 409
+      && error.message.includes("Die defaults changed while this run was being prepared")) {
+      clearPendingCreate();
+      showError("Die defaults changed before this run was saved. Review the refreshed setup and submit again.", "Die defaults changed");
+      el.createNote.textContent = "The previous run was not created. The saved request was cleared so you can review current defaults.";
+      await fetchRuns({ quiet: true });
       return;
     }
     serverStateConfirmed = false;
@@ -2037,6 +2233,8 @@ initializeInventory();
 el.refresh.addEventListener("click", () => fetchRuns());
 el.createForm.addEventListener("submit", createRun);
 el.product.addEventListener("change", renderRunProductionSetups);
+el.productionSetup.addEventListener("change", renderRunDieSetup);
+el.dieType.addEventListener("change", selectRunDie);
 el.stationForm.addEventListener("submit", submitStationForm);
 el.authForm.addEventListener("submit", submitSignIn);
 el.bootstrapForm.addEventListener("submit", submitBootstrap);

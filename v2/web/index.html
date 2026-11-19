@@ -184,6 +184,32 @@
                     <option value="">Choose a product first</option>
                   </select>
                 </label>
+                <section class="die-setup-card" id="die-setup-card" aria-labelledby="die-setup-heading" hidden>
+                  <div>
+                    <p class="eyebrow">OPTIONAL RUN SETUP</p>
+                    <h3 id="die-setup-heading">Die and line settings</h3>
+                  </div>
+                  <label class="field" for="run-die-type">
+                    <span>Die type</span>
+                    <select id="run-die-type" name="dieTypeCode" data-testid="select-run-die">
+                      <option value="">No die selected</option>
+                    </select>
+                  </label>
+                  <p class="manager-help" id="die-setup-status" role="status" aria-live="polite">
+                    Choose a die only when this setup uses a dough line. Reviewed defaults fill blank fields; you can change any value.
+                  </p>
+                  <div class="die-line-grid" id="die-line-fields">
+                    <label class="field"><span>Crusts per cycle</span><input data-die-field="crustsPerCycle" type="number" min="0" step="any" inputmode="decimal" /></label>
+                    <label class="field"><span>Cycle speed</span><input data-die-field="cycleSpeed" type="number" min="0" step="any" inputmode="decimal" /></label>
+                    <label class="field"><span>Speed adjustment</span><input data-die-field="speedAdjustment" type="number" min="0" step="any" inputmode="decimal" /></label>
+                    <label class="field"><span>Freezer time</span><input data-die-field="freezerTime" type="number" min="0" step="any" inputmode="decimal" /></label>
+                    <label class="field"><span>Cases per layer</span><input data-die-field="casesPerLayer" type="number" min="0" step="any" inputmode="decimal" /></label>
+                    <label class="field"><span>Pre-tunnel minutes</span><input data-die-field="preTunnelMin" type="number" min="0" step="any" inputmode="decimal" /></label>
+                    <label class="field"><span>Post-tunnel minutes</span><input data-die-field="postTunnelMin" type="number" min="0" step="any" inputmode="decimal" /></label>
+                    <label class="field"><span>Press oven minutes</span><input data-die-field="pressOvenMin" type="number" min="0" step="any" inputmode="decimal" /></label>
+                    <label class="field"><span>Frontline minutes</span><input data-die-field="frontlineMin" type="number" min="0" step="any" inputmode="decimal" /></label>
+                  </div>
+                </section>
                 <button class="button button-create" id="create-button" type="submit" data-testid="button-create-run">
                   <span>Prepare run</span><span class="button-arrow" aria-hidden="true">↗</span>
                 </button>
@@ -352,6 +378,39 @@
               <h4 class="manager-subheading">Recent setup imports</h4>
               <ul class="manager-list" id="setup-catalog-history" aria-live="polite"></ul>
               <p class="manager-help" id="setup-catalog-status" role="status" aria-live="polite"></p>
+            </section>
+
+            <section class="manager-card" aria-labelledby="die-defaults-heading">
+              <p class="eyebrow">REVIEWED LINE SETTINGS · V2</p>
+              <h3 id="die-defaults-heading">Manage die defaults</h3>
+              <p class="manager-help">Imported values are suggestions only. Saving creates or revises the defaults operators may use. Retiring disables future use; existing run snapshots stay unchanged.</p>
+              <form class="manager-form" id="die-default-form">
+                <label class="field" for="die-default-type">
+                  <span>Catalog die type</span>
+                  <select id="die-default-type" required data-action-control="true">
+                    <option value="">Choose a die type</option>
+                  </select>
+                </label>
+                <p class="manager-help" id="die-default-state" role="status" aria-live="polite">Choose a die type to review its values.</p>
+                <button class="button button-secondary button-small" id="die-default-use-suggestion" type="button" data-action-control="true" hidden>Load imported suggestion</button>
+                <div class="die-line-grid manager-die-line-grid">
+                  <label class="field"><span>Crusts per cycle</span><input data-manager-die-field="crustsPerCycle" type="number" min="0" step="any" required data-action-control="true" /></label>
+                  <label class="field"><span>Cycle speed</span><input data-manager-die-field="cycleSpeed" type="number" min="0" step="any" required data-action-control="true" /></label>
+                  <label class="field"><span>Speed adjustment</span><input data-manager-die-field="speedAdjustment" type="number" min="0" step="any" required data-action-control="true" /></label>
+                  <label class="field"><span>Freezer time</span><input data-manager-die-field="freezerTime" type="number" min="0" step="any" required data-action-control="true" /></label>
+                  <label class="field"><span>Cases per layer</span><input data-manager-die-field="casesPerLayer" type="number" min="0" step="any" required data-action-control="true" /></label>
+                  <label class="field"><span>Pre-tunnel minutes</span><input data-manager-die-field="preTunnelMin" type="number" min="0" step="any" data-action-control="true" /></label>
+                  <label class="field"><span>Post-tunnel minutes</span><input data-manager-die-field="postTunnelMin" type="number" min="0" step="any" data-action-control="true" /></label>
+                  <label class="field"><span>Press oven minutes</span><input data-manager-die-field="pressOvenMin" type="number" min="0" step="any" data-action-control="true" /></label>
+                  <label class="field"><span>Frontline minutes</span><input data-manager-die-field="frontlineMin" type="number" min="0" step="any" data-action-control="true" /></label>
+                </div>
+                <div class="manager-actions">
+                  <button class="button button-primary" type="submit" data-action-control="true">Save reviewed defaults</button>
+                  <button class="button button-secondary" id="die-default-retire" type="button" data-action-control="true" hidden>Retire defaults</button>
+                </div>
+              </form>
+              <h4 class="manager-subheading">Recent die-default changes</h4>
+              <ul class="manager-list" id="die-default-history" aria-live="polite"></ul>
             </section>
 
             <section class="manager-card manager-card-wide" aria-labelledby="capacity-workbook-heading">

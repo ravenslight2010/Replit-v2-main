@@ -97,6 +97,12 @@ target, but is not published.
   manager directories, and spec/merge aliases. Explicit ingredient, mix,
   freezer-pull, and die-default links are facility-scoped. This import does not
   execute production rules or use a V1 run template to start a run.
+- `db/0008-reviewed-die-defaults.sql` keeps imported die values as suggestions
+  until a manager saves a reviewed revision. Run setup lists those reviewed
+  states, applies active values with switch-aware blank filling, and stores the
+  selected die revision and line values in each run's immutable setup snapshot.
+  Manager changes are revision-checked and recorded in append-only attributed
+  history.
 - `core/import-csv.mjs` accepts bounded V2 CSV templates for products, recipes,
   production setup, and opening counts. Imports are staged with server-computed
   idempotency, reopenable for manager review, and guarded for safe undo.
@@ -191,9 +197,9 @@ target, but is not published.
   recovered. The measured database setting was 112 maximum connections with
   four reserved; the configured API and worker pools allow five total.
 - V2 migrations through `0007-staff-role-equivalents.sql` are applied to the
-  development database's `v2` schema only. The setup-catalog migration is tested
-  against disposable PostgreSQL; it has not been applied to the shared
-  development or production database.
+  development database's `v2` schema only. The setup-catalog migration and
+  reviewed-die migration `0008` are tested against disposable PostgreSQL and
+  have not been applied to the shared development or production database.
 - The private preview has one enabled manager account, created through the
   guarded first-manager flow; the owner confirmed sign-out and sign-in. The
   bootstrap marker is set and the one-time bootstrap secret was removed. The two

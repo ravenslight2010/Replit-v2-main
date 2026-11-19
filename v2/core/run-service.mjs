@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { DIE_DEFAULT_FIELDS, isDieLineSettings } from "./die-defaults.mjs";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const STATUSES = new Set(["planned", "running", "paused", "completed"]);
@@ -50,8 +51,8 @@ function normalizeSetupSnapshot(value, { fromStorage = false, requireProductionS
   }
   const keys = Object.keys(value).sort();
   const allowedKeys = fromStorage
-    ? ["label", "productCode", "productionSetupCode", "productionPlan", "targetCases"]
-    : ["label", "productCode", "productionSetupCode", "targetCases"];
+    ? ["label", "productCode", "productionSetupCode", "productionPlan", "targetCases", "dieSetup"]
+    : ["label", "productCode", "productionSetupCode", "targetCases", "dieSetup"];
   if (keys.some((key) => !allowedKeys.includes(key))
     || !keys.includes("label") || !keys.includes("targetCases")
     || (keys.includes("productCode") && (typeof value.productCode !== "string"
@@ -71,12 +72,47 @@ function normalizeSetupSnapshot(value, { fromStorage = false, requireProductionS
   if (!Number.isSafeInteger(value.targetCases) || value.targetCases < 1) {
     throw invalidRequest("Target cases must be a positive whole number.");
   }
-  return {
+  const normalized = {
     label,
     targetCases: value.targetCases,
     ...(value.productCode ? { productCode: value.productCode } : {}),
     ...(value.productionSetupCode ? { productionSetupCode: value.productionSetupCode } : {}),
   };
+  if (Object.hasOwn(value, "dieSetup")) {
+    const setup = value.dieSetup;
+    const allowedDieKeys = fromStorage
+      ? ["dieTypeCode", "dieTypeName", "defaultStatus", "defaultRevision", "lineSettings"]
+      : ["dieTypeCode", "expectedRevision", "lineSettings"];
+    const expectedRevisionKey = fromStorage ? "defaultRevision" : "expectedRevision";
+    if (!setup || typeof setup !== "object" || Array.isArray(setup)
+      || Object.keys(setup).some((key) => !allowedDieKeys.includes(key))
+      || !allowedDieKeys.every((key) => Object.hasOwn(setup, key))
+      || typeof setup.dieTypeCode !== "string"
+      || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(setup.dieTypeCode)
+      || !Number.isSafeInteger(setup[expectedRevisionKey]) || setup[expectedRevisionKey] < 0
+      || !isDieLineSettings(setup.lineSettings)
+      || Object.keys(setup.lineSettings).sort().join("\u0000") !== [...DIE_DEFAULT_FIELDS].sort().join("\u0000")
+      || (fromStorage && (
+        typeof setup.dieTypeName !== "string" || !setup.dieTypeName.trim() || setup.dieTypeName.length > 120
+        || !["active", "disabled", "unreviewed"].includes(setup.defaultStatus)
+      ))) {
+      throw invalidRequest("The selected die setup is invalid.");
+    }
+    normalized.dieSetup = fromStorage
+      ? {
+        dieTypeCode: setup.dieTypeCode,
+        dieTypeName: setup.dieTypeName,
+        defaultStatus: setup.defaultStatus,
+        defaultRevision: setup.defaultRevision,
+        lineSettings: setup.lineSettings,
+      }
+      : {
+        dieTypeCode: setup.dieTypeCode,
+        expectedRevision: setup.expectedRevision,
+        lineSettings: setup.lineSettings,
+      };
+  }
+  return normalized;
 }
 
 function validCanonicalTimestamp(value, nullable = false) {
@@ -84,6 +120,10 @@ function validCanonicalTimestamp(value, nullable = false) {
   if (typeof value !== "string") return false;
   const timestamp = new Date(value);
   return !Number.isNaN(timestamp.valueOf()) && timestamp.toISOString() === value;
+}
+
+function dieLineSettingsMatch(left, right) {
+  return DIE_DEFAULT_FIELDS.every((key) => left?.[key] === right?.[key]);
 }
 
 function validInventoryConsumption(value) {
@@ -208,6 +248,9 @@ function throwSafeStorageError(error) {
   if (error?.code === "22023") {
     throw new RunServiceError("IDEMPOTENCY_CONFLICT", "This request ID was already used for different run details.", 409);
   }
+  if (error?.code === "40001") {
+    throw new RunServiceError("STALE_DIE_DEFAULT", "Die defaults changed while this run was being prepared. Refresh and review the setup again.", 409);
+  }
   throw error;
 }
 
@@ -266,6 +309,11 @@ export function createRunService({ query, authorize: authorizeAction }) {
         || response.run.setupSnapshot.targetCases !== normalizedSetup.targetCases
         || response.run.setupSnapshot.productCode !== normalizedSetup.productCode
         || response.run.setupSnapshot.productionSetupCode !== normalizedSetup.productionSetupCode
+        || (normalizedSetup.dieSetup && (
+          response.run.setupSnapshot.dieSetup?.dieTypeCode !== normalizedSetup.dieSetup.dieTypeCode
+          || response.run.setupSnapshot.dieSetup?.defaultRevision !== normalizedSetup.dieSetup.expectedRevision
+          || !dieLineSettingsMatch(response.run.setupSnapshot.dieSetup?.lineSettings, normalizedSetup.dieSetup.lineSettings)
+        ))
       ) {
         throw new RunServiceError("INVALID_STORAGE_RESPONSE", "Run creation returned a different run setup.", 502);
       }
@@ -315,7 +363,17 @@ export function createRunService({ query, authorize: authorizeAction }) {
         "Run product list returned an unexpected result.");
       const products = catalog.products;
       const productionWarehouse = catalog.productionWarehouse;
-      if (!Array.isArray(products)
+      const dieTypes = catalog.dieTypes;
+      if (!Array.isArray(products) || !Array.isArray(dieTypes)
+        || dieTypes.some((die) => !die || typeof die !== "object" || Array.isArray(die)
+          || typeof die.code !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(die.code)
+          || typeof die.name !== "string" || die.name.length < 1 || die.name.length > 120
+          || !["active", "disabled", "unreviewed"].includes(die.status)
+          || !Number.isSafeInteger(die.revision) || die.revision < 0
+          || (die.defaults !== null && (!isDieLineSettings(die.defaults)
+            || Object.keys(die.defaults).sort().join("\u0000") !== [...DIE_DEFAULT_FIELDS].sort().join("\u0000")))
+          || (die.suggestedDefaults !== null && (!isDieLineSettings(die.suggestedDefaults)
+            || Object.keys(die.suggestedDefaults).sort().join("\u0000") !== [...DIE_DEFAULT_FIELDS].sort().join("\u0000"))))
         || (productionWarehouse !== null && (!productionWarehouse
           || typeof productionWarehouse !== "object" || Array.isArray(productionWarehouse)
           || !UUID_PATTERN.test(productionWarehouse.id)
@@ -330,7 +388,8 @@ export function createRunService({ query, authorize: authorizeAction }) {
           || !Array.isArray(product.productionSetups)
           || product.productionSetups.some((setup) => !setup || typeof setup !== "object" || Array.isArray(setup)
             || typeof setup.code !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(setup.code)
-            || typeof setup.name !== "string" || setup.name.length < 1 || setup.name.length > 120)
+             || typeof setup.name !== "string" || setup.name.length < 1 || setup.name.length > 120
+             || typeof setup.hasDoughRecipe !== "boolean")
           || !product.doughCapacity || typeof product.doughCapacity !== "object"
           || !["available", "unavailable"].includes(product.doughCapacity.status)
           || !Array.isArray(product.doughCapacity.reasons)
@@ -343,7 +402,7 @@ export function createRunService({ query, authorize: authorizeAction }) {
           throw new RunServiceError("INVALID_STORAGE_RESPONSE", "Run product list returned invalid data.", 502);
         }
       }
-      return { products, productionWarehouse };
+      return { products, productionWarehouse, dieTypes };
     },
   });
 }

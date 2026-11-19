@@ -145,6 +145,7 @@
 - [Release evidence timing and revision](release-check-shard-budget.md) + [revision-bound-release-evidence](revision-bound-release-evidence.md) — shard runtime and managed rebases both affect whether release reports remain valid.
 - [Release evidence verifier mode](release-evidence-verifier-mode.md) — full releases need explicit full-mode verification; the default verifier checks a separate standard directory.
 - [Browser coverage contract](release-browser-coverage-contract.md) — when the full suite’s enumerated cases change, update reporter, verifier, and fixtures together or passing runs cannot produce retained evidence.
+- [WebKit TLS runtime](webkit-gio-tls-runtime.md) — distinguish missing host libraries from GIO TLS backends; keep certificate verification enabled.
 - [Source-audit reports](large-source-audit-captures.md) + [versions](source-audit-report-versions.md) — keep hashed source captures shard-safe and dispatch persisted comparisons by supported read version.
 - [Dependency override placement](esbuild-override-placement.md) — override configuration changed with pnpm major versions; verify the resolved graph and audit after updates.
 - [Importer audit recovery](importer-audit-recovery.md) — retryable audit writes must be user/scope-bound and server-idempotent; never replay source imports automatically.

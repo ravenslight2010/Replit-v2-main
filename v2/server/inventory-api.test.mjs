@@ -74,6 +74,80 @@ test("inventory routes require a verified manager before database access", async
   assert.equal(operator.calls.length, 0);
 });
 
+test("reviewed die defaults are manager-only, strict, and attributed idempotent writes", async (t) => {
+  const defaults = {
+    crustsPerCycle: 0,
+    cycleSpeed: 1.5,
+    speedAdjustment: 1,
+    freezerTime: 20,
+    casesPerLayer: 5,
+    preTunnelMin: null,
+    postTunnelMin: null,
+    pressOvenMin: 0,
+    frontlineMin: null,
+  };
+  const saved = {
+    outcome: "created", dieCode: "DIE-A", revision: 1, status: "active", defaults, replayed: false,
+  };
+  const api = await withApi(t, {
+    query: async (sql) => {
+      if (sql.includes("list_die_defaults")) return { rows: [{ result: [{ code: "DIE-A", name: "Die A" }] }] };
+      if (sql.includes("list_die_default_events")) return { rows: [{ result: [] }] };
+      if (sql.includes("save_die_default")) return { rows: [{ result: saved }] };
+      throw new Error("Unexpected database operation");
+    },
+  });
+  const read = await send(api.baseUrl, "/api/v2/inventory/die-defaults?limit=25");
+  assert.equal(read.status, 200);
+  assert.deepEqual(await read.json(), { defaults: [{ code: "DIE-A", name: "Die A" }], history: [] });
+  assert.deepEqual(api.calls.slice(0, 2).map((call) => call.values), [
+    [MANAGER.facilityId],
+    [MANAGER.facilityId, 25],
+  ]);
+
+  const invalid = await send(api.baseUrl, "/api/v2/inventory/die-defaults", {
+    method: "POST",
+    body: {
+      requestId: "die-a-create", dieCode: "DIE-A", expectedRevision: 0,
+      defaults: { ...defaults, crustsPerCycle: null }, enabled: true,
+    },
+  });
+  assert.equal(invalid.status, 400);
+  assert.equal(api.calls.length, 2);
+  const response = await send(api.baseUrl, "/api/v2/inventory/die-defaults", {
+    method: "POST",
+    body: {
+      requestId: "die-a-create", dieCode: "DIE-A", expectedRevision: 0, defaults, enabled: true,
+    },
+  });
+  assert.equal(response.status, 201);
+  assert.deepEqual(await response.json(), saved);
+  const write = api.calls[2];
+  assert.match(write.text, /save_die_default/);
+  assert.deepEqual(write.values.slice(0, 3), [MANAGER.facilityId, MANAGER.actorId, "die-a-create"]);
+  assert.match(write.values[3], /^[0-9a-f]{64}$/u);
+  assert.equal(write.values[4], "DIE-A");
+  assert.equal(write.values[5], 0);
+  assert.equal(write.values[6], JSON.stringify(defaults));
+  assert.equal(write.values[7], true);
+
+  const operator = await withApi(t, { auth: { ...MANAGER, capabilities: [] } });
+  assert.equal((await send(operator.baseUrl, "/api/v2/inventory/die-defaults")).status, 403);
+  assert.equal((await send(operator.baseUrl, "/api/v2/inventory/die-defaults", {
+    method: "POST",
+    body: { requestId: "die-a-create", dieCode: "DIE-A", expectedRevision: 0, defaults, enabled: true },
+  })).status, 403);
+  assert.equal(operator.calls.length, 0);
+
+  const noCsrf = await withApi(t, { csrf: false });
+  assert.equal((await send(noCsrf.baseUrl, "/api/v2/inventory/die-defaults", {
+    method: "POST",
+    body: { requestId: "die-a-create", dieCode: "DIE-A", expectedRevision: 0, defaults, enabled: true },
+    csrf: false,
+  })).status, 403);
+  assert.equal(noCsrf.calls.length, 0);
+});
+
 test("setup import CSV is validated before staging and request hash is server-computed", async (t) => {
   const staged = {
     outcome: "staged",

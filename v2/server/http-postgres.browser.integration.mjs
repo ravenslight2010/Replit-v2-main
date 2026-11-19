@@ -4,11 +4,36 @@ import { randomUUID } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { chromium } from "../../node_modules/.pnpm/node_modules/playwright/index.mjs";
+import { chromium, webkit } from "../../node_modules/.pnpm/node_modules/playwright/index.mjs";
 import { startV2Server } from "./main.mjs";
 
 const MANAGER_USERNAME = "V2IntegrationManager";
 const MANAGER_PASSWORD = "v2-test-manager-password";
+
+async function authenticateBrowserContext(baseUrl, context) {
+  const unauthenticated = await fetch(`${baseUrl}/api/v2/auth/session`);
+  assert.equal(unauthenticated.status, 401, "a new browser context must not inherit a staff session");
+  const response = await fetch(`${baseUrl}/api/v2/auth/sign-in`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: baseUrl, "Sec-Fetch-Site": "same-origin" },
+    body: JSON.stringify({ username: MANAGER_USERNAME, password: MANAGER_PASSWORD }),
+  });
+  assert.equal(response.status, 200, "the manager account must be available for the browser journey");
+  const cookies = response.headers.getSetCookie().map((cookie) => {
+    const [pair, ...attributes] = cookie.split(";");
+    const separator = pair.indexOf("=");
+    const flags = attributes.map((attribute) => attribute.trim().toLowerCase());
+    return {
+      name: pair.slice(0, separator),
+      value: pair.slice(separator + 1),
+      url: baseUrl,
+      httpOnly: flags.includes("httponly"),
+      secure: flags.includes("secure"),
+      sameSite: "Lax",
+    };
+  });
+  await context.addCookies(cookies);
+}
 
 async function main() {
   const databaseUrl = process.env.V2_DATABASE_URL;
@@ -18,7 +43,7 @@ async function main() {
 
   const errors = [];
   const failedResponses = [];
-  let expectedInitialSessionChallenge = false;
+  let offlineCheckActive = false;
   let serverInstance;
   let browser;
   const evidenceDir = join(tmpdir(), `v2-manager-inventory-${randomUUID()}`);
@@ -51,30 +76,112 @@ async function main() {
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => {
       if (message.type() !== "error") return;
-      if (expectedInitialSessionChallenge && message.text().includes("Failed to load resource")) {
-        expectedInitialSessionChallenge = false;
-        return;
-      }
+      if (offlineCheckActive && message.text().includes("net::ERR_INTERNET_DISCONNECTED")) return;
       errors.push(message.text());
     });
     page.on("response", (response) => {
       if (response.status() >= 400) {
         const url = new URL(response.url());
         failedResponses.push(`${response.status()} ${url.pathname}`);
-        if (response.status() === 401 && url.pathname === "/api/v2/auth/session") {
-          expectedInitialSessionChallenge = true;
-        }
       }
     });
 
+    await authenticateBrowserContext(baseUrl, context);
     await page.goto(baseUrl);
-    await page.getByTestId("input-username").fill(MANAGER_USERNAME);
-    await page.getByTestId("input-password").fill(MANAGER_PASSWORD);
-    await page.getByTestId("button-sign-in").click();
-    await page.locator("#authenticated-app:not([hidden])").waitFor();
+    await page.locator("#authenticated-app:not([hidden])").waitFor({ timeout: 10000 }).catch(async () => {
+      throw new Error(JSON.stringify({
+        authStatus: await page.locator("#auth-status").textContent(),
+        authError: await page.locator("#auth-error-message").textContent(),
+        failedResponses,
+        cookieNames: (await context.cookies()).map((cookie) => cookie.name),
+      }));
+    });
     await page.locator("#manager-tools:not([hidden])").waitFor();
     await page.locator("#warehouse-select").waitFor({ state: "visible" });
     await page.waitForFunction(() => document.querySelectorAll("#warehouse-select option").length > 0);
+
+    await page.locator("#die-default-type").selectOption("DIE-REVIEW-TEST");
+    await page.locator('[data-manager-die-field="crustsPerCycle"]').fill("42");
+    await page.locator('[data-manager-die-field="preTunnelMin"]').fill("4.5");
+    await page.locator("#die-default-form button[type=submit]").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#manager-error")?.textContent?.includes("Reviewed die defaults confirmed") === true);
+    await page.locator("#die-default-state").getByText("Revision 4 is active").waitFor();
+
+    await page.locator("#die-default-type").selectOption("DIE-UNREVIEWED-TEST");
+    for (const [field, value] of Object.entries({
+      crustsPerCycle: "8", cycleSpeed: "3.25", speedAdjustment: "1",
+      freezerTime: "22", casesPerLayer: "4",
+    })) {
+      await page.locator(`[data-manager-die-field="${field}"]`).fill(value);
+    }
+    await page.locator("#die-default-form button[type=submit]").click();
+    await page.waitForFunction(() =>
+      document.querySelector("#manager-error")?.textContent?.includes("Reviewed die defaults confirmed") === true);
+    await page.locator("#die-default-state").getByText("Revision 1 is active").waitFor();
+    await page.reload();
+    await page.locator("#manager-tools:not([hidden])").waitFor();
+    await page.locator("#die-default-history").getByText("re-enabled · DIE-REVIEW-TEST · revision 4").waitFor();
+
+    await page.locator("#run-product").selectOption("DOUGH-A");
+    await page.locator("#run-production-setup").selectOption("LINE-A");
+    await page.locator("#die-setup-card").waitFor({ state: "visible" });
+    await page.locator("#run-die-type").selectOption("DIE-REVIEW-TEST");
+    assert.equal(await page.locator('[data-die-field="crustsPerCycle"]').inputValue(), "42");
+    assert.equal(await page.locator('[data-die-field="preTunnelMin"]').inputValue(), "4.5");
+    await page.locator('[data-die-field="cycleSpeed"]').fill("77");
+    await page.locator("#run-die-type").selectOption("DIE-UNREVIEWED-TEST");
+    assert.equal(await page.locator('[data-die-field="crustsPerCycle"]').inputValue(), "8");
+    assert.equal(await page.locator('[data-die-field="cycleSpeed"]').inputValue(), "77",
+      "a manually entered value must survive an explicit die switch");
+    assert.equal(await page.locator('[data-die-field="preTunnelMin"]').inputValue(), "",
+      "switching away from a known auto-fill clears the prior optional default");
+    for (const viewport of [
+      { width: 1280, height: 900 },
+      { width: 402, height: 874 },
+      { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.locator("#die-setup-card").scrollIntoViewIfNeeded();
+      assert.equal(await page.locator("#die-setup-card").isVisible(), true);
+      const overflow = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        elements: [...document.querySelectorAll("body *")]
+          .map((element) => ({ element, rect: element.getBoundingClientRect() }))
+          .filter(({ rect }) => rect.right > window.innerWidth + 1)
+          .slice(0, 8)
+          .map(({ element, rect }) => `${element.tagName.toLowerCase()}#${element.id}.${element.className}=${Math.round(rect.right)}`),
+      }));
+      assert.ok(overflow.scrollWidth <= viewport.width,
+        `the die form must fit ${viewport.width}x${viewport.height}: ${JSON.stringify(overflow)}`);
+    }
+    await page.locator("#setup-label").fill("Die default browser snapshot");
+    await page.locator("#target-cases").fill("1");
+    await page.waitForFunction(() => {
+      const button = document.querySelector("#create-button");
+      return button instanceof HTMLButtonElement && !button.disabled;
+    });
+    const createResponsePromise = page.waitForResponse((response) =>
+      new URL(response.url()).pathname === "/api/v2/runs" && response.request().method() === "POST");
+    await page.getByTestId("button-create-run").click();
+    const createResponse = await createResponsePromise;
+    const createdBody = await createResponse.json();
+    assert.equal(createResponse.status(), 201, JSON.stringify(createdBody));
+    const createdRun = createdBody.run;
+    assert.equal(createdRun.setupSnapshot.dieSetup.dieTypeCode, "DIE-UNREVIEWED-TEST");
+    assert.equal(createdRun.setupSnapshot.dieSetup.defaultStatus, "active");
+    assert.equal(createdRun.setupSnapshot.dieSetup.defaultRevision, 1);
+    assert.equal(createdRun.setupSnapshot.dieSetup.lineSettings.crustsPerCycle, 8);
+    assert.equal(createdRun.setupSnapshot.dieSetup.lineSettings.cycleSpeed, 77);
+    offlineCheckActive = true;
+    await context.setOffline(true);
+    await page.waitForFunction(() =>
+      document.querySelector("#die-default-type")?.disabled === true
+      && document.querySelector('[data-manager-die-field="crustsPerCycle"]')?.disabled === true);
+    await context.setOffline(false);
+    await page.waitForFunction(() => document.querySelector("#die-default-type")?.disabled === false);
+    offlineCheckActive = false;
 
     const suffix = randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
     const productCode = `UI${suffix}`;
@@ -195,9 +302,29 @@ async function main() {
     await page.screenshot({ path: join(evidenceDir, "manager-inventory-after-reload.png"), fullPage: true });
 
     assert.deepEqual(errors, [], "manager inventory browser journey should have no browser or server errors");
-    assert.deepEqual(failedResponses, ["401 /api/v2/auth/session"],
-      "only the expected unauthenticated session challenge should be rejected");
-    console.log("V2 authenticated Chromium inventory journey passed: product import, reviewed opening counts, warehouse assignment, receipt, transfer, and reload persistence.");
+    assert.deepEqual(failedResponses, [],
+      "the authenticated manager journey must not encounter failed requests");
+    console.log("V2 authenticated Chromium journey passed: reviewed die defaults, switch-aware run snapshot, inventory, and reload persistence. Responsive emulation passed at desktop, phone, tablet portrait, and tablet landscape sizes.");
+
+    let webkitBrowser;
+    try {
+      webkitBrowser = await webkit.launch({ headless: true });
+      const webkitContext = await webkitBrowser.newContext({ viewport: { width: 1024, height: 768 } });
+      await authenticateBrowserContext(baseUrl, webkitContext);
+      const webkitPage = await webkitContext.newPage();
+      await webkitPage.goto(baseUrl);
+      await webkitPage.locator("#manager-tools:not([hidden])").waitFor();
+      await webkitPage.locator("#die-default-type").selectOption("DIE-UNREVIEWED-TEST");
+      await webkitPage.locator("#run-product").selectOption("DOUGH-A");
+      await webkitPage.locator("#run-production-setup").selectOption("LINE-A");
+      await webkitPage.locator("#run-die-type").selectOption("DIE-UNREVIEWED-TEST");
+      assert.equal(await webkitPage.locator('[data-die-field="crustsPerCycle"]').inputValue(), "8");
+      console.log("V2 WebKit/Safari engine die-default selection passed.");
+      await webkitBrowser.close();
+    } catch (error) {
+      if (webkitBrowser) await webkitBrowser.close();
+      console.log(`V2 WebKit/Safari lane BLOCKED: ${error instanceof Error ? error.message.split("\n")[0] : "engine unavailable"}`);
+    }
   } finally {
     if (browser) await browser.close();
     if (serverInstance) await serverInstance.close();

@@ -3,6 +3,7 @@ import {
   renderImportCsvTemplate,
   setupImportCsvTemplates,
 } from "../core/import-csv-templates.mjs";
+import { DIE_DEFAULT_FIELDS, REQUIRED_DIE_DEFAULT_FIELDS, isDieLineSettings } from "../core/die-defaults.mjs";
 import { updateSetupCatalogContext } from "./setup-catalog.js";
 
 const IMPORTS = "/api/v2/imports";
@@ -14,6 +15,7 @@ const PENDING_KEY = "fieldline:v2:inventory-pending";
 const IMPORT_KINDS = new Set(["products", "recipes", "production-setups"]);
 const WORKBOOK_IMPORT_FAMILIES = new Set(["dough-procedure", "shipping-guide"]);
 const MAX_WORKBOOK_BYTES = 5 * 1024 * 1024;
+const DIE_DEFAULTS = `${INVENTORY}/die-defaults`;
 
 const byId = (id) => document.getElementById(id);
 const dom = {
@@ -40,6 +42,9 @@ const dom = {
   openingRetry: byId("opening-count-retry"), openingPreview: byId("opening-count-preview"), openingActions: byId("opening-count-actions"),
   openingReview: byId("opening-count-mark-reviewed"), openingApply: byId("opening-count-apply"),
   openingHistory: byId("opening-count-history"),
+  dieDefaultForm: byId("die-default-form"), dieDefaultType: byId("die-default-type"),
+  dieDefaultState: byId("die-default-state"), dieDefaultSuggestion: byId("die-default-use-suggestion"),
+  dieDefaultRetire: byId("die-default-retire"), dieDefaultHistory: byId("die-default-history"),
 };
 
 let staff = null;
@@ -52,6 +57,8 @@ let movements = [];
 let movementNextCursor = null;
 let movementWarehouseId = null;
 let openingCounts = [];
+let dieDefaults = [];
+let dieDefaultHistory = [];
 let currentCount = null;
 let pending = loadPending();
 let loading = false;
@@ -126,6 +133,7 @@ function validPendingRoute(kind, endpoint) {
   if (kind === "movement") return endpoint === `${INVENTORY}/movements`;
   if (kind === "transfer") return endpoint === `${INVENTORY}/transfers`;
   if (kind === "opening-count") return endpoint === `${INVENTORY}/opening-counts`;
+  if (kind === "die-default") return endpoint === DIE_DEFAULTS;
   if (kind === "import-apply" || kind === "import-undo") {
     return new RegExp(`^${IMPORTS}/[0-9a-f-]{36}/${kind.slice(7)}$`, "i").test(endpoint);
   }
@@ -239,7 +247,8 @@ function setBusy(busy) {
   [dom.importApply, dom.workbookStage, dom.workbookApply, ...dom.importForm.querySelectorAll("button"),
     ...dom.workbookForm.querySelectorAll("button"), ...dom.warehouseForm.querySelectorAll("button"),
     ...dom.movementForm.querySelectorAll("button"), ...dom.transferForm.querySelectorAll("button"),
-    ...dom.openingForm.querySelectorAll("button"), dom.openingReview, dom.openingApply].filter(Boolean)
+    ...dom.openingForm.querySelectorAll("button"), ...dom.dieDefaultForm.querySelectorAll("button"),
+    dom.openingReview, dom.openingApply].filter(Boolean)
     .forEach((button) => { button.disabled = busy || (button.dataset.requiresWrite === "true" && !writeGate); });
   updateReadOnly();
 }
@@ -311,6 +320,124 @@ function renderImports() {
     li.append(actions);
     dom.importHistory.append(li);
   });
+}
+function validDieDefaults(value) {
+  return object(value)
+    && Object.keys(value).sort().join("\u0000") === [...DIE_DEFAULT_FIELDS].sort().join("\u0000")
+    && isDieLineSettings(value)
+    && REQUIRED_DIE_DEFAULT_FIELDS.every((key) => typeof value[key] === "number");
+}
+function validateDieType(item) {
+  return object(item) && CODE.test(item.code) && text(item.name, 120) && item.name.length > 0
+    && ["active", "disabled", "unreviewed"].includes(item.status)
+    && Number.isSafeInteger(item.revision) && item.revision >= 0
+    && (item.defaults === null || validDieDefaults(item.defaults))
+    && (item.suggestedDefaults === null || validDieDefaults(item.suggestedDefaults));
+}
+function validateDieDefaultHistory(item) {
+  return object(item) && uuid(item.id) && CODE.test(item.dieCode) && uuid(item.actorId)
+    && ["created", "updated", "retired", "re-enabled"].includes(item.action)
+    && Number.isSafeInteger(item.revision) && item.revision > 0
+    && (item.before === null || object(item.before)) && object(item.after)
+    && text(item.occurredAt, 40);
+}
+function setManagerDieFields(value) {
+  for (const key of DIE_DEFAULT_FIELDS) {
+    const input = dom.dieDefaultForm.querySelector(`[data-manager-die-field="${key}"]`);
+    const item = value?.[key];
+    input.value = typeof item === "number" && Number.isFinite(item) ? String(item) : "";
+  }
+}
+function selectedManagerDie() {
+  return dieDefaults.find((item) => item.code === dom.dieDefaultType.value) || null;
+}
+function renderDieDefaults() {
+  const selectedCode = dom.dieDefaultType.value;
+  dom.dieDefaultType.replaceChildren(new Option("Choose a die type", ""));
+  for (const die of dieDefaults) {
+    dom.dieDefaultType.append(new Option(`${die.name} · ${die.status}`, die.code));
+  }
+  if (dieDefaults.some((die) => die.code === selectedCode)) dom.dieDefaultType.value = selectedCode;
+  const selected = selectedManagerDie();
+  if (selected) {
+    dom.dieDefaultState.textContent = selected.status === "unreviewed"
+      ? selected.suggestedDefaults
+        ? "Not reviewed. Imported values are available as a suggestion but are not used by operators."
+        : "Not reviewed. Enter all required values; optional times may remain blank."
+      : `Revision ${selected.revision} is ${selected.status}. Saving records your reviewed values and actor.`;
+    dom.dieDefaultSuggestion.hidden = !selected.suggestedDefaults;
+    dom.dieDefaultRetire.hidden = selected.status !== "active";
+    if (selected.defaults) setManagerDieFields(selected.defaults);
+    else setManagerDieFields(null);
+  } else {
+    dom.dieDefaultState.textContent = "Choose a die type to review its values.";
+    dom.dieDefaultSuggestion.hidden = true;
+    dom.dieDefaultRetire.hidden = true;
+    setManagerDieFields(null);
+  }
+  if (dieDefaultHistory.length) {
+    dom.dieDefaultHistory.replaceChildren(...dieDefaultHistory.map((item) => {
+      const li = make("li", "manager-list-item");
+      const heading = make("strong", "", `${item.action} · ${item.dieCode} · revision ${item.revision}`);
+      const details = make("span", "manager-list-meta", `${safeDate(item.occurredAt)} · manager ${item.actorId}`);
+      li.append(heading, details);
+      return li;
+    }));
+  } else listNotice(dom.dieDefaultHistory, "No reviewed die-default changes yet.");
+}
+function readManagerDieFields() {
+  const values = {};
+  for (const key of DIE_DEFAULT_FIELDS) {
+    const input = dom.dieDefaultForm.querySelector(`[data-manager-die-field="${key}"]`);
+    if (input.value === "") {
+      values[key] = null;
+    } else {
+      const parsed = Number(input.value);
+      if (!Number.isFinite(parsed) || parsed < 0) throw new Error("Enter non-negative numbers or leave optional times blank.");
+      values[key] = parsed;
+    }
+  }
+  if (REQUIRED_DIE_DEFAULT_FIELDS.some((key) => typeof values[key] !== "number")) {
+    throw new Error("Enter values for all five required die fields.");
+  }
+  return values;
+}
+function validDieDefaultResult(value) {
+  return object(value) && ["created", "updated", "retired", "re-enabled"].includes(value.outcome)
+    && CODE.test(value.dieCode) && Number.isSafeInteger(value.revision) && value.revision > 0
+    && ["active", "disabled"].includes(value.status) && validDieDefaults(value.defaults)
+    && typeof value.replayed === "boolean";
+}
+async function saveDieDefault(enabled) {
+  if (!ensureWrite()) return;
+  const selected = selectedManagerDie();
+  if (!selected) { message("Choose a catalog die type first.", "warning"); return; }
+  let values;
+  try {
+    values = enabled ? readManagerDieFields() : selected.defaults;
+    if (!validDieDefaults(values)) throw new Error("Reviewed defaults are missing or invalid. Refresh the manager data.");
+  } catch (error) {
+    message(error instanceof Error ? error.message : "Die defaults are invalid.", "warning");
+    return;
+  }
+  await operation({
+    kind: "die-default",
+    endpoint: DIE_DEFAULTS,
+    payload: {
+      requestId: crypto.randomUUID(),
+      dieCode: selected.code,
+      expectedRevision: selected.revision,
+      defaults: values,
+      enabled,
+    },
+    validate: validDieDefaultResult,
+    refresh: async () => { await loadAll(); },
+    label: enabled ? "Reviewed die defaults" : "Die defaults retirement",
+  });
+}
+function useDieDefaultSuggestion() {
+  const selected = selectedManagerDie();
+  if (selected?.suggestedDefaults) setManagerDieFields(selected.suggestedDefaults);
 }
 function renderPreview(container, records, label) {
   container.replaceChildren();
@@ -494,21 +621,26 @@ async function loadAll() {
   loading = true;
   dom.importHistory.setAttribute("aria-busy", "true");
   try {
-    const [importsBody, warehousesBody, productsBody, countsBody] = await Promise.all([
+    const [importsBody, warehousesBody, productsBody, countsBody, dieDefaultsBody] = await Promise.all([
       request(`${IMPORTS}?limit=50`), request(`${INVENTORY}/warehouses`), request(`${INVENTORY}/products`),
       request(`${INVENTORY}/opening-counts?limit=50`),
+      request(`${DIE_DEFAULTS}?limit=50`),
     ]);
     if (!Array.isArray(importsBody.imports) || !importsBody.imports.every(validateImport)
       || !Array.isArray(warehousesBody.warehouses) || !warehousesBody.warehouses.every(validateWarehouse)
       || !Array.isArray(productsBody.products) || !productsBody.products.every(validateProduct)
-      || !Array.isArray(countsBody.counts) || !countsBody.counts.every(validateCountSummary)) {
+      || !Array.isArray(countsBody.counts) || !countsBody.counts.every(validateCountSummary)
+      || !Array.isArray(dieDefaultsBody.defaults) || !dieDefaultsBody.defaults.every(validateDieType)
+      || !Array.isArray(dieDefaultsBody.history) || !dieDefaultsBody.history.every(validateDieDefaultHistory)) {
       throw new Error("The server returned inventory data in an unexpected format. Refresh run state and reload manager data.");
     }
     imports = importsBody.imports;
     warehouses = warehousesBody.warehouses;
     products = productsBody.products;
     openingCounts = countsBody.counts;
-    renderImports(); renderWarehouses(); renderCountHistory();
+    dieDefaults = dieDefaultsBody.defaults;
+    dieDefaultHistory = dieDefaultsBody.history;
+    renderImports(); renderWarehouses(); renderCountHistory(); renderDieDefaults();
     await loadWarehouseData();
     clearMessage();
     lastConfirmed = true;
@@ -1208,6 +1340,13 @@ function bind() {
   dom.movementForm.addEventListener("submit", submitMovement);
   dom.transferForm.addEventListener("submit", submitTransfer);
   dom.openingForm.addEventListener("submit", submitOpeningCount);
+  dom.dieDefaultForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    void saveDieDefault(true);
+  });
+  dom.dieDefaultType.addEventListener("change", renderDieDefaults);
+  dom.dieDefaultSuggestion.addEventListener("click", useDieDefaultSuggestion);
+  dom.dieDefaultRetire.addEventListener("click", () => { void saveDieDefault(false); });
   dom.openingRetry.addEventListener("click", retryOpeningCount);
   dom.openingReview.addEventListener("click", () => { void countAction("review"); });
   dom.openingApply.addEventListener("click", () => { void countAction("apply"); });
@@ -1232,12 +1371,15 @@ export function updateInventoryContext(nextStaff, canWrite) {
     dom.panel.hidden = true;
     imports = []; warehouses = []; products = []; stock = []; movements = []; currentCount = null;
      openingCounts = [];
+      dieDefaults = []; dieDefaultHistory = [];
      dom.importHistory.replaceChildren(); dom.stockRows.replaceChildren(); dom.movementHistory.replaceChildren(); dom.openingHistory.replaceChildren();
+      dom.dieDefaultHistory.replaceChildren();
     return;
   }
   dom.panel.hidden = false;
   if (changedUser) {
     imports = []; warehouses = []; products = []; stock = []; movements = []; openingCounts = []; currentCount = null;
+     dieDefaults = []; dieDefaultHistory = [];
     dom.importPreview.hidden = true; dom.importActions.hidden = true; dom.workbookPreview.hidden = true; dom.workbookActions.hidden = true;
     dom.openingPreview.hidden = true; dom.openingActions.hidden = true;
   }
