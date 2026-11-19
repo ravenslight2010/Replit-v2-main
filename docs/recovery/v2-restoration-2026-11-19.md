@@ -38,7 +38,7 @@ database migration, account import, data reset, or publication was performed.
 | Safari/WebKit setup-import and responsive coverage | Reconstructed test expansion; later commit unavailable | Supported Ubuntu CI passed all 13 browser cases, including both required WebKit imports; no browser cases skipped |
 | Installed-shell offline/reconnect and old V1 cache migration | Recovered and checked; shell cache generation advanced for recovered JS | Offline read-only/reconnect browser check; targeted legacy-cache test passed after activation/claim synchronization was corrected |
 | Runtime-safety reconciliation | Reconstructed from current observations | API and leased worker started; ports/role/runtime recorded below; managed schema differences remain explicitly pending |
-| Current GitHub backup | Normal non-forced pushes and protected baseline tag | Verified remote source revision `fb1b549c09f74df5b3d27e6501e78fe02c106222`; final metadata revision is checked again after this report |
+| Current GitHub backup | Normal non-forced pushes and protected baseline tag | Verified remote source revision `eb2f71dd747c664fe806f39a4ecfad900b24786a`; final documentation revision is checked again after this report |
 
 ## Current runtime observations
 
@@ -46,6 +46,10 @@ database migration, account import, data reset, or publication was performed.
   loopback port 3001. Only port 5000 is intended as the external web port.
 - Runtime: x86_64, Node 24.22.3, pnpm 11.5.2. Old ARM-only verification advice
   does not describe this machine.
+- Read-only provider metadata confirmed an existing private Reserved VM
+  deployment with a successful build. It was not republished. This metadata
+  does not prove that the newly recovered source is live, and no production
+  database or live authenticated operational journey was inspected.
 - An orphaned supervisor from the earlier V2 workflow still owned both ports.
   Its identity and workspace were verified before stopping it. The configured
   V2 workflow then started successfully.
@@ -87,8 +91,8 @@ database migration, account import, data reset, or publication was performed.
   passed** and no physical-device result is claimed.
 - The focused GitHub workflow installs supported Chromium/WebKit runtimes on
   Ubuntu and requires WebKit rather than allowing that coverage to disappear.
-  [Supported-runtime run](https://github.com/ravenslight2010/Replit-v2-main/actions/runs/44451695638)
-  passed at source revision `fb1b549c09f74df5b3d27e6501e78fe02c106222`:
+  [Supported-runtime run](https://github.com/ravenslight2010/Replit-v2-main/actions/runs/44452339330)
+  passed at source revision `eb2f71dd747c664fe806f39a4ecfad900b24786a`:
   **154 unit cases passed, two private-corpus cases explicitly skipped;
   13 browser cases passed, zero browser skips; disposable PostgreSQL checks
   passed**. The two private-corpus cases passed locally as part of all 156.
