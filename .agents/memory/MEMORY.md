@@ -165,3 +165,4 @@
 - [Configuration recovery scope](configuration-recovery-scope.md) — environment recovery can replace current startup wiring; verify its scope and the installer's chosen Nix representation.
 - [Schedule timezone](schedule-timezone.md) — production schedule dates and estimates use America/Chicago, independent of the viewer's device timezone.
 - [Version capability catalog](version-capability-catalog.md) — future major versions start from a portable, evidence-linked feature inventory; unapproved candidates remain distinct from requirements.
+- [V2 layer-based ingredient demand](v2-layer-demand.md) — owner confirmed frozen cases-per-layer applies to Sauce, Cheese, Frontline, and Pepperoni; never infer Pepperoni sticks or batch size.

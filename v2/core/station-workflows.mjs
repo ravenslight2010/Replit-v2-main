@@ -175,6 +175,13 @@ function round(value, digits = 2) {
   return Math.round((value + Number.EPSILON) * scale) / scale;
 }
 
+function casesWithFrozenLayer(run, targetCases) {
+  const casesPerLayer = Number(run?.setupSnapshot?.dieSetup?.lineSettings?.casesPerLayer);
+  return Number.isFinite(casesPerLayer) && casesPerLayer > 0
+    ? targetCases + casesPerLayer
+    : targetCases;
+}
+
 export function deriveDoughCasesPerBatch({ doughballYield, pizzasPerCase } = {}) {
   if (typeof doughballYield !== "number" || !Number.isFinite(doughballYield)
     || doughballYield <= 0 || doughballYield > MAX_VALUE
@@ -237,14 +244,11 @@ export function calculateStationMetrics({ stationKey, run, state }) {
   const pizzasPerCase = valueFrom(state, "inputs", "pizzasPerCase");
   const ozPerPizza = valueFrom(state, "inputs", "ozPerPizza");
   const batchLbs = valueFrom(state, "inputs", "batchLbs");
+  const casesForIngredientDemand = casesWithFrozenLayer(run, targetCases);
   if (stationKey === "sauce") {
     const barrelLbs = valueFrom(state, "inputs", "barrelLbs");
-    const casesPerLayer = Number(run?.setupSnapshot?.dieSetup?.lineSettings?.casesPerLayer);
-    const casesWithLayer = Number.isFinite(casesPerLayer) && casesPerLayer > 0
-      ? targetCases + casesPerLayer
-      : targetCases;
     const totalLbs = pizzasPerCase > 0 && ozPerPizza > 0
-      ? round((casesWithLayer * pizzasPerCase * ozPerPizza) / 16 + 30)
+      ? round((casesForIngredientDemand * pizzasPerCase * ozPerPizza) / 16 + 30)
       : null;
     const barrelsNeeded = totalLbs !== null && barrelLbs > 0 ? round(totalLbs / barrelLbs) : null;
     const barrelsMade = valueFrom(state, "progress", "barrelsMade");
@@ -258,7 +262,7 @@ export function calculateStationMetrics({ stationKey, run, state }) {
     return metrics;
   }
   const neededLbs = pizzasPerCase > 0 && ozPerPizza > 0
-    ? round((targetCases * pizzasPerCase * ozPerPizza) / 16 + (stationKey === "frontline" ? 20 : 0))
+    ? round((casesForIngredientDemand * pizzasPerCase * ozPerPizza) / 16 + (stationKey === "frontline" ? 20 : 0))
     : null;
   if (stationKey === "frontline") {
     const onLine = valueFrom(state, "progress", "stockOnLineLbs");

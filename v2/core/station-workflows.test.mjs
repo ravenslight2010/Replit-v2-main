@@ -211,6 +211,63 @@ test("uses the frozen Sauce layer setting and defaults to no extra layer", () =>
   assert.equal(withoutLayer.barrelsNeeded, 0.72);
 });
 
+test("includes the frozen layer in Cheese, Frontline, Pepperoni, and Sauce demand", () => {
+  const runWithLayer = {
+    setupSnapshot: {
+      ...floorExampleRun.setupSnapshot,
+      dieSetup: { lineSettings: { casesPerLayer: 4 } },
+    },
+  };
+
+  const cheese = calculateStationMetrics({
+    stationKey: "cheese",
+    run: runWithLayer,
+    state: {
+      inputs: { pizzasPerCase: 12, ozPerPizza: 2.9, batchLbs: 55.6 },
+      progress: { casesCompleted: 0, batchesMade: 0 },
+    },
+  });
+  assert.equal(cheese.ingredientLbsNeeded, 128.32);
+  assert.equal(cheese.batchesNeeded, 3);
+  assert.equal(cheese.casesRemaining, 55);
+
+  const frontline = calculateStationMetrics({
+    stationKey: "frontline",
+    run: runWithLayer,
+    state: {
+      inputs: { pizzasPerCase: 12, ozPerPizza: 2.9, batchLbs: 55.6 },
+      progress: { batchesMade: 0, stockOnLineLbs: 20, stockConsumedLbs: 10 },
+    },
+  });
+  assert.equal(frontline.totalIngredientLbs, 148.32);
+  assert.equal(frontline.batchesNeeded, 2.67);
+  assert.equal(frontline.batchesToMake, 2.13);
+
+  const pepperoni = calculateStationMetrics({
+    stationKey: "pepperoni",
+    run: runWithLayer,
+    state: {
+      inputs: { pizzasPerCase: 12, ozPerPizza: 1.9 },
+      progress: { casesCompleted: 0, batchesMade: 0 },
+    },
+  });
+  assert.equal(pepperoni.ingredientLbsNeeded, 84.08);
+  assert.equal(pepperoni.batchesNeeded, null);
+  assert.equal(pepperoni.batchesRemaining, null);
+  assert.equal(pepperoni.casesRemaining, 55);
+
+  const sauce = calculateStationMetrics({
+    stationKey: "sauce",
+    run: runWithLayer,
+    state: {
+      inputs: { pizzasPerCase: 12, ozPerPizza: 4, barrelLbs: 271.5 },
+      progress: { barrelsMade: 0 },
+    },
+  });
+  assert.equal(sauce.totalIngredientLbs, 207);
+  assert.equal(sauce.barrelsNeeded, 0.76);
+});
+
 test("calculates Frontline setup allowance, on-line stock, and remaining batches", () => {
   assert.deepEqual(calculateStationMetrics({
     stationKey: "frontline",
