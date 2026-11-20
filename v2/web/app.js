@@ -30,6 +30,20 @@ const el = {
   authPassword: document.querySelector("#auth-password"),
   authSubmit: document.querySelector("#auth-submit"),
   authRetry: document.querySelector("#auth-retry"),
+  passwordRecoveryLinks: document.querySelector("#password-recovery-links"),
+  passwordResetRequestToggle: document.querySelector("#password-reset-request-toggle"),
+  passwordResetCompletionToggle: document.querySelector("#password-reset-completion-toggle"),
+  passwordResetRequestForm: document.querySelector("#password-reset-request-form"),
+  passwordResetRequestUsername: document.querySelector("#password-reset-username"),
+  passwordResetRequestSubmit: document.querySelector("#password-reset-request-submit"),
+  passwordResetRequestCancel: document.querySelector("#password-reset-request-cancel"),
+  passwordResetCompletionForm: document.querySelector("#password-reset-completion-form"),
+  passwordResetCompletionUsername: document.querySelector("#password-reset-completion-username"),
+  passwordResetCodeInput: document.querySelector("#password-reset-code"),
+  passwordResetNewPassword: document.querySelector("#password-reset-new-password"),
+  passwordResetCompletionSubmit: document.querySelector("#password-reset-completion-submit"),
+  passwordResetCompletionCancel: document.querySelector("#password-reset-completion-cancel"),
+  passwordResetStatus: document.querySelector("#password-reset-status"),
   setupToggle: document.querySelector("#setup-toggle"),
   bootstrapForm: document.querySelector("#bootstrap-form"),
   bootstrapCode: document.querySelector("#bootstrap-code"),
@@ -47,6 +61,14 @@ const el = {
   staffRole: document.querySelector("#new-staff-role"),
   staffCreateButton: document.querySelector("#create-staff-button"),
   staffList: document.querySelector("#staff-list"),
+  passwordResetPanel: document.querySelector("#password-reset-panel"),
+  passwordResetQueueStatus: document.querySelector("#password-reset-queue-status"),
+  passwordResetRefresh: document.querySelector("#password-reset-refresh"),
+  passwordResetQueueError: document.querySelector("#password-reset-queue-error"),
+  passwordResetQueue: document.querySelector("#password-reset-queue"),
+  passwordResetCodePanel: document.querySelector("#password-reset-code-panel"),
+  passwordResetIssuedCode: document.querySelector("#password-reset-issued-code"),
+  passwordResetCodeExpiry: document.querySelector("#password-reset-code-expiry"),
   accountControls: document.querySelector("#account-controls"),
   staffLabel: document.querySelector("#staff-label"),
   signOut: document.querySelector("#sign-out-button"),
@@ -94,6 +116,8 @@ let createInFlight = false;
 let commandInFlight = false;
 let authCheckInFlight = false;
 let authInFlight = false;
+let passwordResetInFlight = false;
+let passwordResetActionInFlight = false;
 let signOutInFlight = false;
 let currentStaff = null;
 let runProducts = [];
@@ -512,6 +536,10 @@ function showSignIn(message = null, { title = "Sign-in needed", retry = false } 
   updateScheduleContext(null, false);
   el.authPanel.hidden = false;
   el.authForm.hidden = false;
+  el.passwordRecoveryLinks.hidden = false;
+  el.passwordResetRequestForm.hidden = true;
+  el.passwordResetCompletionForm.hidden = true;
+  el.passwordResetStatus.hidden = true;
   el.bootstrapForm.hidden = true;
   el.setupToggle.hidden = !bootstrapAvailable;
   el.setupToggle.setAttribute("aria-expanded", "false");
@@ -520,6 +548,10 @@ function showSignIn(message = null, { title = "Sign-in needed", retry = false } 
   el.authStatus.textContent = message ? "Your session is not confirmed." : "Sign in to load the current server state.";
   el.accountControls.hidden = true;
   el.staffPanel.hidden = true;
+  el.passwordResetPanel.hidden = true;
+  el.passwordResetCodePanel.hidden = true;
+  el.passwordResetIssuedCode.textContent = "";
+  el.passwordResetCodeExpiry.textContent = "";
   el.authenticatedApp.hidden = true;
   if (message) showAuthError(title, message);
   else el.authError.hidden = true;
@@ -540,6 +572,10 @@ function showAuthenticated(staff) {
   updateInventoryContext(currentStaff, false);
   updateScheduleContext(currentStaff, false);
   el.authPanel.hidden = true;
+  el.passwordRecoveryLinks.hidden = true;
+  el.passwordResetRequestForm.hidden = true;
+  el.passwordResetCompletionForm.hidden = true;
+  el.passwordResetStatus.hidden = true;
   el.bootstrapForm.hidden = true;
   el.setupToggle.hidden = true;
   el.authError.hidden = true;
@@ -551,6 +587,9 @@ function showAuthenticated(staff) {
   const canManageStaff = staffManagementAllowed(staff);
   el.staffPanel.hidden = !canManageStaff;
   if (canManageStaff) void loadStaffDirectory();
+  const canApprovePasswordResets = staff.capabilities.includes("approve-password-resets");
+  el.passwordResetPanel.hidden = !canApprovePasswordResets;
+  if (canApprovePasswordResets) void loadPasswordResetQueue();
   announce(`Signed in as ${staff.username}.`);
   setConnection(true);
   document.querySelector("#page-title")?.focus();
@@ -605,6 +644,9 @@ async function refreshBootstrapAvailability() {
 function toggleBootstrapForm(show) {
   if (!bootstrapAvailable || bootstrapInFlight) return;
   el.authForm.hidden = show;
+  el.passwordRecoveryLinks.hidden = show;
+  el.passwordResetRequestForm.hidden = true;
+  el.passwordResetCompletionForm.hidden = true;
   el.bootstrapForm.hidden = !show;
   el.setupToggle.hidden = show;
   el.setupToggle.setAttribute("aria-expanded", String(show));
@@ -651,6 +693,266 @@ async function submitBootstrap(event) {
   } finally {
     bootstrapInFlight = false;
     el.bootstrapSubmit.disabled = false;
+  }
+}
+
+function showPasswordResetForm(kind) {
+  if (authInFlight || bootstrapInFlight || passwordResetInFlight) return;
+  el.authForm.hidden = true;
+  el.bootstrapForm.hidden = true;
+  el.setupToggle.hidden = true;
+  el.passwordRecoveryLinks.hidden = true;
+  el.passwordResetRequestForm.hidden = kind !== "request";
+  el.passwordResetCompletionForm.hidden = kind !== "complete";
+  el.passwordResetStatus.hidden = true;
+  el.authError.hidden = true;
+  if (kind === "request") el.passwordResetRequestUsername.focus();
+  else el.passwordResetCompletionUsername.focus();
+}
+
+function returnToSignIn() {
+  el.passwordResetRequestForm.hidden = true;
+  el.passwordResetCompletionForm.hidden = true;
+  el.authForm.hidden = false;
+  el.passwordRecoveryLinks.hidden = false;
+  el.setupToggle.hidden = !bootstrapAvailable;
+  el.authError.hidden = true;
+  el.authUsername.focus();
+}
+
+async function submitPasswordResetRequest(event) {
+  event.preventDefault();
+  if (passwordResetInFlight) return;
+  if (navigator.onLine === false) {
+    el.passwordResetStatus.textContent = "Reconnect before sending a recovery request.";
+    el.passwordResetStatus.hidden = false;
+    return;
+  }
+  passwordResetInFlight = true;
+  el.passwordResetRequestSubmit.disabled = true;
+  el.passwordResetStatus.hidden = true;
+  try {
+    const response = await fetch(`${AUTH_API}/password-reset-requests`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ username: el.passwordResetRequestUsername.value }),
+    });
+    const body = await readJson(response);
+    if (response.status !== 202 || body.accepted !== true) {
+      throw new Error("The recovery request could not be confirmed. Try again.");
+    }
+    el.passwordResetRequestForm.reset();
+    el.passwordResetStatus.textContent = "If the account is active, a manager will review the request. Contact a manager for the one-time code after approval.";
+    el.passwordResetStatus.hidden = false;
+  } catch (error) {
+    el.passwordResetStatus.textContent = error instanceof Error
+      ? error.message
+      : "The recovery request could not be confirmed. Check the connection and try again.";
+    el.passwordResetStatus.hidden = false;
+  } finally {
+    passwordResetInFlight = false;
+    el.passwordResetRequestSubmit.disabled = false;
+  }
+}
+
+async function submitPasswordResetCompletion(event) {
+  event.preventDefault();
+  if (passwordResetInFlight) return;
+  if (navigator.onLine === false) {
+    showAuthError("Recovery unavailable", "Reconnect before setting a new password.");
+    return;
+  }
+  passwordResetInFlight = true;
+  el.passwordResetCompletionSubmit.disabled = true;
+  el.authError.hidden = true;
+  const username = el.passwordResetCompletionUsername.value;
+  try {
+    const response = await fetch(`${AUTH_API}/password-reset-completions`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        username,
+        code: el.passwordResetCodeInput.value,
+        newPassword: el.passwordResetNewPassword.value,
+      }),
+    });
+    if (response.status !== 204) await readJson(response);
+    el.passwordResetCompletionForm.reset();
+    el.authUsername.value = username;
+    returnToSignIn();
+    el.authStatus.textContent = "Password updated. Sign in with the new password. If the reply was lost, try signing in or ask a manager for a replacement code.";
+  } catch (error) {
+    showAuthError(
+      "Password recovery could not be completed",
+      error instanceof Error
+        ? `${error.message} If a previous reply was lost, try signing in with the new password; otherwise ask a manager for a replacement code.`
+        : "Check the code and try again, or ask a manager for a replacement code.",
+    );
+    if (error instanceof ApiError && error.status === 401) {
+      el.passwordResetCodeInput.value = "";
+      el.passwordResetNewPassword.value = "";
+    }
+  } finally {
+    passwordResetInFlight = false;
+    el.passwordResetCompletionSubmit.disabled = false;
+  }
+}
+
+function clearPasswordResetQueueError() {
+  el.passwordResetQueueError.hidden = true;
+  el.passwordResetQueueError.textContent = "";
+}
+
+function showPasswordResetQueueError(message) {
+  el.passwordResetQueueError.textContent = message;
+  el.passwordResetQueueError.hidden = false;
+}
+
+function isPasswordResetQueue(body) {
+  return isObject(body)
+    && Array.isArray(body.requests)
+    && body.requests.length <= 100
+    && body.requests.every((request) => isObject(request)
+      && typeof request.requestId === "string" && UUID.test(request.requestId)
+      && typeof request.staffId === "string" && UUID.test(request.staffId)
+      && typeof request.username === "string" && request.username.length >= 3 && request.username.length <= 40
+      && ["pending", "approved"].includes(request.state)
+      && isTimestamp(request.requestedAt)
+      && isTimestamp(request.decidedAt, true)
+      && (request.state === "pending"
+        ? request.codeExpiresAt === null
+        : isTimestamp(request.codeExpiresAt)));
+}
+
+function renderPasswordResetQueue(requests) {
+  if (requests.length === 0) {
+    el.passwordResetQueue.innerHTML = '<li class="manager-list-notice">No recovery requests need review.</li>';
+    return;
+  }
+  el.passwordResetQueue.innerHTML = requests.map((request) => {
+    const requestedAt = new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(request.requestedAt));
+    const isApproved = request.state === "approved";
+    const expiryLabel = isApproved
+      ? `Code active until ${new Intl.DateTimeFormat(undefined, { timeStyle: "short" }).format(new Date(request.codeExpiresAt))}.`
+      : `Requested ${requestedAt}.`;
+    const actions = isApproved
+      ? `<button type="button" class="staff-action-button" data-reset-action="reissue" data-reset-id="${escapeHtml(request.requestId)}" ${passwordResetActionInFlight ? "disabled" : ""}>Issue new code</button>
+         <button type="button" class="staff-action-button danger" data-reset-action="deny" data-reset-id="${escapeHtml(request.requestId)}" ${passwordResetActionInFlight ? "disabled" : ""}>Cancel recovery</button>`
+      : `<button type="button" class="staff-action-button" data-reset-action="approve" data-reset-id="${escapeHtml(request.requestId)}" ${passwordResetActionInFlight ? "disabled" : ""}>Approve</button>
+         <button type="button" class="staff-action-button danger" data-reset-action="deny" data-reset-id="${escapeHtml(request.requestId)}" ${passwordResetActionInFlight ? "disabled" : ""}>Deny</button>`;
+    return `<li class="manager-list-item">
+      <span class="manager-list-copy"><strong>${escapeHtml(request.username)}</strong><span>${isApproved ? "Approved · " : ""}${escapeHtml(expiryLabel)}</span></span>
+      <span class="manager-list-actions">${actions}</span>
+    </li>`;
+  }).join("");
+}
+
+async function loadPasswordResetQueue() {
+  if (!currentStaff?.capabilities.includes("approve-password-resets") || passwordResetActionInFlight) return;
+  el.passwordResetQueueStatus.textContent = "Loading recovery requests…";
+  clearPasswordResetQueueError();
+  try {
+    const response = await fetch(`${AUTH_API}/password-reset-requests`, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    });
+    const body = await readJson(response);
+    if (!isPasswordResetQueue(body)) throw new Error("The server returned an unexpected recovery request list.");
+    if (!currentStaff?.capabilities.includes("approve-password-resets")) return;
+    renderPasswordResetQueue(body.requests);
+    el.passwordResetQueueStatus.textContent = `${body.requests.length} active recovery request${body.requests.length === 1 ? "" : "s"}`;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      showSignIn("Your session has ended. Sign in again to review recovery requests.");
+      return;
+    }
+    el.passwordResetQueueStatus.textContent = "Recovery requests could not be loaded.";
+    showPasswordResetQueueError(error instanceof Error ? error.message : "Refresh and try again.");
+  }
+}
+
+function showIssuedPasswordResetCode(result) {
+  if (!isObject(result) || typeof result.code !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(result.code)
+    || !isTimestamp(result.expiresAt)) {
+    throw new Error("The server returned an incomplete recovery code. Refresh the queue and issue a new code.");
+  }
+  el.passwordResetIssuedCode.textContent = result.code;
+  el.passwordResetCodeExpiry.textContent = `Expires ${new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(result.expiresAt))}.`;
+  el.passwordResetCodePanel.hidden = false;
+}
+
+function clearIssuedPasswordResetCode() {
+  el.passwordResetIssuedCode.textContent = "";
+  el.passwordResetCodeExpiry.textContent = "";
+  el.passwordResetCodePanel.hidden = true;
+}
+
+async function handlePasswordResetAction(event) {
+  const button = event.target.closest("[data-reset-action]");
+  if (!button || passwordResetActionInFlight) return;
+  if (!currentStaff?.capabilities.includes("approve-password-resets")) return;
+  const action = button.dataset.resetAction;
+  const requestId = button.dataset.resetId;
+  if (!UUID.test(requestId || "") || !["approve", "deny", "reissue"].includes(action)) return;
+  if (navigator.onLine === false) {
+    showPasswordResetQueueError("Reconnect before changing recovery requests.");
+    return;
+  }
+  const csrf = getCsrfHeaders();
+  if (!csrf) {
+    showPasswordResetQueueError("Refresh your session before changing recovery requests.");
+    return;
+  }
+  passwordResetActionInFlight = true;
+  clearIssuedPasswordResetCode();
+  clearPasswordResetQueueError();
+  let refreshQueue = false;
+  try {
+    const endpoint = action === "reissue"
+      ? `${AUTH_API}/password-reset-requests/${encodeURIComponent(requestId)}/reissue`
+      : `${AUTH_API}/password-reset-requests/${encodeURIComponent(requestId)}/decision`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...csrf,
+      },
+      body: JSON.stringify(action === "reissue" ? {} : { decision: action }),
+    });
+    const result = await readJson(response);
+    if (action === "approve" || action === "reissue") showIssuedPasswordResetCode(result);
+    else if (result.outcome !== "denied") throw new Error("The recovery decision was not confirmed. Refresh and try again.");
+    el.passwordResetQueueStatus.textContent = action === "deny"
+      ? "Recovery request denied."
+      : action === "reissue" ? "A replacement recovery code is ready." : "Recovery request approved.";
+    refreshQueue = true;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      showSignIn("Your session has ended. Sign in again to review recovery requests.");
+      return;
+    }
+    showPasswordResetQueueError(
+      error instanceof Error
+        ? `${error.message} Refresh the queue; if approval succeeded but its reply was lost, issue a replacement code.`
+        : "The decision could not be confirmed. Refresh the queue before trying again.",
+    );
+    refreshQueue = true;
+  } finally {
+    passwordResetActionInFlight = false;
+    if (refreshQueue && currentStaff?.capabilities.includes("approve-password-resets")) {
+      void loadPasswordResetQueue();
+    }
   }
 }
 
@@ -2247,11 +2549,19 @@ el.productionSetup.addEventListener("change", renderRunDieSetup);
 el.dieType.addEventListener("change", selectRunDie);
 el.stationForm.addEventListener("submit", submitStationForm);
 el.authForm.addEventListener("submit", submitSignIn);
+el.passwordResetRequestForm.addEventListener("submit", submitPasswordResetRequest);
+el.passwordResetCompletionForm.addEventListener("submit", submitPasswordResetCompletion);
+el.passwordResetRequestToggle.addEventListener("click", () => showPasswordResetForm("request"));
+el.passwordResetCompletionToggle.addEventListener("click", () => showPasswordResetForm("complete"));
+el.passwordResetRequestCancel.addEventListener("click", returnToSignIn);
+el.passwordResetCompletionCancel.addEventListener("click", returnToSignIn);
 el.bootstrapForm.addEventListener("submit", submitBootstrap);
 el.setupToggle.addEventListener("click", () => toggleBootstrapForm(true));
 el.setupCancel.addEventListener("click", () => toggleBootstrapForm(false));
 el.staffCreateForm.addEventListener("submit", submitStaffCreate);
 el.staffList.addEventListener("click", handleStaffAction);
+el.passwordResetQueue.addEventListener("click", handlePasswordResetAction);
+el.passwordResetRefresh.addEventListener("click", () => void loadPasswordResetQueue());
 el.authRetry.addEventListener("click", checkSession);
 el.signOut.addEventListener("click", signOut);
 window.addEventListener("offline", enterOfflineMode);

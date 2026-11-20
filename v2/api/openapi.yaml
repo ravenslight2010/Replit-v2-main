@@ -292,6 +292,202 @@ paths:
           $ref: "#/components/responses/Error"
         "405":
           $ref: "#/components/responses/Error"
+  /api/v2/auth/password-reset-requests:
+    get:
+      operationId: listStaffPasswordResetRequests
+      summary: List active password recovery requests for an authorized manager
+      security:
+        - v2Session: []
+      responses:
+        "200":
+          description: Bounded pending requests and approved codes available for reissue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetQueue"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: requestStaffPasswordReset
+      summary: Request password recovery without confirming account existence
+      description: >
+        Always returns the same accepted response for valid usernames. The
+        server stores no recovery code until a manager approves a known active
+        account; the request itself revokes that account's existing sessions.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+      responses:
+        "202":
+          description: Recovery request accepted without revealing whether the account exists
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accepted]
+                properties:
+                  accepted:
+                    const: true
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/password-reset-requests/{requestId}/decision:
+    post:
+      operationId: decideStaffPasswordReset
+      summary: Approve or deny a password recovery request
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/PasswordResetRequestId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetDecision"
+      responses:
+        "200":
+          description: Decision recorded; an approved code is shown only in this authorized response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PasswordResetApproved"
+                  - $ref: "#/components/schemas/PasswordResetDenied"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/password-reset-requests/{requestId}/reissue:
+    post:
+      operationId: reissueStaffPasswordResetCode
+      summary: Replace a lost or expired password recovery code
+      description: >
+        Replaces the active code and revokes any existing sessions. The prior
+        code immediately becomes unusable. Codes are never returned by queue
+        reads or ordinary account responses.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/PasswordResetRequestId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: A new one-use code, shown once to an authorized manager
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetReissued"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
+  /api/v2/auth/password-reset-completions:
+    post:
+      operationId: completeStaffPasswordReset
+      summary: Set a new password using a one-use recovery code
+      description: >
+        The recovery code is single-use and expires after ten minutes. A
+        successful reset revokes every session and requires a fresh sign-in.
+        Unknown usernames, disabled accounts, expired codes, and invalid codes
+        receive the same safe failure.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetCompletion"
+      responses:
+        "204":
+          description: Password replaced; all sessions revoked; a fresh sign-in is required
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
   /api/v2/runs:
     get:
       operationId: listRuns
@@ -1673,6 +1869,13 @@ components:
       schema:
         type: string
         format: uuid
+    PasswordResetRequestId:
+      in: path
+      name: requestId
+      required: true
+      schema:
+        type: string
+        format: uuid
     Limit:
       in: query
       name: limit
@@ -1781,6 +1984,106 @@ components:
           type: string
           minLength: 1
           maxLength: 80
+    PasswordResetRequest:
+      type: object
+      additionalProperties: false
+      required: [username]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 40
+    PasswordResetCompletion:
+      type: object
+      additionalProperties: false
+      required: [username, code, newPassword]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 40
+        code:
+          type: string
+          minLength: 43
+          maxLength: 43
+          pattern: "^[A-Za-z0-9_-]{43}$"
+        newPassword:
+          type: string
+          minLength: 6
+          maxLength: 128
+    PasswordResetDecision:
+      type: object
+      additionalProperties: false
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [approve, deny]
+    PasswordResetQueue:
+      type: object
+      required: [requests]
+      properties:
+        requests:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/PasswordResetRequestSummary"
+    PasswordResetRequestSummary:
+      type: object
+      required: [requestId, staffId, username, state, requestedAt, decidedAt, codeExpiresAt]
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        staffId:
+          type: string
+          format: uuid
+        username:
+          type: string
+        state:
+          type: string
+          enum: [pending, approved]
+        requestedAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type: [string, "null"]
+          format: date-time
+        codeExpiresAt:
+          type: [string, "null"]
+          format: date-time
+    PasswordResetApproved:
+      type: object
+      required: [outcome, code, expiresAt]
+      properties:
+        outcome:
+          const: approved
+        code:
+          type: string
+          minLength: 43
+          maxLength: 43
+        expiresAt:
+          type: string
+          format: date-time
+    PasswordResetReissued:
+      type: object
+      required: [outcome, code, expiresAt]
+      properties:
+        outcome:
+          const: reissued
+        code:
+          type: string
+          minLength: 43
+          maxLength: 43
+        expiresAt:
+          type: string
+          format: date-time
+    PasswordResetDenied:
+      type: object
+      required: [outcome]
+      properties:
+        outcome:
+          const: denied
     StaffDirectory:
       type: object
       required: [staff, roles]

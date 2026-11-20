@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { mkdir, rm } from "node:fs/promises";
+import { access, mkdir, rm } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { chromium, webkit } from "../../node_modules/.pnpm/node_modules/playwright/index.mjs";
+import { chromium, webkit as localWebkit } from "../node_modules/playwright/index.mjs";
 import { startV2Server } from "./main.mjs";
+
+const webkit = process.env.V2_WEBKIT_PLAYWRIGHT_MODULE
+  ? createRequire(import.meta.url)(process.env.V2_WEBKIT_PLAYWRIGHT_MODULE).webkit
+  : localWebkit;
 
 const MANAGER_USERNAME = "V2IntegrationManager";
 const MANAGER_PASSWORD = "v2-test-manager-password";
@@ -46,6 +51,10 @@ async function main() {
   let offlineCheckActive = false;
   let serverInstance;
   let browser;
+  let webkitBrowser;
+  let recoveryContext;
+  let webkitContext;
+  let webkitManagerContext;
   const evidenceDir = join(tmpdir(), `v2-manager-inventory-${randomUUID()}`);
   try {
     await mkdir(evidenceDir, { recursive: true });
@@ -73,18 +82,37 @@ async function main() {
     });
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
-    page.on("pageerror", (error) => errors.push(error.message));
-    page.on("console", (message) => {
-      if (message.type() !== "error") return;
-      if (offlineCheckActive && message.text().includes("net::ERR_INTERNET_DISCONNECTED")) return;
-      errors.push(message.text());
-    });
-    page.on("response", (response) => {
-      if (response.status() >= 400) {
-        const url = new URL(response.url());
-        failedResponses.push(`${response.status()} ${url.pathname}`);
-      }
-    });
+    function watchPage(watchedPage) {
+      let expectedSessionChallenge = false;
+      watchedPage.on("pageerror", (error) => errors.push(error.message));
+      watchedPage.on("console", (message) => {
+        if (message.type() !== "error") return;
+        const text = message.text();
+        const fontPreconnectFailure = text.includes("Failed to preconnect to https://fonts.googleapis.com/")
+          || text.includes("Failed to preconnect to https://fonts.gstatic.com/");
+        const optionalFontTlsFailure = process.env.V2_IGNORE_FONT_TLS_FAILURES === "1"
+          && text === "Failed to load resource: TLS support is not available";
+        if (fontPreconnectFailure || optionalFontTlsFailure) {
+          return;
+        }
+        if (offlineCheckActive && text.includes("net::ERR_INTERNET_DISCONNECTED")) return;
+        if (expectedSessionChallenge && text.includes("Failed to load resource")) {
+          expectedSessionChallenge = false;
+          return;
+        }
+        errors.push(text);
+      });
+      watchedPage.on("response", (response) => {
+        if (response.status() >= 400) {
+          const url = new URL(response.url());
+          failedResponses.push(`${response.status()} ${url.pathname}`);
+          if (response.status() === 401 && url.pathname === "/api/v2/auth/session") {
+            expectedSessionChallenge = true;
+          }
+        }
+      });
+    }
+    watchPage(page);
 
     await authenticateBrowserContext(baseUrl, context);
     await page.goto(baseUrl);
@@ -182,6 +210,173 @@ async function main() {
     await context.setOffline(false);
     await page.waitForFunction(() => document.querySelector("#die-default-type")?.disabled === false);
     offlineCheckActive = false;
+
+    recoveryContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const recoveryPage = await recoveryContext.newPage();
+    watchPage(recoveryPage);
+    await recoveryPage.goto(baseUrl);
+    await recoveryPage.locator("#auth-form:not([hidden])").waitFor();
+    await recoveryPage.locator("#password-recovery-links:not([hidden])").waitFor();
+    await recoveryPage.locator("#password-reset-request-toggle").click();
+    await recoveryPage.locator("#password-reset-request-form:not([hidden])").waitFor();
+    await recoveryPage.locator("#password-reset-username").fill("V2RecoveryOperator");
+    await recoveryPage.locator("#password-reset-request-submit").click();
+    await recoveryPage.locator("#password-reset-status")
+      .getByText("If the account is active, a manager will review the request.").waitFor();
+    await recoveryPage.locator("#password-reset-request-cancel").click();
+
+    await page.reload();
+    await page.locator("#password-reset-panel:not([hidden])").waitFor();
+    const approveButton = page.locator("#password-reset-queue [data-reset-action='approve']").first();
+    await approveButton.waitFor();
+    const browserRequestId = await approveButton.getAttribute("data-reset-id");
+    assert.match(browserRequestId ?? "", /^[0-9a-f-]{36}$/i);
+    await approveButton.click();
+    await page.locator("#password-reset-code-panel:not([hidden])").waitFor();
+    const browserRecoveryCode = (await page.locator("#password-reset-issued-code").textContent()).trim();
+    assert.match(browserRecoveryCode, /^[A-Za-z0-9_-]{43}$/);
+
+    for (const viewport of [
+      { name: "phone", width: 390, height: 844 },
+      { name: "tablet portrait", width: 768, height: 1024 },
+      { name: "tablet landscape", width: 1024, height: 768 },
+      { name: "desktop", width: 1280, height: 900 },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      const overflow = await page.locator("#password-reset-panel").evaluate((panel) =>
+        panel.scrollWidth > panel.clientWidth + 1);
+      assert.equal(overflow, false, `${viewport.name} recovery queue should not overflow horizontally`);
+    }
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    await recoveryPage.locator("#password-reset-completion-toggle").click();
+    await recoveryPage.locator("#password-reset-completion-form:not([hidden])").waitFor();
+    await recoveryPage.locator("#password-reset-completion-username").fill("V2RecoveryOperator");
+    await recoveryPage.locator("#password-reset-code").fill(browserRecoveryCode);
+    await recoveryPage.locator("#password-reset-new-password").fill("v2-test-browser-recovery-password");
+    await recoveryPage.locator("#password-reset-completion-submit").click();
+    await recoveryPage.locator("#auth-status")
+      .getByText("Password updated. Sign in with the new password.").waitFor();
+    await recoveryPage.locator("#auth-username").fill("V2RecoveryOperator");
+    await recoveryPage.locator("#auth-password").fill("v2-test-browser-recovery-password");
+    await recoveryPage.locator("#auth-submit").click();
+    await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor();
+    await recoveryPage.locator("#sign-out-button").click();
+    await recoveryPage.locator("#auth-form:not([hidden])").waitFor();
+
+    await recoveryPage.locator("#password-reset-request-toggle").click();
+    await recoveryPage.locator("#password-reset-username").fill("V2RecoveryOperator");
+    await recoveryPage.locator("#password-reset-request-submit").click();
+    await recoveryPage.locator("#password-reset-status")
+      .getByText("If the account is active, a manager will review the request.").waitFor();
+    await page.reload();
+    await page.locator("#password-reset-panel:not([hidden])").waitFor();
+    const denyButton = page.locator("#password-reset-queue .manager-list-item")
+      .filter({ hasText: "V2RecoveryOperator" })
+      .getByRole("button", { name: "Deny" });
+    await denyButton.click();
+    await page.locator("#password-reset-queue")
+      .getByText("No recovery requests need review.").waitFor();
+    assert.equal(await page.locator("#password-reset-code-panel").isVisible(), false);
+    await page.reload();
+    await page.locator("#password-reset-panel:not([hidden])").waitFor();
+    await page.locator("#password-reset-queue")
+      .getByText("No recovery requests need review.").waitFor();
+
+    let webkitLane = "BLOCKED: Playwright WebKit is not installed in this test environment.";
+    const webkitPath = webkit.executablePath();
+    try {
+      await access(webkitPath);
+      const previousHostCheck = process.env.PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS;
+      if (process.env.V2_WEBKIT_SKIP_HOST_REQUIREMENTS === "1") {
+        process.env.PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "1";
+      }
+      try {
+        webkitBrowser = await webkit.launch({
+          headless: true,
+          env: {
+            ...process.env,
+            ...(process.env.V2_WEBKIT_EGL_VENDOR
+              ? { __EGL_VENDOR_LIBRARY_FILENAMES: process.env.V2_WEBKIT_EGL_VENDOR }
+              : {}),
+          },
+        });
+      } finally {
+        if (previousHostCheck === undefined) delete process.env.PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS;
+        else process.env.PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = previousHostCheck;
+      }
+      webkitLane = "AVAILABLE";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      webkitLane = message.includes("missing dependencies")
+        ? "BLOCKED: this NixOS environment lacks compatible native WebKit libraries."
+        : `BLOCKED: ${message.split("\n").find((line) => line.trim().length > 0)?.slice(0, 180) || "WebKit could not start."}`;
+    }
+    if (!webkitBrowser && process.env.V2_WEBKIT_REQUIRED === "1") {
+      throw new Error(`Required WebKit browser journey failed: ${webkitLane}`);
+    }
+    if (webkitBrowser) {
+      webkitManagerContext = await webkitBrowser.newContext({ viewport: { width: 1280, height: 900 } });
+      const webkitManagerPage = await webkitManagerContext.newPage();
+      watchPage(webkitManagerPage);
+      await webkitManagerPage.goto(baseUrl);
+      await webkitManagerPage.locator("#auth-username").fill(MANAGER_USERNAME);
+      await webkitManagerPage.locator("#auth-password").fill(MANAGER_PASSWORD);
+      await webkitManagerPage.locator("#auth-submit").click();
+      await webkitManagerPage.locator("#password-reset-panel:not([hidden])").waitFor();
+      webkitContext = await webkitBrowser.newContext({ viewport: { width: 390, height: 844 } });
+      const webkitStaffPage = await webkitContext.newPage();
+      watchPage(webkitStaffPage);
+      await webkitStaffPage.goto(baseUrl);
+      await webkitStaffPage.locator("#password-recovery-links:not([hidden])").waitFor();
+      await webkitStaffPage.locator("#password-reset-request-toggle").click();
+      await webkitStaffPage.locator("#password-reset-username").fill("V2RecoveryOperator");
+      await webkitStaffPage.locator("#password-reset-request-submit").click();
+      await webkitStaffPage.locator("#password-reset-status")
+        .getByText("If the account is active, a manager will review the request.").waitFor();
+      await webkitStaffPage.locator("#password-reset-request-cancel").click();
+      await webkitManagerPage.reload();
+      const webkitApprove = webkitManagerPage.locator("#password-reset-queue [data-reset-action='approve']").first();
+      await webkitApprove.waitFor();
+      await webkitApprove.click();
+      await webkitManagerPage.locator("#password-reset-code-panel:not([hidden])").waitFor();
+      const webkitCode = (await webkitManagerPage.locator("#password-reset-issued-code").textContent()).trim();
+      assert.match(webkitCode, /^[A-Za-z0-9_-]{43}$/);
+      for (const viewport of [
+        { name: "phone", width: 390, height: 844 },
+        { name: "tablet portrait", width: 768, height: 1024 },
+        { name: "tablet landscape", width: 1024, height: 768 },
+        { name: "desktop", width: 1280, height: 900 },
+      ]) {
+        await webkitManagerPage.setViewportSize({ width: viewport.width, height: viewport.height });
+        const overflow = await webkitManagerPage.locator("#password-reset-panel").evaluate((panel) =>
+          panel.scrollWidth > panel.clientWidth + 1);
+        assert.equal(overflow, false, `WebKit ${viewport.name} recovery queue should not overflow horizontally`);
+      }
+      await webkitStaffPage.locator("#password-reset-completion-toggle").click();
+      await webkitStaffPage.locator("#password-reset-completion-form:not([hidden])").waitFor();
+      await webkitStaffPage.locator("#password-reset-completion-username").fill("V2RecoveryOperator");
+      await webkitStaffPage.locator("#password-reset-code").fill(webkitCode);
+      await webkitStaffPage.locator("#password-reset-new-password").fill("v2-test-webkit-recovery-password");
+      await webkitStaffPage.locator("#password-reset-completion-submit").click();
+      await webkitStaffPage.locator("#auth-status")
+        .getByText("Password updated. Sign in with the new password.").waitFor();
+      await webkitStaffPage.locator("#auth-username").fill("V2RecoveryOperator");
+      await webkitStaffPage.locator("#auth-password").fill("v2-test-webkit-recovery-password");
+      await webkitStaffPage.locator("#auth-submit").click();
+      await webkitStaffPage.locator("#authenticated-app:not([hidden])").waitFor();
+      await webkitManagerPage.reload();
+      await webkitManagerPage.locator("#password-reset-queue")
+        .getByText("No recovery requests need review.").waitFor();
+
+      await webkitManagerPage.locator("#die-default-type").selectOption("DIE-UNREVIEWED-TEST");
+      await webkitManagerPage.locator("#run-product").selectOption("DOUGH-A");
+      await webkitManagerPage.locator("#run-production-setup").selectOption("LINE-A");
+      await webkitManagerPage.locator("#run-die-type").selectOption("DIE-UNREVIEWED-TEST");
+      assert.equal(await webkitManagerPage.locator('[data-die-field="crustsPerCycle"]').inputValue(), "8");
+      console.log("V2 WebKit/Safari engine die-default selection passed.");
+      webkitLane = `PASS (WebKit ${webkitBrowser.version()})`;
+    }
 
     const suffix = randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
     const productCode = `UI${suffix}`;
@@ -359,31 +554,19 @@ async function main() {
     assert.equal(await secondPage.locator('.schedule-run [data-field="targetCases"]').inputValue(), "20");
     await secondContext.close();
 
-    assert.deepEqual(errors, [], "manager inventory and schedule browser journeys should have no browser or server errors");
-    assert.deepEqual(failedResponses, ["401 /api/v2/auth/session"],
-      "only the expected unauthenticated session challenge should be rejected");
+    assert.deepEqual(errors, [], "manager recovery, inventory, die-default, and schedule journeys should have no browser or server errors");
+    assert.ok(
+      failedResponses.length >= 2 && failedResponses.every((response) => response === "401 /api/v2/auth/session"),
+      "only expected unauthenticated session challenges should be rejected",
+    );
     console.log("V2 authenticated Chromium journeys passed: reviewed die defaults, switch-aware run snapshot, inventory, schedule convergence, and reload persistence. Responsive emulation passed at desktop, phone, tablet portrait, and tablet landscape sizes.");
-
-    let webkitBrowser;
-    try {
-      webkitBrowser = await webkit.launch({ headless: true });
-      const webkitContext = await webkitBrowser.newContext({ viewport: { width: 1024, height: 768 } });
-      await authenticateBrowserContext(baseUrl, webkitContext);
-      const webkitPage = await webkitContext.newPage();
-      await webkitPage.goto(baseUrl);
-      await webkitPage.locator("#manager-tools:not([hidden])").waitFor();
-      await webkitPage.locator("#die-default-type").selectOption("DIE-UNREVIEWED-TEST");
-      await webkitPage.locator("#run-product").selectOption("DOUGH-A");
-      await webkitPage.locator("#run-production-setup").selectOption("LINE-A");
-      await webkitPage.locator("#run-die-type").selectOption("DIE-UNREVIEWED-TEST");
-      assert.equal(await webkitPage.locator('[data-die-field="crustsPerCycle"]').inputValue(), "8");
-      console.log("V2 WebKit/Safari engine die-default selection passed.");
-      await webkitBrowser.close();
-    } catch (error) {
-      if (webkitBrowser) await webkitBrowser.close();
-      console.log(`V2 WebKit/Safari lane BLOCKED: ${error instanceof Error ? error.message.split("\n")[0] : "engine unavailable"}`);
-    }
+    console.log(`Password recovery browser coverage: Chromium PASS across phone, tablet portrait/landscape, and desktop; WebKit ${webkitLane}`);
+    console.log("V2 authenticated Chromium inventory journey passed: product import, reviewed opening counts, warehouse assignment, receipt, transfer, and reload persistence.");
   } finally {
+    if (webkitContext) await webkitContext.close();
+    if (webkitManagerContext) await webkitManagerContext.close();
+    if (recoveryContext) await recoveryContext.close();
+    if (webkitBrowser) await webkitBrowser.close();
     if (browser) await browser.close();
     if (serverInstance) await serverInstance.close();
     await rm(evidenceDir, { recursive: true, force: true });
@@ -391,10 +574,15 @@ async function main() {
 }
 
 main().catch((error) => {
+  const sourceFrame = error instanceof Error
+    ? error.stack?.split("\n").slice(1)
+      .find((line) => line.includes("http-postgres.browser.integration.mjs"))?.trim()
+    : undefined;
   console.error(JSON.stringify({
     event: "v2.http_postgres_browser_integration.failed",
     errorName: typeof error?.name === "string" ? error.name : "UnknownError",
-    message: error instanceof Error ? error.message : "Browser integration assertion failed.",
+    location: sourceFrame || "browser integration source location unavailable",
+    message: "Browser integration failed; sensitive test values are not logged.",
   }));
   process.exitCode = 1;
 });

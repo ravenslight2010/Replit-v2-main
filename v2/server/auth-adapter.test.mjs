@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createAuthAdapter, hashPassword, verifyPassword } from "./auth-adapter.mjs";
+import { createAuthAdapter, hashPassword, V2AuthError, verifyPassword } from "./auth-adapter.mjs";
 
 const USER_ID = "71000000-0000-4000-8000-000000000001";
 const FACILITY_ID = "71000000-0000-4000-8000-000000000099";
@@ -227,6 +227,142 @@ test("sign-out revokes the session, and run authorization accepts only authentic
   assert.equal(adapter.authorizeRun({ auth: null, action: "run.read" }), false);
   assert.equal(await adapter.signOut(request), true);
   assert.equal(await adapter.authenticate(request), null);
+});
+
+test("password recovery hides account existence, hashes codes, and uses a one-time password change", async () => {
+  let now = 10_000;
+  const calls = [];
+  const logs = [];
+  const adapter = createAuthAdapter({
+    query: async (sql, params) => {
+      calls.push({ sql, params });
+      if (sql.includes("request_staff_password_reset")) return { rows: [{ accepted: params[0] === "shiftmanager" }] };
+      if (sql.includes("list_staff_password_reset_requests")) {
+        return {
+          rows: [{
+            request_id: "71000000-0000-4000-8000-000000000010",
+            staff_id: USER_ID,
+            username: "ShiftManager",
+            state: "pending",
+            requested_at: new Date(now).toISOString(),
+            decided_at: null,
+            code_expires_at: null,
+          }],
+        };
+      }
+      if (sql.includes("decide_staff_password_reset")) return { rows: [{ outcome: "approved" }] };
+      if (sql.includes("reissue_staff_password_reset_code")) return { rows: [{ outcome: "reissued" }] };
+      if (sql.includes("complete_staff_password_reset")) return { rows: [{ completed: true }] };
+      throw new Error("Unexpected query");
+    },
+    clock: () => now,
+    logger: (entry) => logs.push(entry),
+    passwordResetRequestLimit: { maxAttempts: 1, windowMs: 60_000 },
+  });
+
+  assert.deepEqual(
+    await adapter.requestPasswordReset({ username: "ShiftManager", clientKey: "client-a" }),
+    { accepted: true },
+  );
+  assert.deepEqual(
+    await adapter.requestPasswordReset({ username: "MissingAccount", clientKey: "client-b" }),
+    { accepted: true },
+  );
+  assert.equal(calls[0].sql.includes("request_staff_password_reset"), true);
+  assert.equal(calls[0].params[0], "shiftmanager");
+  await assert.rejects(
+    adapter.requestPasswordReset({ username: "shiftmanager", clientKey: "client-a" }),
+    { status: 429 },
+  );
+
+  const requests = await adapter.listPasswordResetRequests({ actorId: USER_ID });
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].state, "pending");
+  assert.equal("recoveryCode" in requests[0], false);
+
+  const approved = await adapter.decidePasswordReset({
+    actorId: USER_ID,
+    requestId: "71000000-0000-4000-8000-000000000010",
+    decision: "approve",
+    clientKey: "manager-client",
+  });
+  assert.equal(approved.outcome, "approved");
+  assert.match(approved.code, /^[A-Za-z0-9_-]{43}$/);
+  assert.equal(Date.parse(approved.expiresAt), now + 10 * 60 * 1000);
+  const decisionCall = calls.find((call) => call.sql.includes("decide_staff_password_reset"));
+  assert.match(decisionCall.params[3], /^[0-9a-f]{64}$/);
+  assert.notEqual(decisionCall.params[3], approved.code);
+  assert.equal(JSON.stringify(logs).includes(approved.code), false);
+
+  const reissued = await adapter.reissuePasswordResetCode({
+    actorId: USER_ID,
+    requestId: "71000000-0000-4000-8000-000000000010",
+    clientKey: "manager-client",
+  });
+  assert.equal(reissued.outcome, "reissued");
+  assert.notEqual(reissued.code, approved.code);
+
+  await adapter.completePasswordReset({
+    username: "ShiftManager",
+    code: reissued.code,
+    newPassword: "new password is private",
+    clientKey: "client-a",
+  });
+  const completionCall = calls.find((call) => call.sql.includes("complete_staff_password_reset"));
+  assert.equal(completionCall.params[0], "shiftmanager");
+  assert.match(completionCall.params[1], /^[0-9a-f]{64}$/);
+  assert.notEqual(completionCall.params[1], reissued.code);
+  assert.equal(await verifyPassword("new password is private", completionCall.params[2]), true);
+  assert.equal(JSON.stringify(calls).includes(reissued.code), false);
+  assert.equal(JSON.stringify(logs).includes(reissued.code), false);
+});
+
+test("password recovery converts database permission races into a safe forbidden response", async () => {
+  const adapter = createAuthAdapter({
+    query: async () => {
+      throw Object.assign(new Error("database permission detail"), { code: "42501" });
+    },
+  });
+  await assert.rejects(
+    adapter.listPasswordResetRequests({ actorId: USER_ID }),
+    (error) => error instanceof V2AuthError
+      && error.status === 403
+      && !error.message.includes("database permission detail"),
+  );
+});
+
+test("password recovery decisions and completion are rate-limited before database or password work", async () => {
+  const calls = [];
+  const adapter = createAuthAdapter({
+    query: async (sql) => {
+      calls.push(sql);
+      if (sql.includes("decide_staff_password_reset")) return { rows: [{ outcome: "approved" }] };
+      if (sql.includes("complete_staff_password_reset")) return { rows: [{ completed: true }] };
+      throw new Error("Unexpected query");
+    },
+    passwordResetDecisionLimit: { maxAttempts: 1, windowMs: 60_000 },
+    passwordResetCompletionLimit: { maxAttempts: 1, windowMs: 60_000 },
+    passwordResetMinimumResponseMs: 0,
+  });
+  const requestId = "71000000-0000-4000-8000-000000000010";
+  await adapter.decidePasswordReset({
+    actorId: USER_ID, requestId, decision: "approve", clientKey: "manager-client",
+  });
+  await assert.rejects(
+    adapter.reissuePasswordResetCode({ actorId: USER_ID, requestId, clientKey: "manager-client" }),
+    { status: 429 },
+  );
+  assert.equal(calls.filter((sql) => /decide_staff_password_reset|reissue_staff_password_reset_code/u.test(sql)).length, 1);
+
+  const completion = {
+    username: "ShiftManager",
+    code: "a".repeat(43),
+    newPassword: "a new password",
+    clientKey: "staff-client",
+  };
+  await adapter.completePasswordReset(completion);
+  await assert.rejects(adapter.completePasswordReset(completion), { status: 429 });
+  assert.equal(calls.filter((sql) => sql.includes("complete_staff_password_reset")).length, 1);
 });
 
 test("session cookie helpers are HttpOnly and clear the same V2 cookie", (t) => {

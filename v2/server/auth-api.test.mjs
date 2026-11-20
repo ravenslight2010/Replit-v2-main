@@ -66,6 +66,23 @@ function makeAuth() {
     async updateStaffAccount() {
       throw new V2AuthError(403, "Staff management is not authorized.");
     },
+    async requestPasswordReset() {
+      return { accepted: true };
+    },
+    async listPasswordResetRequests() {
+      return [];
+    },
+    async decidePasswordReset({ decision }) {
+      return decision === "approve"
+        ? { outcome: "approved", code: "c".repeat(43), expiresAt: "2026-11-17T00:10:00.000Z" }
+        : { outcome: "denied" };
+    },
+    async reissuePasswordResetCode() {
+      return { outcome: "reissued", code: "d".repeat(43), expiresAt: "2026-11-17T00:10:00.000Z" };
+    },
+    async completePasswordReset() {
+      return true;
+    },
     sessionCookie(value, options) {
       return `v2_session=${value}; Path=/; HttpOnly; SameSite=Lax${options.secure ? "; Secure" : ""}`;
     },
@@ -412,5 +429,183 @@ test("manager staff routes require authorization and CSRF and accept only known 
     current = { ...manager, capabilities: [] };
     const forbidden = await fetch(`${baseUrl}/api/v2/auth/staff`);
     assert.equal(forbidden.status, 403);
+  });
+});
+
+test("recovery requests and completions keep public responses non-enumerating and secrets out of logs", async () => {
+  const auth = makeAuth();
+  const requests = [];
+  const completions = [];
+  auth.requestPasswordReset = async (input) => {
+    requests.push(input);
+    return { accepted: true };
+  };
+  auth.completePasswordReset = async (input) => {
+    completions.push(input);
+    return true;
+  };
+  const observedLogs = [];
+  const handler = createAuthApi({
+    auth,
+    getClientKey: () => "test-client",
+    logger: (entry) => observedLogs.push(entry),
+  });
+
+  await withServer(handler, async (baseUrl) => {
+    async function request(username) {
+      const response = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: baseUrl,
+          "sec-fetch-site": "same-origin",
+        },
+        body: JSON.stringify({ username }),
+      });
+      return { status: response.status, body: await response.json(), headers: response.headers };
+    }
+    const known = await request("ShiftManager");
+    const unknown = await request("MissingAccount");
+    assert.equal(known.status, 202);
+    assert.deepEqual(known.body, { accepted: true });
+    assert.equal(unknown.status, known.status);
+    assert.deepEqual(unknown.body, known.body);
+    assert.deepEqual(requests.map((input) => input.username), ["ShiftManager", "MissingAccount"]);
+    assert.equal(known.headers.get("cache-control"), "no-store");
+
+    const invalidBody = await fetch(`${baseUrl}/api/v2/auth/password-reset-completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ username: "operator", code: "a".repeat(43), newPassword: "new-password", extra: true }),
+    });
+    assert.equal(invalidBody.status, 400);
+
+    const code = "Z".repeat(43);
+    const completed = await fetch(`${baseUrl}/api/v2/auth/password-reset-completions`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: baseUrl,
+        "sec-fetch-site": "same-origin",
+      },
+      body: JSON.stringify({ username: "operator", code, newPassword: "new-password" }),
+    });
+    assert.equal(completed.status, 204);
+    assert.deepEqual(completions, [{
+      username: "operator",
+      code,
+      newPassword: "new-password",
+      clientKey: "test-client",
+    }]);
+    assert.deepEqual(observedLogs, []);
+  });
+});
+
+test("recovery queue and decisions require the dedicated capability and CSRF", async () => {
+  const auth = makeAuth();
+  const manager = {
+    verified: true,
+    actorId: "10000000-0000-4000-8000-000000000011",
+    facilityId: "10000000-0000-4000-8000-000000000002",
+    username: "manager",
+    role: "manager",
+    capabilities: ["approve-password-resets"],
+    sessionExpiresAt: "2026-11-17T00:00:00.000Z",
+  };
+  let current = manager;
+  const listed = [];
+  const decisions = [];
+  const reissues = [];
+  auth.authenticate = async () => current;
+  auth.verifyCsrf = async (request) => request.headers["x-csrf-token"] === csrfToken;
+  auth.listPasswordResetRequests = async (input) => {
+    listed.push(input);
+    return [{
+      requestId: "10000000-0000-4000-8000-000000000012",
+      staffId: "10000000-0000-4000-8000-000000000013",
+      username: "operator",
+      state: "pending",
+      requestedAt: "2026-11-16T00:00:00.000Z",
+      decidedAt: null,
+      codeExpiresAt: null,
+    }];
+  };
+  auth.decidePasswordReset = async (input) => {
+    decisions.push(input);
+    return input.decision === "approve"
+      ? { outcome: "approved", code: "x".repeat(43), expiresAt: "2026-11-17T00:10:00.000Z" }
+      : { outcome: "denied" };
+  };
+  auth.reissuePasswordResetCode = async (input) => {
+    reissues.push(input);
+    return { outcome: "reissued", code: "y".repeat(43), expiresAt: "2026-11-17T00:10:00.000Z" };
+  };
+  const handler = createAuthApi({ auth, getClientKey: () => "manager-client" });
+
+  await withServer(handler, async (baseUrl) => {
+    const queue = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests`);
+    assert.equal(queue.status, 200);
+    assert.equal((await queue.json()).requests.length, 1);
+    assert.deepEqual(listed, [{ actorId: manager.actorId }]);
+
+    const requestPath = "/api/v2/auth/password-reset-requests/10000000-0000-4000-8000-000000000012/decision";
+    const missingCsrf = await fetch(`${baseUrl}${requestPath}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: `v2_session=${token}` },
+      body: JSON.stringify({ decision: "approve" }),
+    });
+    assert.equal(missingCsrf.status, 403);
+
+    const approved = await fetch(`${baseUrl}${requestPath}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: baseUrl,
+        "sec-fetch-site": "same-origin",
+        cookie: `v2_session=${token}; v2_csrf=${csrfToken}`,
+        "x-csrf-token": csrfToken,
+      },
+      body: JSON.stringify({ decision: "approve" }),
+    });
+    assert.equal(approved.status, 200);
+    const approvedBody = await approved.json();
+    assert.equal(approvedBody.code, "x".repeat(43));
+    assert.deepEqual(decisions[0], {
+      actorId: manager.actorId,
+      requestId: "10000000-0000-4000-8000-000000000012",
+      decision: "approve",
+      clientKey: "manager-client",
+    });
+
+    const reissue = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests/10000000-0000-4000-8000-000000000012/reissue`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: baseUrl,
+        "sec-fetch-site": "same-origin",
+        cookie: `v2_session=${token}; v2_csrf=${csrfToken}`,
+        "x-csrf-token": csrfToken,
+      },
+      body: "{}",
+    });
+    assert.equal(reissue.status, 200);
+    assert.equal((await reissue.json()).outcome, "reissued");
+    assert.equal(reissues.length, 1);
+
+    current = { ...manager, capabilities: [] };
+    const forbidden = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests`);
+    assert.equal(forbidden.status, 403);
+    const forbiddenDecision = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests/10000000-0000-4000-8000-000000000012/decision`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: baseUrl,
+        "sec-fetch-site": "same-origin",
+        cookie: `v2_session=${token}`,
+      },
+      body: JSON.stringify({ decision: "deny" }),
+    });
+    assert.equal(forbiddenDecision.status, 403);
+    assert.equal(decisions.length, 1, "unauthorized actors must not call the decision adapter");
   });
 });

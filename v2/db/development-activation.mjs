@@ -7,8 +7,9 @@ import { pathToFileURL } from "node:url";
 const SOURCES = [
   ["0007-approved-setup-catalogs.sql", "163829a4906746dc18879aa41156cc04adacaccc17a33ca698554979860dab9d"],
   ["0008-production-rule-enforcement.sql", "d248bb1d6c9b4a781d001f0720376bce827b78c3f8f3f8a03a59eb86334cc5a2"],
+  ["0009-staff-password-resets.sql", "750028e6833d5136aa15d47eae4c698bc9393b4c72aba763878c32bb3b10be7a"],
 ];
-const RUNTIME_ACCESS_SHA256 = "14f2febdbbc7af08a23e728db89d02c5b3e619527fa62f4f58d8d3c4aec387b0";
+const RUNTIME_ACCESS_SHA256 = "3329fa41b3ba3567428154650132b2d61883478e60967a1f717a0f4270534fae";
 const MANAGED_BASELINE = "8563f4c4b177a2c0a864491f9d5ed5db";
 const TABLES = [
   "command_receipts", "facility_scope", "inventory_balances", "inventory_movements",
@@ -101,10 +102,10 @@ BEGIN
   IF (${snapshotSql()}) IS DISTINCT FROM current_setting('v2.activation_snapshot') THEN
     RAISE EXCEPTION 'V2 activation changed existing records';
   END IF;
-  IF (SELECT count(*) FROM pg_tables WHERE schemaname = 'v2') <> 32 OR
-     (SELECT count(*) FROM pg_proc WHERE pronamespace = 'v2'::regnamespace) <> 60 OR
+  IF (SELECT count(*) FROM pg_tables WHERE schemaname = 'v2') <> 34 OR
+     (SELECT count(*) FROM pg_proc WHERE pronamespace = 'v2'::regnamespace) <> 68 OR
      (SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
-      WHERE c.relnamespace = 'v2'::regnamespace AND NOT t.tgisinternal) <> 9 THEN
+      WHERE c.relnamespace = 'v2'::regnamespace AND NOT t.tgisinternal) <> 11 THEN
     RAISE EXCEPTION 'V2 activation did not produce the reviewed schema';
   END IF;
   IF has_schema_privilege('v2_runtime_access', 'v2', 'CREATE') OR
@@ -116,7 +117,17 @@ BEGIN
          AND has_table_privilege('v2_runtime_access', c.oid,
            'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')) OR
      (SELECT count(*) FROM pg_proc p WHERE p.pronamespace = 'v2'::regnamespace
-       AND has_function_privilege('v2_runtime_access', p.oid, 'EXECUTE')) <> 44 OR
+       AND has_function_privilege('v2_runtime_access', p.oid, 'EXECUTE')) <> 49 OR
+     NOT has_function_privilege('v2_runtime_access',
+       'v2.request_staff_password_reset(text)', 'EXECUTE') OR
+     NOT has_function_privilege('v2_runtime_access',
+       'v2.list_staff_password_reset_requests(uuid)', 'EXECUTE') OR
+     NOT has_function_privilege('v2_runtime_access',
+       'v2.decide_staff_password_reset(uuid,uuid,text,text,timestamptz)', 'EXECUTE') OR
+     NOT has_function_privilege('v2_runtime_access',
+       'v2.reissue_staff_password_reset_code(uuid,uuid,text,timestamptz)', 'EXECUTE') OR
+     NOT has_function_privilege('v2_runtime_access',
+       'v2.complete_staff_password_reset(text,text,text)', 'EXECUTE') OR
      has_function_privilege('v2_runtime_access', 'v2.bootstrap_first_manager(text,text)', 'EXECUTE') THEN
     RAISE EXCEPTION 'V2 activation did not produce the reviewed runtime permissions';
   END IF;

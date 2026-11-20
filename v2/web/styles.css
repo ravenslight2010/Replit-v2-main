@@ -227,6 +227,10 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .auth-submit:disabled { cursor: progress; }
 .auth-retry { margin-top: 12px; border-color: var(--line-strong); color: var(--ink-soft); min-height: 40px; }
 .auth-retry[hidden] { display: none; }
+.password-recovery-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+.password-recovery-links .text-button { min-height: 38px; color: var(--ink-soft); font-size: 12px; }
+.password-recovery-links[hidden] { display: none; }
+.password-reset-form .form-note { margin: 0 0 2px; }
 .auth-footnote { margin: 22px 0 0; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.5; }
 .setup-toggle { margin-top: 14px; min-height: 40px; border-color: var(--line-strong); color: var(--ink-soft); }
 .bootstrap-form { margin-top: 18px; }
@@ -258,6 +262,14 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .staff-action-button.danger { border-color: var(--danger-border); color: var(--danger-text); }
 .staff-action-button:disabled { opacity: .5; cursor: not-allowed; }
 .staff-self-note { color: var(--muted); font-size: 11px; }
+.password-reset-panel { margin-top: 0; }
+.password-reset-refresh { min-height: 36px; margin: -5px 0 8px; }
+.password-reset-code { display: grid; gap: 8px; margin-top: 15px; padding: 14px; border: 1px solid var(--warning-border); background: var(--warning-bg); color: var(--warning-text); overflow-wrap: anywhere; }
+.password-reset-code[hidden] { display: none; }
+.password-reset-code strong { font-size: 13px; }
+.password-reset-code code { color: var(--ink); font: 600 17px/1.5 var(--mono); letter-spacing: .04em; user-select: all; }
+.password-reset-code span { font: 11px var(--mono); }
+.password-reset-code p { margin: 0; font-size: 11px; line-height: 1.5; }
 .loading-state { margin-top: 35px; }
 .skeleton { position: relative; overflow: hidden; background: var(--surface-raised); }
 .skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgb(255 255 255 / 6%), transparent); transform: translateX(-100%); animation: shimmer 1.7s infinite; }

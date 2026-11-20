@@ -750,6 +750,17 @@ fi
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-approved-setup-catalogs.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0009-production-schedules.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0009-staff-password-resets.sql" >/dev/null
+"${PSQL[@]}" -c "
+  GRANT EXECUTE ON FUNCTION v2.request_staff_password_reset(text) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_staff_password_reset_requests(uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.decide_staff_password_reset(uuid, uuid, text, text, timestamptz) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.reissue_staff_password_reset_code(uuid, uuid, text, timestamptz) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.complete_staff_password_reset(text, text, text) TO v2_api_test;
+" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0009-staff-password-resets.test.sql"
+assert_no_direct_table_access "v2.staff_password_reset_requests"
+assert_no_direct_table_access "v2.staff_password_reset_events"
 ENCODED_DB_USER="$(python3 - "$DB_USER" <<'PY'
 import sys
 import urllib.parse

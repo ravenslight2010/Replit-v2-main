@@ -56,6 +56,14 @@ function requireSignInKeys(body) {
   }
 }
 
+function requireExactKeys(body, expected, message) {
+  const keys = Object.keys(body).sort();
+  const expectedKeys = [...expected].sort();
+  if (keys.length !== expectedKeys.length || keys.some((key, index) => key !== expectedKeys[index])) {
+    throw new V2AuthError(400, message);
+  }
+}
+
 function assertSameOriginRequest(request) {
   const fetchSite = request.headers["sec-fetch-site"];
   if (fetchSite === "cross-site") {
@@ -104,6 +112,11 @@ function routeOperation(pathname) {
   if (pathname === `${AUTH_PREFIX}/bootstrap-status`) return "bootstrap_status";
   if (pathname === `${AUTH_PREFIX}/bootstrap`) return "bootstrap";
   if (pathname === `${AUTH_PREFIX}/staff`) return "staff_collection";
+  if (pathname === `${AUTH_PREFIX}/password-reset-requests`) return "password_reset_collection";
+  if (pathname === `${AUTH_PREFIX}/password-reset-completions`) return "password_reset_completion";
+  if (/^\/api\/v2\/auth\/password-reset-requests\/[0-9a-f-]{36}\/(decision|reissue)$/i.test(pathname)) {
+    return "password_reset_action";
+  }
   if (/^\/api\/v2\/auth\/staff\/[0-9a-f-]{36}$/i.test(pathname)) return "staff_item";
   return "unknown";
 }
@@ -128,6 +141,11 @@ export function createAuthApi({
     "listStaff",
     "createStaffAccount",
     "updateStaffAccount",
+    "requestPasswordReset",
+    "listPasswordResetRequests",
+    "decidePasswordReset",
+    "reissuePasswordResetCode",
+    "completePasswordReset",
   ]) {
     if (typeof auth?.[method] !== "function") {
       throw new TypeError(`A V2 authentication adapter with ${method}() is required.`);
@@ -330,6 +348,108 @@ export function createAuthApi({
           ...await auth.listStaff(current.actorId),
           outcome: updated.outcome,
         });
+        return true;
+      }
+
+      if (operation === "password_reset_collection") {
+        if (request.method !== "GET" && request.method !== "POST") {
+          sendJson(response, 405, { error: "This method is not allowed for password recovery requests." }, { Allow: "GET, POST" });
+          return true;
+        }
+        if (url.search) throw new V2AuthError(400, "Password recovery requests do not accept query parameters.");
+
+        if (request.method === "POST") {
+          assertSameOriginRequest(request);
+          const body = await readJsonBody(request);
+          requireExactKeys(body, ["username"], "The recovery request contains missing or unsupported fields.");
+          await auth.requestPasswordReset({
+            username: body.username,
+            clientKey: getClientKey(request),
+          });
+          sendJson(response, 202, { accepted: true });
+          return true;
+        }
+
+        const current = await auth.authenticate(request);
+        if (current?.verified !== true) {
+          sendJson(response, 401, { error: "Sign in to review password recovery requests." });
+          return true;
+        }
+        if (!current.capabilities.includes("approve-password-resets")) {
+          sendJson(response, 403, { error: "You do not have permission to review password recovery requests." });
+          return true;
+        }
+        sendJson(response, 200, { requests: await auth.listPasswordResetRequests({ actorId: current.actorId }) });
+        return true;
+      }
+
+      if (operation === "password_reset_completion") {
+        if (request.method !== "POST") {
+          sendJson(response, 405, { error: "This method is not allowed for password recovery completion." }, { Allow: "POST" });
+          return true;
+        }
+        assertSameOriginRequest(request);
+        if (url.search) throw new V2AuthError(400, "Password recovery completion does not accept query parameters.");
+        const body = await readJsonBody(request);
+        requireExactKeys(
+          body,
+          ["username", "code", "newPassword"],
+          "The password recovery completion contains missing or unsupported fields.",
+        );
+        await auth.completePasswordReset({
+          username: body.username,
+          code: body.code,
+          newPassword: body.newPassword,
+          clientKey: getClientKey(request),
+        });
+        sendEmpty(response, 204);
+        return true;
+      }
+
+      if (operation === "password_reset_action") {
+        if (request.method !== "POST") {
+          sendJson(response, 405, { error: "This method is not allowed for password recovery decisions." }, { Allow: "POST" });
+          return true;
+        }
+        assertSameOriginRequest(request);
+        if (url.search) throw new V2AuthError(400, "Password recovery decisions do not accept query parameters.");
+        const current = await auth.authenticate(request);
+        if (current?.verified !== true) {
+          sendJson(response, 401, { error: "Sign in to review password recovery requests." });
+          return true;
+        }
+        if (!current.capabilities.includes("approve-password-resets")) {
+          sendJson(response, 403, { error: "You do not have permission to review password recovery requests." });
+          return true;
+        }
+        if (await auth.verifyCsrf(request, current) !== true) {
+          sendJson(response, 403, { error: "Refresh your session before changing recovery requests." });
+          return true;
+        }
+
+        const match = url.pathname.match(/^\/api\/v2\/auth\/password-reset-requests\/([0-9a-f-]{36})\/(decision|reissue)$/i);
+        const requestId = match?.[1];
+        const action = match?.[2];
+        if (action === "decision") {
+          const body = await readJsonBody(request);
+          requireExactKeys(body, ["decision"], "The recovery decision contains missing or unsupported fields.");
+          const result = await auth.decidePasswordReset({
+            actorId: current.actorId,
+            requestId,
+            decision: body.decision,
+            clientKey: getClientKey(request),
+          });
+          sendJson(response, 200, result);
+          return true;
+        }
+
+        const body = await readJsonBody(request);
+        requireExactKeys(body, [], "The recovery code request does not accept fields.");
+        sendJson(response, 200, await auth.reissuePasswordResetCode({
+          actorId: current.actorId,
+          requestId,
+          clientKey: getClientKey(request),
+        }));
         return true;
       }
 

@@ -93,6 +93,11 @@ function safeRouteName(url) {
   if (url.pathname === "/api/v2/auth/bootstrap-status") return "auth.bootstrap_status";
   if (url.pathname === "/api/v2/auth/bootstrap") return "auth.bootstrap";
   if (url.pathname === "/api/v2/auth/staff") return "auth.staff";
+  if (url.pathname === "/api/v2/auth/password-reset-requests") return "auth.password_reset_requests";
+  if (url.pathname === "/api/v2/auth/password-reset-completions") return "auth.password_reset_completion";
+  if (/^\/api\/v2\/auth\/password-reset-requests\/[0-9a-f-]{36}\/(decision|reissue)$/i.test(url.pathname)) {
+    return "auth.password_reset_action";
+  }
   if (/^\/api\/v2\/auth\/staff\/[0-9a-f-]{36}$/i.test(url.pathname)) return "auth.staff_item";
   if (url.pathname === "/api/v2/runs") return "runs.collection";
   if (url.pathname === "/api/v2/runs/products") return "runs.products";

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import * as XLSX from "xlsx";
 import { Pool } from "pg";
 import { buildAllowlistedCutoverBatch } from "../core/cutover-transform.mjs";
@@ -6,6 +7,7 @@ import { startV2Server } from "./main.mjs";
 
 const MANAGER_PASSWORD = "v2-test-manager-password";
 const OPERATOR_PASSWORD = "v2-test-operator-password";
+const RECOVERY_PASSWORD = "v2-test-recovery-password";
 const BOOTSTRAP_CODE = "v2-test-initial-manager-bootstrap-code";
 
 async function jsonResponse(response) {
@@ -172,6 +174,26 @@ async function main() {
     assert.ok(directory.roles.some((role) => role.name === "manager"));
     assert.ok(directory.roles.some((role) => role.name === "operator"));
     assert.doesNotMatch(JSON.stringify(directory), /v2-test-operator-password|argon2id|v2_session/);
+
+    const createRecoveryStaff = await fetch(`${baseUrl}/api/v2/auth/staff`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: manager.cookieHeader,
+        "X-CSRF-Token": manager.csrfToken,
+        Origin: baseUrl,
+        "Sec-Fetch-Site": "same-origin",
+      },
+      body: JSON.stringify({
+        username: "V2RecoveryOperator",
+        password: RECOVERY_PASSWORD,
+        roleName: "operator",
+      }),
+    });
+    assert.equal(createRecoveryStaff.status, 201);
+    const recoveryStaff = (await jsonResponse(createRecoveryStaff)).staff
+      .find((staff) => staff.username.toLowerCase() === "v2recoveryoperator");
+    assert.ok(recoveryStaff);
 
     const operatorDeniedRead = await fetch(`${baseUrl}/api/v2/auth/staff`);
     assert.equal(operatorDeniedRead.status, 401);
@@ -791,6 +813,141 @@ async function main() {
     const sharedStationRun = (await jsonResponse(operatorStationRead)).run;
     assert.equal(sharedStationRun.revision, completed.run.revision, "the completed revision should persist across sessions");
     assert.equal(sharedStationRun.stationProgress.line.progress.casesProduced, acceptedStation.run.stationProgress.line.progress.casesProduced);
+
+    const recoveryOldSession = await signIn(baseUrl, "V2RecoveryOperator", RECOVERY_PASSWORD);
+    const genericRecoveryRequest = async (username) => {
+      const response = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: baseUrl,
+          "Sec-Fetch-Site": "same-origin",
+        },
+        body: JSON.stringify({ username }),
+      });
+      return { response, body: await jsonResponse(response) };
+    };
+    const unknownRecovery = await genericRecoveryRequest("V2UnknownRecoveryAccount");
+    const knownRecovery = await genericRecoveryRequest("V2RecoveryOperator");
+    assert.equal(unknownRecovery.response.status, 202);
+    assert.deepEqual(unknownRecovery.body, { accepted: true });
+    assert.equal(knownRecovery.response.status, unknownRecovery.response.status);
+    assert.deepEqual(knownRecovery.body, unknownRecovery.body);
+    assert.equal((await fetch(`${baseUrl}/api/v2/auth/session`, {
+      headers: { Cookie: recoveryOldSession.cookieHeader },
+    })).status, 401, "a recovery request should revoke all existing sessions");
+
+    const pendingQueueResponse = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests`, {
+      headers: { Cookie: manager.cookieHeader, Accept: "application/json" },
+    });
+    assert.equal(pendingQueueResponse.status, 200);
+    const pendingQueue = await jsonResponse(pendingQueueResponse);
+    const pendingRequest = pendingQueue.requests.find((request) => request.staffId === recoveryStaff.userId);
+    assert.ok(pendingRequest);
+
+    const postRequestSession = await signIn(baseUrl, "V2RecoveryOperator", RECOVERY_PASSWORD);
+    const decisionPath = `/api/v2/auth/password-reset-requests/${pendingRequest.requestId}/decision`;
+    const concurrentDecisions = await Promise.all([
+      sessionPost(manager, decisionPath, { decision: "approve" }),
+      sessionPost(manager, decisionPath, { decision: "approve" }),
+    ]);
+    assert.deepEqual(concurrentDecisions.map((response) => response.status).sort(), [200, 409]);
+    const approvedResponse = concurrentDecisions.find((response) => response.status === 200);
+    const approvedResult = await jsonResponse(approvedResponse);
+    assert.equal(approvedResult.outcome, "approved");
+    assert.match(approvedResult.code, /^[A-Za-z0-9_-]{43}$/);
+    assert.equal(Date.parse(approvedResult.expiresAt) - Date.now() <= 10 * 60 * 1000, true);
+    assert.equal((await fetch(`${baseUrl}/api/v2/auth/session`, {
+      headers: { Cookie: postRequestSession.cookieHeader },
+    })).status, 401, "approval should revoke sessions opened after the request");
+
+    const approvedQueueResponse = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests`, {
+      headers: { Cookie: manager.cookieHeader, Accept: "application/json" },
+    });
+    const approvedQueueText = await approvedQueueResponse.text();
+    assert.equal(approvedQueueResponse.status, 200);
+    assert.equal(approvedQueueText.includes(approvedResult.code), false, "queue reads must never reveal recovery codes");
+    const storedRecovery = await adminPool.query(
+      "SELECT state, recovery_code_hash FROM v2.staff_password_reset_requests WHERE id = $1",
+      [pendingRequest.requestId],
+    );
+    assert.equal(storedRecovery.rows[0].state, "approved");
+    assert.equal(
+      storedRecovery.rows[0].recovery_code_hash,
+      createHash("sha256").update(approvedResult.code).digest("hex"),
+    );
+    assert.notEqual(storedRecovery.rows[0].recovery_code_hash, approvedResult.code);
+
+    const reissueResponse = await sessionPost(manager,
+      `/api/v2/auth/password-reset-requests/${pendingRequest.requestId}/reissue`, {});
+    assert.equal(reissueResponse.status, 200);
+    const reissued = await jsonResponse(reissueResponse);
+    assert.equal(reissued.outcome, "reissued");
+    assert.match(reissued.code, /^[A-Za-z0-9_-]{43}$/);
+    assert.notEqual(reissued.code, approvedResult.code);
+
+    const completeRecovery = async (code, newPassword) => fetch(`${baseUrl}/api/v2/auth/password-reset-completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Origin: baseUrl,
+        "Sec-Fetch-Site": "same-origin",
+      },
+      body: JSON.stringify({ username: "V2RecoveryOperator", code, newPassword }),
+    });
+    const staleCode = await completeRecovery(approvedResult.code, "v2-test-recovery-password-stale");
+    assert.equal(staleCode.status, 401, "reissue must immediately invalidate the previous code");
+    const newPassword = "v2-test-recovery-password-new";
+    const completion = await completeRecovery(reissued.code, newPassword);
+    assert.equal(completion.status, 204);
+    const completedRecovery = await adminPool.query(
+      "SELECT state, recovery_code_hash FROM v2.staff_password_reset_requests WHERE id = $1",
+      [pendingRequest.requestId],
+    );
+    assert.equal(completedRecovery.rows[0].state, "completed");
+    assert.equal(completedRecovery.rows[0].recovery_code_hash, null);
+    const replayedRecovery = await completeRecovery(reissued.code, "v2-test-recovery-password-replay");
+    assert.equal(replayedRecovery.status, 401, "a completed code must not be replayable");
+    const oldPasswordSignIn = await fetch(`${baseUrl}/api/v2/auth/sign-in`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: baseUrl, "Sec-Fetch-Site": "same-origin" },
+      body: JSON.stringify({ username: "V2RecoveryOperator", password: RECOVERY_PASSWORD }),
+    });
+    assert.equal(oldPasswordSignIn.status, 401);
+    const recoveryNewSession = await signIn(baseUrl, "V2RecoveryOperator", newPassword);
+    assert.equal((await fetch(`${baseUrl}/api/v2/auth/session`, {
+      headers: { Cookie: recoveryNewSession.cookieHeader },
+    })).status, 200, "the new password should allow a normal sign-in");
+
+    const deniedRequest = await genericRecoveryRequest("V2RecoveryOperator");
+    assert.equal(deniedRequest.response.status, 202);
+    const denialSession = await signIn(baseUrl, "V2RecoveryOperator", newPassword);
+    const denialQueueResponse = await fetch(`${baseUrl}/api/v2/auth/password-reset-requests`, {
+      headers: { Cookie: manager.cookieHeader, Accept: "application/json" },
+    });
+    const denialQueue = await jsonResponse(denialQueueResponse);
+    const requestToDeny = denialQueue.requests.find((request) => request.staffId === recoveryStaff.userId);
+    assert.ok(requestToDeny);
+    const denied = await sessionPost(manager,
+      `/api/v2/auth/password-reset-requests/${requestToDeny.requestId}/decision`, { decision: "deny" });
+    assert.equal(denied.status, 200);
+    assert.equal((await jsonResponse(denied)).outcome, "denied");
+    assert.equal((await fetch(`${baseUrl}/api/v2/auth/session`, {
+      headers: { Cookie: denialSession.cookieHeader },
+    })).status, 401, "denial should revoke sessions opened after the request");
+
+    const recoveryEvents = await adminPool.query(
+      "SELECT event_type FROM v2.staff_password_reset_events WHERE staff_id = $1",
+      [recoveryStaff.userId],
+    );
+    assert.deepEqual(
+      recoveryEvents.rows.map((row) => row.event_type).sort(),
+      ["approved", "completed", "denied", "requested", "requested", "reissued"].sort(),
+    );
+    assert.equal(JSON.stringify(logs).includes(approvedResult.code), false);
+    assert.equal(JSON.stringify(logs).includes(reissued.code), false);
+    assert.equal(JSON.stringify(recoveryEvents.rows).includes(approvedResult.code), false);
+    assert.equal(JSON.stringify(recoveryEvents.rows).includes(reissued.code), false);
 
     const roleChange = await fetch(`${baseUrl}/api/v2/auth/staff/${directory.staff.find((staff) => staff.username === "v2integrationoperator").userId}`, {
       method: "PATCH",

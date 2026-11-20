@@ -81,6 +81,7 @@ try {
   await admin.query("ROLLBACK");
   psql(["-f", join(root, "0007-approved-setup-catalogs.test.sql")]);
   psql(["-f", join(root, "0008-production-rule-enforcement.test.sql")]);
+  psql(["-f", join(root, "0009-staff-password-resets.test.sql")]);
   await admin.query("CREATE ROLE v2_activation_login LOGIN; GRANT v2_runtime_access TO v2_activation_login;");
   restricted = new pg.Client({ ...options, user: "v2_activation_login" });
   await restricted.connect();
@@ -111,6 +112,10 @@ try {
     return value;
   };
   await request("/auth/session", 200); // The pre-migration session still authenticates.
+  assert.deepEqual(await request("/auth/password-reset-requests", 202, {
+    username: "NoSuchActivationAccount",
+  }), { accepted: true });
+  assert.deepEqual((await request("/auth/password-reset-requests", 200)).requests, []);
   const run = (await request(`/runs/${runId}`, 200)).run;
   assert.equal(run.id, runId);
   assert.deepEqual(run.productionRules, []);

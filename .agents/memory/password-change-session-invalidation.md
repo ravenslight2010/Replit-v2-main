@@ -13,3 +13,9 @@ Password changes (self-service `/auth/change-password`, manager `PUT /users/:id/
    **Why:** account creation is not a password change; conflating the two breaks any token minted before a user's row existed for reasons unrelated to a real security event (e.g. the daily-reset legacy-token fallback).
 
 **Reset-approver privilege boundary.** A reset approver only needs the narrow `approve-password-resets` capability, but approving mints a code that fully hands over the target account. `canManagePasswordResetFor(targetUserId, actorCapabilities)` in `lib/roles.ts` requires the target's full capability set to be a subset of the actor's — mirrors the existing "can't assign a role with capabilities you don't have" rule for `setUserRole`. Applied to both the list (an approver never even sees a higher-privileged pending request) and the approve/decline actions (403 if attempted directly by id).
+
+**V2 recovery-code retry boundary.** V2 manager-mediated recovery stores only the hash of a high-entropy, short-lived, single-use code. If the approval response is lost, an authorized manager rotates the code and gives the new one to staff; the raw code is never reconstructed from storage or copied into ordinary history.
+
+**Why:** Hash-only storage prevents recovery secrets from leaking through database reads, logs, exports, or ordinary account history. Explicit rotation makes a lost reply recoverable without retaining the secret.
+
+**How to apply:** Keep recovery-code display limited to the successful approval/reissue response, and ensure every reissue invalidates the prior code and revokes target sessions.

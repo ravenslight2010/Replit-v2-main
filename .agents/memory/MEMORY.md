@@ -34,6 +34,7 @@
 - [Generic JSX breaks metadata plugin](generic-jsx-breaks-metadata-plugin.md) + [home.tsx render TDZ](home-render-tdz.md) — `<Comp<T>/>` white-screens Vite dev (drop the type arg); render-time helpers must not read refs declared later in the file — only real-browser e2e catches it.
 - [Fill-missing assistant](fill-missing-assistant.md) + [shared lib](fill-missing-shared-lib.md) — source priority learned→profile→spec→default→AI; never auto-apply; record must carry subTab; pure logic in @workspace/fill-missing.
 - [Web test harness](web-test-harness.md) — web Vitest runs serialized with generous timeouts; preserve that configuration to avoid contention flakes.
+- [Nix-hosted WebKit runtime](local-validation-runtime-index.md) — on Replit, use the Nix `playwright-test` bundle; npm WPE downloads can fail against the host GLIBC ABI.
 - [Orval query coerce quirk](orval-query-coerce-quirk.md) — generated *QueryParams use zod.coerce.string(), so a MISSING required param becomes "undefined" and never 400s; guard presence explicitly in the route.
 - [AI merge suggestions + learned aliases](merge-suggest.md) — AI dedupe assist + factory-wide learned merge memory; cost-guard must sanitize body (blank padding bypasses count cap); web+mobile parity.
 - [Spec-sheet Excel importer](spec-import.md) + [scale harness](spec-import-scale-harness.md) — AI-parsed .xlsx → profiles+recipes w/ learned aliases; sauce rows ground to FRONTLINE pool; run BOTH real-AI harnesses after model changes; prompt cells wrap under PROMPT_MAX_CELL_CHARS.

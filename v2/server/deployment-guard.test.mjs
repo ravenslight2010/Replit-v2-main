@@ -11,10 +11,11 @@ test("published V2 starts its supervised API and worker on one external web port
   const config = readFileSync(resolve(repositoryRoot, ".replit"), "utf8");
   assert.match(config, /^run = \["bash", "scripts\/start-v2\.sh"\]$/m);
   assert.doesNotMatch(config, /run = \["bash", "scripts\/deny-v2-publish\.sh"\]/);
-  assert.deepEqual(
-    [...config.matchAll(/^\s*externalPort\s*=\s*(\d+)\s*$/gm)].map((match) => match[1]),
-    ["80"],
-  );
+  const portBlocks = config.split(/^\[\[ports\]\]\s*$/m).slice(1)
+    .map((block) => block.split(/^\[\[/m, 1)[0])
+    .filter((block) => /^\s*localPort\s*=\s*5000\s*$/m.test(block));
+  assert.equal(portBlocks.length, 1, "V2 should have one public-port mapping");
+  assert.match(portBlocks[0], /^\s*externalPort\s*=\s*80\s*$/m);
 });
 
 test("the retired publish guard still fails closed when called directly", () => {

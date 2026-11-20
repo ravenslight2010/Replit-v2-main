@@ -33,6 +33,21 @@ function fakeAuthAdapter({ session = null } = {}) {
     async updateStaffAccount() {
       throw new Error("not used");
     },
+    async requestPasswordReset() {
+      return { accepted: true };
+    },
+    async listPasswordResetRequests() {
+      return [];
+    },
+    async decidePasswordReset() {
+      return { outcome: "denied" };
+    },
+    async reissuePasswordResetCode() {
+      return { outcome: "reissued", code: "x".repeat(43), expiresAt: "2026-11-17T00:10:00.000Z" };
+    },
+    async completePasswordReset() {
+      return true;
+    },
     sessionCookie() {
       return "v2_session=test";
     },

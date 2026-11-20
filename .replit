@@ -45,8 +45,12 @@ timeoutMs = 300000
 
 [nix]
 channel = "stable-25_05"
-packages = ["process-compose", "shellcheck", "libgbm", "wayland", "libxkbcommon", "libxml2", "libuuid", "libpulseaudio", "freetype", "fontconfig", "expat", "dbus", "alsa-lib", "mesa", "xorg.libxshmfence", "xorg.libxkbfile", "xorg.libxcb", "xorg.libXrandr", "xorg.libXfixes", "xorg.libXext", "xorg.libXdamage", "xorg.libXcomposite", "xorg.libX11", "cairo", "pango", "gtk3", "libdrm", "cups", "at-spi2-atk", "atk", "nspr", "nss", "glib", "chromium"]
+packages = ["process-compose", "shellcheck", "libgbm", "wayland", "libxkbcommon", "libxml2", "libuuid", "libpulseaudio", "freetype", "fontconfig", "expat", "dbus", "alsa-lib", "mesa", "xorg.libxshmfence", "xorg.libxkbfile", "xorg.libxcb", "xorg.libXrandr", "xorg.libXfixes", "xorg.libXext", "xorg.libXdamage", "xorg.libXcomposite", "xorg.libX11", "cairo", "pango", "gtk3", "libdrm", "cups", "at-spi2-atk", "atk", "nspr", "nss", "glib", "chromium", "playwright-test"]
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 5173
+externalPort = 5173

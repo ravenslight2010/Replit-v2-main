@@ -60,6 +60,37 @@
                 <span>Continue</span><span class="button-arrow" aria-hidden="true">→</span>
               </button>
             </form>
+            <div class="password-recovery-links" id="password-recovery-links" hidden>
+              <button class="text-button" id="password-reset-request-toggle" type="button">Request a password reset</button>
+              <button class="text-button" id="password-reset-completion-toggle" type="button">Use a recovery code</button>
+            </div>
+            <form class="auth-form password-reset-form" id="password-reset-request-form" hidden>
+              <p class="form-note">If the account is active, a manager will review the request. This message is the same for every username.</p>
+              <label class="field" for="password-reset-username">
+                <span>Username</span>
+                <input id="password-reset-username" name="username" type="text" minlength="3" maxlength="40" autocomplete="username" autocapitalize="none" spellcheck="false" required />
+              </label>
+              <button class="button button-primary auth-submit" id="password-reset-request-submit" type="submit">Send recovery request</button>
+              <button class="text-button setup-cancel" id="password-reset-request-cancel" type="button">Back to sign in</button>
+            </form>
+            <form class="auth-form password-reset-form" id="password-reset-completion-form" hidden>
+              <p class="form-note">Enter the one-time code provided by a manager. The code expires after ten minutes.</p>
+              <label class="field" for="password-reset-completion-username">
+                <span>Username</span>
+                <input id="password-reset-completion-username" name="username" type="text" minlength="3" maxlength="40" autocomplete="username" autocapitalize="none" spellcheck="false" required />
+              </label>
+              <label class="field" for="password-reset-code">
+                <span>One-time recovery code</span>
+                <input id="password-reset-code" name="code" type="text" minlength="43" maxlength="43" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required />
+              </label>
+              <label class="field" for="password-reset-new-password">
+                <span>New password</span>
+                <input id="password-reset-new-password" name="newPassword" type="password" minlength="6" maxlength="128" autocomplete="new-password" required />
+              </label>
+              <button class="button button-primary auth-submit" id="password-reset-completion-submit" type="submit">Set new password</button>
+              <button class="text-button setup-cancel" id="password-reset-completion-cancel" type="button">Back to sign in</button>
+            </form>
+            <p class="auth-status password-reset-status" id="password-reset-status" role="status" aria-live="polite" hidden></p>
             <button class="text-button setup-toggle" id="setup-toggle" type="button" hidden aria-expanded="false" aria-controls="bootstrap-form">Set up the first manager</button>
             <form class="auth-form bootstrap-form" id="bootstrap-form" hidden>
               <p class="form-note">This setup is available only on a fresh V2 database and requires the one-time code configured by the V2 administrator.</p>
@@ -129,6 +160,26 @@
               <thead><tr><th scope="col">Username</th><th scope="col">Status</th><th scope="col">Role</th><th scope="col">Actions</th></tr></thead>
               <tbody id="staff-list"></tbody>
             </table>
+          </div>
+        </section>
+
+        <section class="staff-panel password-reset-panel" id="password-reset-panel" aria-labelledby="password-reset-heading" hidden>
+          <div class="staff-panel-header">
+            <div>
+              <p class="eyebrow">MANAGER ACCESS</p>
+              <h2 id="password-reset-heading">Password recovery</h2>
+            </div>
+            <p class="staff-panel-note">Recovery codes are shown once, expire after ten minutes, and can be replaced if an approval reply is lost.</p>
+          </div>
+          <p class="staff-status" id="password-reset-queue-status" role="status" aria-live="polite">Loading recovery requests…</p>
+          <button class="text-button password-reset-refresh" id="password-reset-refresh" type="button">Refresh requests</button>
+          <div class="staff-error" id="password-reset-queue-error" role="alert" hidden></div>
+          <ul class="manager-list" id="password-reset-queue" aria-live="polite"></ul>
+          <div class="password-reset-code" id="password-reset-code-panel" hidden>
+            <strong>Give this code to the staff member</strong>
+            <code id="password-reset-issued-code"></code>
+            <span id="password-reset-code-expiry"></span>
+            <p>Do not copy this code into notes, messages, or account history. It will not be shown again; issue another code if needed.</p>
           </div>
         </section>
 

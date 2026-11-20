@@ -4,6 +4,7 @@ import {
   randomBytes,
   timingSafeEqual,
 } from "node:crypto";
+import { performance } from "node:perf_hooks";
 
 const SESSION_COOKIE = "v2_session";
 const CSRF_COOKIE = "v2_csrf";
@@ -30,6 +31,12 @@ const LIST_STAFF_SQL = "SELECT * FROM v2.list_staff_accounts($1::uuid)";
 const LIST_STAFF_ROLES_SQL = "SELECT * FROM v2.list_staff_roles($1::uuid)";
 const CREATE_STAFF_SQL = "SELECT v2.create_staff_account($1::uuid, $2::text, $3::text, $4::text) AS outcome";
 const UPDATE_STAFF_SQL = "SELECT v2.update_staff_account($1::uuid, $2::uuid, $3::boolean, $4::text) AS outcome";
+const REQUEST_PASSWORD_RESET_SQL = "SELECT v2.request_staff_password_reset($1::text) AS accepted";
+const LIST_PASSWORD_RESETS_SQL = "SELECT * FROM v2.list_staff_password_reset_requests($1::uuid)";
+const DECIDE_PASSWORD_RESET_SQL = "SELECT v2.decide_staff_password_reset($1::uuid, $2::uuid, $3::text, $4::text, $5::timestamptz) AS outcome";
+const REISSUE_PASSWORD_RESET_SQL = "SELECT v2.reissue_staff_password_reset_code($1::uuid, $2::uuid, $3::text, $4::timestamptz) AS outcome";
+const COMPLETE_PASSWORD_RESET_SQL = "SELECT v2.complete_staff_password_reset($1::text, $2::text, $3::text) AS completed";
+const PASSWORD_RESET_TTL_MS = 10 * 60 * 1000;
 
 export class V2AuthError extends Error {
   constructor(status, message, retryAfterSeconds = undefined) {
@@ -245,6 +252,10 @@ export function createAuthAdapter({
   bootstrapLimit = { maxAttempts: 5, windowMs: 60_000 },
   staffReadLimit = { maxAttempts: 120, windowMs: 60_000 },
   staffLimit = { maxAttempts: 10, windowMs: 60_000 },
+  passwordResetRequestLimit = { maxAttempts: 4, windowMs: 15 * 60_000 },
+  passwordResetDecisionLimit = { maxAttempts: 20, windowMs: 60_000 },
+  passwordResetCompletionLimit = { maxAttempts: 8, windowMs: 15 * 60_000 },
+  passwordResetMinimumResponseMs = 100,
   logger = () => {},
 } = {}) {
   if (typeof query !== "function") throw new TypeError("A parameterized V2 database query is required.");
@@ -260,11 +271,18 @@ export function createAuthAdapter({
   ) {
     throw new TypeError("A positive login rate limit is required.");
   }
+  if (!Number.isSafeInteger(passwordResetMinimumResponseMs) || passwordResetMinimumResponseMs < 0
+    || passwordResetMinimumResponseMs > 1000) {
+    throw new TypeError("passwordResetMinimumResponseMs must be between zero and 1000.");
+  }
   for (const [name, limit] of [
     ["bootstrapStatusLimit", bootstrapStatusLimit],
     ["bootstrapLimit", bootstrapLimit],
     ["staffReadLimit", staffReadLimit],
     ["staffLimit", staffLimit],
+    ["passwordResetRequestLimit", passwordResetRequestLimit],
+    ["passwordResetDecisionLimit", passwordResetDecisionLimit],
+    ["passwordResetCompletionLimit", passwordResetCompletionLimit],
   ]) {
     if (
       !Number.isSafeInteger(limit?.maxAttempts)
@@ -281,6 +299,9 @@ export function createAuthAdapter({
   const bootstrapLimiter = createRateLimiter({ ...bootstrapLimit, clock });
   const staffReadLimiter = createRateLimiter({ ...staffReadLimit, clock });
   const staffLimiter = createRateLimiter({ ...staffLimit, clock });
+  const passwordResetRequestLimiter = createRateLimiter({ ...passwordResetRequestLimit, clock });
+  const passwordResetDecisionLimiter = createRateLimiter({ ...passwordResetDecisionLimit, clock });
+  const passwordResetCompletionLimiter = createRateLimiter({ ...passwordResetCompletionLimit, clock });
   const bootstrapIsConfigured = typeof bootstrapSecret === "string"
     && bootstrapSecret.length >= 32
     && bootstrapSecret.length <= 256;
@@ -382,6 +403,17 @@ export function createAuthAdapter({
   function validateActorId(actorId) {
     if (typeof actorId !== "string" || !UUID_PATTERN.test(actorId)) {
       throw new V2AuthError(401, "Sign in to manage staff accounts.");
+    }
+  }
+
+  async function queryPasswordReset(sql, params) {
+    try {
+      return await query(sql, params);
+    } catch (error) {
+      if (error?.code === "42501") {
+        throw new V2AuthError(403, "You do not have permission to review password recovery requests.");
+      }
+      throw error;
     }
   }
 
@@ -522,6 +554,141 @@ export function createAuthAdapter({
     return { outcome };
   }
 
+  async function requestPasswordReset({ username, clientKey }) {
+    const normalizedUsername = normalizeUsername(username);
+    const clientHash = validateClientKey(clientKey, "Password recovery request is invalid.");
+    const startedAt = performance.now();
+    try {
+      consumeLimit(
+        passwordResetRequestLimiter,
+        [`client:${clientHash}`, `account:${hashHex(normalizedUsername)}`],
+        "Too many recovery requests. Wait and try again.",
+      );
+      await query(REQUEST_PASSWORD_RESET_SQL, [normalizedUsername]);
+      logger({ event: "v2.auth.password_reset.request", outcome: "accepted" });
+      return { accepted: true };
+    } finally {
+      const remainingMs = passwordResetMinimumResponseMs - (performance.now() - startedAt);
+      if (remainingMs > 0) await new Promise((resolve) => setTimeout(resolve, remainingMs));
+    }
+  }
+
+  async function listPasswordResetRequests({ actorId }) {
+    validateActorId(actorId);
+    consumeLimit(
+      staffReadLimiter,
+      [`actor:${actorId}`],
+      "Password recovery reads are temporarily limited. Wait and try again.",
+    );
+    const result = await queryPasswordReset(LIST_PASSWORD_RESETS_SQL, [actorId]);
+    return (result?.rows ?? []).map((row) => ({
+      requestId: row.request_id,
+      staffId: row.staff_id,
+      username: row.username,
+      state: row.state,
+      requestedAt: new Date(row.requested_at).toISOString(),
+      decidedAt: row.decided_at ? new Date(row.decided_at).toISOString() : null,
+      codeExpiresAt: row.code_expires_at ? new Date(row.code_expires_at).toISOString() : null,
+    }));
+  }
+
+  function mapPasswordResetDecisionOutcome(outcome) {
+    if (outcome === "not_found") throw new V2AuthError(404, "The recovery request is no longer available.");
+    if (outcome === "not_active") throw new V2AuthError(409, "The recovery request is no longer pending.");
+    if (outcome === "already_approved") throw new V2AuthError(409, "This recovery request already has an active code. Reissue it if needed.");
+    if (outcome === "target_unavailable") throw new V2AuthError(409, "The account changed and can no longer use this recovery request.");
+    if (outcome !== "approved" && outcome !== "denied" && outcome !== "reissued") {
+      throw new V2AuthError(503, "The recovery request could not be completed. Refresh and try again.");
+    }
+    return outcome;
+  }
+
+  async function decidePasswordReset({ actorId, requestId, decision, clientKey }) {
+    validateActorId(actorId);
+    if (typeof requestId !== "string" || !UUID_PATTERN.test(requestId)) {
+      throw new V2AuthError(400, "Choose a valid recovery request.");
+    }
+    if (decision !== "approve" && decision !== "deny") {
+      throw new V2AuthError(400, "Choose whether to approve or deny the recovery request.");
+    }
+    const clientHash = validateClientKey(clientKey, "Password recovery decision is invalid.");
+    consumeLimit(
+      passwordResetDecisionLimiter,
+      [`client:${clientHash}`, `actor:${actorId}`],
+      "Too many recovery decisions. Wait and try again.",
+    );
+
+    const recoveryCode = decision === "approve" ? randomBytes(32).toString("base64url") : null;
+    const expiresAt = recoveryCode ? new Date(clock() + PASSWORD_RESET_TTL_MS) : null;
+    const result = await queryPasswordReset(DECIDE_PASSWORD_RESET_SQL, [
+      actorId,
+      requestId,
+      decision,
+      recoveryCode ? hashHex(recoveryCode) : null,
+      expiresAt?.toISOString() ?? null,
+    ]);
+    const outcome = mapPasswordResetDecisionOutcome(result?.rows?.[0]?.outcome);
+    logger({ event: "v2.auth.password_reset.decision", outcome, actorId });
+    return outcome === "approved"
+      ? { outcome, code: recoveryCode, expiresAt: expiresAt.toISOString() }
+      : { outcome };
+  }
+
+  async function reissuePasswordResetCode({ actorId, requestId, clientKey }) {
+    validateActorId(actorId);
+    if (typeof requestId !== "string" || !UUID_PATTERN.test(requestId)) {
+      throw new V2AuthError(400, "Choose a valid recovery request.");
+    }
+    const clientHash = validateClientKey(clientKey, "Password recovery decision is invalid.");
+    consumeLimit(
+      passwordResetDecisionLimiter,
+      [`client:${clientHash}`, `actor:${actorId}`],
+      "Too many recovery decisions. Wait and try again.",
+    );
+
+    const recoveryCode = randomBytes(32).toString("base64url");
+    const expiresAt = new Date(clock() + PASSWORD_RESET_TTL_MS);
+    const result = await queryPasswordReset(REISSUE_PASSWORD_RESET_SQL, [
+      actorId,
+      requestId,
+      hashHex(recoveryCode),
+      expiresAt.toISOString(),
+    ]);
+    const outcome = mapPasswordResetDecisionOutcome(result?.rows?.[0]?.outcome);
+    logger({ event: "v2.auth.password_reset.decision", outcome, actorId });
+    return { outcome, code: recoveryCode, expiresAt: expiresAt.toISOString() };
+  }
+
+  async function completePasswordReset({ username, code, newPassword, clientKey }) {
+    const normalizedUsername = normalizeUsername(username);
+    if (typeof code !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(code)) {
+      throw new V2AuthError(400, "Enter a valid recovery code.");
+    }
+    if (typeof newPassword !== "string" || newPassword.length < 6 || newPassword.length > 128) {
+      throw new V2AuthError(400, "Passwords must be between 6 and 128 characters.");
+    }
+    const clientHash = validateClientKey(clientKey, "Password recovery completion is invalid.");
+    const accountHash = hashHex(normalizedUsername);
+    consumeLimit(
+      passwordResetCompletionLimiter,
+      [`client:${clientHash}`, `account:${accountHash}`],
+      "Too many recovery attempts. Wait and try again.",
+    );
+
+    const passwordHash = await hashPassword(newPassword);
+    const result = await query(COMPLETE_PASSWORD_RESET_SQL, [
+      normalizedUsername,
+      hashHex(code),
+      passwordHash,
+    ]);
+    const completed = result?.rows?.[0]?.completed === true;
+    logger({ event: "v2.auth.password_reset.complete", outcome: completed ? "completed" : "rejected" });
+    if (!completed) {
+      throw new V2AuthError(401, "Password recovery could not be completed. Check the username and code.");
+    }
+    return true;
+  }
+
   async function resolveToken(token) {
     if (!token) return null;
     const result = await query(RESOLVE_SESSION_SQL, [hashHex(token)]);
@@ -541,6 +708,16 @@ export function createAuthAdapter({
     createStaffAccount,
 
     updateStaffAccount,
+
+    requestPasswordReset,
+
+    listPasswordResetRequests,
+
+    decidePasswordReset,
+
+    reissuePasswordResetCode,
+
+    completePasswordReset,
 
     authenticate(request) {
       return resolveToken(parseCookie(request, SESSION_COOKIE));
