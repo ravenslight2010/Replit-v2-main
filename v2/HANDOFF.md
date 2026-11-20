@@ -149,8 +149,14 @@ target, but is not published.
    replacement twice. Component-presence checks use the run snapshot and
    approved replacements, including the frozen snapshot for completed runs.
    These QC outcomes remain advisory and do not block production or shipping.
-   Migrations `0008` through `0010` have only been exercised on disposable
+    Migrations `0008` through `0011` have only been exercised on disposable
    PostgreSQL and have not been applied to a shared database.
+ - `db/0011-qc-checkpoint-review.sql` extends the same append-only ledger with
+   temperature/time observations, corrective-action observations, and run/lot
+   review flags. Readings remain not evaluated; review flags do not hold or
+   release production/shipping. Only `manage-qc` can append a manager review.
+   The facility/QC owner has not supplied an approved source, unit policy, or
+   limits for any evaluation, so none are inferred.
 - `core/run-service.mjs` returns the product catalog with compatible imported
   production setups and the designated production warehouse. Run creation
   requires both selections and rejects a server response without the frozen

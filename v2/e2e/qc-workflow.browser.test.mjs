@@ -122,7 +122,10 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
   const run = {
     id: RUN_ID,
     status: "running",
-    setupSnapshot: { productCode: "PIZZA-QC", productionPlan: { recipes: [] } },
+    setupSnapshot: { productCode: "PIZZA-QC", productionPlan: { recipes: [
+      { code: "DOUGH-BASE", stationKey: "dough", ingredients: [] },
+      { code: "CHEESE-BASE", stationKey: "cheese", ingredients: [] },
+    ] } },
   };
   const server = createServer(async (request, response) => {
     const pathname = new URL(request.url, "http://v2.test").pathname;
@@ -333,6 +336,11 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
           return;
         }
       }
+      if (body.eventType === "review-flag-reviewed"
+        && !events.some((event) => event.id === body.targetEventId && event.eventType === "review-flag-raised")) {
+        json(404, { error: "QC review flag is unavailable." });
+        return;
+      }
       const event = eventRecord(body.eventType, payloadFor(body, settings), actorId, eventPath[1]);
       events.push(event);
       json(201, { event, replayed: false });
@@ -431,6 +439,62 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
   await page.locator('form[data-qc-action="date-code"] button[type="submit"]').click();
   await page.getByText(/Printed text “LOT 2026” · not evaluated/).first().waitFor();
 
+  const checkpointForm = page.locator('form[data-qc-action="checkpoint"]');
+  await checkpointForm.locator('select[name="checkpointType"]').selectOption("time");
+  await checkpointForm.locator('select[name="stationKey"]').selectOption("dough");
+  await checkpointForm.locator('input[name="checkpointLabel"]').fill("Cooling observation");
+  await checkpointForm.locator('input[name="observedValue"]').fill("2.5");
+  await checkpointForm.locator('select[name="unit"]').selectOption("min");
+  await checkpointForm.getByRole("button", { name: "Record checkpoint" }).click();
+  await page.getByText("Checkpoint observation saved. No safety criterion was evaluated.").waitFor();
+  await page.locator("#qc-event-list").getByText(/Elapsed time · Cooling observation · 2\.5 min · not evaluated/).first().waitFor();
+  const checkpointEvent = events.find((event) => event.eventType === "checkpoint-observed");
+  assert.equal(checkpointEvent.payload.evaluationStatus, "not_evaluated");
+  assert.equal(checkpointEvent.payload.target, undefined);
+
+  const actionForm = page.locator('form[data-qc-action="corrective-action"]');
+  await actionForm.locator('select[name="targetEventId"]').selectOption(checkpointEvent.id);
+  await actionForm.locator('input[name="actionObserved"]').fill("Moved product to the next station");
+  await actionForm.locator('input[name="followUpNote"]').fill("QC review still needed");
+  await actionForm.getByRole("button", { name: "Record action observation" }).click();
+  await page.getByText("Corrective-action observation saved to QC history.").waitFor();
+  await page.locator("#qc-event-list").getByText(/Corrective-action observation · Moved product to the next station/).first().waitFor();
+
+  const lotRecord = events.find((event) => event.eventType === "lot-recorded");
+  const flagForm = page.locator('form[data-qc-action="review-flag"]');
+  await flagForm.locator('select[name="targetType"]').selectOption("lot");
+  await flagForm.locator('select[name="targetEventId"]').selectOption(lotRecord.id);
+  await flagForm.locator('input[name="reason"]').fill("Lot identity needs manager review");
+  await flagForm.getByRole("button", { name: "Flag for manager review" }).click();
+  await page.getByText("Review flag saved. Production and shipping remain available.").waitFor();
+  await page.locator("#qc-event-list").getByText(/Needs review · lot record · Lot identity needs manager review/).first().waitFor();
+  const reviewFlag = events.find((event) => event.eventType === "review-flag-raised");
+  const managerReviewForm = page.locator(`form[data-qc-action="review-flag-review"][data-target-event-id="${reviewFlag.id}"]`);
+  await managerReviewForm.locator('input[name="reviewNote"]').fill("Lot record checked; keep observing.");
+  await managerReviewForm.getByRole("button", { name: "Record manager review" }).click();
+  await page.getByText("Manager review added to the flag history.").waitFor();
+  await page.locator("#qc-event-list").getByText(/Manager review recorded · Lot record checked; keep observing\./).first().waitFor();
+  assert.ok(events.some((event) => event.eventType === "review-flag-reviewed"
+    && event.payload.targetEventId === reviewFlag.id));
+
+  const runFlagForm = page.locator('form[data-qc-action="review-flag"]');
+  await runFlagForm.locator('select[name="targetType"]').selectOption("run");
+  await runFlagForm.locator('input[name="reason"]').fill("Cooling observation needs manager follow-up");
+  await runFlagForm.getByRole("button", { name: "Flag for manager review" }).click();
+  await page.getByText("Review flag saved. Production and shipping remain available.").waitFor();
+  const runReviewFlag = events.find((event) =>
+    event.eventType === "review-flag-raised" && event.payload.targetType === "run");
+
+  const correctionForm = page.locator(`form[data-qc-action="correction"][data-target-event-id="${checkpointEvent.id}"]`);
+  await correctionForm.locator("..").locator("summary").click();
+  await correctionForm.locator('input[name="correctedText"]').fill("Corrected display label");
+  await correctionForm.locator('input[name="reason"]').fill("Transcription correction");
+  await correctionForm.getByRole("button", { name: "Add correction" }).click();
+  await page.locator("#qc-event-list").getByText(/Correction: Corrected display label · Transcription correction/).first().waitFor();
+  assert.ok(events.some((event) => event.id === checkpointEvent.id && event.eventType === "checkpoint-observed"));
+  assert.ok(events.some((event) => event.eventType === "correction"
+    && event.payload.targetEventId === checkpointEvent.id));
+
   const cleaningForm = page.locator('form[data-qc-action="cleaning"]');
   await cleaningForm.locator('input[name="method"]').fill("Approved wash");
   await cleaningForm.locator('input[name="cleanedAt"]').fill("2026-11-18T10:15");
@@ -446,6 +510,7 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
   await page.getByText("QC history is current on this device.").waitFor();
   assert.equal(await page.getByRole("heading", { name: "QC target settings" }).count(), 0);
   assert.equal(await page.locator("#qc-export").isVisible(), false);
+  assert.equal(await page.locator('form[data-qc-action="review-flag-review"]').count(), 0);
   const verify = page.getByRole("button", { name: "Verify as a second staff member" });
   await verify.first().waitFor();
   await verify.first().click();
@@ -471,6 +536,13 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
     globalThis.activeQcActor = manager.userId;
     window.setQcContext(manager, { id: "88000000-0000-4000-8000-000000000001" }, true);
   }, staff(MANAGER_ID, "manager"));
+  const runReviewForm = page.locator(`form[data-qc-action="review-flag-review"][data-target-event-id="${runReviewFlag.id}"]`);
+  await runReviewForm.waitFor({ state: "attached" });
+  assert.equal(await runReviewForm.count(), 1);
+  await runReviewForm.locator('input[name="reviewNote"]').fill("Run follow-up documented.");
+  await runReviewForm.getByRole("button", { name: "Record manager review" }).click();
+  await page.getByText("Manager review added to the flag history.").waitFor();
+  await page.locator("#qc-event-list").getByText(/Manager review recorded · Run follow-up documented\./).first().waitFor();
   await page.getByRole("button", { name: "Approve and adjust stock" }).click();
   await page.getByText(/Substitution approved · 40 lb Monterey posted to inventory/).first().waitFor();
   await page.getByText("Correct substitution Monterey", { exact: true }).click();
@@ -551,6 +623,16 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
   await page.getByText(/Lot REMOTE-LOT/).first().waitFor({ timeout: 10_000 });
   await secondDevice.close();
 
+  await page.reload();
+  await page.waitForFunction(() => typeof window.setQcContext === "function");
+  await page.evaluate(({ manager, runData }) => {
+    window.setQcContext(manager, runData, true);
+  }, { manager: staff(MANAGER_ID, "manager"), runData: run });
+  await page.getByText("QC history is current on this device.").waitFor();
+  await page.locator("#qc-event-list").getByText(/Elapsed time · Cooling observation · 2\.5 min · not evaluated/).first().waitFor();
+  await page.locator("#qc-event-list").getByText(/Manager review recorded · Lot record checked; keep observing\./).first().waitFor();
+  assert.ok(events.some((event) => event.id === checkpointEvent.id));
+
   for (const viewport of [
     { width: 402, height: 874 },
     { width: 768, height: 1024 },
@@ -562,9 +644,20 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
       page: document.documentElement.scrollWidth,
       panel: document.querySelector("#qc-panel").scrollWidth,
       panelWidth: document.querySelector("#qc-panel").clientWidth,
+      internallyOverflowing: [...document.querySelectorAll("body *")].flatMap((element) =>
+        element.scrollWidth > element.clientWidth + 1
+          ? [{ tag: element.tagName, id: element.id, className: element.className, client: element.clientWidth, scroll: element.scrollWidth, text: element.textContent.trim().slice(0, 90) }]
+          : [],
+      ).slice(0, 12),
+      overflow: [...document.querySelectorAll("body *")].flatMap((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.right > document.documentElement.clientWidth + 1 || rect.left < -1
+          ? [{ tag: element.tagName, className: element.className, right: Math.round(rect.right), width: Math.round(rect.width), text: element.textContent.trim().slice(0, 90) }]
+          : [];
+      }).slice(0, 8),
     }));
-    assert.ok(dimensions.page <= dimensions.viewport, `horizontal page overflow at ${viewport.width}×${viewport.height}`);
-    assert.ok(dimensions.panel <= dimensions.panelWidth, `QC panel overflow at ${viewport.width}×${viewport.height}`);
+    assert.ok(dimensions.page <= dimensions.viewport, `horizontal page overflow at ${viewport.width}×${viewport.height}: ${JSON.stringify(dimensions)}`);
+    assert.ok(dimensions.panel <= dimensions.panelWidth, `QC panel overflow at ${viewport.width}×${viewport.height}: ${JSON.stringify(dimensions)}`);
   }
 
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
@@ -596,6 +689,30 @@ function payloadFor(body, settings) {
       }
     case "date-code-observed":
       return { observedText: body.observedText, result: "not_evaluated" };
+    case "checkpoint-observed":
+      return {
+        checkpointType: body.checkpointType,
+        stationKey: body.stationKey,
+        checkpointLabel: body.checkpointLabel,
+        observedValue: body.observedValue,
+        unit: body.unit,
+        evaluationStatus: "not_evaluated",
+        ...(body.note ? { note: body.note } : {}),
+      };
+    case "corrective-action-observed":
+      return {
+        targetEventId: body.targetEventId,
+        actionObserved: body.actionObserved,
+        ...(body.followUpNote ? { followUpNote: body.followUpNote } : {}),
+      };
+    case "review-flag-raised":
+      return {
+        targetType: body.targetType,
+        ...(body.targetEventId ? { targetEventId: body.targetEventId } : {}),
+        reason: body.reason,
+      };
+    case "review-flag-reviewed":
+      return { targetEventId: body.targetEventId, reviewNote: body.reviewNote };
     case "cleaning-recorded":
       return { method: body.method, cleanedAt: body.cleanedAt };
     case "cleaning-verified":

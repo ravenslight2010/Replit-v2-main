@@ -455,6 +455,230 @@ test("literal date-code observations preserve exact text and stay not evaluated"
   assert.equal(payload.result, "not_evaluated");
 });
 
+test("QC temperature and elapsed-time checkpoints stay observation-only and use run stations", async (t) => {
+  const completedRun = { ...structuredClone(RUN), status: "completed" };
+  const api = await withApi(t, {
+    query: async (queryConfig) => {
+      if (queryConfig.text.includes("v2.get_run")) return { rows: [{ result: completedRun }] };
+      if (queryConfig.text.includes("v2.record_qc_event")) {
+        return { rows: [{ result: { replayed: false, event: { id: "checkpoint-event" } } }] };
+      }
+      throw new Error("unexpected query");
+    },
+  });
+  const response = await send(api.baseUrl, `/api/v2/qc/runs/${RUN_ID}/events`, {
+    method: "POST",
+    body: {
+      requestId: "temp-observation",
+      eventType: "checkpoint-observed",
+      checkpointType: "temperature",
+      stationKey: "dough",
+      checkpointLabel: "Mixer display",
+      observedValue: "-2.5",
+      unit: "°C",
+      note: "",
+    },
+  });
+  assert.equal(response.status, 201);
+  const write = api.calls.find((call) => call.text.includes("v2.record_qc_event"));
+  const payload = JSON.parse(write.values[6]);
+  assert.deepEqual(payload, {
+    checkpointType: "temperature",
+    stationKey: "dough",
+    checkpointLabel: "Mixer display",
+    observedValue: "-2.5",
+    unit: "°C",
+    evaluationStatus: "not_evaluated",
+  });
+  assert.equal(write.values[2], RUN_ID);
+  assert.equal(payload.result, undefined);
+  assert.equal(payload.target, undefined);
+
+  const elapsedApi = await withApi(t, {
+    query: async (queryConfig) => {
+      if (queryConfig.text.includes("v2.get_run")) return { rows: [{ result: RUN }] };
+      if (queryConfig.text.includes("v2.record_qc_event")) return { rows: [{ result: { replayed: false } }] };
+      throw new Error("unexpected query");
+    },
+  });
+  const elapsed = await send(elapsedApi.baseUrl, `/api/v2/qc/runs/${RUN_ID}/events`, {
+    method: "POST",
+    body: {
+      requestId: "time-observation",
+      eventType: "checkpoint-observed",
+      checkpointType: "time",
+      stationKey: "dough",
+      checkpointLabel: "Observed duration",
+      observedValue: "3.5",
+      unit: "min",
+      note: "",
+    },
+  });
+  assert.equal(elapsed.status, 201);
+});
+
+test("QC checkpoint API rejects unsupported stations, units, evaluations, and negative elapsed time", async (t) => {
+  const api = await withApi(t, {
+    query: async (queryConfig) => {
+      if (queryConfig.text.includes("v2.get_run")) return { rows: [{ result: RUN }] };
+      throw new Error("invalid checkpoint reached the write command");
+    },
+  });
+  const invalid = [
+    {
+      requestId: "unknown-station",
+      eventType: "checkpoint-observed",
+      checkpointType: "temperature",
+      stationKey: "warehouse",
+      checkpointLabel: "Display",
+      observedValue: "4",
+      unit: "°C",
+      note: "",
+    },
+    {
+      requestId: "invalid-unit",
+      eventType: "checkpoint-observed",
+      checkpointType: "temperature",
+      stationKey: "dough",
+      checkpointLabel: "Display",
+      observedValue: "4",
+      unit: "degrees",
+      note: "",
+    },
+    {
+      requestId: "negative-duration",
+      eventType: "checkpoint-observed",
+      checkpointType: "time",
+      stationKey: "dough",
+      checkpointLabel: "Observed duration",
+      observedValue: "-1",
+      unit: "min",
+      note: "",
+    },
+    {
+      requestId: "forged-result",
+      eventType: "checkpoint-observed",
+      checkpointType: "temperature",
+      stationKey: "dough",
+      checkpointLabel: "Display",
+      observedValue: "4",
+      unit: "°C",
+      note: "",
+      result: "pass",
+    },
+  ];
+  for (const body of invalid) {
+    const response = await send(api.baseUrl, `/api/v2/qc/runs/${RUN_ID}/events`, {
+      method: "POST",
+      body,
+    });
+    assert.equal(response.status, 400);
+  }
+  assert.equal(api.calls.filter((call) => call.text.includes("v2.record_qc_event")).length, 0);
+});
+
+test("QC corrective actions and run or lot review flags use linked append-only evidence", async (t) => {
+  const api = await withApi(t, {
+    query: async (queryConfig) => {
+      if (queryConfig.text.includes("v2.get_run")) return { rows: [{ result: RUN }] };
+      if (queryConfig.text.includes("v2.record_qc_event")) {
+        return { rows: [{ result: { replayed: false, event: { id: "review-event" } } }] };
+      }
+      throw new Error("unexpected query");
+    },
+  });
+  const checkpointId = "10000000-0000-4000-8000-000000000008";
+  const action = await send(api.baseUrl, `/api/v2/qc/runs/${RUN_ID}/events`, {
+    method: "POST",
+    body: {
+      requestId: "action-observed",
+      eventType: "corrective-action-observed",
+      targetEventId: checkpointId,
+      actionObserved: "Adjusted the observed setting",
+      followUpNote: "",
+    },
+  });
+  assert.equal(action.status, 201);
+  let write = api.calls.filter((call) => call.text.includes("v2.record_qc_event")).at(-1);
+  assert.equal(write.values[5], "corrective-action-observed");
+  assert.deepEqual(JSON.parse(write.values[6]), {
+    targetEventId: checkpointId,
+    actionObserved: "Adjusted the observed setting",
+  });
+
+  const runFlag = await send(api.baseUrl, `/api/v2/qc/runs/${RUN_ID}/events`, {
+    method: "POST",
+    body: {
+      requestId: "run-needs-review",
+      eventType: "review-flag-raised",
+      targetType: "run",
+      reason: "Run details need review",
+    },
+  });
+  assert.equal(runFlag.status, 201);
+  write = api.calls.filter((call) => call.text.includes("v2.record_qc_event")).at(-1);
+  assert.deepEqual(JSON.parse(write.values[6]), {
+    targetType: "run",
+    reason: "Run details need review",
+  });
+
+  const lotFlag = await send(api.baseUrl, `/api/v2/qc/runs/${RUN_ID}/events`, {
+    method: "POST",
+    body: {
+      requestId: "lot-needs-review",
+      eventType: "review-flag-raised",
+      targetType: "lot",
+      targetEventId: checkpointId,
+      reason: "Lot record needs review",
+    },
+  });
+  assert.equal(lotFlag.status, 201);
+  write = api.calls.filter((call) => call.text.includes("v2.record_qc_event")).at(-1);
+  assert.deepEqual(JSON.parse(write.values[6]), {
+    targetType: "lot",
+    targetEventId: checkpointId,
+    reason: "Lot record needs review",
+  });
+});
+
+test("QC review flag decisions are manager-only at the API boundary", async (t) => {
+  const operator = await withApi(t);
+  const denied = await send(operator.baseUrl, `/api/v2/qc/runs/${RUN_ID}/events`, {
+    method: "POST",
+    body: {
+      requestId: "operator-resolve-flag",
+      eventType: "review-flag-reviewed",
+      targetEventId: "10000000-0000-4000-8000-000000000009",
+      reviewNote: "Reviewed the evidence",
+    },
+  });
+  assert.equal(denied.status, 403);
+  assert.equal(operator.calls.length, 0);
+
+  const manager = await withApi(t, {
+    auth: MANAGER,
+    query: async (queryConfig) => {
+      if (queryConfig.text.includes("v2.get_run")) return { rows: [{ result: RUN }] };
+      if (queryConfig.text.includes("v2.record_qc_event")) {
+        return { rows: [{ result: { replayed: false, event: { id: "manager-review" } } }] };
+      }
+      throw new Error("unexpected query");
+    },
+  });
+  const reviewed = await send(manager.baseUrl, `/api/v2/qc/runs/${RUN_ID}/events`, {
+    method: "POST",
+    body: {
+      requestId: "manager-review-flag",
+      eventType: "review-flag-reviewed",
+      targetEventId: "10000000-0000-4000-8000-000000000009",
+      reviewNote: "Reviewed the evidence",
+    },
+  });
+  assert.equal(reviewed.status, 201);
+  const write = manager.calls.find((call) => call.text.includes("v2.record_qc_event"));
+  assert.equal(write.values[5], "review-flag-reviewed");
+});
+
 test("QC target settings and full-history export are manager-only", async (t) => {
   const operator = await withApi(t);
   const denied = await send(operator.baseUrl, "/api/v2/qc/settings", {

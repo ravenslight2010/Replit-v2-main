@@ -7,6 +7,7 @@ const CODE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 const TRACKED_ALLERGENS = ["egg", "soy", "milk", "wheat", "peanuts", "tree nuts", "fish", "shellfish", "sesame"];
 const NUMBER = /^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,6})?$/;
 const POSITIVE = /^(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,6})?$/;
+const SIGNED_NUMBER = /^-?(?:0|[1-9][0-9]{0,8})(?:\.[0-9]{1,6})?$/;
 const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_EXPORT_ROWS = 10_000;
@@ -108,6 +109,18 @@ function validateNumber(value, label, { positive = false } = {}) {
     throw new QcApiError(400, `${label} must be a ${positive ? "positive " : ""}number with up to six decimals.`);
   }
   return value;
+}
+
+function validateSignedNumber(value, label) {
+  if (typeof value !== "string" || !SIGNED_NUMBER.test(value)) {
+    throw new QcApiError(400, `${label} must be a number with up to six decimals.`);
+  }
+  return value;
+}
+
+function runHasStation(run, stationKey) {
+  const recipes = run?.setupSnapshot?.productionPlan?.recipes;
+  return Array.isArray(recipes) && recipes.some((recipe) => recipe?.stationKey === stationKey);
 }
 
 function hashRequest(value) {
@@ -861,7 +874,9 @@ export function createQcApi({ pool, authenticate, verifyCsrf, logger = () => {} 
         const body = await readJsonBody(request);
         if (typeof body.eventType !== "string") throw new QcApiError(400, "Choose a supported QC record type.");
         const eventType = body.eventType;
-        if (eventType === "review-signed-off") requireQcAccess(auth, "manage-qc");
+        if (eventType === "review-signed-off" || eventType === "review-flag-reviewed") {
+          requireQcAccess(auth, "manage-qc");
+        }
         if (eventType === "redaction") requireQcAccess(auth, "manage-qc");
         const run = await loadRun(scope, runId);
         const requestId = validateRequestId(body.requestId);
@@ -1037,6 +1052,71 @@ export function createQcApi({ pool, authenticate, verifyCsrf, logger = () => {} 
           } else {
             throw new QcApiError(400, "Choose a supported run checklist.");
           }
+        } else if (eventType === "checkpoint-observed") {
+          requireKeys(body, [
+            "requestId", "eventType", "checkpointType", "stationKey",
+            "checkpointLabel", "observedValue", "unit", "note",
+          ]);
+          if (!["temperature", "time"].includes(body.checkpointType)) {
+            throw new QcApiError(400, "Choose a temperature or elapsed-time observation.");
+          }
+          if (!STATIONS.has(body.stationKey) || !runHasStation(run, body.stationKey)) {
+            throw new QcApiError(400, "Choose a production station from this run.");
+          }
+          const unitOptions = body.checkpointType === "temperature"
+            ? ["°C", "°F"]
+            : ["s", "min", "h"];
+          if (!unitOptions.includes(body.unit)) {
+            throw new QcApiError(400, "Choose a unit that matches this observation type.");
+          }
+          const observedValue = validateSignedNumber(body.observedValue, "Observed value");
+          if (body.checkpointType === "time" && Number(observedValue) < 0) {
+            throw new QcApiError(400, "Elapsed time cannot be negative.");
+          }
+          const note = body.note === "" ? null : validateText(body.note, "Observation note", { max: 500 });
+          payload = {
+            checkpointType: body.checkpointType,
+            stationKey: body.stationKey,
+            checkpointLabel: validateText(body.checkpointLabel, "Checkpoint label", { max: 100 }),
+            observedValue,
+            unit: body.unit,
+            evaluationStatus: "not_evaluated",
+            ...(note ? { note } : {}),
+          };
+        } else if (eventType === "corrective-action-observed") {
+          requireKeys(body, ["requestId", "eventType", "targetEventId", "actionObserved", "followUpNote"]);
+          const followUpNote = body.followUpNote === ""
+            ? null
+            : validateText(body.followUpNote, "Follow-up note", { max: 500 });
+          payload = {
+            targetEventId: validateUuid(body.targetEventId, "QC checkpoint or review flag"),
+            actionObserved: validateText(body.actionObserved, "Action observed", { max: 500 }),
+            ...(followUpNote ? { followUpNote } : {}),
+          };
+        } else if (eventType === "review-flag-raised") {
+          if (body.targetType === "run") {
+            requireKeys(body, ["requestId", "eventType", "targetType", "reason"]);
+            payload = {
+              targetType: "run",
+              reason: validateText(body.reason, "Review reason", { min: 3, max: 500 }),
+            };
+          } else if (body.targetType === "lot") {
+            requireKeys(body, ["requestId", "eventType", "targetType", "targetEventId", "reason"]);
+            payload = {
+              targetType: "lot",
+              targetEventId: validateUuid(body.targetEventId, "Lot record"),
+              reason: validateText(body.reason, "Review reason", { min: 3, max: 500 }),
+            };
+          } else {
+            throw new QcApiError(400, "Choose a run or recorded lot to flag for review.");
+          }
+        } else if (eventType === "review-flag-reviewed") {
+          requireQcAccess(auth, "manage-qc");
+          requireKeys(body, ["requestId", "eventType", "targetEventId", "reviewNote"]);
+          payload = {
+            targetEventId: validateUuid(body.targetEventId, "Review flag"),
+            reviewNote: validateText(body.reviewNote, "Manager review note", { min: 3, max: 500 }),
+          };
         } else if (eventType === "review-signed-off") {
           requireKeys(body, ["requestId", "eventType"]);
           payload = { review: "signed-off" };

@@ -10,24 +10,32 @@ This is a planning handoff. It does not authorize cutover or data transfer.
 
 ## 1. Full QC Department
 
-**V1 reference:** `docs/qc-department-plan.md` (archived; not first-release scope).  
-**V2 status:** Not implemented.
+**V1 reference:** `docs/qc-department-plan.md` (referenced by the historical handoff; not present in this checkout).
+**V2 status:** The QC foundation and observation-only checkpoint/review workflows are implemented.
 
-### What to build
-- QC station or panel with:
-  - Brix testing entry and history
-  - HACCP checkpoints (temperature, time, corrective actions)
-  - Quality check records tied to a run and station
-  - Manager quality history view
-  - Ability to flag a run or lot for review
-- Server-owned records (same pattern as station progress): revision, idempotency, events.
-- Role gate: QC manager / supervisor capability.
+### Existing V2 foundation
+- The append-only facility QC event ledger already records Brix, lots, weights,
+  cleaning, date-code observations, allergen/component reviews, corrections,
+  redactions, and retained run/facility history.
+- QC staff and managers record run/station-linked temperature and elapsed-time
+  observations, append corrective-action observations, and flag runs or recorded
+  lots for manager review. Only `manage-qc` can append the manager review.
+- Checkpoints are explicitly `not_evaluated`; review flags mean “needs review,”
+  not a production/shipping hold, release decision, or certification.
 - Do not carry V1 historical QC data at cutover. Start fresh.
 
+### Remaining policy boundary
+- No qualified facility/QC-owner source, unit policy, limits, or evaluation policy
+  was available in this checkout. Until the owner approves them, measurements
+  remain observations only; no target, tolerance, pass/fail outcome, or automated
+  safety evaluation may be inferred. See
+  `research/qc-checkpoint-review-verification.md`.
+
 ### Acceptance
-- Disposable PostgreSQL tests for create/read/update of Brix and HACCP records.
-- Browser test for QC entry on a run and manager history view.
-- No silent overwrite of a prior check; corrections are new records or explicit revisions.
+- Checkpoint, corrective-action, flag, and manager-review records use the
+  server-timestamped, idempotent append-only history; corrections append evidence.
+- See the verification report for disposable PostgreSQL and Chromium/WebKit
+  evidence and for unavailable physical-device lanes.
 
 ---
 
@@ -234,7 +242,7 @@ These are already better in V2 than V1. Do not regress them.
 3. Die defaults + freezer pull + cycle counts (inventory completeness)
 4. Allergen and substitutions (safety and production accuracy)
 5. Mix Plan (operational clarity)
-6. QC department (new capability; can follow core inventory)
+6. QC policy follow-up only if a qualified facility/QC owner approves evaluation criteria
 7. App updates polish + E2E matrix expansion
 8. Continuous reinforcement of the architectural items above
 

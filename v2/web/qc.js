@@ -211,6 +211,38 @@ async function handleFormSubmit(event) {
         observation.status === "identity-mismatch" && !observation.observedProductId)) {
         throw new Error("Choose an active observed product code for each identity mismatch.");
       }
+    } else if (action === "checkpoint") {
+      body = {
+        eventType: "checkpoint-observed",
+        checkpointType: values.get("checkpointType"),
+        stationKey: values.get("stationKey"),
+        checkpointLabel: values.get("checkpointLabel"),
+        observedValue: values.get("observedValue"),
+        unit: values.get("unit"),
+        note: values.get("note") || "",
+      };
+    } else if (action === "corrective-action") {
+      body = {
+        eventType: "corrective-action-observed",
+        targetEventId: values.get("targetEventId"),
+        actionObserved: values.get("actionObserved"),
+        followUpNote: values.get("followUpNote") || "",
+      };
+    } else if (action === "review-flag") {
+      const targetType = values.get("targetType");
+      body = {
+        eventType: "review-flag-raised",
+        targetType,
+        reason: values.get("reason"),
+      };
+      if (targetType === "lot") body.targetEventId = values.get("targetEventId");
+    } else if (action === "review-flag-review") {
+      path = `/runs/${encodeURIComponent(form.dataset.targetRunId)}/events`;
+      body = {
+        eventType: "review-flag-reviewed",
+        targetEventId: form.dataset.targetEventId,
+        reviewNote: values.get("reviewNote"),
+      };
     } else if (action === "substitution-propose") {
       path = `/runs/${encodeURIComponent(run.id)}/substitutions`;
       const sourceItems = [...form.querySelectorAll("[data-source-row]")].map((row) => {
@@ -323,6 +355,14 @@ async function handleFormSubmit(event) {
         ? "Link recorded. Existing run snapshots do not change."
         : action === "component-check"
           ? "Component observations recorded. This check does not block production."
+          : action === "checkpoint"
+            ? "Checkpoint observation saved. No safety criterion was evaluated."
+            : action === "corrective-action"
+              ? "Corrective-action observation saved to QC history."
+              : action === "review-flag"
+                ? "Review flag saved. Production and shipping remain available."
+                : action === "review-flag-review"
+                  ? "Manager review added to the flag history."
           : action === "substitution-propose"
             ? "Proposal recorded. Stock changes only after QC manager approval."
             : action === "substitution-decision"
@@ -374,6 +414,14 @@ function eventSummary(event) {
       return `Cleaning record ${payload.targetEventId ?? ""} verified by a second staff member.`;
     case "date-code-observed":
       return `Printed text “${payload.observedText ?? ""}” · not evaluated`;
+    case "checkpoint-observed":
+      return `${payload.checkpointType === "temperature" ? "Temperature" : "Elapsed time"} · ${payload.checkpointLabel ?? "checkpoint"} · ${payload.observedValue ?? "—"} ${payload.unit ?? ""} · not evaluated`;
+    case "corrective-action-observed":
+      return `Corrective-action observation · ${payload.actionObserved ?? "—"}${payload.followUpNote ? ` · Follow-up: ${payload.followUpNote}` : ""}`;
+    case "review-flag-raised":
+      return `Needs review · ${payload.targetType === "lot" ? "lot record" : "run"} · ${payload.reason ?? "reason not recorded"}`;
+    case "review-flag-reviewed":
+      return `Manager review recorded · ${payload.reviewNote ?? "—"}`;
     case "brix-check":
       return `Brix ${payload.actual ?? "—"} °Bx · ${String(payload.result ?? "not_evaluated").replaceAll("_", " ")}`;
     case "run-check-reviewed":
@@ -408,6 +456,17 @@ function eventSummary(event) {
   }
 }
 
+function referenceEventLabel(event) {
+  if (event.eventType === "checkpoint-observed") {
+    const kind = event.payload?.checkpointType === "temperature" ? "Temperature" : "Time";
+    return `${kind} · ${event.payload?.stationKey ?? "station"} · ${event.payload?.checkpointLabel ?? "checkpoint"}`;
+  }
+  if (event.eventType === "review-flag-raised") {
+    return `Review flag · ${event.payload?.targetType === "lot" ? "lot" : "run"}`;
+  }
+  return "QC record";
+}
+
 function renderEvent(event, eventPool = data.events, allowActions = true) {
   const payload = event.payload ?? {};
   const safeId = escapeHtml(event.id);
@@ -416,11 +475,24 @@ function renderEvent(event, eventPool = data.events, allowActions = true) {
     && !["review-signed-off", "redaction", "correction"].includes(event.eventType);
   const verified = eventPool.some((candidate) =>
     candidate.eventType === "cleaning-verified" && candidate.payload?.targetEventId === event.id);
+  const reviewFlagReviewed = eventPool.some((candidate) =>
+    candidate.eventType === "review-flag-reviewed" && candidate.payload?.targetEventId === event.id);
   const verifyForm = allowActions && event.eventType === "cleaning-recorded" && !verified && event.actorId !== staff?.userId
     ? `<form data-qc-action="cleaning-verify" data-target-event-id="${safeId}" data-target-run-id="${escapeHtml(event.runId)}">
          <button class="button button-secondary button-small" type="submit" ${writable ? "" : "disabled"}>Verify as a second staff member</button>
          <p data-form-status role="status"></p>
        </form>`
+    : "";
+  const reviewFlagForm = allowActions && event.eventType === "review-flag-raised"
+    && !reviewFlagReviewed && canManage()
+    ? `<div class="qc-review-flag-action">
+         <form class="qc-inline-form" data-qc-action="review-flag-review" data-target-event-id="${safeId}" data-target-run-id="${escapeHtml(event.runId)}">
+           <p class="qc-help">Manager review · advisory only</p>
+           <label class="field"><span>Manager review note</span><input name="reviewNote" minlength="3" maxlength="500" required /></label>
+           <button class="button button-secondary button-small" type="submit" ${writable ? "" : "disabled"}>Record manager review</button>
+           <p data-form-status role="status"></p>
+         </form>
+       </div>`
     : "";
   const correctionForm = allowActions && editable && event.runId
     ? `<details data-details><summary>Correct this record</summary>
@@ -458,11 +530,11 @@ function renderEvent(event, eventPool = data.events, allowActions = true) {
          </form>
        </details>`
     : "";
-  return `<li class="qc-event">
+  return `<li class="qc-event" data-event-id="${safeId}" data-event-type="${escapeHtml(event.eventType)}">
     <div class="qc-event-meta"><span>${escapeHtml(event.eventType.replaceAll("-", " "))}</span><time datetime="${escapeHtml(event.occurredAt)}">${escapeHtml(fmtDate(event.occurredAt))}</time></div>
     <p>${escapeHtml(eventSummary(event))}</p>
     <p class="qc-event-actor">Recorded by staff ID ${escapeHtml(event.actorId)}</p>
-    ${verifyForm}${substitutionDecision}${correctionForm}${redactionForm}
+    ${verifyForm}${reviewFlagForm}${substitutionDecision}${correctionForm}${redactionForm}
   </li>`;
 }
 
@@ -534,6 +606,24 @@ function renderForms() {
       <button class="button button-secondary button-small" type="button" data-remove-source ${index === 0 ? "hidden" : ""}>Remove source</button>
     </div>`;
   const components = Array.isArray(data?.components) ? data.components : [];
+  const events = Array.isArray(data?.events) ? data.events : [];
+  const runRecipes = data?.run?.setupSnapshot?.productionPlan?.recipes;
+  const stationKeys = [...new Set([
+    ...(Array.isArray(runRecipes) ? runRecipes.map((recipe) => recipe?.stationKey) : []),
+    ...runItems().map((item) => item.stationKey),
+  ].filter((stationKey) => ["dough", "cheese", "pepperoni", "sauce", "frontline"].includes(stationKey)))];
+  const stationOptions = stationKeys.map((stationKey) =>
+    `<option value="${escapeHtml(stationKey)}">${escapeHtml(stationKey)}</option>`,
+  ).join("");
+  const checkpointTargets = events.filter((event) =>
+    ["checkpoint-observed", "review-flag-raised"].includes(event.eventType) && !event.payload?.redacted);
+  const checkpointTargetOptions = checkpointTargets.map((event) =>
+    `<option value="${escapeHtml(event.id)}">${escapeHtml(referenceEventLabel(event))} · ${escapeHtml(fmtDate(event.occurredAt))}</option>`,
+  ).join("");
+  const lotTargets = events.filter((event) => event.eventType === "lot-recorded" && !event.payload?.redacted);
+  const lotTargetOptions = lotTargets.map((event) =>
+    `<option value="${escapeHtml(event.id)}">${escapeHtml(String(event.payload?.lotCode ?? "Lot record").slice(0, 32))} · ${escapeHtml(event.payload?.productCode ?? "Product")} · ${escapeHtml(fmtDate(event.occurredAt))}</option>`,
+  ).join("");
   const componentRows = components.map((item, index) => `<div class="qc-component-row" data-component-row>
       <div><strong>${escapeHtml(item.productName)}</strong><p class="qc-help">${escapeHtml(item.recipeName)} · ${escapeHtml(item.stationKey)} · ${escapeHtml(item.unit)}${item.substitution ? " · approved replacement" : ""}</p></div>
       <label class="field" for="qc-component-status-${index}"><span>Identity and presence</span>
@@ -601,6 +691,39 @@ function renderForms() {
         </form>`}
       ${data?.run?.status === "completed" ? "" : correctionForms}
       ${!componentProducts.length ? "<p class=\"qc-help\">No active inventory products are available for a replacement.</p>" : ""}
+    </section>`;
+  const checkpointSection = `<section class="qc-card" aria-labelledby="qc-checkpoint-heading">
+      <p class="eyebrow">OBSERVATION ONLY · SOURCE-BOUNDED</p><h3 id="qc-checkpoint-heading">Temperature and time checkpoints</h3>
+      <p class="qc-help">Record a run and station observation using an explicit unit. No target, tolerance, pass result, or safety evaluation is configured here.</p>
+      ${stationKeys.length ? `<form data-qc-action="checkpoint" data-qc-reset-on-success>
+        <label class="field"><span>Observation type</span><select name="checkpointType"><option value="temperature">Temperature</option><option value="time">Elapsed time</option></select></label>
+        <label class="field"><span>Production station</span><select name="stationKey" required>${stationOptions}</select></label>
+        <label class="field"><span>Checkpoint description</span><input name="checkpointLabel" maxlength="100" required /></label>
+        <label class="field"><span>Observed value</span><input name="observedValue" inputmode="decimal" pattern="-?(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,6})?" required /></label>
+        <label class="field"><span>Unit</span><select name="unit"><option value="°C">°C</option><option value="°F">°F</option></select></label>
+        <label class="field"><span>Optional observation note</span><input name="note" maxlength="500" /></label>
+        <button class="button button-primary" type="submit" ${editable}>Record checkpoint</button><p data-form-status role="status"></p>
+      </form>` : "<p class=\"qc-help\">No production station is available in this run snapshot.</p>"}
+    </section>`;
+  const correctiveActionSection = `<section class="qc-card" aria-labelledby="qc-corrective-heading">
+      <p class="eyebrow">APPEND-ONLY OBSERVATION</p><h3 id="qc-corrective-heading">Corrective-action observation</h3>
+      <p class="qc-help">Describe an action observed in response to a checkpoint or review flag. This does not assert that a hazard was controlled or a production hold was released.</p>
+      ${checkpointTargets.length ? `<form data-qc-action="corrective-action" data-qc-reset-on-success>
+        <label class="field"><span>Related checkpoint or review flag</span><select name="targetEventId" required>${checkpointTargetOptions}</select></label>
+        <label class="field"><span>Action observed</span><input name="actionObserved" minlength="3" maxlength="500" required /></label>
+        <label class="field"><span>Optional follow-up note</span><input name="followUpNote" maxlength="500" /></label>
+        <button class="button button-primary" type="submit" ${editable}>Record action observation</button><p data-form-status role="status"></p>
+      </form>` : "<p class=\"qc-help\">Record a checkpoint or review flag before linking an action observation.</p>"}
+    </section>`;
+  const reviewFlagSection = `<section class="qc-card" aria-labelledby="qc-review-flag-heading">
+      <p class="eyebrow">NEEDS REVIEW · NO HOLD</p><h3 id="qc-review-flag-heading">Flag a run or lot for review</h3>
+      <p class="qc-help">Flags request manager attention only. They do not stop production or shipping and are not a compliance or certification decision.</p>
+      <form data-qc-action="review-flag" data-qc-reset-on-success>
+        <label class="field"><span>Flag scope</span><select name="targetType"><option value="run">This run</option><option value="lot" ${lotTargets.length ? "" : "disabled"}>A recorded lot</option></select></label>
+        <label class="field" data-lot-target-field hidden><span>Recorded lot</span><select name="targetEventId"><option value="">Choose a lot record</option>${lotTargetOptions}</select></label>
+        <label class="field"><span>Reason</span><input name="reason" minlength="3" maxlength="500" required /></label>
+        <button class="button button-primary" type="submit" ${editable}>Flag for manager review</button><p data-form-status role="status"></p>
+      </form>
     </section>`;
   const allergenLinkManager = canManageAllergens()
     ? `<section class="qc-card qc-manager-card" aria-labelledby="qc-ingredient-links-heading">
@@ -671,6 +794,9 @@ function renderForms() {
 
   el.forms.innerHTML = `${footprintSection}
     ${componentSection}
+    ${checkpointSection}
+    ${correctiveActionSection}
+    ${reviewFlagSection}
     ${substitutionSection}
     ${allergenLinkManager}
     <section class="qc-card" aria-labelledby="qc-lots-heading">
@@ -723,6 +849,30 @@ function renderForms() {
     </section>
     ${managerForms}`;
   el.forms.querySelectorAll("form[data-qc-action]").forEach((form) => form.addEventListener("submit", handleFormSubmit));
+  const reviewFlagForm = el.forms.querySelector('form[data-qc-action="review-flag"]');
+  const lotTargetField = reviewFlagForm?.querySelector("[data-lot-target-field]");
+  const lotTargetSelect = reviewFlagForm?.querySelector('select[name="targetEventId"]');
+  reviewFlagForm?.querySelector('select[name="targetType"]')?.addEventListener("change", (event) => {
+    const showLot = event.currentTarget.value === "lot";
+    if (lotTargetField) lotTargetField.hidden = !showLot;
+    if (lotTargetSelect) lotTargetSelect.required = showLot;
+  });
+  const checkpointTypeSelect = el.forms.querySelector('form[data-qc-action="checkpoint"] select[name="checkpointType"]');
+  const checkpointUnitSelect = el.forms.querySelector('form[data-qc-action="checkpoint"] select[name="unit"]');
+  checkpointTypeSelect?.addEventListener("change", () => {
+    if (!checkpointUnitSelect) return;
+    const selectedUnit = checkpointUnitSelect.value;
+    const options = checkpointTypeSelect.value === "temperature"
+      ? [["°C", "°C"], ["°F", "°F"]]
+      : [["min", "minutes"], ["s", "seconds"], ["h", "hours"]];
+    checkpointUnitSelect.replaceChildren(...options.map(([value, label]) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      return option;
+    }));
+    if (options.some(([value]) => value === selectedUnit)) checkpointUnitSelect.value = selectedUnit;
+  });
   const sourceRows = el.forms.querySelector("[data-source-rows]");
   const addSourceButton = el.forms.querySelector("[data-add-source]");
   if (sourceRows && addSourceButton) {
@@ -755,6 +905,10 @@ function renderForms() {
       if (control && control.type !== "submit") control.value = value;
     }
   }
+  checkpointTypeSelect?.dispatchEvent(new Event("change"));
+  const restoredReviewFlagType = reviewFlagForm?.querySelector('select[name="targetType"]')?.value;
+  if (lotTargetField && restoredReviewFlagType === "lot") lotTargetField.hidden = false;
+  if (lotTargetSelect && restoredReviewFlagType === "lot") lotTargetSelect.required = true;
   const productSelect = el.forms.querySelector('form[data-qc-action="ingredient-link"] select[name="productId"]');
   const ingredientSelect = el.forms.querySelector('form[data-qc-action="ingredient-link"] select[name="ingredientCode"]');
   if (productSelect && ingredientSelect) {
@@ -809,6 +963,7 @@ function render() {
   el.review.dataset.state = data.review?.status === "signed-off" ? "complete" : "open";
   el.export.hidden = !canManage();
   const fingerprint = JSON.stringify({
+    events: data.events,
     settings: data.settings,
     ingredientLinks: data.ingredientLinks,
     allergenFootprint: data.allergenFootprint,

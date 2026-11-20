@@ -2518,8 +2518,11 @@ paths:
       description: >
         QC-role only; writes are append-only, idempotent by requestId, and use
         authenticated staff identity and a server timestamp. No outcome blocks
-        production or shipping. Cleaning verification must be a separate
-        authenticated QC staff member.
+        production or shipping. Checkpoint readings are observation-only until
+        an approved facility criterion exists. Review flags mean needs review,
+        not a production/shipping hold or certification. Cleaning verification
+        must be a separate authenticated QC staff member; review-flag decisions
+        require the manage-qc capability.
       security:
         - v2Session: []
           v2CsrfCookie: []
@@ -2981,7 +2984,7 @@ components:
           format: uuid
         eventType:
           type: string
-          enum: [lot-recorded, weight-check, cleaning-recorded, cleaning-verified, date-code-observed, brix-check, qc-setting-reviewed, review-signed-off, run-check-reviewed, run-substitution-proposed, run-substitution-approved, run-substitution-rejected, run-substitution-corrected, correction, redaction]
+          enum: [lot-recorded, weight-check, cleaning-recorded, cleaning-verified, date-code-observed, brix-check, qc-setting-reviewed, review-signed-off, run-check-reviewed, run-substitution-proposed, run-substitution-approved, run-substitution-rejected, run-substitution-corrected, checkpoint-observed, corrective-action-observed, review-flag-raised, review-flag-reviewed, correction, redaction]
         payload:
           type: object
         occurredAt:
@@ -3155,6 +3158,64 @@ components:
           maxLength: 300
     QcEventRequest:
       oneOf:
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, checkpointType, stationKey, checkpointLabel, observedValue, unit, note]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: checkpoint-observed }
+            checkpointType: { const: temperature }
+            stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+            checkpointLabel: { type: string, minLength: 1, maxLength: 100 }
+            observedValue: { type: string, pattern: "^-?(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,6})?$" }
+            unit: { type: string, enum: ["°C", "°F"] }
+            note: { type: string, maxLength: 500 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, checkpointType, stationKey, checkpointLabel, observedValue, unit, note]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: checkpoint-observed }
+            checkpointType: { const: time }
+            stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+            checkpointLabel: { type: string, minLength: 1, maxLength: 100 }
+            observedValue: { type: string, pattern: "^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,6})?$" }
+            unit: { type: string, enum: [s, min, h] }
+            note: { type: string, maxLength: 500 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, targetEventId, actionObserved, followUpNote]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: corrective-action-observed }
+            targetEventId: { type: string, format: uuid }
+            actionObserved: { type: string, minLength: 3, maxLength: 500 }
+            followUpNote: { type: string, maxLength: 500 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, targetType, reason]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: review-flag-raised }
+            targetType: { const: run }
+            reason: { type: string, minLength: 3, maxLength: 500 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, targetType, targetEventId, reason]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: review-flag-raised }
+            targetType: { const: lot }
+            targetEventId: { type: string, format: uuid }
+            reason: { type: string, minLength: 3, maxLength: 500 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, targetEventId, reviewNote]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: review-flag-reviewed }
+            targetEventId: { type: string, format: uuid }
+            reviewNote: { type: string, minLength: 3, maxLength: 500 }
         - type: object
           additionalProperties: false
           required: [requestId, eventType, checkType]

@@ -631,6 +631,7 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .qc-card form + form { padding-top: 13px; border-top: 1px solid var(--line); }
 .qc-card form .button, .qc-inline-form .button { width: 100%; min-height: 44px; }
 .qc-card input, .qc-card select, .qc-inline-form input { width: 100%; min-width: 0; min-height: 44px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 0; background: var(--field); color: var(--ink); font: 14px var(--display); }
+.qc-card select { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .qc-card input:focus-visible, .qc-card select:focus-visible, .qc-inline-form input:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
 .qc-card input:disabled, .qc-card select:disabled, .qc-card button:disabled, .qc-inline-form input:disabled { opacity: .58; cursor: not-allowed; }
 .qc-help { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
