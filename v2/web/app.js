@@ -2135,7 +2135,10 @@ function renderStationPanel(run) {
   const capacityNotice = selectedStationKey === "dough" && run.doughCapacity?.status !== "available"
     ? `<p class="station-capacity-notice" role="status">Dough capacity unavailable: ${escapeHtml(describeDoughCapacity(run.doughCapacity))}</p>`
     : "";
-  el.stationMetrics.innerHTML = `${metricMarkup}${capacityNotice}`;
+  const doughHelp = selectedStationKey === "dough"
+    ? `<p class="station-help">Example: 645.19 doughballs ÷ 12 pizzas per case = 53.7658 cases per batch. Batch estimates round up to whole batches: 53 cases needs 1; 54 needs 2.</p>`
+    : "";
+  el.stationMetrics.innerHTML = `${metricMarkup}${doughHelp}${capacityNotice}`;
 
   const makeFields = (title, group, fields) => `
     <div class="station-field-group">

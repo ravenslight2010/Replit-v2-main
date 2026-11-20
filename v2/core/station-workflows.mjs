@@ -239,8 +239,12 @@ export function calculateStationMetrics({ stationKey, run, state }) {
   const batchLbs = valueFrom(state, "inputs", "batchLbs");
   if (stationKey === "sauce") {
     const barrelLbs = valueFrom(state, "inputs", "barrelLbs");
+    const casesPerLayer = Number(run?.setupSnapshot?.dieSetup?.lineSettings?.casesPerLayer);
+    const casesWithLayer = Number.isFinite(casesPerLayer) && casesPerLayer > 0
+      ? targetCases + casesPerLayer
+      : targetCases;
     const totalLbs = pizzasPerCase > 0 && ozPerPizza > 0
-      ? round((targetCases * pizzasPerCase * ozPerPizza) / 16 + 30)
+      ? round((casesWithLayer * pizzasPerCase * ozPerPizza) / 16 + 30)
       : null;
     const barrelsNeeded = totalLbs !== null && barrelLbs > 0 ? round(totalLbs / barrelLbs) : null;
     const barrelsMade = valueFrom(state, "progress", "barrelsMade");
@@ -262,9 +266,11 @@ export function calculateStationMetrics({ stationKey, run, state }) {
     metrics.totalIngredientLbs = neededLbs;
     metrics.stockOnLineLbs = onLine;
     metrics.stockConsumedLbs = consumed;
-    metrics.batchesNeeded = neededLbs !== null && batchLbs > 0 ? Math.ceil(neededLbs / batchLbs) : null;
+    metrics.batchesNeeded = neededLbs !== null && batchLbs > 0
+      ? round(neededLbs / batchLbs)
+      : null;
     metrics.batchesToMake = neededLbs !== null && batchLbs > 0
-      ? Math.ceil(Math.max(0, neededLbs - onLine - consumed) / batchLbs)
+      ? round(Math.max(0, neededLbs - onLine - consumed) / batchLbs)
       : null;
     metrics.batchesMade = valueFrom(state, "progress", "batchesMade");
     return metrics;

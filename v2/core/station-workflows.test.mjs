@@ -187,6 +187,30 @@ test("includes Sauce preparation loss and calculates barrel demand", () => {
   });
 });
 
+test("uses the frozen Sauce layer setting and defaults to no extra layer", () => {
+  const sauce = (dieSetup) => calculateStationMetrics({
+    stationKey: "sauce",
+    run: {
+      setupSnapshot: {
+        targetCases: 55,
+        ...(dieSetup ? { dieSetup } : {}),
+      },
+    },
+    state: {
+      inputs: { pizzasPerCase: 12, ozPerPizza: 4, barrelLbs: 271.5 },
+      progress: { barrelsMade: 0 },
+    },
+  });
+  const withLayer = sauce({ lineSettings: { casesPerLayer: 4 } });
+  assert.equal(withLayer.totalIngredientLbs, 207);
+  assert.equal(withLayer.barrelsNeeded, 0.76);
+  assert.equal(withLayer.barrelsRemaining, 1);
+
+  const withoutLayer = sauce(null);
+  assert.equal(withoutLayer.totalIngredientLbs, 195);
+  assert.equal(withoutLayer.barrelsNeeded, 0.72);
+});
+
 test("calculates Frontline setup allowance, on-line stock, and remaining batches", () => {
   assert.deepEqual(calculateStationMetrics({
     stationKey: "frontline",
@@ -200,10 +224,28 @@ test("calculates Frontline setup allowance, on-line stock, and remaining batches
     totalIngredientLbs: 140,
     stockOnLineLbs: 20,
     stockConsumedLbs: 10,
-    batchesNeeded: 9,
-    batchesToMake: 7,
+    batchesNeeded: 8.75,
+    batchesToMake: 6.88,
     batchesMade: 3,
   });
+});
+
+test("keeps unsupported Pepperoni batch and stick sizing unavailable", () => {
+  const metrics = calculateStationMetrics({
+    stationKey: "pepperoni",
+    run: floorExampleRun,
+    state: {
+      inputs: { pizzasPerCase: 12, ozPerPizza: 1.9 },
+      progress: { casesCompleted: 0, batchesMade: 0 },
+    },
+  });
+  assert.equal(metrics.ingredientLbsNeeded, 78.38);
+  assert.equal(metrics.batchesNeeded, null);
+  assert.equal(metrics.batchesRemaining, null);
+  assert.throws(() => validateStationCommand({
+    stationKey: "pepperoni",
+    changes: { pepperoniSticks: 1 },
+  }), /not used by the Pepperoni station/);
 });
 
 test("validates required station setup and timer values", () => {
@@ -351,8 +393,8 @@ test("matches workbook-based recipe pounds, station allowances, and skid target"
     totalIngredientLbs: 139.63,
     stockOnLineLbs: 20,
     stockConsumedLbs: 10,
-    batchesNeeded: 3,
-    batchesToMake: 2,
+    batchesNeeded: 2.51,
+    batchesToMake: 1.97,
     batchesMade: 0,
   });
 
@@ -433,7 +475,7 @@ test("covers Sauce barrel, Frontline supply, and Packaging skid boundaries", () 
       progress: { stockOnLineLbs, stockConsumedLbs: 50 },
     },
   }).batchesToMake;
-  assert.equal(frontlineAtSupply(89.629), 1);
+  assert.equal(frontlineAtSupply(89), 0.01);
   assert.equal(frontlineAtSupply(89.63), 0);
 
   const packagingAt = (casesPacked) => calculateStationMetrics({

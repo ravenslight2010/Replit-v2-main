@@ -871,6 +871,24 @@ test("dough capacity is derived from the selected product and has no editable ov
   await page.locator("#station-panel:not([hidden])").waitFor({ timeout: 5000 });
   await page.getByTestId("tab-station-dough").click();
   assert.equal(await page.getByText("54.0000 cases", { exact: true }).count(), 1);
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const help = page.locator(".station-help");
+    assert.equal(await help.isVisible(), true);
+    const bounds = await help.boundingBox();
+    assert.ok(bounds && bounds.x >= 0 && bounds.x + bounds.width <= viewport.width);
+    assert.ok(
+      await page.evaluate(() => document.documentElement.scrollWidth) <= viewport.width,
+      `dough help fits ${viewport.width}×${viewport.height}`,
+    );
+    await page.screenshot({
+      path: join(tmpdir(), `v2-dough-help-${viewport.width}.png`),
+      fullPage: true,
+    });
+  }
   assert.deepEqual(fixture.pageErrors, []);
   assert.deepEqual(fixture.consoleErrors, []);
 });
