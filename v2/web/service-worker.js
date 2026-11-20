@@ -1,4 +1,4 @@
-const CACHE_NAME = "fieldline-v2-shell-7";
+const CACHE_NAME = "fieldline-v2-shell-8";
 const SHELL_ASSETS = [
   // V1's active Workbox worker can intercept shared root URLs during install.
   // Fetch V2-only aliases, then store them under the canonical app URLs.
@@ -12,6 +12,8 @@ const SHELL_ASSETS = [
   ["/v2/web/inventory.js", "/v2/web/inventory.js"],
   ["/v2/web/setup-catalog.js", "/v2/web/setup-catalog.js"],
   ["/v2/web/schedule.js", "/v2/web/schedule.js"],
+  ["/v2/web/mix-plan.js", "/v2/web/mix-plan.js"],
+  ["/v2/core/mix-plan.mjs", "/v2/core/mix-plan.mjs"],
   ["/v2/core/import-csv-templates.mjs", "/v2/core/import-csv-templates.mjs"],
   ["/v2/core/import-csv.mjs", "/v2/core/import-csv.mjs"],
   ["/v2/core/setup-catalog-csv.mjs", "/v2/core/setup-catalog-csv.mjs"],

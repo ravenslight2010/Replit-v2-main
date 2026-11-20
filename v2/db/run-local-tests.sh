@@ -703,6 +703,7 @@ fi
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-inventory-parity.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0009-production-schedules.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0010-operational-mix-plan.sql" >/dev/null
 "${PSQL[@]}" -c "
   GRANT EXECUTE ON FUNCTION v2.stage_setup_catalog_import(uuid, uuid, text, text, text, jsonb, jsonb) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.apply_setup_catalog_import(uuid, uuid, uuid) TO v2_api_test;
@@ -743,6 +744,7 @@ fi
   GRANT EXECUTE ON FUNCTION v2.get_production_schedule(uuid, date) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_schedule_run_templates(uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.apply_production_schedule_command(uuid, uuid, date, text, text, bigint, jsonb) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.get_operational_mix_plan_sources(uuid, date) TO v2_api_test;
 " >/dev/null
 assert_no_direct_table_access "v2.run_inventory_consumptions"
 assert_no_direct_table_access "v2.inventory_movements"
@@ -784,6 +786,7 @@ fi
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-approved-setup-catalogs.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0009-production-schedules.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0010-operational-mix-plan.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0009-staff-password-resets.sql" >/dev/null
 "${PSQL[@]}" -c "
   GRANT EXECUTE ON FUNCTION v2.request_staff_password_reset(text) TO v2_api_test;

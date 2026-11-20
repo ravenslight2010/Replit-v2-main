@@ -80,6 +80,7 @@ import type {
   GetProfileNameLinkCleanupAudit200,
   GetShiftHandoffDigestParams,
   GetSyncTodayParams,
+  GetV2MixPlanParams,
   HealthStatus,
   IdentifyPhotoInput,
   IdentifyPhotoResult,
@@ -224,6 +225,7 @@ import type {
   UpdateProactiveAlertSettingsInput,
   UpdateRunSuggestionInput,
   UsernameAvailability,
+  V2MixPlanResponse,
   WasteInsightInput,
   WasteInsightResult
 } from './api.schemas';
@@ -274,6 +276,91 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetV2MixPlanUrl = (params: GetV2MixPlanParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v2/mix-plan?${stringifiedParams}` : `/api/v2/mix-plan`
+}
+
+/**
+ * Returns a facility-scoped read model from canonical schedules, current approved setup, active frozen run snapshots, and explicit inventory mappings. This endpoint is read-only and never changes recipes, inventory, schedules, or completed-run evidence.
+ * @summary Read the mix plan for a preparation date
+ */
+export const getV2MixPlan = async (params: GetV2MixPlanParams, options?: Parameters<typeof customFetch>[1]): Promise<V2MixPlanResponse> => {
+
+  return customFetch<V2MixPlanResponse>(getGetV2MixPlanUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetV2MixPlanQueryKey = (params?: GetV2MixPlanParams,) => {
+    return [
+    `/api/v2/mix-plan`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetV2MixPlanQueryOptions = <TData = Awaited<ReturnType<typeof getV2MixPlan>>, TError = ErrorType<void>>(params: GetV2MixPlanParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV2MixPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetV2MixPlanQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getV2MixPlan>>> = ({ signal }) => getV2MixPlan(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getV2MixPlan>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetV2MixPlanQueryResult = NonNullable<Awaited<ReturnType<typeof getV2MixPlan>>>
+export type GetV2MixPlanQueryError = ErrorType<void>
+
+
+/**
+ * Returns a facility-scoped read model from canonical schedules, current approved setup, active frozen run snapshots, and explicit inventory mappings. This endpoint is read-only and never changes recipes, inventory, schedules, or completed-run evidence.
+ * @summary Read the mix plan for a preparation date
+ */
+export function useGetV2MixPlan<TData = Awaited<ReturnType<typeof getV2MixPlan>>, TError = ErrorType<void>>(
+ params: GetV2MixPlanParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getV2MixPlan>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetV2MixPlanQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getHealthCheckUrl = () => {
 

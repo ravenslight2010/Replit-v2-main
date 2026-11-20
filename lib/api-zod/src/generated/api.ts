@@ -9,6 +9,88 @@ import * as zod from 'zod';
 
 
 /**
+ * Returns a facility-scoped read model from canonical schedules, current approved setup, active frozen run snapshots, and explicit inventory mappings. This endpoint is read-only and never changes recipes, inventory, schedules, or completed-run evidence.
+ * @summary Read the mix plan for a preparation date
+ */
+export const GetV2MixPlanQueryParams = zod.object({
+  "makeDate": zod.date().describe('Preparation date in America/Chicago.')
+})
+
+export const getV2MixPlanResponsePlanItemsItemComponentsItemIndexMin = 0;
+
+export const getV2MixPlanResponsePlanCoverageScheduledRunCountMin = 0;
+
+export const getV2MixPlanResponsePlanCoverageActiveRunCountMin = 0;
+
+export const getV2MixPlanResponsePlanCoverageIncludedRunCountMin = 0;
+
+export const getV2MixPlanResponsePlanCoverageEnabledMixCountMin = 0;
+
+
+
+export const GetV2MixPlanResponse = zod.object({
+  "generatedAt": zod.coerce.date(),
+  "plan": zod.object({
+  "makeDate": zod.coerce.date(),
+  "timeZone": zod.literal("America/Chicago"),
+  "items": zod.array(zod.object({
+  "mixCode": zod.string(),
+  "mixName": zod.string(),
+  "mode": zod.enum(['per-pizza', 'per-batch']),
+  "preparationDate": zod.coerce.date(),
+  "batchSizeLbs": zod.number().nullable(),
+  "batchEquivalent": zod.number().nullable(),
+  "totalQuantity": zod.number().nullable(),
+  "totalUnit": zod.string().nullable(),
+  "components": zod.array(zod.object({
+  "index": zod.int().min(getV2MixPlanResponsePlanItemsItemComponentsItemIndexMin),
+  "name": zod.string(),
+  "ingredientCode": zod.string().nullable(),
+  "perPizzaOz": zod.number().nullable(),
+  "perBatchLbs": zod.number().nullable(),
+  "amount": zod.number().nullable(),
+  "unit": zod.string().nullable(),
+  "inventoryQuantity": zod.number().nullable(),
+  "inventoryUnit": zod.string().nullable()
+})),
+  "contributingRuns": zod.array(zod.object({
+  "runId": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['scheduled', 'running', 'paused']),
+  "productionDate": zod.coerce.date(),
+  "productCode": zod.string().nullable(),
+  "productName": zod.string().nullable(),
+  "cases": zod.number().nullable(),
+  "pizzas": zod.number().nullable()
+})),
+  "warnings": zod.array(zod.object({
+  "code": zod.string(),
+  "message": zod.string(),
+  "componentCode": zod.string().optional(),
+  "mixCode": zod.string().optional(),
+  "runId": zod.string().optional(),
+  "productionDate": zod.coerce.date().optional()
+}))
+})),
+  "warnings": zod.array(zod.object({
+  "code": zod.string(),
+  "message": zod.string(),
+  "componentCode": zod.string().optional(),
+  "mixCode": zod.string().optional(),
+  "runId": zod.string().optional(),
+  "productionDate": zod.coerce.date().optional()
+})),
+  "coverage": zod.object({
+  "scheduledRunCount": zod.int().min(getV2MixPlanResponsePlanCoverageScheduledRunCountMin),
+  "activeRunCount": zod.int().min(getV2MixPlanResponsePlanCoverageActiveRunCountMin),
+  "includedRunCount": zod.int().min(getV2MixPlanResponsePlanCoverageIncludedRunCountMin),
+  "enabledMixCount": zod.int().min(getV2MixPlanResponsePlanCoverageEnabledMixCountMin)
+})
+})
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

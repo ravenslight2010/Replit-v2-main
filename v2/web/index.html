@@ -128,6 +128,12 @@
             <div><span class="eyebrow">LAST CHECK</span><strong id="last-check">Waiting for server</strong></div>
           </div>
         </section>
+        <nav class="operations-nav" aria-label="Operations destinations">
+          <a href="#workspace">Run control</a>
+          <a href="#mix-plan">Mix Plan</a>
+          <a href="#schedule-tools" id="schedule-nav-link" hidden>Production schedule</a>
+          <a href="#manager-tools" id="setup-nav-link" hidden>Setup and inventory</a>
+        </nav>
 
         <section class="staff-panel" id="staff-panel" aria-labelledby="staff-heading" hidden>
           <div class="staff-panel-header">
@@ -189,7 +195,7 @@
           <button class="text-button" id="refresh-button" type="button" data-testid="button-refresh">Refresh state</button>
         </div>
 
-        <section class="workspace" aria-label="Run operations">
+        <section class="workspace" id="workspace" aria-label="Run operations">
           <div class="primary-column">
             <article class="run-panel" aria-labelledby="run-label">
               <div class="panel-topline">
@@ -289,6 +295,32 @@
               <div><strong>Reconnected?</strong><p>State refreshes when this screen returns to view, and periodically while open.</p></div>
             </section>
           </aside>
+        </section>
+        <section class="mix-plan-panel" id="mix-plan" aria-labelledby="mix-plan-heading" hidden>
+          <div class="mix-plan-heading">
+            <div>
+              <p class="eyebrow intro-kicker">READ-ONLY PREPARATION VIEW <span class="intro-rule"></span> V2</p>
+              <h2 id="mix-plan-heading">Mix Plan</h2>
+              <p class="mix-plan-intro">Scheduled runs use current approved setup. Active runs use their frozen recipe snapshot. This plan never changes recipes, stock, or completed-run evidence.</p>
+            </div>
+            <div class="mix-plan-controls">
+              <label class="field" for="mix-plan-date">
+                <span>Preparation date · Central time</span>
+                <input id="mix-plan-date" type="date" required />
+              </label>
+              <button class="button button-secondary" id="mix-plan-refresh" type="button">Refresh plan</button>
+            </div>
+          </div>
+          <p class="mix-plan-state" id="mix-plan-state" role="status" aria-live="polite"></p>
+          <p class="mix-plan-alert" id="mix-plan-alert" role="alert" hidden></p>
+          <div class="mix-plan-warning-list" id="mix-plan-warnings" aria-live="polite"></div>
+          <div class="mix-plan-list" id="mix-plan-list" aria-live="polite"></div>
+          <p class="mix-plan-empty" id="mix-plan-empty" hidden>No scheduled or active runs need a mix on this preparation date.</p>
+          <div class="mix-plan-links" id="mix-plan-links" hidden>
+            <span>Need to update an approved source?</span>
+            <a href="#setup-catalog-panel" id="mix-plan-recipes-link">Mix Recipes and setup catalog</a>
+            <a href="#manager-tools" id="mix-plan-inventory-link">Ingredient and stock mappings</a>
+          </div>
         </section>
         <section class="station-panel" id="station-panel" aria-labelledby="station-heading" hidden>
           <div class="station-heading-row">

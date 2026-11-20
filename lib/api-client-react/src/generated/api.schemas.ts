@@ -5,6 +5,109 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type V2MixPlanItemMode = typeof V2MixPlanItemMode[keyof typeof V2MixPlanItemMode];
+
+
+export const V2MixPlanItemMode = {
+  'per-pizza': 'per-pizza',
+  'per-batch': 'per-batch',
+} as const;
+
+export interface V2MixPlanComponent {
+  /** @minimum 0 */
+  index: number;
+  name: string;
+  /** @nullable */
+  ingredientCode: string | null;
+  /** @nullable */
+  perPizzaOz: number | null;
+  /** @nullable */
+  perBatchLbs: number | null;
+  /** @nullable */
+  amount: number | null;
+  /** @nullable */
+  unit: string | null;
+  /** @nullable */
+  inventoryQuantity: number | null;
+  /** @nullable */
+  inventoryUnit: string | null;
+}
+
+export type V2MixPlanRunStatus = typeof V2MixPlanRunStatus[keyof typeof V2MixPlanRunStatus];
+
+
+export const V2MixPlanRunStatus = {
+  scheduled: 'scheduled',
+  running: 'running',
+  paused: 'paused',
+} as const;
+
+export interface V2MixPlanRun {
+  runId: string;
+  label: string;
+  status: V2MixPlanRunStatus;
+  productionDate: string;
+  /** @nullable */
+  productCode: string | null;
+  /** @nullable */
+  productName: string | null;
+  /** @nullable */
+  cases: number | null;
+  /** @nullable */
+  pizzas: number | null;
+}
+
+export interface V2MixPlanWarning {
+  code: string;
+  message: string;
+  componentCode?: string;
+  mixCode?: string;
+  runId?: string;
+  productionDate?: string;
+}
+
+export interface V2MixPlanItem {
+  mixCode: string;
+  mixName: string;
+  mode: V2MixPlanItemMode;
+  preparationDate: string;
+  /** @nullable */
+  batchSizeLbs: number | null;
+  /** @nullable */
+  batchEquivalent: number | null;
+  /** @nullable */
+  totalQuantity: number | null;
+  /** @nullable */
+  totalUnit: string | null;
+  components: V2MixPlanComponent[];
+  contributingRuns: V2MixPlanRun[];
+  warnings: V2MixPlanWarning[];
+}
+
+export type V2MixPlanCoverage = {
+  /** @minimum 0 */
+  scheduledRunCount: number;
+  /** @minimum 0 */
+  activeRunCount: number;
+  /** @minimum 0 */
+  includedRunCount: number;
+  /** @minimum 0 */
+  enabledMixCount: number;
+};
+
+export interface V2MixPlan {
+  makeDate: string;
+  timeZone: 'America/Chicago';
+  items: V2MixPlanItem[];
+  warnings: V2MixPlanWarning[];
+  coverage: V2MixPlanCoverage;
+}
+
+export interface V2MixPlanResponse {
+  generatedAt: string;
+  plan: V2MixPlan;
+}
+
 /**
  * Whether the response is deterministic-only, AI-enriched, or missing AI narration
  */
@@ -4253,6 +4356,11 @@ export interface ManagerActionItemUpdate {
 export type ClientTodayParameter = string;
 
 export type SyncSnapshotParameter = string;
+
+export type GetV2MixPlanParams = {
+  /** Preparation date in America/Chicago. */
+  makeDate: string;
+};
 
 export type CheckUsernameAvailableParams = {
   /**

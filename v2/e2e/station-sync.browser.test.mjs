@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import { access, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { chromium, webkit } from "../../node_modules/.pnpm/node_modules/playwright/index.mjs";
+import { chromium, webkit as pinnedWebkit } from "../../node_modules/.pnpm/node_modules/playwright/index.mjs";
 import * as XLSX from "xlsx";
 import { parseOpeningCountCsv, parseSetupImportCsv } from "../core/import-csv.mjs";
 import {
@@ -25,6 +26,9 @@ import { applyScheduleCommand, emptySchedule } from "../core/schedule-planning.m
 const CSRF_TOKEN = "a".repeat(43);
 const STAFF_ID = "72000000-0000-4000-8000-000000000001";
 const RUN_ID = "73000000-0000-4000-8000-000000000001";
+const webkit = process.env.V2_WEBKIT_PLAYWRIGHT_MODULE
+  ? createRequire(import.meta.url)(process.env.V2_WEBKIT_PLAYWRIGHT_MODULE).webkit
+  : pinnedWebkit;
 const webkitExecutablePath = process.env.V2_WEBKIT_EXECUTABLE_PATH || webkit.executablePath();
 let webkitInstalled = true;
 try {
@@ -71,6 +75,8 @@ const WEB_ASSETS = new Map([
   ["/v2/web/inventory.js", ["../web/inventory.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/setup-catalog.js", ["../web/setup-catalog.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/schedule.js", ["../web/schedule.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/mix-plan.js", ["../web/mix-plan.js", "text/javascript; charset=utf-8"]],
+  ["/v2/core/mix-plan.mjs", ["../core/mix-plan.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/web/styles.css", ["../web/styles.css", "text/css; charset=utf-8"]],
   ["/v2/web/write-gate.mjs", ["../web/write-gate.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/import-csv-templates.mjs", ["../core/import-csv-templates.mjs", "text/javascript; charset=utf-8"]],
@@ -227,6 +233,9 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
     scheduleReceipts: new Map(),
     forceScheduleConflictOnce: false,
     expectedConflictConsoleErrors: 0,
+    mixPlanCalls: [],
+    mixPlanRevision: 0,
+    notFoundRoutes: [],
   };
   const server = createServer(async (request, response) => {
     const asset = WEB_ASSETS.get(new URL(request.url, "http://v2.test").pathname);
@@ -258,6 +267,15 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
   } else if (browserEngine === webkit && process.env.V2_WEBKIT_EXECUTABLE_PATH) {
     launchOptions.executablePath = process.env.V2_WEBKIT_EXECUTABLE_PATH;
   }
+  if (browserEngine === webkit && process.env.V2_WEBKIT_SKIP_HOST_REQUIREMENTS === "1") {
+    launchOptions.env = {
+      ...process.env,
+      PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: "1",
+      ...(process.env.V2_WEBKIT_EGL_VENDOR
+        ? { __EGL_VENDOR_LIBRARY_FILENAMES: process.env.V2_WEBKIT_EGL_VENDOR }
+        : {}),
+    };
+  }
   const browser = await browserEngine.launch(launchOptions);
   t.after(async () => {
     await browser.close();
@@ -282,10 +300,64 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
             staff: {
               userId: STAFF_ID,
               username: "station_tester",
-              role: "manager",
-              capabilities: ["station.command", ...(canApprove ? [
+              role: canApprove ? "manager" : "operator",
+              capabilities: ["station.command", "run.read", ...(canApprove ? [
                 "manage-inventory", "manage-factory-settings",
               ] : [])],
+            },
+          }),
+        });
+        return;
+      }
+      if (url.pathname === "/api/v2/mix-plan" && request.method() === "GET") {
+        const makeDate = url.searchParams.get("makeDate");
+        fixture.mixPlanCalls.push(makeDate);
+        const quantity = fixture.mixPlanRevision === 0 ? 4 : 5;
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            generatedAt: new Date().toISOString(),
+            plan: {
+              makeDate,
+              timeZone: "America/Chicago",
+              items: [{
+                mixCode: "MIX-PLAN-TEST",
+                mixName: "Synthetic Prep Mix",
+                mode: "per-batch",
+                preparationDate: makeDate,
+                batchSizeLbs: 10,
+                batchEquivalent: 0.2,
+                totalQuantity: quantity,
+                totalUnit: "each",
+                components: [{
+                  index: 0,
+                  name: "Synthetic Flour",
+                  ingredientCode: "FLOUR-TEST",
+                  perPizzaOz: null,
+                  perBatchLbs: 2,
+                  amount: 0.4,
+                  unit: "lb",
+                  inventoryQuantity: null,
+                  inventoryUnit: null,
+                }],
+                contributingRuns: [{
+                  runId: "75000000-0000-4000-8000-000000000011",
+                  label: "Scheduled Test Run",
+                  status: "scheduled",
+                  productionDate: makeDate,
+                  productCode: "PRODUCT",
+                  productName: "Brand Flavor",
+                  cases: 2,
+                  pizzas: 24,
+                }],
+                warnings: [],
+              }],
+              warnings: [{
+                code: "ingredient-conversion-missing",
+                message: "Synthetic Flour has no complete inventory product and stock-unit conversion.",
+              }],
+              coverage: { scheduledRunCount: 1, activeRunCount: 0, includedRunCount: 1, enabledMixCount: 1 },
             },
           }),
         });
@@ -533,6 +605,21 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ counts: [] }) });
         return;
       }
+      if (manager && url.pathname === "/api/v2/inventory/preparation-setup" && request.method() === "GET") {
+        await route.fulfill({
+          status: 200, contentType: "application/json",
+          body: JSON.stringify({ ingredients: [], mixes: [] }),
+        });
+        return;
+      }
+      if (manager && url.pathname === "/api/v2/inventory/preparations" && request.method() === "GET") {
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ preparations: [] }) });
+        return;
+      }
+      if (manager && url.pathname === "/api/v2/inventory/cycle-counts" && request.method() === "GET") {
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ counts: [] }) });
+        return;
+      }
       if (url.pathname === "/api/v2/runs" && request.method() === "GET") {
         await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ runs: [snapshot(fixture)] }) });
         return;
@@ -744,6 +831,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         });
         return;
       }
+      fixture.notFoundRoutes.push(`${request.method()} ${url.pathname}`);
       await route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: "Not found." }) });
     };
     await context.route("**/api/v2/**", routeApi);
@@ -764,7 +852,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         fixture.expectedLostApplyConsoleError = false;
         return;
       }
-      fixture.consoleErrors.push(message.text());
+      fixture.consoleErrors.push(`${message.text()} [${JSON.stringify(message.location())}]`);
     });
     await page.goto(baseUrl);
     try {
@@ -786,6 +874,99 @@ async function waitForState(predicate, timeoutMs = 7000) {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   assert.fail("Timed out waiting for shared test state.");
+}
+
+for (const browserEngine of [chromium, webkit]) {
+test(`operators can review the read-only Mix Plan across roles, reload, and responsive widths in ${browserEngine.name()}`,
+  { skip: browserEngine === webkit && !webkitInstalled ? "Playwright WebKit is not installed on this host." : false },
+  async (t) => {
+    const browserState = await createFixture(t, { width: 1440, height: 900 }, {
+      manager: true, browserEngine,
+    });
+    const managerDevice = await browserState.openDevice();
+    const { page, context } = managerDevice;
+    await page.getByRole("link", { name: "Mix Plan", exact: true }).click();
+    await page.locator("#mix-plan:not([hidden])").waitFor();
+    await page.getByRole("heading", { name: "Synthetic Prep Mix" }).waitFor();
+    await page.getByText("Synthetic Flour has no complete inventory product and stock-unit conversion.").waitFor();
+    await page.getByText("Scheduled Test Run", { exact: true }).waitFor();
+    assert.equal(await page.locator("#mix-plan-recipes-link").isVisible(), true);
+    assert.equal(await page.locator("#mix-plan-inventory-link").isVisible(), true);
+    assert.equal(await page.locator("#mix-plan form").count(), 0, "the plan surface has no recipe or stock editing form");
+    assert.ok(browserState.fixture.mixPlanCalls.length >= 1);
+    if (browserEngine === chromium) {
+      await page.screenshot({
+        path: join(tmpdir(), `v2-mix-plan-${browserEngine.name()}-desktop.png`),
+        caret: "initial",
+      });
+    }
+
+    const mixPlanCallsBeforeScheduleEdit = browserState.fixture.mixPlanCalls.length;
+    await page.locator("#schedule-nav-link").click();
+    await page.locator("#schedule-tools:not([hidden])").waitFor();
+    await page.getByText(/Server schedule loaded/u).waitFor();
+    await page.locator("#schedule-add").click();
+    const plannedRun = page.locator('.schedule-run[data-is-new="true"]');
+    await plannedRun.locator('[data-field="productCode"]').selectOption("PRODUCT");
+    await plannedRun.locator('[data-field="productionSetupCode"]').selectOption("SETUP");
+    await plannedRun.locator('[data-field="runTemplateCode"]').selectOption("TEMPLATE");
+    await plannedRun.locator('[data-field="targetCases"]').fill("3");
+    await plannedRun.getByRole("button", { name: "Add to plan" }).click();
+    await page.getByText("Schedule change saved to the server.").waitFor();
+    await waitForState(() => browserState.fixture.mixPlanCalls.length > mixPlanCallsBeforeScheduleEdit);
+    await page.getByRole("link", { name: "Mix Plan", exact: true }).click();
+
+    browserState.fixture.mixPlanRevision = 1;
+    await page.locator("#mix-plan-refresh").click();
+    await page.getByText("5 each", { exact: true }).waitFor();
+    await page.reload();
+    await page.locator("#mix-plan:not([hidden])").waitFor();
+    await page.getByText("5 each", { exact: true }).waitFor();
+    assert.ok(browserState.fixture.mixPlanCalls.length >= 3, "reload requests a fresh canonical plan");
+
+    for (const viewport of [
+      { width: 390, height: 844 },
+      { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const bounds = await page.locator("#mix-plan").evaluate((element) => ({
+        width: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }));
+      assert.ok(bounds.scrollWidth <= bounds.width, `Mix Plan does not overflow at ${viewport.width}×${viewport.height}`);
+    }
+    if (browserEngine === chromium) {
+      await page.screenshot({
+        path: join(tmpdir(), `v2-mix-plan-${browserEngine.name()}-phone.png`),
+        caret: "initial",
+      });
+    }
+
+    await context.setOffline(true);
+    await page.getByText(/Offline · showing the last server-confirmed plan/u).waitFor();
+    assert.equal(await page.locator("#mix-plan-refresh").isDisabled(), true);
+    assert.equal(await page.getByText("5 each", { exact: true }).count(), 1);
+    const mixPlanCallsBeforeReconnect = browserState.fixture.mixPlanCalls.length;
+    await context.setOffline(false);
+    await page.getByText(/Server-confirmed/u).waitFor();
+    await waitForState(() => browserState.fixture.mixPlanCalls.length > mixPlanCallsBeforeReconnect);
+
+    await page.locator("#mix-plan-recipes-link").click();
+    assert.equal(new URL(page.url()).hash, "#setup-catalog-panel");
+    assert.equal(await page.locator("#setup-catalog-family").inputValue(), "mixes");
+
+    const operatorDevice = await browserState.openDevice({ width: 390, height: 844 }, { canApprove: false });
+    await operatorDevice.page.getByRole("link", { name: "Mix Plan", exact: true }).click();
+    await operatorDevice.page.locator("#mix-plan:not([hidden])").waitFor();
+    await operatorDevice.page.getByText("Synthetic Flour has no complete inventory product and stock-unit conversion.").waitFor();
+    assert.equal(await operatorDevice.page.locator("#mix-plan-links").isVisible(), false);
+    assert.equal(await operatorDevice.page.locator("#setup-nav-link").isVisible(), false);
+    assert.equal(await operatorDevice.page.locator("#schedule-nav-link").isVisible(), false);
+    assert.deepEqual(browserState.fixture.pageErrors, []);
+    assert.deepEqual(browserState.fixture.notFoundRoutes, []);
+    assert.deepEqual(browserState.fixture.consoleErrors, []);
+  });
 }
 
 test("production rules warn, block definitively, and display an approved imported bypass", async (t) => {

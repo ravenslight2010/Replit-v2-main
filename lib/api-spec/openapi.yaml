@@ -14,6 +14,8 @@ tags:
     description: Username + password authentication
   - name: runs
     description: Production run history
+  - name: mixPlan
+    description: Read-only make-day preparation planning
   - name: inventory
     description: Stock / inventory control
   - name: roles
@@ -40,6 +42,35 @@ tags:
   - name: sync
     description: Client-date-scoped live day-state synchronization
 paths:
+  /v2/mix-plan:
+    get:
+      operationId: getV2MixPlan
+      tags: [mixPlan]
+      summary: Read the mix plan for a preparation date
+      description: >-
+        Returns a facility-scoped read model from canonical schedules, current
+        approved setup, active frozen run snapshots, and explicit inventory
+        mappings. This endpoint is read-only and never changes recipes,
+        inventory, schedules, or completed-run evidence.
+      parameters:
+        - name: makeDate
+          in: query
+          required: true
+          description: Preparation date in America/Chicago.
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Current preparation plan and source-coverage warnings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/V2MixPlanResponse" }
+        "400": { description: Invalid or duplicate preparation date }
+        "401": { description: Sign-in is required }
+        "403": { description: Run-read access is required }
+        "405": { description: Read-only requests must use GET }
+        "500": { description: The canonical read model could not be loaded }
+        "502": { description: Canonical mix plan sources are incomplete }
+
   /healthz:
     get:
       operationId: healthCheck
@@ -4336,6 +4367,89 @@ components:
       required: false
       schema: { type: string, pattern: "^[a-f0-9]{64}$" }
   schemas:
+    V2MixPlanResponse:
+      type: object
+      required: [plan, generatedAt]
+      properties:
+        generatedAt: { type: string, format: date-time }
+        plan: { $ref: "#/components/schemas/V2MixPlan" }
+    V2MixPlan:
+      type: object
+      required: [makeDate, timeZone, items, warnings, coverage]
+      properties:
+        makeDate: { type: string, format: date }
+        timeZone: { type: string, const: America/Chicago }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/V2MixPlanItem" }
+        warnings:
+          type: array
+          items: { $ref: "#/components/schemas/V2MixPlanWarning" }
+        coverage:
+          type: object
+          required: [scheduledRunCount, activeRunCount, includedRunCount, enabledMixCount]
+          properties:
+            scheduledRunCount: { type: integer, minimum: 0 }
+            activeRunCount: { type: integer, minimum: 0 }
+            includedRunCount: { type: integer, minimum: 0 }
+            enabledMixCount: { type: integer, minimum: 0 }
+    V2MixPlanItem:
+      type: object
+      required: [mixCode, mixName, mode, preparationDate, batchSizeLbs, batchEquivalent, totalQuantity, totalUnit, components, contributingRuns, warnings]
+      properties:
+        mixCode: { type: string }
+        mixName: { type: string }
+        mode: { type: string, enum: [per-pizza, per-batch] }
+        preparationDate: { type: string, format: date }
+        batchSizeLbs: { type: [number, "null"] }
+        batchEquivalent: { type: [number, "null"] }
+        totalQuantity: { type: [number, "null"] }
+        totalUnit: { type: [string, "null"] }
+        components:
+          type: array
+          items: { $ref: "#/components/schemas/V2MixPlanComponent" }
+        contributingRuns:
+          type: array
+          items: { $ref: "#/components/schemas/V2MixPlanRun" }
+        warnings:
+          type: array
+          items: { $ref: "#/components/schemas/V2MixPlanWarning" }
+    V2MixPlanComponent:
+      type: object
+      required: [index, name, ingredientCode, perPizzaOz, perBatchLbs, amount, unit, inventoryQuantity, inventoryUnit]
+      properties:
+        index: { type: integer, minimum: 0 }
+        name: { type: string }
+        ingredientCode: { type: [string, "null"] }
+        perPizzaOz: { type: [number, "null"] }
+        perBatchLbs: { type: [number, "null"] }
+        amount: { type: [number, "null"] }
+        unit: { type: [string, "null"] }
+        inventoryQuantity: { type: [number, "null"] }
+        inventoryUnit: { type: [string, "null"] }
+    V2MixPlanRun:
+      type: object
+      required: [runId, label, status, productionDate, productCode, productName, cases, pizzas]
+      properties:
+        runId: { type: string }
+        label: { type: string }
+        status: { type: string, enum: [scheduled, running, paused] }
+        productionDate: { type: string, format: date }
+        productCode: { type: [string, "null"] }
+        productName: { type: [string, "null"] }
+        cases: { type: [number, "null"] }
+        pizzas: { type: [number, "null"] }
+    V2MixPlanWarning:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        componentCode: { type: string }
+        mixCode: { type: string }
+        runId: { type: string }
+        productionDate: { type: string, format: date }
+
     AiStatus:
       type: string
       enum: [deterministic, enriched, unavailable]

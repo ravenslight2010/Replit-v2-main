@@ -3,6 +3,7 @@ import {
   centralDate,
   SCHEDULE_TIME_ZONE,
 } from "../core/schedule-planning.mjs";
+import { refreshMixPlan } from "./mix-plan.js";
 
 const API = "/api/v2/schedules";
 const RUNS_API = "/api/v2/runs";
@@ -668,6 +669,7 @@ async function sendPending(pending) {
       renderSchedule();
       setAlert("Another manager changed this date. The latest confirmed plan is loaded; this change was not saved. Review and submit it again if it is still wanted.");
       setStatus("Schedule conflict · the latest server plan remains confirmed.");
+      refreshMixPlan();
       return;
     }
     if (!response.ok) {
@@ -693,6 +695,7 @@ async function sendPending(pending) {
     }
     draftOverlay = null;
     setAlert("");
+    refreshMixPlan();
   } catch (error) {
     if (error?.status === 401) {
       setWriteGate(false);
@@ -703,6 +706,7 @@ async function sendPending(pending) {
       setAlert(error.message || "Review the latest plan before retrying this schedule change.");
       setStatus("Schedule conflict · no stale change was applied.");
       renderSchedule();
+      refreshMixPlan();
     } else if (error?.status >= 400 && error?.status < 500) {
       clearPending(pending.date);
       setAlert(error instanceof Error ? error.message : "The schedule change was rejected.");
