@@ -457,6 +457,35 @@
           <h3 class="manager-subheading">Staged and completed supplies</h3>
           <ul class="manager-list" id="run-supply-history" aria-live="polite"></ul>
         </section>
+        <section class="qc-panel" id="qc-panel" aria-labelledby="qc-heading" hidden>
+          <div class="qc-panel-heading">
+            <div>
+              <p class="eyebrow intro-kicker">QUALITY RECORDS · ADVISORY</p>
+              <h2 id="qc-heading">QC and run review</h2>
+              <p class="manager-tools-copy">Records stay linked to this run. QC outcomes do not stop production or shipping.</p>
+            </div>
+            <span class="qc-review-badge" id="qc-review-badge">Loading review</span>
+          </div>
+          <p class="qc-status" id="qc-status" role="status" aria-live="polite"></p>
+          <div class="qc-error" id="qc-error" role="alert" hidden></div>
+          <div class="qc-grid" id="qc-forms"></div>
+          <section class="qc-history" aria-labelledby="qc-history-heading">
+            <div class="qc-history-heading">
+              <div><p class="eyebrow">FACILITY-RETAINED · SERVER-TIMESTAMPED</p><h3 id="qc-history-heading">Run QC history</h3></div>
+              <div class="qc-history-actions">
+                <button class="button button-secondary button-small" id="qc-export" type="button" hidden>Export facility history</button>
+                <button class="button button-secondary button-small" id="qc-refresh" type="button">Refresh QC</button>
+              </div>
+            </div>
+            <ol class="qc-event-list" id="qc-event-list" aria-live="polite"></ol>
+          </section>
+          <section class="qc-history" aria-labelledby="qc-facility-history-heading">
+            <div class="qc-history-heading">
+              <div><p class="eyebrow">FACILITY-SCOPED · MOST RECENT 100</p><h3 id="qc-facility-history-heading">Facility QC history</h3></div>
+            </div>
+            <ol class="qc-event-list" id="qc-facility-event-list" aria-live="polite"></ol>
+          </section>
+        </section>
         <section class="manager-tools" id="manager-tools" aria-labelledby="manager-tools-title" hidden>
           <div class="manager-tools-heading">
             <div>

@@ -66,15 +66,16 @@ const V2_ASSETS = new Map([
   ["/favicon.ico", ["../web/favicon.svg", "image/svg+xml"]],
   ["/v2/web/favicon.svg", ["../web/favicon.svg", "image/svg+xml"]],
   ["/v2/web/app.js", ["../web/app.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/qc.js", ["../web/qc.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/inventory.js", ["../web/inventory.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/setup-catalog.js", ["../web/setup-catalog.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/schedule.js", ["../web/schedule.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/styles.css", ["../web/styles.css", "text/css; charset=utf-8"]],
   ["/v2/web/write-gate.mjs", ["../web/write-gate.mjs", "text/javascript; charset=utf-8"]],
-  ["/v2/core/import-csv-templates.mjs", ["../core/import-csv-templates.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/import-csv.mjs", ["../core/import-csv.mjs", "text/javascript; charset=utf-8"]],
-  ["/v2/core/die-defaults.mjs", ["../core/die-defaults.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/setup-catalog-csv.mjs", ["../core/setup-catalog-csv.mjs", "text/javascript; charset=utf-8"]],
+  ["/v2/core/import-csv-templates.mjs", ["../core/import-csv-templates.mjs", "text/javascript; charset=utf-8"]],
+  ["/v2/core/die-defaults.mjs", ["../core/die-defaults.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/station-workflows.mjs", ["../core/station-workflows.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/schedule-planning.mjs", ["../core/schedule-planning.mjs", "text/javascript; charset=utf-8"]],
 ]);
@@ -188,18 +189,18 @@ self.addEventListener("message", (event) => {
   await page.waitForFunction(async () => {
     const registration = await navigator.serviceWorker.getRegistration("/");
     const names = await caches.keys();
-    return names.includes("fieldline-v2-shell-7")
+    return names.includes("fieldline-v2-shell-8")
       && !names.includes(`workbox-precache-v2-${registration.scope}`)
       && !names.includes("google-fonts-cache")
       && !names.includes("gstatic-fonts-cache");
   });
   assert.ok((await page.evaluate(() => caches.keys())).includes("unrelated-app-shell"));
   const cachedShell = await page.evaluate(async () => (
-    await (await caches.open("fieldline-v2-shell-7")).match("/")
+    await (await caches.open("fieldline-v2-shell-8")).match("/")
   )?.text());
   assert.match(cachedShell ?? "", /Sign in to the floor/);
   const cachedRootAssets = await page.evaluate(async () => {
-    const cache = await caches.open("fieldline-v2-shell-7");
+    const cache = await caches.open("fieldline-v2-shell-8");
     const manifest = await cache.match("/manifest.webmanifest");
     const icon = await cache.match("/favicon.ico");
     return {

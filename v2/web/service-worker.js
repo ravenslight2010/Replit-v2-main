@@ -14,6 +14,7 @@ const SHELL_ASSETS = [
   ["/v2/web/schedule.js", "/v2/web/schedule.js"],
   ["/v2/web/mix-plan.js", "/v2/web/mix-plan.js"],
   ["/v2/core/mix-plan.mjs", "/v2/core/mix-plan.mjs"],
+  ["/v2/web/qc.js", "/v2/web/qc.js"],
   ["/v2/core/import-csv-templates.mjs", "/v2/core/import-csv-templates.mjs"],
   ["/v2/core/import-csv.mjs", "/v2/core/import-csv.mjs"],
   ["/v2/core/setup-catalog-csv.mjs", "/v2/core/setup-catalog-csv.mjs"],

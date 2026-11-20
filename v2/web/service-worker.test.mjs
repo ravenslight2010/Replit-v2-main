@@ -5,13 +5,14 @@ import { fileURLToPath } from "node:url";
 
 const serviceWorkerPath = fileURLToPath(new URL("./service-worker.js", import.meta.url));
 
-test("offline shell caches the mix planner, schedule planner, and setup-import modules", async () => {
+test("offline shell caches the QC, mix, schedule, and setup-import modules", async () => {
   const source = await readFile(serviceWorkerPath, "utf8");
   for (const path of [
     "/v2/web/setup-catalog.js",
     "/v2/web/schedule.js",
     "/v2/web/mix-plan.js",
     "/v2/core/mix-plan.mjs",
+    "/v2/web/qc.js",
     "/v2/core/setup-catalog-csv.mjs",
     "/v2/core/import-csv.mjs",
     "/v2/core/schedule-planning.mjs",

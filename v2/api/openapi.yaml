@@ -2282,6 +2282,450 @@ paths:
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
+  /api/v2/qc/ingredient-links:
+    get:
+      operationId: listQcIngredientLinks
+      summary: Read manager-reviewed product-to-ingredient links
+      description: Manager capability manage-allergens only; returns bounded facility-scoped catalog identities and append-only link history.
+      responses:
+        "200":
+          description: Inventory products, canonical ingredients, and recent link changes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcIngredientLinks"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: recordQcIngredientLink
+      summary: Append a reviewed product-to-ingredient link
+      description: Manager capability manage-allergens only; links one inventory product to an existing canonical identity or explicitly unlinks it. Existing run snapshots are unchanged.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QcIngredientLinkRequest"
+      responses:
+        "201":
+          description: New audited link change appended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcIngredientLinkWriteResult"
+        "200":
+          description: Idempotent replay of the same link change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcIngredientLinkWriteResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/runs/{runId}:
+    get:
+      operationId: getQcRunHistory
+      summary: Read run-linked QC history and canonical items
+      description: >
+        QC-role only. Returns bounded facility-scoped events and reviewed settings.
+        The derived allergen footprint uses only identity and facts frozen in the
+        run snapshot; missing or unreviewed facts remain unknown. Component
+        identity checks use the canonical run snapshot and approved substitutions.
+        QC substitution approval posts the exact replacement quantity to inventory;
+        completion deducts only unreplaced source quantities.
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Run snapshot, allergen footprint, available inventory identities, and QC history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcRunHistory"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/runs/{runId}/substitutions:
+    post:
+      operationId: proposeQcRunSubstitution
+      summary: Propose a run-linked ingredient substitution
+      description: >
+        QC-role only. A proposal accepts one to twenty exact source components,
+        including partial quantities, and one exact replacement product quantity.
+        It does not adjust inventory until an authorized QC manager approves it.
+        No conversion is inferred between unlike units.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QcSubstitutionProposalRequest"
+      responses:
+        "201":
+          description: Proposal recorded without a stock movement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "200":
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/runs/{runId}/substitutions/{proposalId}/decision:
+    post:
+      operationId: decideQcRunSubstitution
+      summary: Approve or reject a run substitution proposal
+      description: >
+        QC-manager only. Approval atomically records the decision and deducts
+        replacement stock from the run production warehouse. Rejection does
+        not change inventory.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - name: proposalId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QcSubstitutionDecisionRequest"
+      responses:
+        "201":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "200":
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/runs/{runId}/substitutions/{substitutionId}/corrections:
+    post:
+      operationId: correctQcRunSubstitution
+      summary: Append a correction to an approved substitution
+      description: >
+        QC-manager only and available only before run completion. The correction
+        is audited and makes only the compensating replacement-stock movement
+        needed to reconcile the prior approval with the corrected amount.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - name: substitutionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QcSubstitutionCorrectionRequest"
+      responses:
+        "201":
+          description: Correction and compensating inventory movement recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "200":
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/runs/{runId}/events:
+    post:
+      operationId: recordQcEvent
+      summary: Append a QC record to a run
+      description: >
+        QC-role only; writes are append-only, idempotent by requestId, and use
+        authenticated staff identity and a server timestamp. No outcome blocks
+        production or shipping. Cleaning verification must be a separate
+        authenticated QC staff member.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QcEventRequest"
+      responses:
+        "201":
+          description: New event appended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "200":
+          description: Idempotent replay of the same event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/history:
+    get:
+      operationId: listQcHistory
+      summary: Read bounded facility QC history
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Recent facility-scoped QC events
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [events]
+                properties:
+                  events:
+                    type: array
+                    maxItems: 100
+                    items:
+                      $ref: "#/components/schemas/QcEvent"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/settings:
+    get:
+      operationId: listQcSettings
+      summary: Read the latest reviewed QC settings
+      responses:
+        "200":
+          description: Current manager-reviewed weight overrides and Brix targets
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [settings]
+                properties:
+                  settings:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: "#/components/schemas/QcSetting"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: reviewQcSetting
+      summary: Save a manager-reviewed QC setting
+      description: >
+        QC-manager only. Weight values are explicit overrides with a source
+        reference; the default tolerance is ±0.1 in the selected unit.
+        Brix requires an explicit tolerance and never receives an implicit
+        default.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QcSettingRequest"
+      responses:
+        "201":
+          description: Setting review appended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "200":
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/settings/redactions:
+    post:
+      operationId: redactQcSetting
+      summary: Append an audited redaction for a reviewed setting
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [requestId, eventType, targetEventId, reason]
+              properties:
+                requestId:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                eventType:
+                  const: redaction
+                targetEventId:
+                  type: string
+                  format: uuid
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 500
+      responses:
+        "201":
+          description: Redaction event appended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "200":
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QcEventWriteResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/qc/export.csv:
+    get:
+      operationId: exportQcHistory
+      summary: Export bounded facility QC history as CSV
+      description: QC-manager only; exports at most 10,000 events.
+      parameters:
+        - in: query
+          name: runId
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Spreadsheet-safe CSV of facility QC history
+          content:
+            text/csv:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
 components:
   securitySchemes:
     v2Session:
@@ -2337,6 +2781,481 @@ components:
       schema:
         type: string
   schemas:
+    QcIngredientLinks:
+      type: object
+      required: [products, productsTruncated, ingredients, ingredientsTruncated, events]
+      properties:
+        products:
+          type: array
+          maxItems: 2000
+          items:
+            type: object
+            required: [productId, productCode, productName, ingredientCode, ingredientName, linkedAt, linkedBy, linkEventId]
+            properties:
+              productId: { type: string, format: uuid }
+              productCode: { type: string }
+              productName: { type: string }
+              ingredientCode: { type: [string, "null"] }
+              ingredientName: { type: [string, "null"] }
+              linkedAt: { type: [string, "null"], format: date-time }
+              linkedBy: { type: [string, "null"], format: uuid }
+              linkEventId: { type: [string, "null"], format: uuid }
+        productsTruncated: { type: boolean }
+        ingredients:
+          type: array
+          maxItems: 2000
+          items:
+            type: object
+            required: [ingredientCode, ingredientName, allergens, allergensReviewed, updatedAt]
+            properties:
+              ingredientCode: { type: string }
+              ingredientName: { type: string }
+              allergens:
+                type: array
+                items: { type: string }
+              allergensReviewed: { type: boolean }
+              updatedAt: { type: string, format: date-time }
+        ingredientsTruncated: { type: boolean }
+        events:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/QcIngredientLinkEvent"
+    QcIngredientLinkEvent:
+      type: object
+      required: [id, actorId, productId, productCode, productName, action, previousIngredientCode, previousIngredientName, ingredientCode, ingredientName, occurredAt]
+      properties:
+        id: { type: string, format: uuid }
+        actorId: { type: string, format: uuid }
+        productId: { type: string, format: uuid }
+        productCode: { type: string }
+        productName: { type: string }
+        action: { type: string, enum: [linked, unlinked] }
+        previousIngredientCode: { type: [string, "null"] }
+        previousIngredientName: { type: [string, "null"] }
+        ingredientCode: { type: [string, "null"] }
+        ingredientName: { type: [string, "null"] }
+        occurredAt: { type: string, format: date-time }
+    QcIngredientLinkRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, productId, ingredientCode]
+      properties:
+        requestId: { type: string, minLength: 1, maxLength: 200 }
+        productId: { type: string, format: uuid }
+        ingredientCode: { type: [string, "null"], maxLength: 80 }
+    QcIngredientLinkWriteResult:
+      type: object
+      required: [event, replayed]
+      properties:
+        event:
+          $ref: "#/components/schemas/QcIngredientLinkEvent"
+        replayed: { type: boolean }
+    QcComponentProduct:
+      type: object
+      required: [productId, productCode, productName, unit]
+      properties:
+        productId: { type: string, format: uuid }
+        productCode: { type: string }
+        productName: { type: string }
+        unit: { type: string }
+    QcSubstitutionSourceItem:
+      type: object
+      additionalProperties: false
+      required: [productId, recipeCode, stationKey, quantity, unit]
+      properties:
+        productId: { type: string, format: uuid }
+        recipeCode: { type: string, pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$" }
+        stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+        quantity: { type: string, pattern: "^(?:0|[1-9][0-9]{0,13})(?:\\.[0-9]{1,6})?$" }
+        unit: { type: string, maxLength: 16 }
+    QcRunSubstitution:
+      type: object
+      required: [id, proposalEventId, revision, sourceItems, replacementProductId, replacementProductCode, replacementProductName, replacementQuantity, replacementUnit, replacementIngredientSnapshot, actorId, movementGroupId, occurredAt]
+      properties:
+        id: { type: string, format: uuid }
+        proposalEventId: { type: string, format: uuid }
+        revision: { type: integer, minimum: 1 }
+        sourceItems:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            allOf:
+              - $ref: "#/components/schemas/QcSubstitutionSourceItem"
+              - type: object
+                properties:
+                  productCode: { type: string }
+                  productName: { type: string }
+                  recipeName: { type: string }
+                  ingredientSnapshot: { type: [object, "null"] }
+        replacementProductId: { type: string, format: uuid }
+        replacementProductCode: { type: string }
+        replacementProductName: { type: string }
+        replacementQuantity: { type: string }
+        replacementUnit: { type: string }
+        replacementIngredientSnapshot: { type: [object, "null"] }
+        actorId: { type: string, format: uuid }
+        movementGroupId: { type: string, format: uuid }
+        occurredAt: { type: string, format: date-time }
+    QcSubstitutionProposalRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, sourceItems, replacementProductId, replacementQuantity, replacementUnit, reason]
+      properties:
+        requestId: { type: string, minLength: 1, maxLength: 200 }
+        sourceItems:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items: { $ref: "#/components/schemas/QcSubstitutionSourceItem" }
+        replacementProductId: { type: string, format: uuid }
+        replacementQuantity: { type: string, pattern: "^(?:0|[1-9][0-9]{0,13})(?:\\.[0-9]{1,6})?$" }
+        replacementUnit: { type: string, maxLength: 16 }
+        reason: { type: string, minLength: 3, maxLength: 500 }
+    QcSubstitutionDecisionRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [requestId, decision]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            decision: { const: approve }
+        - type: object
+          additionalProperties: false
+          required: [requestId, decision, reason]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            decision: { const: reject }
+            reason: { type: string, minLength: 3, maxLength: 500 }
+    QcSubstitutionCorrectionRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, sourceItems, replacementProductId, replacementQuantity, replacementUnit, reason]
+      properties:
+        requestId: { type: string, minLength: 1, maxLength: 200 }
+        sourceItems:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items: { $ref: "#/components/schemas/QcSubstitutionSourceItem" }
+        replacementProductId: { type: string, format: uuid }
+        replacementQuantity: { type: string, pattern: "^(?:0|[1-9][0-9]{0,13})(?:\\.[0-9]{1,6})?$" }
+        replacementUnit: { type: string, maxLength: 16 }
+        reason: { type: string, minLength: 3, maxLength: 500 }
+    QcAllergenFootprint:
+      type: object
+      required: [status, allergens, ingredientCount, unknownIngredients]
+      properties:
+        status: { type: string, enum: [complete, unknown] }
+        allergens:
+          type: array
+          items:
+            type: string
+            enum: [egg, soy, milk, wheat, peanuts, tree nuts, fish, shellfish, sesame]
+        ingredientCount: { type: integer, minimum: 0, maximum: 4000 }
+        unknownIngredients:
+          type: array
+          maxItems: 4000
+          items:
+            type: object
+            required: [productId, productCode, productName, stationKey, reason]
+            properties:
+              productId: { type: string, format: uuid }
+              productCode: { type: string }
+              productName: { type: string }
+              stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+              reason: { type: string }
+    QcEvent:
+      type: object
+      required: [id, runId, actorId, eventType, payload, occurredAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        runId:
+          type: [string, "null"]
+          format: uuid
+        actorId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          enum: [lot-recorded, weight-check, cleaning-recorded, cleaning-verified, date-code-observed, brix-check, qc-setting-reviewed, review-signed-off, run-check-reviewed, run-substitution-proposed, run-substitution-approved, run-substitution-rejected, run-substitution-corrected, correction, redaction]
+        payload:
+          type: object
+        occurredAt:
+          type: string
+          format: date-time
+    QcEventWriteResult:
+      type: object
+      required: [event, replayed]
+      properties:
+        event:
+          $ref: "#/components/schemas/QcEvent"
+        replayed:
+          type: boolean
+    QcRunHistory:
+      type: object
+      required: [run, items, events, settings, substitutions, components, componentProducts, review, allergenFootprint, limitations]
+      properties:
+        run:
+          type: object
+          required: [id, status, setupSnapshot]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [planned, running, paused, completed]
+            setupSnapshot:
+              type: object
+        items:
+          type: array
+          maxItems: 4000
+          items:
+            type: object
+            required: [productId, productCode, productName, unit, stationKey]
+            properties:
+              productId:
+                type: string
+                format: uuid
+              productCode:
+                type: string
+              productName:
+                type: string
+              unit:
+                type: string
+              stationKey:
+                type: string
+                enum: [dough, cheese, pepperoni, sauce, frontline]
+              recipeCode: { type: string }
+              recipeName: { type: string }
+        substitutions:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/QcRunSubstitution" }
+        components:
+          type: array
+          maxItems: 4000
+          items:
+            type: object
+            required: [productId, productCode, productName, recipeCode, recipeName, stationKey, unit, substitution]
+            properties:
+              productId: { type: string, format: uuid }
+              productCode: { type: string }
+              productName: { type: string }
+              recipeCode: { type: string }
+              recipeName: { type: string }
+              stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+              unit: { type: string }
+              substitution: { type: boolean }
+        componentProducts:
+          type: array
+          maxItems: 2000
+          items: { $ref: "#/components/schemas/QcComponentProduct" }
+        events:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/QcEvent"
+        settings:
+          type: array
+          maxItems: 1000
+          items:
+            $ref: "#/components/schemas/QcSetting"
+        review:
+          type: object
+          required: [status, signedOffAt, signedOffBy]
+          properties:
+            status:
+              type: string
+              enum: [needs-review, signed-off]
+            signedOffAt:
+              type: [string, "null"]
+              format: date-time
+            signedOffBy:
+              type: [string, "null"]
+              format: uuid
+        allergenFootprint:
+          $ref: "#/components/schemas/QcAllergenFootprint"
+        limitations:
+          type: object
+          required: [allergens, components, reason]
+          properties:
+            allergens:
+              type: string
+              enum: [available, incomplete]
+            components:
+              type: string
+              enum: [available, limited]
+            reason:
+              type: [string, "null"]
+    QcSetting:
+      type: object
+      required: [id, actorId, settingKey, settingType, subjectCode, stationKey, target, tolerance, unit, sourceReference, occurredAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+          format: uuid
+        settingKey:
+          type: string
+        settingType:
+          type: string
+          enum: [weight-override, brix]
+        subjectCode:
+          type: string
+        stationKey:
+          type: [string, "null"]
+        target:
+          type: string
+        tolerance:
+          type: string
+        unit:
+          type: string
+        sourceReference:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+    QcSettingRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, settingType, subjectCode, stationKey, target, tolerance, unit, sourceReference]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        settingType:
+          type: string
+          enum: [weight-override, brix]
+        subjectCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        stationKey:
+          type: [string, "null"]
+          enum: [dough, cheese, pepperoni, sauce, frontline, null]
+        target:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,6})?$"
+        tolerance:
+          type: string
+          pattern: "^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,6})?$"
+        unit:
+          type: string
+          maxLength: 16
+        sourceReference:
+          type: string
+          minLength: 3
+          maxLength: 300
+    QcEventRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, checkType]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: run-check-reviewed }
+            checkType: { const: allergen-footprint }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, checkType, observations]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: run-check-reviewed }
+            checkType: { const: component-presence }
+            observations:
+              type: array
+              minItems: 1
+              maxItems: 200
+              items:
+                type: object
+                additionalProperties: false
+                required: [productId, recipeCode, stationKey, status, observedProductId]
+                properties:
+                  productId: { type: string, format: uuid }
+                  recipeCode: { type: string }
+                  stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+                  status: { type: string, enum: [present, missing, identity-mismatch, not-observed] }
+                  observedProductId: { type: [string, "null"], format: uuid }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, productId, recipeCode, stationKey, lotCode]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: lot-recorded }
+            productId: { type: string, format: uuid }
+            recipeCode: { type: string }
+            stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+            lotCode: { type: string, minLength: 1, maxLength: 120 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, productId, recipeCode, stationKey, actual, reason]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: weight-check }
+            productId: { type: string, format: uuid }
+            recipeCode: { type: string }
+            stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+            actual: { type: string, pattern: "^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,6})?$" }
+            reason: { type: string, maxLength: 500 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, method, cleanedAt]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: cleaning-recorded }
+            method: { type: string, minLength: 1, maxLength: 120 }
+            cleanedAt: { type: string, format: date-time }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, targetEventId]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: cleaning-verified }
+            targetEventId: { type: string, format: uuid }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, observedText]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: date-code-observed }
+            observedText: { type: string, minLength: 1, maxLength: 200 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, actual]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: brix-check }
+            actual: { type: string, pattern: "^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,6})?$" }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: review-signed-off }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, targetEventId, correctedText, reason]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: correction }
+            targetEventId: { type: string, format: uuid }
+            correctedText: { type: string, minLength: 1, maxLength: 500 }
+            reason: { type: string, minLength: 3, maxLength: 500 }
+        - type: object
+          additionalProperties: false
+          required: [requestId, eventType, targetEventId, reason]
+          properties:
+            requestId: { type: string, minLength: 1, maxLength: 200 }
+            eventType: { const: redaction }
+            targetEventId: { type: string, format: uuid }
+            reason: { type: string, minLength: 3, maxLength: 500 }
     Health:
       type: object
       required: [status]

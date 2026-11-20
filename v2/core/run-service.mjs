@@ -144,6 +144,24 @@ function validInventoryConsumption(value) {
         typeof line[key] === "string" && /^(0|[1-9][0-9]{0,13})(\.[0-9]{1,6})?$/u.test(line[key])));
 }
 
+function validIngredientSnapshot(value) {
+  if (value === undefined) return true;
+  if (!value || typeof value !== "object" || Array.isArray(value)
+    || !["linked", "unknown"].includes(value.status)) return false;
+  if (value.status === "unknown") {
+    return typeof value.reason === "string" && value.reason.length >= 1 && value.reason.length <= 80
+      && (value.linkEventId === undefined || UUID_PATTERN.test(value.linkEventId));
+  }
+  return typeof value.ingredientCode === "string"
+    && /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(value.ingredientCode)
+    && typeof value.ingredientName === "string" && value.ingredientName.length >= 1 && value.ingredientName.length <= 200
+    && Array.isArray(value.allergens) && value.allergens.length <= 32
+    && value.allergens.every((allergen) => typeof allergen === "string" && allergen.length <= 80)
+    && typeof value.allergensReviewed === "boolean"
+    && UUID_PATTERN.test(value.linkEventId)
+    && validCanonicalTimestamp(value.ingredientUpdatedAt);
+}
+
 function validInventoryPlanLine(line) {
   return line && typeof line === "object" && !Array.isArray(line)
     && typeof line.productId === "string" && UUID_PATTERN.test(line.productId)
@@ -152,7 +170,8 @@ function validInventoryPlanLine(line) {
     && typeof line.unit === "string" && /^[A-Za-z][A-Za-z0-9._/-]{0,15}$/u.test(line.unit)
     && typeof line.quantity === "string"
     && /^(0|[1-9][0-9]{0,11})(\.[0-9]{1,6})?$/u.test(line.quantity)
-    && Number(line.quantity) > 0;
+    && Number(line.quantity) > 0
+    && validIngredientSnapshot(line.ingredientSnapshot);
 }
 
 function validProductionPlan(value) {

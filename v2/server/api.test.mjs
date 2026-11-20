@@ -204,6 +204,11 @@ test("serves the V2 sign-in page and local assets with restrictive browser heade
     const styles = await fetch(`${baseUrl}/v2/web/styles.css`);
     assert.equal(styles.status, 200);
     assert.match(styles.headers.get("content-type"), /text\/css/);
+
+    const qcClient = await fetch(`${baseUrl}/v2/web/qc.js`);
+    assert.equal(qcClient.status, 200);
+    assert.match(qcClient.headers.get("content-type"), /javascript/);
+    assert.match(await qcClient.text(), /not_evaluated/);
   });
 });
 

@@ -821,6 +821,26 @@ V2_DATABASE_URL="$V2_API_URL" NODE_ENV=development \
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-inventory-parity.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-staff-role-equivalents.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-staff-role-equivalents.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0008-qc-workflows.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0009-qc-ingredient-links.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0010-qc-substitutions.sql" >/dev/null
+"${PSQL[@]}" -c "
+  GRANT EXECUTE ON FUNCTION v2.record_qc_event(uuid, uuid, uuid, text, text, text, jsonb) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_qc_events(uuid, uuid, uuid, integer) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_qc_settings(uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.get_qc_review_state(uuid, uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.record_qc_ingredient_link(uuid, uuid, text, text, uuid, text) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_qc_ingredient_links(uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_qc_component_products(uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_qc_run_substitutions(uuid, uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.record_qc_substitution(uuid, uuid, uuid, text, text, text, uuid, uuid, jsonb) TO v2_api_test;
+" >/dev/null
+assert_no_direct_table_access "v2.qc_events"
+assert_no_direct_table_access "v2.qc_ingredient_link_events"
+assert_no_direct_table_access "v2.qc_run_substitutions"
+"${PSQL[@]}" -f "$ROOT/v2/db/0008-qc-workflows.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0009-qc-ingredient-links.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0010-qc-substitutions.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/cutover-transfer-rehearsal.test.sql"
 
 printf 'Run schema and lifecycle checks passed.\n'
@@ -842,4 +862,5 @@ printf 'Concurrent stock adjustment and ledger reconciliation passed: %s\n' "$ST
 printf 'V2 run-to-inventory snapshot, shortage, and retry checks passed.\n'
 printf 'Restricted API run/inventory command grants passed: %s\n' "$INVENTORY_COMPLETION_PRIVILEGES"
 printf 'Synthetic setup family count, identity, replay, rollback, undo, and facility-scope checks passed.\n'
+printf 'QC append-only evidence, roles, scope, cleaning verification, settings, and redaction checks passed.\n'
 printf 'Synthetic V1-to-V2 setup and staff transfer rehearsal passed.\n'

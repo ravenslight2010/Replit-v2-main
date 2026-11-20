@@ -105,9 +105,11 @@ is treated as accepted work.
 
 ## Keep outside the first release unless separately approved
 
-- QC, allergens, food-safety holds, label/date-code enforcement, and Brix
-  thresholds require qualified sources and owner-approved policy; V1 advisory
-  behavior is not authorization for V2 rules.
+- The approved V2 QC/allergen scope is record-first and advisory only. No
+  regulatory label declaration, safety certification, cross-contact claim,
+  guessed target/date validity/allergen clearance, or production/shipping hold
+  is authorized. New targets, references, tolerances, and enforcement rules
+  need separate owner/qualified-policy approval.
 - A separate V1 historical archive is recommended for cutover but has no
   approved retention period, access policy, or created archive.
 - New deployable services, external database providers, native mobile apps,

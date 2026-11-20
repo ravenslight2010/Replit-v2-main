@@ -79,6 +79,7 @@ const WEB_ASSETS = new Map([
   ["/v2/web/schedule.js", ["../web/schedule.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/mix-plan.js", ["../web/mix-plan.js", "text/javascript; charset=utf-8"]],
   ["/v2/core/mix-plan.mjs", ["../core/mix-plan.mjs", "text/javascript; charset=utf-8"]],
+  ["/v2/web/qc.js", ["../web/qc.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/styles.css", ["../web/styles.css", "text/css; charset=utf-8"]],
   ["/v2/web/write-gate.mjs", ["../web/write-gate.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/import-csv-templates.mjs", ["../core/import-csv-templates.mjs", "text/javascript; charset=utf-8"]],

@@ -89,8 +89,9 @@ target, but is not published.
   atomically, and records shortages without blocking completion or allowing
   negative stock.
 - `db/0007-staff-role-equivalents.sql` seeds the reviewed `warehouse` and
-  `qc-manager` roles in V2 development. The latter's QC and incident permissions
-  are enforced as Tasks #3964 and #3965 add those features.
+  `qc-manager` roles in V2 development. The QC workflow migration adds a
+  separate `qc-operator` role with record-only access; both roles are facility
+  scoped and manager-only actions remain capability-gated.
 - `db/0007-approved-setup-catalogs.sql` adds a manager-only import lifecycle
   and dedicated V2 tables for ingredients/allergen facts, mixes, die types and
   defaults, production rules, freezer-pull items, run templates, approved
@@ -123,6 +124,33 @@ target, but is not published.
   functions. It derives actor/scope from the V2 session, enforces CSRF on writes,
   rate-limits CSV staging, and returns safe errors. Managers can designate only
   an active warehouse with an applied opening count for new production runs.
+- `db/0008-qc-workflows.sql` adds facility-scoped, append-only QC evidence,
+  manager-reviewed target settings, server timestamps, idempotent writes,
+  correction/redaction events, cleaning second-person verification, review
+  reopening, and retention-safe run references. `server/qc-api.mjs` and
+  `web/qc.js` provide authenticated run and facility histories, lot and weight
+  observations, cleaning records, literal date-code observations, Brix checks,
+  reviewed settings, manager export, and responsive operator/manager screens.
+  Outcomes are advisory only. Weight targets require an explicit source-backed
+  manager override; Brix requires an explicit reviewed target and tolerance;
+  date-code observations remain not evaluated without an exact-text reference.
+- `db/0009-qc-ingredient-links.sql` adds a manager-only, append-only link
+  history from an inventory product to one existing canonical setup ingredient.
+  New run snapshots freeze that identity and its allergen facts at run creation;
+  old runs stay unknown instead of being backfilled. QC exposes the derived
+  tracked-allergen footprint separately from the manual run-allergen field.
+  Missing links, unreviewed facts, and invalid allergen values remain unknown;
+  a reviewed-empty footprint means none of the nine tracked allergens, not a
+   safety clearance. Link changes cannot rewrite prior snapshots.
+ - `db/0010-qc-substitutions.sql` adds QC-approved run substitutions with exact
+   multi-source quantities, append-only corrections, and atomic replacement
+   stock adjustments. Run completion deducts only unreplaced source amounts and
+   preserves the immutable component/substitution receipt without charging the
+   replacement twice. Component-presence checks use the run snapshot and
+   approved replacements, including the frozen snapshot for completed runs.
+   These QC outcomes remain advisory and do not block production or shipping.
+   Migrations `0008` through `0010` have only been exercised on disposable
+   PostgreSQL and have not been applied to a shared database.
 - `core/run-service.mjs` returns the product catalog with compatible imported
   production setups and the designated production warehouse. Run creation
   requires both selections and rejects a server response without the frozen
@@ -167,7 +195,7 @@ target, but is not published.
   to the API through a loopback-only worker health endpoint; retry, restart,
   and shutdown behavior is covered by checks.
 - `api/openapi.yaml` records health, authentication, manager setup, run control,
-  production stations, product/setup/catalog imports, and inventory routes.
+  production stations, product/setup/catalog imports, inventory, and QC routes.
 - `web/` now connects the username/password sign-in, session check, sign-out,
   run controls, and the Line, Dough, Cheese, Pepperoni, Sauce, Frontline, and
   Packaging station workflows to the V2 API. Station edits, timers, and

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createAuthApi } from "./auth-api.mjs";
 import { createInventoryApi } from "./inventory-api.mjs";
 import { createMixPlanApi } from "./mix-plan-api.mjs";
+import { createQcApi } from "./qc-api.mjs";
 import { createRunApiForDatabase } from "./run-api.mjs";
 import { createScheduleApi } from "./schedule-api.mjs";
 
@@ -37,6 +38,7 @@ const WEB_ASSETS = new Map([
   ["/v2/web/mix-plan.js", { file: new URL("../web/mix-plan.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/core/mix-plan.mjs", { file: new URL("../core/mix-plan.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/core/schedule-planning.mjs", { file: new URL("../core/schedule-planning.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
+  ["/v2/web/qc.js", { file: new URL("../web/qc.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/write-gate.mjs", { file: new URL("../web/write-gate.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/styles.css", { file: new URL("../web/styles.css", import.meta.url), type: "text/css; charset=utf-8" }],
 ]);
@@ -91,6 +93,7 @@ function safeRouteName(url) {
   if (url.pathname === "/v2/web/mix-plan.js") return "web.mix_plan";
   if (url.pathname === "/v2/core/mix-plan.mjs") return "web.mix_plan_core";
   if (url.pathname === "/v2/core/schedule-planning.mjs") return "web.schedule_planning";
+  if (url.pathname === "/v2/web/qc.js") return "web.qc";
   if (url.pathname === "/v2/web/write-gate.mjs") return "web.write-gate";
   if (url.pathname === "/v2/web/styles.css") return "web.styles";
   if (url.pathname === "/healthz") return "health";
@@ -125,6 +128,7 @@ function safeRouteName(url) {
   if (/^\/api\/v2\/imports\/[^/]+$/.test(url.pathname)) return "imports.detail";
   if (/^\/api\/v2\/imports\/[^/]+\/(apply|undo)$/.test(url.pathname)) return "imports.action";
   if (url.pathname.startsWith("/api/v2/inventory/")) return "inventory.operation";
+  if (url.pathname === "/api/v2/qc" || url.pathname.startsWith("/api/v2/qc/")) return "qc.operation";
   return "unmatched";
 }
 
@@ -177,6 +181,12 @@ export function createV2Api({
     logger,
   });
   const scheduleApi = createScheduleApi({
+    pool,
+    authenticate: (request) => authAdapter.authenticate(request),
+    verifyCsrf: (request, auth) => authAdapter.verifyCsrf(request, auth),
+    logger,
+  });
+  const qcApi = createQcApi({
     pool,
     authenticate: (request) => authAdapter.authenticate(request),
     verifyCsrf: (request, auth) => authAdapter.verifyCsrf(request, auth),
@@ -248,6 +258,7 @@ export function createV2Api({
       if (await mixPlanApi(request, response)) return;
       if (await inventoryApi(request, response)) return;
       if (await scheduleApi(request, response)) return;
+      if (await qcApi(request, response)) return;
       await runApi(request, response);
     } catch (error) {
       logger({

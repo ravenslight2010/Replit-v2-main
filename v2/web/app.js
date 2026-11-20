@@ -4,10 +4,12 @@ import { DIE_DEFAULT_FIELDS, isDieLineSettings, resolveDieLineDefaults, resolveD
 import { initializeInventory, updateInventoryContext } from "./inventory.js";
 import { updateMixPlanContext } from "./mix-plan.js";
 import { updateScheduleContext } from "./schedule.js";
+import { initializeQc } from "./qc.js";
 
 const API = "/api/v2/runs";
 const AUTH_API = "/api/v2/auth";
 const RUN_INVENTORY_API = "/api/v2/inventory";
+const qc = initializeQc();
 const POLL_INTERVAL_MS = 3000;
 const STATION_STATUSES = new Set(["not_started", "running", "paused", "completed"]);
 const TIMER_STATUSES = new Set(["idle", "running", "paused"]);
@@ -184,6 +186,23 @@ function isTimestamp(value, nullable = false) {
   return !Number.isNaN(date.getTime()) && date.toISOString() === value;
 }
 
+function isIngredientSnapshot(value) {
+  if (value === undefined) return true;
+  if (!isObject(value) || !["linked", "unknown"].includes(value.status)) return false;
+  if (value.status === "unknown") {
+    return typeof value.reason === "string" && value.reason.length >= 1 && value.reason.length <= 80
+      && (value.linkEventId === undefined || UUID.test(value.linkEventId));
+  }
+  return typeof value.ingredientCode === "string"
+    && /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(value.ingredientCode)
+    && typeof value.ingredientName === "string" && value.ingredientName.length >= 1 && value.ingredientName.length <= 200
+    && Array.isArray(value.allergens) && value.allergens.length <= 32
+    && value.allergens.every((allergen) => typeof allergen === "string" && allergen.length <= 80)
+    && typeof value.allergensReviewed === "boolean"
+    && UUID.test(value.linkEventId)
+    && isTimestamp(value.ingredientUpdatedAt);
+}
+
 function isInventoryPlanLine(line) {
   return isObject(line) && typeof line.productId === "string" && UUID.test(line.productId)
     && typeof line.productCode === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(line.productCode)
@@ -191,7 +210,8 @@ function isInventoryPlanLine(line) {
     && typeof line.unit === "string" && /^[A-Za-z][A-Za-z0-9._/-]{0,15}$/u.test(line.unit)
     && typeof line.quantity === "string"
     && /^(0|[1-9][0-9]{0,11})(\.[0-9]{1,6})?$/u.test(line.quantity)
-    && Number(line.quantity) > 0;
+    && Number(line.quantity) > 0
+    && isIngredientSnapshot(line.ingredientSnapshot);
 }
 
 function isProductionPlan(value) {
@@ -378,6 +398,7 @@ function isStaffRecord(staff) {
 
 function clearUserScopedState() {
   authGeneration += 1;
+  qc.clear();
   runs = [];
   selectedRunId = null;
   lastKnownRun = null;
@@ -1969,6 +1990,7 @@ function render() {
   renderRun(selectedRun());
   renderStationPanel(selectedRun());
   renderRunSupplyPanel(selectedRun());
+  qc.updateContext({ staff: currentStaff, run: selectedRun(), writable: canWriteNow() });
 }
 
 const STATION_FIELD_META = Object.freeze({
