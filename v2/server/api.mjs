@@ -31,6 +31,7 @@ const WEB_ASSETS = new Map([
   ["/v2/core/import-csv.mjs", { file: new URL("../core/import-csv.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/core/setup-catalog-csv.mjs", { file: new URL("../core/setup-catalog-csv.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/inventory.js", { file: new URL("../web/inventory.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
+  ["/v2/web/inventory-export.mjs", { file: new URL("../web/inventory-export.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/setup-catalog.js", { file: new URL("../web/setup-catalog.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/schedule.js", { file: new URL("../web/schedule.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/mix-plan.js", { file: new URL("../web/mix-plan.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
@@ -84,6 +85,7 @@ function safeRouteName(url) {
   if (url.pathname === "/v2/core/import-csv.mjs") return "web.import_csv";
   if (url.pathname === "/v2/core/setup-catalog-csv.mjs") return "web.setup_catalog_csv";
   if (url.pathname === "/v2/web/inventory.js") return "web.inventory";
+  if (url.pathname === "/v2/web/inventory-export.mjs") return "web.inventory_export";
   if (url.pathname === "/v2/web/setup-catalog.js") return "web.setup_catalog";
   if (url.pathname === "/v2/web/schedule.js") return "web.schedule";
   if (url.pathname === "/v2/web/mix-plan.js") return "web.mix_plan";

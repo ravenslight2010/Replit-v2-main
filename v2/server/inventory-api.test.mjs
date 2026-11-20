@@ -522,10 +522,11 @@ test("workbook preview is read-only and manager mappings can stage only unresolv
     { code: "DUP-A", name: "Ambiguous Product", active: true },
     { code: "DUP-B", name: " ambiguous product ", active: true },
   ];
+  const priorLinks = [{ sourceKey: "9".repeat(64), productCode: "TARGET" }];
   const api = await withApi(t, {
     query: async (sql, values) => {
       if (sql.includes("list_inventory_products")) return { rows: [{ result: products }] };
-      if (sql.includes("list_workbook_source_links")) return { rows: [{ result: [] }] };
+      if (sql.includes("list_workbook_source_links")) return { rows: [{ result: priorLinks }] };
       if (sql.includes("stage_setup_import")) {
         return { rows: [{ result: {
           outcome: "staged",
@@ -565,6 +566,10 @@ test("workbook preview is read-only and manager mappings can stage only unresolv
   assert.equal(stagedBody.managerMappedCount, 1);
   assert.deepEqual(stagedBody.unmatchedRows.map(({ reason }) => reason), ["ambiguous"]);
   assert.deepEqual(stagedBody.records.map(({ productCode }) => productCode), ["KNOWN", "TARGET"]);
+  assert.deepEqual(stagedBody.duplicateSources.map(({ productCode, existingCount, workbookCount, resultingCount, capacityConsequence }) =>
+    [productCode, existingCount, workbookCount, resultingCount, capacityConsequence]), [
+    ["TARGET", 1, 1, 2, "unavailable"],
+  ]);
   assert.equal(api.calls.some((call) => call.text.includes("stage_setup_import")), true);
 
   const exactOverride = await send(api.baseUrl, "/api/v2/imports/workbooks", {
@@ -592,6 +597,149 @@ test("workbook preview is read-only and manager mappings can stage only unresolv
   });
   assert.equal(inactiveOverride.status, 400);
   assert.match((await inactiveOverride.json()).error, /active product/u);
+});
+
+test("workbook link correction is scoped, retryable, and supports clearing either family", async (t) => {
+  const sourceKey = "a".repeat(64);
+  const callsByRequest = new Map();
+  const api = await withApi(t, {
+    query: async (sql, values) => {
+      assert.match(sql, /correct_workbook_source_link/u);
+      const [facilityId, actorId, requestId, requestHash, family, key, expected, productCode] = values;
+      callsByRequest.set(requestId, (callsByRequest.get(requestId) ?? 0) + 1);
+      const outcome = productCode === null ? "cleared" : "corrected";
+      return { rows: [{ result: {
+        outcome,
+        sourceFamily: family,
+        sourceKey: key,
+        previousProductCode: expected,
+        productCode,
+        replayed: callsByRequest.get(requestId) > 1,
+      } }] };
+    },
+  });
+  const doughPayload = {
+    requestId: "correct-dough-source",
+    family: "dough-procedure",
+    sourceKey,
+    expectedProductCode: "DOUGH-A",
+    productCode: "DOUGH-B",
+  };
+  const dough = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: doughPayload,
+  });
+  assert.equal(dough.status, 201);
+  assert.deepEqual(await dough.json(), {
+    outcome: "corrected",
+    sourceFamily: "dough-procedure",
+    sourceKey,
+    previousProductCode: "DOUGH-A",
+    productCode: "DOUGH-B",
+    replayed: false,
+  });
+  const retry = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: doughPayload,
+  });
+  assert.equal(retry.status, 200);
+  assert.equal((await retry.json()).replayed, true);
+  assert.deepEqual(api.calls[0].values.slice(0, 3), [
+    MANAGER.facilityId, MANAGER.actorId, doughPayload.requestId,
+  ]);
+  assert.match(api.calls[0].values[3], /^[0-9a-f]{64}$/u);
+
+  const doughClearPayload = { ...doughPayload, requestId: "clear-dough-source", productCode: null };
+  const doughClear = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: doughClearPayload,
+  });
+  assert.equal(doughClear.status, 201);
+  assert.equal((await doughClear.json()).outcome, "cleared");
+  const doughRestore = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: {
+      ...doughPayload,
+      requestId: "restore-dough-source",
+      expectedProductCode: null,
+      productCode: "DOUGH-A",
+    },
+  });
+  assert.equal(doughRestore.status, 201);
+  assert.equal((await doughRestore.json()).previousProductCode, null);
+
+  const shippingPayload = {
+      requestId: "correct-shipping-source",
+      family: "shipping-guide",
+      sourceKey: "b".repeat(64),
+      expectedProductCode: "SHIP-A",
+      productCode: "SHIP-B",
+  };
+  const shipping = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: shippingPayload,
+  });
+  assert.equal(shipping.status, 201);
+  assert.equal((await shipping.json()).outcome, "corrected");
+  const shippingRetry = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: shippingPayload,
+  });
+  assert.equal(shippingRetry.status, 200);
+  assert.equal((await shippingRetry.json()).replayed, true);
+
+  const shippingClearPayload = {
+    ...shippingPayload,
+    requestId: "clear-shipping-source",
+    expectedProductCode: "SHIP-B",
+    productCode: null,
+  };
+  const shippingClear = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: shippingClearPayload,
+  });
+  assert.equal(shippingClear.status, 201);
+  assert.equal((await shippingClear.json()).outcome, "cleared");
+  const shippingRestore = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: {
+      ...shippingPayload,
+      requestId: "restore-shipping-source",
+      expectedProductCode: null,
+      productCode: "SHIP-B",
+    },
+  });
+  assert.equal(shippingRestore.status, 201);
+  assert.equal((await shippingRestore.json()).previousProductCode, null);
+  assert.equal(api.calls[4].values[4], "shipping-guide");
+  assert.equal(api.calls[4].values[7], "SHIP-B");
+  assert.equal(api.calls[6].values[4], "shipping-guide");
+  assert.equal(api.calls[6].values[7], null);
+  assert.equal(api.calls[7].values[6], null);
+  assert.equal(api.calls[7].values[7], "SHIP-B");
+
+  const malformed = await send(api.baseUrl, "/api/v2/imports/workbooks/links", {
+    method: "POST",
+    body: { ...doughPayload, sourceKey: "not-a-key" },
+  });
+  assert.equal(malformed.status, 400);
+  assert.equal(api.calls.length, 8);
+
+  const failedApi = await withApi(t, {
+    query: async () => {
+      const error = new Error("active product constraint");
+      error.code = "23503";
+      throw error;
+    },
+  });
+  for (const payload of [doughPayload, shippingPayload]) {
+    const failed = await send(failedApi.baseUrl, "/api/v2/imports/workbooks/links", {
+      method: "POST",
+      body: { ...payload, requestId: `failed-${payload.family}` },
+    });
+    assert.equal(failed.status, 409);
+    assert.deepEqual(Object.keys(await failed.json()), ["error"]);
+  }
 });
 
 test("setup import details can be reopened by another manager", async (t) => {

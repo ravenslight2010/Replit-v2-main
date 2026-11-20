@@ -11,6 +11,7 @@ import {
   sourceWorkbookImportLimits,
 } from "../core/source-workbook-import.mjs";
 import {
+  analyzeWorkbookCapacityDuplicates,
   linkWorkbookCapacityRows,
   parseDoughCapacityWorkbook,
   parseShippingCapacityWorkbook,
@@ -424,6 +425,7 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
           url.pathname === IMPORTS_PATH
           || url.pathname === `${IMPORTS_PATH}/workbooks`
           || url.pathname === `${IMPORTS_PATH}/workbooks/preview`
+          || url.pathname === `${IMPORTS_PATH}/workbooks/links`
           || url.pathname === SETUP_CATALOG_PATH
           || url.pathname === SOURCE_WORKBOOK_PREVIEW_PATH
           || url.pathname === `${INVENTORY_PATH}/opening-counts`
@@ -603,6 +605,7 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
         const parsed = parseWorkbookUpload(body);
         const { products, priorLinks } = await workbookLinkContext(pool, scope, body.family);
         const rows = linkWorkbookCapacityRows(parsed.rows, products, priorLinks);
+        const duplicateSources = analyzeWorkbookCapacityDuplicates(rows, products, priorLinks);
         sendJson(response, 200, {
           sourceFamily: body.family,
           fileName: parsed.fileName,
@@ -615,7 +618,43 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
             productCode: row.productCode,
           })),
           products: products.map(({ code, name }) => ({ code, name })),
+          duplicateSources,
         });
+        return true;
+      }
+
+      if (isImports && url.pathname === `${IMPORTS_PATH}/workbooks/links` && request.method === "POST") {
+        operation = "correct_workbook_source_link";
+        const body = await readJsonBody(request);
+        requireKeys(body, ["requestId", "family", "sourceKey", "expectedProductCode", "productCode"]);
+        const requestId = validateRequestId(body.requestId);
+        if (!["dough-procedure", "shipping-guide"].includes(body.family)
+          || typeof body.sourceKey !== "string" || !/^[0-9a-f]{64}$/u.test(body.sourceKey)
+          || body.expectedProductCode !== null && (typeof body.expectedProductCode !== "string"
+            || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(body.expectedProductCode))
+          || body.productCode !== null && (typeof body.productCode !== "string"
+            || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(body.productCode))) {
+          throw new InventoryApiError(400, "Choose a saved source and an active product, or clear the saved link.");
+        }
+        const requestHash = hashRequest({
+          family: body.family,
+          sourceKey: body.sourceKey,
+          expectedProductCode: body.expectedProductCode,
+          productCode: body.productCode,
+        });
+        const result = await pool.query(
+          "SELECT v2.correct_workbook_source_link($1::uuid, $2::uuid, $3::text, $4::text, $5::text, $6::text, $7::text, $8::text) AS result",
+          [...scope, actor, requestId, requestHash, body.family, body.sourceKey, body.expectedProductCode, body.productCode],
+        );
+        const corrected = resultValue(result);
+        if (!corrected || typeof corrected !== "object"
+          || !["corrected", "cleared", "unchanged"].includes(corrected.outcome)
+          || corrected.sourceFamily !== body.family || corrected.sourceKey !== body.sourceKey
+          || corrected.previousProductCode !== body.expectedProductCode
+          || corrected.productCode !== body.productCode || typeof corrected.replayed !== "boolean") {
+          throw new InventoryApiError(502, "The server did not confirm the workbook link change.");
+        }
+        sendJson(response, corrected.replayed || corrected.outcome === "unchanged" ? 200 : 201, corrected);
         return true;
       }
 
@@ -642,6 +681,7 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
           }
         }
         const linkedRows = linkWorkbookCapacityRows(parsed.rows, products, priorLinks, managerLinks);
+        const duplicateSources = analyzeWorkbookCapacityDuplicates(linkedRows, products, priorLinks, managerLinks);
         const records = linkedRows
           .filter((row) => row.productCode)
           .map((row) => ({
@@ -703,6 +743,7 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
           invalidValueCount: linkedRows.filter((row) => body.family === "dough-procedure"
             ? row.doughballYield === null
             : row.pizzasPerCase === null).length,
+          duplicateSources,
         });
         return true;
       }

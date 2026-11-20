@@ -260,7 +260,8 @@ function mapRowsToProducts(rows, products, priorLinks, managerLinks = []) {
   const existingLinks = new Map();
   const explicitLinks = new Map();
   for (const link of priorLinks) {
-    if (typeof link?.sourceKey === "string" && typeof link?.productCode === "string") {
+    if (typeof link?.sourceKey === "string"
+      && (typeof link.productCode === "string" || link.productCode === null)) {
       existingLinks.set(link.sourceKey, link.productCode);
     }
   }
@@ -273,7 +274,27 @@ function mapRowsToProducts(rows, products, priorLinks, managerLinks = []) {
   return rows.map((row) => {
     const existingCode = existingLinks.get(row.sourceKey);
     const existingProduct = existingCode ? productByCode.get(existingCode.toLocaleLowerCase("en-US")) : null;
+    if (existingProduct && explicitLinks.has(row.sourceKey)) {
+      const explicitCode = explicitLinks.get(row.sourceKey);
+      const explicitProduct = explicitCode
+        ? productByCode.get(explicitCode.toLocaleLowerCase("en-US"))
+        : null;
+      if (explicitProduct) return { ...row, productCode: explicitProduct.code, linkType: "manager" };
+      if (explicitCode === null && existingProduct) {
+        return { ...row, productCode: null, linkType: "cleared", previousProductCode: existingProduct.code };
+      }
+    }
     if (existingProduct) return { ...row, productCode: existingProduct.code, linkType: "remembered" };
+    if (existingLinks.has(row.sourceKey) && existingCode === null) {
+      const explicitCode = explicitLinks.get(row.sourceKey);
+      const explicitProduct = explicitCode
+        ? productByCode.get(explicitCode.toLocaleLowerCase("en-US"))
+        : null;
+      if (explicitLinks.has(row.sourceKey) && explicitProduct) {
+        return { ...row, productCode: explicitProduct.code, linkType: "manager" };
+      }
+      return { ...row, productCode: null, linkType: "cleared" };
+    }
     const exactMatches = exactNames.get(normalizedMatchKey(row.name)) ?? [];
     if (exactMatches.length === 1) return { ...row, productCode: exactMatches[0].code, linkType: "exact" };
     const explicitCode = explicitLinks.get(row.sourceKey);
@@ -452,6 +473,65 @@ export function linkWorkbookCapacityRows(rows, products, priorLinks = [], manage
     throw new TypeError("Active products and source links are required.");
   }
   return mapRowsToProducts(rows, products, priorLinks, managerLinks);
+}
+
+export function analyzeWorkbookCapacityDuplicates(rows, products, priorLinks = [], managerLinks = []) {
+  if (!Array.isArray(rows) || !Array.isArray(products) || !Array.isArray(priorLinks)
+    || !Array.isArray(managerLinks)) {
+    throw new TypeError("Workbook rows, products, and source links are required.");
+  }
+  const productByCode = new Map(products.map((product) => [product.code.toLocaleLowerCase("en-US"), product]));
+  const managerBySource = new Map(managerLinks.map((link) => [link.sourceKey, link.productCode]));
+  const currentBySource = new Map(priorLinks
+    .filter((link) => typeof link?.sourceKey === "string"
+      && (typeof link.productCode === "string" || link.productCode === null))
+    .map((link) => [link.sourceKey, link.productCode]));
+  const projectedBySource = new Map(currentBySource);
+  const workbookByProduct = new Map();
+
+  for (const row of rows) {
+    const currentCode = currentBySource.get(row.sourceKey);
+    const selected = managerBySource.has(row.sourceKey)
+      ? managerBySource.get(row.sourceKey)
+      : row.productCode;
+    if (currentBySource.has(row.sourceKey)) projectedBySource.delete(row.sourceKey);
+    if (selected) {
+      projectedBySource.set(row.sourceKey, selected);
+      const key = selected.toLocaleLowerCase("en-US");
+      workbookByProduct.set(key, (workbookByProduct.get(key) ?? 0) + 1);
+    }
+  }
+
+  const countsByProduct = (links) => {
+    const counts = new Map();
+    for (const code of links.values()) {
+      if (typeof code !== "string") continue;
+      const key = code.toLocaleLowerCase("en-US");
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  };
+  const existingCounts = countsByProduct(currentBySource);
+  const projectedCounts = countsByProduct(projectedBySource);
+  const impacted = new Set();
+  for (const [key, count] of existingCounts) if (count > 1) impacted.add(key);
+  for (const [key, count] of workbookByProduct) if (count > 1) impacted.add(key);
+  for (const [key, count] of projectedCounts) if (count > 1) impacted.add(key);
+
+  return [...impacted].map((key) => {
+    const product = productByCode.get(key);
+    const existingCount = existingCounts.get(key) ?? 0;
+    const workbookCount = workbookByProduct.get(key) ?? 0;
+    const resultingCount = projectedCounts.get(key) ?? 0;
+    return {
+      productCode: product?.code ?? [...currentBySource.values()].find((code) => code.toLocaleLowerCase("en-US") === key) ?? "",
+      productName: product?.name ?? "",
+      existingCount,
+      workbookCount,
+      resultingCount,
+      capacityConsequence: resultingCount > 1 ? "unavailable" : "no_duplicate",
+    };
+  }).sort((a, b) => a.productName.localeCompare(b.productName) || a.productCode.localeCompare(b.productCode));
 }
 
 export const workbookCapacityImportLimits = Object.freeze({

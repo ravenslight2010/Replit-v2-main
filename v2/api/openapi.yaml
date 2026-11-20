@@ -1170,6 +1170,7 @@ paths:
         without staging data. Unique exact normalized product names and confirmed
         product-code links are automatic; ambiguous and unmatched rows remain
         unlinked until a manager explicitly selects an active product during staging.
+        The response also identifies duplicate sources and their current capacity impact.
       security:
         - v2Session: []
           v2CsrfCookie: []
@@ -1200,6 +1201,60 @@ paths:
           $ref: "#/components/responses/Error"
         "429":
           $ref: "#/components/responses/Error"
+  /api/v2/imports/workbooks/links:
+    post:
+      operationId: correctCapacityWorkbookSourceLink
+      summary: Correct or clear a saved workbook source link
+      description: >
+        Manager-only and facility-scoped. Requires the currently saved product
+        code so concurrent changes are rejected. A non-null target must be an
+        active product in the same facility. Repeated request IDs replay the
+        confirmed result; corrections detach prior import ownership so an older
+        guarded Undo cannot overwrite the manager's correction.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CapacityWorkbookLinkCorrectionRequest"
+      responses:
+        "200":
+          description: Previously confirmed correction replayed, or no-op confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapacityWorkbookLinkCorrectionResult"
+        "201":
+          description: Saved workbook link corrected or cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapacityWorkbookLinkCorrectionResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+        "415":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
   /api/v2/imports/workbooks:
     post:
       operationId: stageDoughCapacityWorkbook
@@ -1207,8 +1262,10 @@ paths:
       description: >
         Manager-only and V2-only. Accepts dough procedure or shipping guide
         workbooks, preserves automatic unique exact-name and confirmed links, and
-        accepts explicit active-product selections only for unmatched or ambiguous
-        rows. Stages linked rows for review through the existing import lifecycle.
+        accepts explicit active-product selections for unresolved rows. Corrections
+        or clears to remembered links use the separate facility-scoped manager
+        action. Stages linked rows for review through the existing import lifecycle
+        and reports current and projected duplicate-source impacts.
         Confirmed product-code links are reused on later imports.
       security:
         - v2Session: []
@@ -3467,9 +3524,49 @@ components:
         productCode:
           type: string
           pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+    CapacityWorkbookLinkCorrectionRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, family, sourceKey, expectedProductCode, productCode]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        family:
+          type: string
+          enum: [dough-procedure, shipping-guide]
+        sourceKey:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        expectedProductCode:
+          type: [string, "null"]
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        productCode:
+          type: [string, "null"]
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+    CapacityWorkbookLinkCorrectionResult:
+      type: object
+      required: [outcome, sourceFamily, sourceKey, previousProductCode, productCode, replayed]
+      properties:
+        outcome:
+          type: string
+          enum: [corrected, cleared, unchanged]
+        sourceFamily:
+          type: string
+          enum: [dough-procedure, shipping-guide]
+        sourceKey:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        previousProductCode:
+          type: [string, "null"]
+        productCode:
+          type: [string, "null"]
+        replayed:
+          type: boolean
     CapacityWorkbookLinkPreview:
       type: object
-      required: [sourceFamily, fileName, fileSha256, rows, products]
+      required: [sourceFamily, fileName, fileSha256, rows, products, duplicateSources]
       properties:
         sourceFamily:
           type: string
@@ -3496,7 +3593,7 @@ components:
                 minimum: 1
               reason:
                 type: string
-                enum: [exact, remembered, unmatched, ambiguous]
+                enum: [exact, remembered, unmatched, ambiguous, cleared]
               productCode:
                 type: [string, "null"]
         products:
@@ -3510,6 +3607,11 @@ components:
                 type: string
               name:
                 type: string
+        duplicateSources:
+          type: array
+          maxItems: 2000
+          items:
+            $ref: "#/components/schemas/CapacityWorkbookDuplicateSource"
     CapacityWorkbookImportPreview:
       type: object
       required:
@@ -3528,6 +3630,7 @@ components:
         - unmatchedRows
         - unmatchedCount
         - invalidValueCount
+        - duplicateSources
       properties:
         outcome:
           type: string
@@ -3589,6 +3692,39 @@ components:
         invalidValueCount:
           type: integer
           minimum: 0
+        duplicateSources:
+          type: array
+          maxItems: 2000
+          items:
+            $ref: "#/components/schemas/CapacityWorkbookDuplicateSource"
+    CapacityWorkbookDuplicateSource:
+      type: object
+      required:
+        - productCode
+        - productName
+        - existingCount
+        - workbookCount
+        - resultingCount
+        - capacityConsequence
+      properties:
+        productCode:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$"
+        productName:
+          type: string
+          maxLength: 120
+        existingCount:
+          type: integer
+          minimum: 0
+        workbookCount:
+          type: integer
+          minimum: 0
+        resultingCount:
+          type: integer
+          minimum: 0
+        capacityConsequence:
+          type: string
+          enum: [unavailable, no_duplicate]
     SetupImportProduct:
       type: object
       required: [code, name, unit]

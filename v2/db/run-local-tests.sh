@@ -704,7 +704,11 @@ fi
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0009-production-schedules.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0010-operational-mix-plan.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0010-workbook-link-corrections.sql" >/dev/null
 "${PSQL[@]}" -c "
+  GRANT EXECUTE ON FUNCTION v2.correct_workbook_source_link(
+    uuid, uuid, text, text, text, text, text, text
+  ) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.stage_setup_catalog_import(uuid, uuid, text, text, text, jsonb, jsonb) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.apply_setup_catalog_import(uuid, uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.undo_setup_catalog_import(uuid, uuid, uuid) TO v2_api_test;
@@ -811,6 +815,7 @@ V2_TEST_ADMIN_URL="$V2_TEST_ADMIN_URL" V2_DATABASE_URL="$V2_API_URL" \
   NODE_ENV=development PORT=0 node "$ROOT/v2/server/http-postgres.integration.mjs"
 "${PSQL[@]}" -f "$ROOT/v2/db/0006-run-inventory-linkage.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-reviewed-die-defaults.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0010-workbook-link-corrections.test.sql"
 V2_DATABASE_URL="$V2_API_URL" NODE_ENV=development \
   node "$ROOT/v2/server/http-postgres.browser.integration.mjs"
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-inventory-parity.test.sql"

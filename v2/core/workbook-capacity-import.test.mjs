@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import * as XLSX from "xlsx";
 import {
+  analyzeWorkbookCapacityDuplicates,
   linkWorkbookCapacityRows,
   parseDoughCapacityWorkbook,
   parseShippingCapacityWorkbook,
@@ -113,6 +114,75 @@ test("manager links resolve only unmatched rows and retain the active product's 
     products,
     [],
   )[0].productCode, null);
+});
+
+test("a manager can correct a remembered link without changing exact-name defaults", () => {
+  const row = { sourceKey: "d".repeat(64), name: "Renamed Product" };
+  const products = [
+    { code: "PRODUCT-A", name: "Renamed Product" },
+    { code: "PRODUCT-B", name: "Other Product" },
+  ];
+  const priorLinks = [{ sourceKey: row.sourceKey, productCode: "PRODUCT-A" }];
+  assert.equal(linkWorkbookCapacityRows([row], products, priorLinks)[0].linkType, "remembered");
+  const corrected = linkWorkbookCapacityRows([row], products, priorLinks, [
+    { sourceKey: row.sourceKey, productCode: "PRODUCT-B" },
+  ])[0];
+  assert.deepEqual([corrected.productCode, corrected.linkType], ["PRODUCT-B", "manager"]);
+});
+
+test("an explicitly cleared source stays unlinked instead of reappearing as an exact match", () => {
+  const row = { sourceKey: "c".repeat(64), name: "Known Product" };
+  const products = [{ code: "KNOWN", name: "Known Product" }];
+  const cleared = linkWorkbookCapacityRows(
+    [row],
+    products,
+    [{ sourceKey: row.sourceKey, productCode: null }],
+  )[0];
+  assert.deepEqual([cleared.productCode, cleared.linkType], [null, "cleared"]);
+  const restored = linkWorkbookCapacityRows(
+    [row],
+    products,
+    [{ sourceKey: row.sourceKey, productCode: null }],
+    [{ sourceKey: row.sourceKey, productCode: "KNOWN" }],
+  )[0];
+  assert.deepEqual([restored.productCode, restored.linkType], ["KNOWN", "manager"]);
+});
+
+test("duplicate review identifies existing, workbook, and projected capacity ambiguity", () => {
+  const rows = [
+    { sourceKey: "e".repeat(64), productCode: "CAP-A" },
+    { sourceKey: "f".repeat(64), productCode: "CAP-A" },
+    { sourceKey: "g".repeat(64), productCode: "CAP-B" },
+  ];
+  const products = [
+    { code: "CAP-A", name: "Capacity A" },
+    { code: "CAP-B", name: "Capacity B" },
+  ];
+  const priorLinks = [
+    { sourceKey: rows[0].sourceKey, productCode: "CAP-A" },
+    { sourceKey: rows[1].sourceKey, productCode: "CAP-A" },
+  ];
+  const result = analyzeWorkbookCapacityDuplicates(rows, products, priorLinks);
+  assert.deepEqual(result, [{
+    productCode: "CAP-A",
+    productName: "Capacity A",
+    existingCount: 2,
+    workbookCount: 2,
+    resultingCount: 2,
+    capacityConsequence: "unavailable",
+  }]);
+
+  const corrected = analyzeWorkbookCapacityDuplicates(
+    rows,
+    products,
+    priorLinks,
+    [{ sourceKey: rows[1].sourceKey, productCode: "CAP-B" }],
+  );
+  assert.deepEqual(corrected.map(({ productCode, existingCount, resultingCount }) =>
+    [productCode, existingCount, resultingCount]), [
+    ["CAP-A", 2, 1],
+    ["CAP-B", 0, 2],
+  ]);
 });
 
 test("parses every local dough procedure and the approved shipping guide", {

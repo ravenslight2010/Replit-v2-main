@@ -155,6 +155,7 @@ function validPendingRoute(kind, endpoint) {
   if (typeof endpoint !== "string") return false;
   if (kind === "setup-import") return endpoint === IMPORTS;
   if (kind === "workbook-import") return endpoint === `${IMPORTS}/workbooks`;
+  if (kind === "workbook-link") return endpoint === `${IMPORTS}/workbooks/links`;
   if (kind === "warehouse-create") return endpoint === `${INVENTORY}/warehouses`;
   if (kind === "production-warehouse") return endpoint === `${INVENTORY}/production-warehouse`;
   if (kind === "movement") return endpoint === `${INVENTORY}/movements`;
@@ -1155,9 +1156,26 @@ function workbookImportResponse(value, family = null, fileSha256 = null) {
     && value.unmatchedRows.every((row) => object(row) && /^[0-9a-f]{64}$/u.test(row.sourceKey)
       && text(row.name, 120)
       && Number.isSafeInteger(row.row) && row.row > 0
-      && ["unmatched", "ambiguous"].includes(row.reason))
+      && ["unmatched", "ambiguous", "cleared"].includes(row.reason))
+    && Array.isArray(value.duplicateSources) && value.duplicateSources.every(validateWorkbookDuplicate)
     && Array.isArray(value.records) && value.records.length === value.linkedCount
     && value.records.every((record) => validateRecord(record, value.kind));
+}
+function validateWorkbookDuplicate(item) {
+  return object(item) && text(item.productCode, 80) && CODE.test(item.productCode)
+    && text(item.productName, 120)
+    && Number.isSafeInteger(item.existingCount) && item.existingCount >= 0
+    && Number.isSafeInteger(item.workbookCount) && item.workbookCount >= 0
+    && Number.isSafeInteger(item.resultingCount) && item.resultingCount >= 0
+    && ["unavailable", "no_duplicate"].includes(item.capacityConsequence);
+}
+function workbookLinkCorrectionResponse(value, family, sourceKey, productCode) {
+  return object(value) && ["corrected", "cleared", "unchanged"].includes(value.outcome)
+    && value.sourceFamily === family && value.sourceKey === sourceKey
+    && (value.previousProductCode === null
+      || text(value.previousProductCode, 80) && CODE.test(value.previousProductCode))
+    && (value.productCode === null || text(value.productCode, 80) && CODE.test(value.productCode))
+    && value.productCode === productCode && typeof value.replayed === "boolean";
 }
 function workbookLinkPreviewResponse(value, family, fileSha256) {
   return object(value) && value.sourceFamily === family && WORKBOOK_IMPORT_FAMILIES.has(value.sourceFamily)
@@ -1166,10 +1184,33 @@ function workbookLinkPreviewResponse(value, family, fileSha256) {
     && Array.isArray(value.rows) && value.rows.length >= 1 && value.rows.length <= 2000
     && value.rows.every((row) => object(row) && /^[0-9a-f]{64}$/u.test(row.sourceKey)
       && text(row.name, 120) && Number.isSafeInteger(row.row) && row.row > 0
-      && ["exact", "remembered", "unmatched", "ambiguous"].includes(row.reason)
+       && ["exact", "remembered", "unmatched", "ambiguous", "cleared"].includes(row.reason)
       && (row.productCode === null || typeof row.productCode === "string" && CODE.test(row.productCode)))
     && Array.isArray(value.products) && value.products.length <= 2000
+    && Array.isArray(value.duplicateSources) && value.duplicateSources.every(validateWorkbookDuplicate)
     && value.products.every((product) => object(product) && CODE.test(product.code) && text(product.name, 120));
+}
+function renderWorkbookDuplicateWarnings(parent, warnings, family) {
+  if (!warnings.length) return;
+  const details = make("details", "workbook-duplicate-warning");
+  details.open = true;
+  details.append(
+    make("strong", "", "Duplicate capacity sources need review"),
+    make("p", "manager-help", "More than one source for a product makes that workbook input ambiguous, so capacity is unavailable until the duplicate is resolved."),
+  );
+  const list = make("ul", "preview-records");
+  warnings.forEach((item) => {
+    const parts = [];
+    if (item.existingCount > 1) parts.push(`${item.existingCount} existing sources`);
+    if (item.workbookCount > 1) parts.push(`${item.workbookCount} rows in this workbook`);
+    parts.push(`${item.resultingCount} sources after this import`);
+    const consequence = item.capacityConsequence === "unavailable"
+      ? `${family === "dough-procedure" ? "Dough" : "Shipping"} capacity will be unavailable`
+      : "No duplicate remains after this import";
+    list.append(make("li", "", `${item.productName} · ${item.productCode}: ${parts.join("; ")}. ${consequence}.`));
+  });
+  details.append(list);
+  parent.append(details);
 }
 function renderWorkbookLinkReview(preview) {
   dom.workbookPreview.replaceChildren();
@@ -1186,14 +1227,39 @@ function renderWorkbookLinkReview(preview) {
     if (row.productCode) {
       const description = row.reason === "remembered" ? "Previously confirmed link" : "Exact name match";
       line.append(make("span", "preview-detail", `${description} · ${row.productCode}`));
+      if (row.reason === "remembered") {
+        const select = make("select", "workbook-product-link");
+        select.dataset.actionControl = "true";
+        select.dataset.sourceKey = row.sourceKey;
+        select.dataset.originalProductCode = row.productCode;
+        select.setAttribute("aria-label", `Change saved link for ${row.name}, workbook row ${row.row}`);
+        const clear = make("option", "", "Clear saved source link");
+        clear.value = "";
+        select.append(clear);
+        preview.products.forEach((product) => {
+          const option = make("option", "", `${product.name} · ${product.code}`);
+          option.value = product.code;
+          select.append(option);
+        });
+        select.value = row.productCode;
+        const save = actionButton("Save link change", () => {
+          void correctWorkbookSourceLink(row, select.value || null);
+        }, "button button-secondary button-small");
+        save.dataset.actionControl = "true";
+        save.classList.add("workbook-link-save");
+        line.append(select, save);
+      }
     } else {
       const select = make("select", "workbook-product-link");
       select.dataset.actionControl = "true";
       select.dataset.sourceKey = row.sourceKey;
+      select.dataset.originalProductCode = "";
       select.setAttribute("aria-label", `Choose a product for ${row.name}, workbook row ${row.row}`);
       const placeholder = make("option", "", row.reason === "ambiguous"
         ? "Choose a product · multiple exact matches"
-        : "Choose an active product");
+        : row.reason === "cleared"
+          ? "Source link cleared · choose to restore"
+          : "Choose an active product");
       placeholder.value = "";
       select.append(placeholder);
       preview.products.forEach((product) => {
@@ -1203,12 +1269,15 @@ function renderWorkbookLinkReview(preview) {
       });
       line.append(make("span", "preview-detail", row.reason === "ambiguous"
         ? "Multiple exact product matches · manager selection required"
-        : "No exact product match · manager selection required"));
+        : row.reason === "cleared"
+          ? "Saved source link was cleared · exact-name matching is suppressed until a manager restores it"
+          : "No exact product match · manager selection required"));
       line.append(select);
     }
     list.append(line);
   });
   dom.workbookPreview.append(list);
+  renderWorkbookDuplicateWarnings(dom.workbookPreview, preview.duplicateSources, preview.sourceFamily);
   dom.workbookActions.hidden = false;
   dom.workbookStage.hidden = false;
   dom.workbookStage.dataset.actionControl = "true";
@@ -1231,6 +1300,7 @@ function renderWorkbookPreview(result) {
     details.append(list);
     dom.workbookPreview.append(details);
   }
+  renderWorkbookDuplicateWarnings(dom.workbookPreview, result.duplicateSources, result.sourceFamily);
   dom.workbookActions.hidden = false;
   dom.workbookStage.hidden = true;
   dom.workbookApply.hidden = false;
@@ -1328,7 +1398,7 @@ async function submitCapacityWorkbook(event) {
 }
 function selectedWorkbookProductLinks() {
   return [...dom.workbookPreview.querySelectorAll("select[data-source-key]")]
-    .filter((select) => select.value)
+    .filter((select) => !select.dataset.originalProductCode && select.value)
     .map((select) => ({ sourceKey: select.dataset.sourceKey, productCode: select.value }));
 }
 async function previewCapacityWorkbook(file) {
@@ -1388,6 +1458,13 @@ async function previewCapacityWorkbook(file) {
 }
 async function stageCapacityWorkbook() {
   if (!workbookDraft || !ensureWrite()) return;
+  const pendingSavedLinkEdits = [...dom.workbookPreview.querySelectorAll("select[data-source-key]")]
+    .some((select) => select.dataset.originalProductCode
+      && select.value !== select.dataset.originalProductCode);
+  if (pendingSavedLinkEdits) {
+    message("Save or clear the changed saved link before staging this workbook.", "warning");
+    return;
+  }
   const file = dom.workbookFile.files?.[0];
   if (!file || file.name !== workbookDraft.fileName || dom.workbookFamily.value !== workbookDraft.family) {
     message("Choose the same workbook and type used for the current preview.", "warning");
@@ -1404,6 +1481,33 @@ async function stageCapacityWorkbook() {
     return;
   }
   await uploadCapacityWorkbook(file);
+}
+async function correctWorkbookSourceLink(row, productCode) {
+  if (!ensureWrite() || pending) {
+    if (pending) message("Resolve the saved request first. Retry its exact action before changing a workbook link.", "warning");
+    return;
+  }
+  const file = dom.workbookFile.files?.[0];
+  const family = workbookDraft?.family;
+  if (!file || !family || !row?.sourceKey || !row.productCode) {
+    message("Refresh the workbook preview before changing a saved link.", "warning");
+    return;
+  }
+  const payload = {
+    requestId: crypto.randomUUID(),
+    family,
+    sourceKey: row.sourceKey,
+    expectedProductCode: row.productCode,
+    productCode,
+  };
+  await operation({
+    kind: "workbook-link",
+    endpoint: `${IMPORTS}/workbooks/links`,
+    payload,
+    validate: (result) => workbookLinkCorrectionResponse(result, family, row.sourceKey, productCode),
+    label: productCode ? "Workbook link correction" : "Workbook link clear",
+    refresh: async () => { await previewCapacityWorkbook(file); },
+  });
 }
 async function retryImport() {
   if (!pending || pending.kind !== "setup-import" || pending.actorId !== staff?.userId) return;
@@ -1748,7 +1852,13 @@ async function retrySavedRequest() {
             : saved.kind === "cycle-count" ? cycleStageResponse
               : saved.kind === "cycle-review" || saved.kind === "cycle-apply" ? cycleActionResponse
                 : saved.kind === "prep-link" ? preparationLinkResponse
-                  : saved.kind === "prep-run" ? preparationResponse
+                   : saved.kind === "prep-run" ? preparationResponse
+                     : saved.kind === "workbook-link" ? (value) => workbookLinkCorrectionResponse(
+                       value,
+                       saved.payload.family,
+                       saved.payload.sourceKey,
+                       saved.payload.productCode,
+                     )
             : (value) => object(value);
   await operation({
     kind: saved.kind, endpoint: saved.endpoint, payload: saved.payload,
@@ -1759,6 +1869,9 @@ async function retrySavedRequest() {
         dom.importActions.hidden = false; dom.importApply.dataset.importId = result.importId;
       } else if (saved.kind === "opening-count") {
          await refreshCount(result.countId);
+      } else if (saved.kind === "workbook-link") {
+        const file = dom.workbookFile.files?.[0];
+        if (file) await previewCapacityWorkbook(file);
       } else if (saved.kind === "warehouse-create") {
         const item = validateWarehouse(result) ? result : result.warehouse;
         warehouses = [...warehouses.filter((old) => old.id !== item.id), item];

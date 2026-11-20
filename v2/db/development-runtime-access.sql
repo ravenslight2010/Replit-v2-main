@@ -12,6 +12,7 @@ GRANT EXECUTE ON FUNCTION
   v2.claim_worker_lease(text, uuid, integer),
   v2.complete_run_with_inventory(uuid, uuid, uuid, text, text, text, bigint),
   v2.complete_staff_password_reset(text, text, text),
+  v2.correct_workbook_source_link(uuid, uuid, text, text, text, text, text, text),
   v2.create_inventory_warehouse(uuid, uuid, text, text, text),
   v2.create_planned_run(uuid, uuid, text, text, jsonb),
   v2.create_staff_account(uuid, text, text, text),

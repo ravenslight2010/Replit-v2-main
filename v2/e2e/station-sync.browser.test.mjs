@@ -10,6 +10,7 @@ import { chromium, webkit as pinnedWebkit } from "../../node_modules/.pnpm/node_
 import * as XLSX from "xlsx";
 import { parseOpeningCountCsv, parseSetupImportCsv } from "../core/import-csv.mjs";
 import {
+  analyzeWorkbookCapacityDuplicates,
   linkWorkbookCapacityRows,
   parseDoughCapacityWorkbook,
   parseShippingCapacityWorkbook,
@@ -73,6 +74,7 @@ const WEB_ASSETS = new Map([
   ["/v2/web/favicon.svg", ["../web/favicon.svg", "image/svg+xml"]],
   ["/v2/web/app.js", ["../web/app.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/inventory.js", ["../web/inventory.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/inventory-export.mjs", ["../web/inventory-export.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/web/setup-catalog.js", ["../web/setup-catalog.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/schedule.js", ["../web/schedule.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/mix-plan.js", ["../web/mix-plan.js", "text/javascript; charset=utf-8"]],
@@ -228,6 +230,12 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
     expectedLostApplyConsoleError: false,
     stationCommandOutcomes: [],
     browserStationCommands: [],
+    workbookLinks: new Map(),
+    workbookLinkReceipts: new Map(),
+    failNextWorkbookLinkResponse: false,
+    rejectNextWorkbookLinkResponse: false,
+    expectedWorkbookLinkConflictConsoleError: false,
+    expectedWorkbookLinkConsoleError: false,
     forceTimerStartConflict: false,
     schedule: null,
     scheduleReceipts: new Map(),
@@ -585,6 +593,10 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ warehouses: [] }) });
         return;
       }
+      if (manager && url.pathname === "/api/v2/imports" && request.method() === "GET") {
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ imports: [] }) });
+        return;
+      }
       if (manager && url.pathname === "/api/v2/inventory/die-defaults" && request.method() === "GET") {
         await route.fulfill({
           status: 200,
@@ -597,7 +609,10 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         await route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify({ products: [{ code: "DOUGH-A", name: "North Shop", unit: "case" }] }),
+          body: JSON.stringify({ products: [
+            { code: "DOUGH-A", name: "North Shop", unit: "case" },
+            { code: "DOUGH-B", name: "South Shop", unit: "case" },
+          ] }),
         });
         return;
       }
@@ -651,8 +666,14 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         const parsed = body.family === "dough-procedure"
           ? parseDoughCapacityWorkbook(workbookBuffer, body.fileName)
           : parseShippingCapacityWorkbook(workbookBuffer, body.fileName);
-        const products = [{ code: "DOUGH-A", name: "North Shop" }];
-        const rows = linkWorkbookCapacityRows(parsed.rows, products, []);
+        const products = [
+          { code: "DOUGH-A", name: "North Shop" },
+          { code: "DOUGH-B", name: "South Shop" },
+        ];
+        const priorLinks = [...fixture.workbookLinks.entries()]
+          .filter(([identity]) => identity.startsWith(`${body.family}:`))
+          .map(([identity, productCode]) => ({ sourceKey: identity.slice(body.family.length + 1), productCode }));
+        const rows = linkWorkbookCapacityRows(parsed.rows, products, priorLinks);
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -668,7 +689,59 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
               productCode: row.productCode,
             })),
             products,
+            duplicateSources: analyzeWorkbookCapacityDuplicates(rows, products, priorLinks),
           }),
+        });
+        return;
+      }
+      if (manager && url.pathname === "/api/v2/imports/workbooks/links" && request.method() === "POST") {
+        if (request.headers()["x-csrf-token"] !== CSRF_TOKEN) {
+          await route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: "Invalid CSRF test token." }) });
+          return;
+        }
+        const body = request.postDataJSON();
+        const identity = `${body.family}:${body.sourceKey}`;
+        if (fixture.rejectNextWorkbookLinkResponse) {
+          fixture.rejectNextWorkbookLinkResponse = false;
+          fixture.expectedWorkbookLinkConflictConsoleError = true;
+          await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: "Saved link changed." }) });
+          return;
+        }
+        const replay = fixture.workbookLinkReceipts.get(body.requestId);
+        if (replay) {
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({ ...replay, replayed: true }),
+          });
+          return;
+        }
+        const previousProductCode = fixture.workbookLinks.get(identity);
+        if (previousProductCode !== body.expectedProductCode) {
+          await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: "Saved link changed." }) });
+          return;
+        }
+        if (body.productCode === null) fixture.workbookLinks.set(identity, null);
+        else fixture.workbookLinks.set(identity, body.productCode);
+        const result = {
+          outcome: body.productCode === null ? "cleared" : "corrected",
+          sourceFamily: body.family,
+          sourceKey: body.sourceKey,
+          previousProductCode,
+          productCode: body.productCode,
+          replayed: false,
+        };
+        fixture.workbookLinkReceipts.set(body.requestId, result);
+        if (fixture.failNextWorkbookLinkResponse) {
+          fixture.failNextWorkbookLinkResponse = false;
+          fixture.expectedWorkbookLinkConsoleError = true;
+          await route.abort("connectionreset");
+          return;
+        }
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify(result),
         });
         return;
       }
@@ -682,10 +755,17 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         const parsed = body.family === "dough-procedure"
           ? parseDoughCapacityWorkbook(workbookBuffer, body.fileName)
           : parseShippingCapacityWorkbook(workbookBuffer, body.fileName);
+        const products = [
+          { code: "DOUGH-A", name: "North Shop" },
+          { code: "DOUGH-B", name: "South Shop" },
+        ];
+        const priorLinks = [...fixture.workbookLinks.entries()]
+          .filter(([identity]) => identity.startsWith(`${body.family}:`))
+          .map(([identity, productCode]) => ({ sourceKey: identity.slice(body.family.length + 1), productCode }));
         const rows = linkWorkbookCapacityRows(
           parsed.rows,
-          [{ code: "DOUGH-A", name: "North Shop" }],
-          [],
+          products,
+          priorLinks,
           body.productLinks || [],
         );
         const records = rows.filter((row) => row.productCode).map((row) => ({
@@ -749,6 +829,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
             invalidValueCount: records.filter((record) => body.family === "dough-procedure"
               ? record.data.doughballYield === null
               : record.data.pizzasPerCase === null).length,
+            duplicateSources: analyzeWorkbookCapacityDuplicates(rows, products, priorLinks, body.productLinks || []),
           }),
         });
         return;
@@ -850,6 +931,14 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
       }
       if (fixture.expectedLostApplyConsoleError && message.text().includes("503 (Service Unavailable)")) {
         fixture.expectedLostApplyConsoleError = false;
+        return;
+      }
+      if (fixture.expectedWorkbookLinkConsoleError && message.text().includes("ERR_CONNECTION_RESET")) {
+        fixture.expectedWorkbookLinkConsoleError = false;
+        return;
+      }
+      if (fixture.expectedWorkbookLinkConflictConsoleError && message.text().includes("409 (Conflict)")) {
+        fixture.expectedWorkbookLinkConflictConsoleError = false;
         return;
       }
       fixture.consoleErrors.push(`${message.text()} [${JSON.stringify(message.location())}]`);
@@ -1077,6 +1166,8 @@ test("dough capacity is derived from the selected product and has no editable ov
 test("manager resolves an unmatched workbook row, reviews its link, and applies it", async (t) => {
   const browserState = await createFixture(t, { width: 1440, height: 900 }, { manager: true });
   const { page } = await browserState.openDevice();
+  await page.locator("#manager-tools:not([hidden])").waitFor();
+  await page.waitForFunction(() => !document.querySelector("#capacity-workbook-review")?.disabled);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
     ["Customer", "OZ", "LBS", "YIELD", "PER TRAY"],
@@ -1084,18 +1175,41 @@ test("manager resolves an unmatched workbook row, reviews its link, and applies 
     ["Nroth Shop", 7.8, 310.5, 646, 84],
   ]), "Procedure");
   const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+  const parsedWorkbook = parseDoughCapacityWorkbook(buffer, "north-shop-dough.xlsx");
+  browserState.fixture.workbookLinks.set(
+    `dough-procedure:${parsedWorkbook.rows[0].sourceKey}`,
+    "DOUGH-A",
+  );
   await page.locator("#capacity-workbook-file").setInputFiles({
     name: "north-shop-dough.xlsx",
     mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     buffer,
   });
   await page.getByRole("button", { name: "Preview workbook links" }).click();
-  await page.getByText("Exact name match · DOUGH-A").waitFor();
+  await page.getByText("Previously confirmed link · DOUGH-A").waitFor();
+  const savedLink = page.getByLabel("Change saved link for North Shop, workbook row 2");
+  await savedLink.selectOption("DOUGH-B");
+  browserState.fixture.rejectNextWorkbookLinkResponse = true;
+  await page.getByRole("button", { name: "Save link change" }).click();
+  await page.getByText(/server rejected this attempt/u).waitFor();
+  assert.equal(browserState.fixture.workbookLinks.get(`dough-procedure:${parsedWorkbook.rows[0].sourceKey}`), "DOUGH-A");
+  browserState.fixture.failNextWorkbookLinkResponse = true;
+  await page.getByRole("button", { name: "Save link change" }).click();
+  await page.getByRole("button", { name: "Retry saved request" }).waitFor();
+  await page.getByRole("button", { name: "Retry saved request" }).click();
+  await page.getByText("Previously confirmed link · DOUGH-B").waitFor();
+
+  await page.getByLabel("Change saved link for North Shop, workbook row 2").selectOption("");
+  await page.getByRole("button", { name: "Save link change" }).click();
+  await page.getByText(/Saved source link was cleared/u).waitFor();
+  await page.getByLabel("Choose a product for North Shop, workbook row 2").selectOption("DOUGH-A");
   await page.getByLabel("Choose a product for Nroth Shop, workbook row 3").selectOption("DOUGH-A");
   await page.getByRole("button", { name: "Stage reviewed workbook" }).click();
   await page.getByText(/Staged · dough-procedure/u).waitFor();
   await page.getByText(/2 rows staged/u).waitFor();
-  await page.getByText(/1 manager-selected links included/u).waitFor();
+  await page.getByText(/2 manager-selected links included/u).waitFor();
+  await page.getByText(/2 rows in this workbook/u).waitFor();
+  await page.getByText(/Dough capacity will be unavailable/u).waitFor();
   await page.getByText("North Shop", { exact: true }).first().waitFor();
   await page.getByText(/Product: DOUGH-A/u).first().waitFor();
   await page.getByRole("button", { name: "Apply reviewed workbook" }).click();
@@ -1119,6 +1233,45 @@ test("manager resolves an unmatched workbook row, reviews its link, and applies 
   }
   assert.ok((await page.locator("body").evaluate(() => document.documentElement.scrollWidth)) <= 1024);
   assert.deepEqual(await page.locator("#capacity-workbook-preview").isVisible(), true);
+  assert.deepEqual(browserState.fixture.pageErrors, []);
+  assert.deepEqual(browserState.fixture.consoleErrors, []);
+});
+
+test("manager can correct and clear a saved shipping workbook link", async (t) => {
+  const browserState = await createFixture(t, { width: 1440, height: 900 }, { manager: true });
+  const { page } = await browserState.openDevice();
+  await page.locator("#manager-tools:not([hidden])").waitFor();
+  await page.waitForFunction(() => !document.querySelector("#capacity-workbook-review")?.disabled);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
+    ["Pizza", "Notes", "Pizzas/CS"],
+    ["North Shop", "", 12],
+  ]), "Shipping");
+  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+  const parsed = parseShippingCapacityWorkbook(buffer, "north-shop-shipping.xlsx");
+  browserState.fixture.workbookLinks.set(`shipping-guide:${parsed.rows[0].sourceKey}`, "DOUGH-A");
+  await page.locator("#capacity-workbook-family").selectOption("shipping-guide");
+  await page.locator("#capacity-workbook-file").setInputFiles({
+    name: "north-shop-shipping.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer,
+  });
+  await page.getByRole("button", { name: "Preview workbook links" }).click();
+  await page.getByText("Previously confirmed link · DOUGH-A").waitFor();
+  await page.getByLabel("Change saved link for North Shop, workbook row 2").selectOption("DOUGH-B");
+  browserState.fixture.rejectNextWorkbookLinkResponse = true;
+  await page.getByRole("button", { name: "Save link change" }).click();
+  await page.getByText(/server rejected this attempt/u).waitFor();
+  assert.equal(browserState.fixture.workbookLinks.get(`shipping-guide:${parsed.rows[0].sourceKey}`), "DOUGH-A");
+  browserState.fixture.failNextWorkbookLinkResponse = true;
+  await page.getByRole("button", { name: "Save link change" }).click();
+  await page.getByRole("button", { name: "Retry saved request" }).waitFor();
+  await page.getByRole("button", { name: "Retry saved request" }).click();
+  await page.getByText("Previously confirmed link · DOUGH-B").waitFor();
+  await page.getByLabel("Change saved link for North Shop, workbook row 2").selectOption("");
+  await page.getByRole("button", { name: "Save link change" }).click();
+  await page.getByText(/Saved source link was cleared/u).waitFor();
+  assert.equal(await page.getByText("Exact name match · DOUGH-A").count(), 0);
   assert.deepEqual(browserState.fixture.pageErrors, []);
   assert.deepEqual(browserState.fixture.consoleErrors, []);
 });

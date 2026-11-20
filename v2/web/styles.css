@@ -341,6 +341,10 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .preview-detail { grid-column: 1 / -1; color: var(--muted); font: 10px/1.5 var(--mono); overflow-wrap: anywhere; }
 .workbook-product-link { grid-column: 1 / -1; width: 100%; min-width: 0; min-height: 42px; padding: 0 9px; border: 1px solid var(--line-strong); border-radius: 0; background: var(--field); color: var(--ink); font: 12px var(--display); }
 .workbook-product-link:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+.workbook-link-save { grid-column: 1 / -1; justify-self: start; }
+.workbook-duplicate-warning { margin-top: 12px; padding: 10px; border: 1px solid var(--danger, #a33); background: var(--surface); color: var(--ink); }
+.workbook-duplicate-warning > strong { display: block; color: var(--danger, #a33); font-size: 12px; }
+.workbook-duplicate-warning .preview-records { margin-top: 8px; }
 .preview-code, .table-code { color: var(--muted-soft); font: 10px var(--mono); }
 .inventory-table-wrap { max-width: 100%; overflow-x: auto; border-top: 1px solid var(--line); }
 .inventory-table { width: 100%; border-collapse: collapse; text-align: left; }

@@ -8,8 +8,9 @@ const SOURCES = [
   ["0007-approved-setup-catalogs.sql", "163829a4906746dc18879aa41156cc04adacaccc17a33ca698554979860dab9d"],
   ["0008-production-rule-enforcement.sql", "d248bb1d6c9b4a781d001f0720376bce827b78c3f8f3f8a03a59eb86334cc5a2"],
   ["0009-staff-password-resets.sql", "750028e6833d5136aa15d47eae4c698bc9393b4c72aba763878c32bb3b10be7a"],
+  ["0010-workbook-link-corrections.sql", "c081dfc240d80fc39e499813ca490b80248cc4d0ef17a5795e765d1dbc257406"],
 ];
-const RUNTIME_ACCESS_SHA256 = "3329fa41b3ba3567428154650132b2d61883478e60967a1f717a0f4270534fae";
+const RUNTIME_ACCESS_SHA256 = "64220e1d038330dde7f9b028f431d81bb2f679f3095c16b2fe6eeb4745bc87da";
 const MANAGED_BASELINE = "8563f4c4b177a2c0a864491f9d5ed5db";
 const TABLES = [
   "command_receipts", "facility_scope", "inventory_balances", "inventory_movements",
@@ -103,7 +104,7 @@ BEGIN
     RAISE EXCEPTION 'V2 activation changed existing records';
   END IF;
   IF (SELECT count(*) FROM pg_tables WHERE schemaname = 'v2') <> 34 OR
-     (SELECT count(*) FROM pg_proc WHERE pronamespace = 'v2'::regnamespace) <> 68 OR
+      (SELECT count(*) FROM pg_proc WHERE pronamespace = 'v2'::regnamespace) <> 69 OR
      (SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
       WHERE c.relnamespace = 'v2'::regnamespace AND NOT t.tgisinternal) <> 11 THEN
     RAISE EXCEPTION 'V2 activation did not produce the reviewed schema';
@@ -117,7 +118,7 @@ BEGIN
          AND has_table_privilege('v2_runtime_access', c.oid,
            'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')) OR
      (SELECT count(*) FROM pg_proc p WHERE p.pronamespace = 'v2'::regnamespace
-       AND has_function_privilege('v2_runtime_access', p.oid, 'EXECUTE')) <> 49 OR
+        AND has_function_privilege('v2_runtime_access', p.oid, 'EXECUTE')) <> 50 OR
      NOT has_function_privilege('v2_runtime_access',
        'v2.request_staff_password_reset(text)', 'EXECUTE') OR
      NOT has_function_privilege('v2_runtime_access',
@@ -128,6 +129,8 @@ BEGIN
        'v2.reissue_staff_password_reset_code(uuid,uuid,text,timestamptz)', 'EXECUTE') OR
      NOT has_function_privilege('v2_runtime_access',
        'v2.complete_staff_password_reset(text,text,text)', 'EXECUTE') OR
+      NOT has_function_privilege('v2_runtime_access',
+        'v2.correct_workbook_source_link(uuid,uuid,text,text,text,text,text,text)', 'EXECUTE') OR
      has_function_privilege('v2_runtime_access', 'v2.bootstrap_first_manager(text,text)', 'EXECUTE') THEN
     RAISE EXCEPTION 'V2 activation did not produce the reviewed runtime permissions';
   END IF;

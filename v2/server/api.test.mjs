@@ -191,6 +191,11 @@ test("serves the V2 sign-in page and local assets with restrictive browser heade
     assert.equal(writeGate.status, 200);
     assert.match(await writeGate.text(), /canWriteRunState/);
 
+    const inventoryExport = await fetch(`${baseUrl}/v2/web/inventory-export.mjs`);
+    assert.equal(inventoryExport.status, 200);
+    assert.match(inventoryExport.headers.get("content-type"), /javascript/);
+    assert.match(await inventoryExport.text(), /buildMovementCsv/);
+
     const csvTemplates = await fetch(`${baseUrl}/v2/core/import-csv-templates.mjs`);
     assert.equal(csvTemplates.status, 200);
     assert.match(csvTemplates.headers.get("content-type"), /javascript/);
