@@ -624,6 +624,11 @@
                 </table>
               </div>
               <p class="manager-empty" id="stock-empty" hidden>No active products yet. Import products before recording stock.</p>
+              <div class="manager-actions" aria-label="Warehouse exports">
+                <button class="button button-secondary button-small" id="stock-export" type="button">Download current stock CSV</button>
+                <button class="button button-secondary button-small" id="movement-export" type="button">Download all movements CSV</button>
+              </div>
+              <p class="manager-help" id="inventory-export-status" role="status" aria-live="polite"></p>
               <h4 class="manager-subheading">Lots in this warehouse</h4>
               <ul class="manager-list" id="lot-history" aria-live="polite"></ul>
               <h4 class="manager-subheading">Recent stock movements</h4>

@@ -3,6 +3,7 @@ import {
   renderImportCsvTemplate,
   setupImportCsvTemplates,
 } from "../core/import-csv-templates.mjs";
+import { buildMovementCsv, buildStockCsv, collectAllMovementPages } from "./inventory-export.mjs";
 import { DIE_DEFAULT_FIELDS, REQUIRED_DIE_DEFAULT_FIELDS, isDieLineSettings } from "../core/die-defaults.mjs";
 import { updateSetupCatalogContext } from "./setup-catalog.js";
 
@@ -33,6 +34,8 @@ const dom = {
   productionWarehouse: byId("production-warehouse-select"), productionWarehouseSet: byId("production-warehouse-set"),
   productionWarehouseStatus: byId("production-warehouse-status"),
   stockRows: byId("stock-rows"), stockEmpty: byId("stock-empty"), movementHistory: byId("movement-history"),
+  stockExport: byId("stock-export"), movementExport: byId("movement-export"),
+  exportStatus: byId("inventory-export-status"),
   movementMore: byId("movement-load-more"), lotHistory: byId("lot-history"),
   movementForm: byId("movement-form"), movementType: byId("movement-type"), movementProduct: byId("movement-product"),
   movementQuantity: byId("movement-quantity"), movementReason: byId("movement-reason"),
@@ -84,6 +87,7 @@ let inFlight = false;
 let workbookPreparing = false;
 let workbookDraft = null;
 let lastConfirmed = false;
+let exportBusy = false;
 
 function object(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
 function uuid(value) { return typeof value === "string" && UUID.test(value); }
@@ -206,11 +210,19 @@ async function request(path, { method = "GET", body, allowEmpty = false } = {}) 
   }
   let response;
   try { response = await fetch(path, options); }
-  catch { throw new Error("Connection lost before the server confirmed the request. Retry the same saved request."); }
+  catch {
+    throw new Error(method === "GET"
+      ? "Connection lost before the server response. Check the connection and try again."
+      : "Connection lost before the server confirmed the request. Retry the same saved request.");
+  }
   if (allowEmpty && response.status === 204) return {};
   let data;
   try { data = await response.json(); }
-  catch { throw new Error("The server response could not be read. The result is not confirmed; retry the same request."); }
+  catch {
+    throw new Error(method === "GET"
+      ? "The server response could not be read. Check the connection and try again."
+      : "The server response could not be read. The result is not confirmed; retry the same request.");
+  }
   if (!response.ok) {
     const serverMessage = object(data) && text(data.error, 500) ? data.error : "";
     const fallback = response.status === 409
@@ -218,7 +230,9 @@ async function request(path, { method = "GET", body, allowEmpty = false } = {}) 
       : response.status === 400 ? "Check the highlighted values and correct the request."
         : response.status === 401 ? "Your session expired. Sign in again as the original staff member."
           : response.status === 403 ? "Manager access or a fresh secure session is required."
-            : "The server did not accept this request. Retry the same request only after reviewing its status.";
+            : method === "GET"
+              ? "The server could not provide this data. Check the connection and try again."
+              : "The server did not accept this request. Retry the same request only after reviewing its status.";
     throw new RequestError(response.status, serverMessage || fallback);
   }
   if (!object(data)) throw new Error("The server returned an unexpected response. The result is not confirmed; retry the same request.");
@@ -260,6 +274,12 @@ function validateMovement(item) {
     && Array.isArray(item.lotAllocations) && item.lotAllocations.every((allocation) =>
       object(allocation) && uuid(allocation.lotId) && text(allocation.lotNumber, 120)
         && quantity(allocation.quantityDelta, true));
+}
+function validateExportMovement(item) {
+  return validateMovement(item) && uuid(item.id)
+    && uuidOrNull(item.movementGroupId) && CODE.test(item.productCode)
+    && text(item.productName, 120) && text(item.unit, 16)
+    && uuidOrNull(item.plannedProductId);
 }
 function validateMovementCursor(value) {
   return value === null || object(value) && uuid(value.id) && text(value.occurredAt, 40);
@@ -334,6 +354,16 @@ function updateReadOnly() {
   else dom.panel.setAttribute("aria-label", "Manager workspace");
   renderPending();
   updateStockWriteState();
+  updateExportButtons();
+}
+function updateExportButtons() {
+  const canExport = writeGate && lastConfirmed
+    && !inFlight
+    && staff?.capabilities?.includes("manage-inventory") === true
+    && warehouses.some((warehouse) => warehouse.id === dom.warehouseSelect.value && warehouse.active);
+  [dom.stockExport, dom.movementExport].forEach((button) => {
+    button.disabled = !canExport || exportBusy;
+  });
 }
 function renderPending() {
   const owned = pending && pending.actorId === staff?.userId;
@@ -739,6 +769,96 @@ function renderMovements() {
     dom.movementHistory.append(li);
   });
   dom.movementMore.hidden = !movementNextCursor;
+}
+function safeFilePart(value) {
+  return String(value).normalize("NFKD").replace(/[\u0300-\u036f]/gu, "")
+    .toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(/^-|-$/gu, "").slice(0, 60) || "warehouse";
+}
+function downloadCsv(filename, csv) {
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function exportContext(warehouseId, userId) {
+  if (staff?.userId !== userId || !staff?.capabilities?.includes("manage-inventory")
+    || !writeGate || !lastConfirmed) {
+    throw new Error("A fresh, online manager session is required. Refresh the inventory before exporting.");
+  }
+  if (dom.warehouseSelect.value !== warehouseId) {
+    throw new Error("The selected warehouse changed. Select it again and retry the export.");
+  }
+}
+async function exportWarehouse(kind) {
+  const warehouseId = dom.warehouseSelect.value;
+  const warehouse = warehouses.find((item) => item.id === warehouseId && item.active);
+  const userId = staff?.userId;
+  if (!warehouse || !userId) {
+    message("Choose an active warehouse before exporting.", "warning");
+    return;
+  }
+  if (!writeGate || !lastConfirmed || !staff?.capabilities?.includes("manage-inventory")) {
+    message("A fresh, online manager session is required. Refresh the inventory before exporting.", "warning");
+    return;
+  }
+  if (exportBusy) return;
+
+  exportBusy = true;
+  updateExportButtons();
+  dom.exportStatus.textContent = `Loading ${kind === "stock" ? "current stock" : "complete movement history"} from ${warehouse.name}…`;
+  try {
+    let csv;
+    let count;
+    if (kind === "stock") {
+      const body = await request(`${INVENTORY}/stock?warehouseId=${encodeURIComponent(warehouseId)}`);
+      if (!Array.isArray(body.stock) || !body.stock.every(validateStock)) {
+        throw new Error("The server returned an invalid stock list.");
+      }
+      exportContext(warehouseId, userId);
+      count = body.stock.length;
+      csv = buildStockCsv(body.stock, warehouse);
+    } else {
+      const movementsForExport = await collectAllMovementPages({
+        warehouseId,
+        pageSize: 100,
+        validateMovement: validateExportMovement,
+        validateCursor: validateMovementCursor,
+        fetchPage: async ({ warehouseId: id, limit, cursor }) => {
+          const params = new URLSearchParams({ warehouseId: id, limit: String(limit) });
+          if (cursor) {
+            params.set("beforeAt", cursor.occurredAt);
+            params.set("beforeId", cursor.id);
+          }
+          const body = await request(`${INVENTORY}/movements?${params.toString()}`);
+          return { movements: body.movements, nextCursor: body.nextCursor };
+        },
+      });
+      exportContext(warehouseId, userId);
+      count = movementsForExport.length;
+      csv = buildMovementCsv(movementsForExport, warehouse);
+    }
+
+    exportContext(warehouseId, userId);
+    const date = new Date().toISOString().slice(0, 10);
+    downloadCsv(`warehouse-${safeFilePart(warehouse.name)}-${kind}-${date}.csv`, csv);
+    const recordLabel = kind === "stock" ? "stock row" : "movement";
+    dom.exportStatus.textContent = count
+      ? `Downloaded ${count} ${recordLabel}${count === 1 ? "" : "s"} for ${warehouse.name}.`
+      : `No ${kind === "stock" ? "stock rows" : "movements"} were found for ${warehouse.name}. An empty CSV was downloaded.`;
+    clearMessage();
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "The server response could not be read.";
+    dom.exportStatus.textContent = "Export failed. No file was downloaded.";
+    message(`${kind === "stock" ? "Stock" : "Movement history"} export failed; no file was downloaded. ${detail}`, "error");
+  } finally {
+    exportBusy = false;
+    updateExportButtons();
+  }
 }
 function renderCountHistory() {
   dom.openingHistory.replaceChildren();
@@ -1682,8 +1802,11 @@ function bind() {
     if (item) void actOnImport(item, "apply");
   });
   dom.warehouseForm.addEventListener("submit", createWarehouse);
+  dom.stockExport.addEventListener("click", () => { void exportWarehouse("stock"); });
+  dom.movementExport.addEventListener("click", () => { void exportWarehouse("movements"); });
   dom.productionWarehouseSet.addEventListener("click", () => { void setProductionWarehouse(); });
   dom.warehouseSelect.addEventListener("change", () => {
+    dom.exportStatus.textContent = "";
     movementNextCursor = null;
     movementWarehouseId = null;
     updateStockWriteState();
