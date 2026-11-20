@@ -193,7 +193,7 @@ export function parseSetupImportCsv(kind, text) {
   return records;
 }
 
-export function parseOpeningCountCsv(text, activeProductCodes) {
+export function parseOpeningCountCsv(text, activeProductCodes, { requireAll = true } = {}) {
   if (!Array.isArray(activeProductCodes)) throw new TypeError("Active product codes are required.");
   const rows = validateCsvHeaders(parseCsvRows(text), ["product_code", "quantity"]);
   const seen = new Set();
@@ -214,7 +214,7 @@ export function parseOpeningCountCsv(text, activeProductCodes) {
   const unknown = counts.find((item) => !known.has(item.productCode.toLocaleLowerCase("en-US")));
   if (unknown) fail(`Product code "${unknown.productCode}" is not active in V2.`, null, "product_code");
   const missing = activeProductCodes.filter((code) => !seen.has(String(code).toLocaleLowerCase("en-US")));
-  if (missing.length > 0) {
+  if (requireAll && missing.length > 0) {
     fail(`Count every active product, including zero quantities. Missing: ${missing.slice(0, 10).join(", ")}${missing.length > 10 ? ", …" : ""}.`);
   }
   return counts;

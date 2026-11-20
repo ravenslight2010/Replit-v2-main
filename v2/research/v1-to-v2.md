@@ -47,7 +47,7 @@ physical devices, or establish published V1 behavior.
 ## V2 implementation update
 
 The capability table above records the V2 source state on 2026-11-10. The
-following 2026-11-16 update supersedes only its V2 starting-point column; the
+following dated updates supersede only the V2 starting-point column; the
 V1 evidence, limitations, and cutover exclusions remain unchanged.
 
 - V2 now has an executable username/password server, run lifecycle, and
@@ -83,6 +83,27 @@ customer-data transfer:
   unsupported layouts, and ambiguous mappings are not automatically applied.
   Synthetic parser, API, browser, and disposable-database evidence is required;
   no V1 data was changed or transferred.
+
+### Inventory workflow update — 2026-11-19
+
+The inventory workflow matrix below reflects the V2 implementation and
+disposable-database/browser checks in this task. It does not claim production
+cutover approval or physical iOS/Android verification.
+
+| Workflow | V1-to-V2 status | V2 behavior and boundary |
+|---|---|---|
+| Lot tracking | **Supported, bounded** | V2 receipts create lots with optional supplied lot/source references; preparation creates an output lot; FIFO use and warehouse transfers preserve lot allocation lineage. Existing positive V2 balances receive a named V2-only baseline lot. No V1 balance or history is copied. |
+| Receiving | **Supported** | A manager records product, warehouse, positive quantity, reason, actor, server time, and optional lot/source reference. Receipt, lot, balance, ledger entry, and idempotency receipt commit together. |
+| Preparation / premix | **Supported when explicitly linked** | Managers map approved ingredient and mix identities to raw/prepared products and stock-units-per-pound conversions. V2 calculates component consumption from each linked mix's `perBatchLbs` formula, consumes raw stock, and receives prepared stock as a separate product/lot. Missing mappings or non-positive raw availability block the operation. |
+| Freezer pulls | **Partially supported** | Managers can transfer stock between warehouses, including a freezer and production warehouse, with lot lineage. V2 does not yet provide the V1-style planned freezer-pull queue or demand-driven pull workflow; imported freezer-pull setup records alone do not create stock movements. |
+| Staged supply / substitutions | **Supported** | A run reader can see eligible product identities; an authorized operator or manager stages an alternate product only when its stock unit matches a product in the frozen run plan. Stock is reserved and visible as staged versus available. Only run completion consumes it; unused quantity is released. Exact actual and planned product identities remain in the receipt. The browser journey exercises a prepared-for-raw substitution. |
+| Cycle counts | **Supported** | Managers stage partial physical counts, review current balance revisions and variances, then explicitly acknowledge and apply. A changed revision marks the count stale; the manager must stage and review a fresh count. Absolute quantities are never delta-rebased. |
+| Finished-case adjustments | **Partially supported** | A manager can apply a signed, reasoned delta to any product, including finished cases; it is actor/time-stamped and ledgered. There is no separate finished-case return, spoilage, or waste policy, and no automatic adjustment from unconfirmed client state. |
+| Inventory reconciliation | **Supported in disposable checks** | The append-only movement ledger is the balance source; tests reconcile ledger sums, lot totals, no-negative-stock behavior, cross-warehouse transfer, and run completion. Shortages remain explicit in the run receipt. Missing unit mappings stay visibly blocked. |
+
+The selected preparation rule is the linked mix formula, not a guessed yield or
+manual fixed output. This choice is now reflected in the API and manager
+workflow. Opening stock still requires an owner-reviewed new physical count.
 
 ## Status of the planning records
 

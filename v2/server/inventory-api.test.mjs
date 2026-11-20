@@ -148,6 +148,85 @@ test("reviewed die defaults are manager-only, strict, and attributed idempotent 
   assert.equal(noCsrf.calls.length, 0);
 });
 
+test("inventory parity routes enforce run-scoped access and validate manager commands", async (t) => {
+  const operator = await withApi(t, {
+    auth: { ...MANAGER, capabilities: ["run.read", "run.lifecycle.command"] },
+    query: async () => ({ rows: [{ result: [
+      { id: "10000000-0000-4000-8000-000000000010", code: "FLOUR", name: "Flour", unit: "lb" },
+    ] }] }),
+  });
+  const products = await send(operator.baseUrl, "/api/v2/inventory/run-products");
+  assert.equal(products.status, 200);
+  assert.equal((await products.json()).products[0].code, "FLOUR");
+  assert.match(operator.calls[0].text, /list_run_inventory_products/u);
+
+  const staged = await send(operator.baseUrl, "/api/v2/inventory/run-staged-supplies?runId=10000000-0000-4000-8000-000000000011", {
+    method: "POST",
+    body: {
+      commandId: "run-stage-1",
+      runId: "10000000-0000-4000-8000-000000000011",
+      plannedProductCode: "FLOUR",
+      actualProductCode: "ALT-FLOUR",
+      quantity: "5",
+      reason: "Approved product substitution",
+    },
+  });
+  assert.equal(staged.status, 400, "write routes must reject query parameters");
+  assert.equal(operator.calls.length, 1);
+
+  const stageWrite = await send(operator.baseUrl, "/api/v2/inventory/run-staged-supplies", {
+    method: "POST",
+    body: {
+      commandId: "run-stage-1",
+      runId: "10000000-0000-4000-8000-000000000011",
+      plannedProductCode: "FLOUR",
+      actualProductCode: "ALT-FLOUR",
+      quantity: "5",
+      reason: "Approved product substitution",
+    },
+  });
+  assert.equal(stageWrite.status, 201);
+  assert.match(operator.calls[1].text, /stage_run_inventory_supply/u);
+  assert.equal(operator.calls[1].values[2], "run-stage-1");
+  assert.match(operator.calls[1].values[3], /^[0-9a-f]{64}$/u);
+
+  const deniedManagerRead = await withApi(t, {
+    auth: { ...MANAGER, capabilities: ["run.read"] },
+  });
+  const lotsDenied = await send(deniedManagerRead.baseUrl, `/api/v2/inventory/lots?warehouseId=${WAREHOUSE_ID}`);
+  assert.equal(lotsDenied.status, 403);
+  assert.equal(deniedManagerRead.calls.length, 0);
+
+  const prep = await withApi(t, {
+    query: async () => ({ rows: [{ result: {
+      outcome: "prepared", preparationId: "10000000-0000-4000-8000-000000000012",
+      replayed: false, preparedQuantity: "40", preparedUnit: "lb",
+    } }] }),
+  });
+  const prepResult = await send(prep.baseUrl, "/api/v2/inventory/preparations", {
+    method: "POST",
+    body: {
+      commandId: "prep-1",
+      mixCode: "MIX-1",
+      sourceWarehouseId: WAREHOUSE_ID,
+      outputWarehouseId: WAREHOUSE_ID,
+      batchCount: "2",
+      lotNumber: "MIX-LOT-1",
+      sourceReference: "Mix record 12",
+      reason: "Prepare linked mix",
+    },
+  });
+  assert.equal(prepResult.status, 201);
+  assert.match(prep.calls[0].text, /prepare_inventory_mix/u);
+
+  const badCycle = await send(prep.baseUrl, "/api/v2/inventory/cycle-counts", {
+    method: "POST",
+    body: { requestId: "count-1", warehouseId: WAREHOUSE_ID, csv: "product_code,quantity\nA,1\n", reason: "No" },
+  });
+  assert.equal(badCycle.status, 400, "cycle-count reason must meet the shared safe-input minimum");
+  assert.equal(prep.calls.length, 1);
+});
+
 test("setup import CSV is validated before staging and request hash is server-computed", async (t) => {
   const staged = {
     outcome: "staged",

@@ -401,6 +401,30 @@
             <div id="schedule-import-preview" class="schedule-import-preview" aria-live="polite" hidden></div>
           </section>
         </section>
+        <section class="station-panel run-supply-panel" id="run-supply-panel" aria-labelledby="run-supply-heading" hidden>
+          <div class="station-heading-row">
+            <div>
+              <p class="eyebrow">RUN-BOUND INVENTORY</p>
+              <h2 id="run-supply-heading">Stage a supply substitution</h2>
+              <p class="station-intro">Reserve a same-unit substitute for this run. Completion consumes only the actual stock used; unused staged stock is released.</p>
+            </div>
+            <span class="station-revision" id="run-supply-status" role="status" aria-live="polite"></span>
+          </div>
+          <form id="run-supply-form" class="station-form run-supply-form">
+            <div class="station-field-groups">
+              <label class="field" for="run-supply-planned"><span>Planned product</span><select id="run-supply-planned" required></select></label>
+              <label class="field" for="run-supply-actual"><span>Stock to stage</span><select id="run-supply-actual" required></select></label>
+              <label class="field" for="run-supply-quantity"><span>Quantity in matching stock units</span><input id="run-supply-quantity" type="text" inputmode="decimal" maxlength="20" required /></label>
+              <label class="field" for="run-supply-reason"><span>Reason</span><input id="run-supply-reason" type="text" minlength="3" maxlength="500" required /></label>
+            </div>
+            <div class="station-form-actions">
+              <button class="button button-primary" id="run-supply-submit" type="submit">Stage supply</button>
+              <button class="button button-secondary" id="run-supply-retry" type="button" hidden>Retry same request</button>
+            </div>
+          </form>
+          <h3 class="manager-subheading">Staged and completed supplies</h3>
+          <ul class="manager-list" id="run-supply-history" aria-live="polite"></ul>
+        </section>
         <section class="manager-tools" id="manager-tools" aria-labelledby="manager-tools-title" hidden>
           <div class="manager-tools-heading">
             <div>
@@ -595,11 +619,13 @@
               <div class="inventory-table-wrap">
                 <table class="inventory-table">
                   <caption>Current product stock in the selected warehouse</caption>
-                  <thead><tr><th scope="col">Product</th><th scope="col">On hand</th></tr></thead>
+                  <thead><tr><th scope="col">Product</th><th scope="col">On hand</th><th scope="col">Staged</th><th scope="col">Available</th></tr></thead>
                   <tbody id="stock-rows"></tbody>
                 </table>
               </div>
               <p class="manager-empty" id="stock-empty" hidden>No active products yet. Import products before recording stock.</p>
+              <h4 class="manager-subheading">Lots in this warehouse</h4>
+              <ul class="manager-list" id="lot-history" aria-live="polite"></ul>
               <h4 class="manager-subheading">Recent stock movements</h4>
               <ul class="manager-list" id="movement-history" aria-live="polite"></ul>
               <button class="button button-secondary button-small" id="movement-load-more" type="button" hidden>Load older movements</button>
@@ -625,6 +651,14 @@
                   <input id="movement-quantity" name="quantity" type="text" inputmode="decimal" maxlength="20" placeholder="e.g. 12.5" aria-describedby="movement-quantity-help" required />
                 </label>
                 <p class="field-hint" id="movement-quantity-help">Up to six decimal places. Adjustments may be positive or negative; receipts must be positive.</p>
+                <label class="field" for="movement-lot">
+                  <span>Lot number</span>
+                  <input id="movement-lot" name="lotNumber" type="text" maxlength="120" />
+                </label>
+                <label class="field" for="movement-source">
+                  <span>Source or supplier reference</span>
+                  <input id="movement-source" name="sourceReference" type="text" maxlength="200" />
+                </label>
                 <label class="field" for="movement-reason">
                   <span>Reason</span>
                   <input id="movement-reason" name="reason" type="text" minlength="3" maxlength="500" required />
@@ -662,6 +696,73 @@
                 <p class="manager-help" id="transfer-stock-gate" role="status" hidden></p>
                 <button class="button button-primary" id="transfer-submit" type="submit">Transfer stock</button>
               </form>
+            </section>
+
+            <section class="manager-card manager-card-wide" aria-labelledby="prep-link-heading">
+              <p class="eyebrow">EXPLICIT STOCK MAPPINGS</p>
+              <h3 id="prep-link-heading">Link ingredients and prepared mixes</h3>
+              <p class="manager-help">Preparation uses the saved mix formula in pounds per batch. Every ingredient and prepared-stock output needs an explicit product and stock-unit conversion; unresolved links stay blocked.</p>
+              <form id="preparation-link-form" class="manager-form manager-inline-form">
+                <label class="field" for="preparation-link-kind">
+                  <span>Setup type</span>
+                  <select id="preparation-link-kind" required>
+                    <option value="ingredient">Ingredient</option>
+                    <option value="mix">Prepared mix</option>
+                  </select>
+                </label>
+                <label class="field" for="preparation-link-source">
+                  <span>Setup record</span>
+                  <select id="preparation-link-source" required></select>
+                </label>
+                <label class="field" for="preparation-link-product">
+                  <span>Inventory product</span>
+                  <select id="preparation-link-product" required></select>
+                </label>
+                <label class="field" for="preparation-link-rate">
+                  <span>Stock units per pound</span>
+                  <input id="preparation-link-rate" type="text" inputmode="decimal" maxlength="20" value="1" required />
+                </label>
+                <button class="button button-primary" type="submit">Save link</button>
+              </form>
+              <ul class="manager-list" id="preparation-link-status" aria-live="polite"></ul>
+            </section>
+
+            <section class="manager-card" aria-labelledby="preparation-heading">
+              <p class="eyebrow">PREPARATION / PREMIX</p>
+              <h3 id="preparation-heading">Prepare from a linked mix</h3>
+              <form id="preparation-form" class="manager-form">
+                <label class="field" for="preparation-mix"><span>Prepared mix</span><select id="preparation-mix" required></select></label>
+                <label class="field" for="preparation-source-warehouse"><span>Raw-stock warehouse</span><select id="preparation-source-warehouse" required></select></label>
+                <label class="field" for="preparation-output-warehouse"><span>Prepared-stock warehouse</span><select id="preparation-output-warehouse" required></select></label>
+                <label class="field" for="preparation-batches"><span>Mix batches</span><input id="preparation-batches" type="text" inputmode="decimal" maxlength="20" placeholder="e.g. 2" required /></label>
+                <label class="field" for="preparation-lot"><span>Output lot number</span><input id="preparation-lot" type="text" maxlength="120" /></label>
+                <label class="field" for="preparation-source"><span>Source reference</span><input id="preparation-source" type="text" maxlength="200" /></label>
+                <label class="field" for="preparation-reason"><span>Reason</span><input id="preparation-reason" type="text" minlength="3" maxlength="500" required /></label>
+                <p class="manager-help" id="preparation-readiness" role="status"></p>
+                <button class="button button-primary" type="submit">Record preparation</button>
+              </form>
+              <h4 class="manager-subheading">Recent preparation records</h4>
+              <ul class="manager-list" id="preparation-history" aria-live="polite"></ul>
+            </section>
+
+            <section class="manager-card manager-card-wide" aria-labelledby="cycle-count-heading">
+              <p class="eyebrow">REVIEWED PHYSICAL CORRECTIONS</p>
+              <h3 id="cycle-count-heading">Cycle count</h3>
+              <p class="manager-help">Counts may cover selected products. Review compares every row with a fresh balance revision. If anything changes before Apply, stage a new count; absolute counts are never rebased.</p>
+              <form id="cycle-count-form" class="manager-form manager-inline-form">
+                <label class="field" for="cycle-count-warehouse"><span>Warehouse</span><select id="cycle-count-warehouse" required></select></label>
+                <label class="field" for="cycle-count-file"><span>Count CSV</span><input id="cycle-count-file" type="file" accept=".csv,text/csv" required /></label>
+                <label class="field" for="cycle-count-reason"><span>Reason</span><input id="cycle-count-reason" type="text" minlength="3" maxlength="500" required /></label>
+                <button class="button button-primary" type="submit">Stage cycle count</button>
+              </form>
+              <p class="csv-template"><span>Columns: <code>product_code,quantity</code>. Include only products physically counted; zero is an explicit count.</span></p>
+              <div class="manager-preview" id="cycle-count-preview" aria-live="polite" hidden></div>
+              <div class="manager-actions" id="cycle-count-actions" hidden>
+                <button class="button button-secondary" id="cycle-count-review" type="button">Review fresh balances</button>
+                <button class="button button-primary" id="cycle-count-apply" type="button" disabled>Confirm and apply count</button>
+              </div>
+              <h4 class="manager-subheading">Recent cycle counts</h4>
+              <ul class="manager-list" id="cycle-count-history" aria-live="polite"></ul>
             </section>
 
             <section class="manager-card manager-card-wide" aria-labelledby="opening-count-heading">

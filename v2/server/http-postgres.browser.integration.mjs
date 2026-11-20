@@ -14,6 +14,7 @@ const webkit = process.env.V2_WEBKIT_PLAYWRIGHT_MODULE
 
 const MANAGER_USERNAME = "V2IntegrationManager";
 const MANAGER_PASSWORD = "v2-test-manager-password";
+const csvCell = (value) => `"${String(value).replaceAll('"', '""')}"`;
 
 async function authenticateBrowserContext(baseUrl, context) {
   const unauthenticated = await fetch(`${baseUrl}/api/v2/auth/session`);
@@ -40,6 +41,31 @@ async function authenticateBrowserContext(baseUrl, context) {
   await context.addCookies(cookies);
 }
 
+async function inventoryPanelDimensions(page) {
+  return page.locator("#manager-tools").evaluate((container) => {
+    const panel = container.getBoundingClientRect();
+    const rightEdge = panel.left + container.clientWidth;
+    return {
+      width: container.clientWidth,
+      offenders: [...container.querySelectorAll("*")].map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          tag: element.tagName,
+          id: element.id,
+          className: typeof element.className === "string" ? element.className : "",
+          leftOverflow: Math.round(panel.left - rect.left),
+          rightOverflow: Math.round(rect.right - rightEdge),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        };
+      }).filter((element) => element.width > 0 && element.height > 0
+        && (element.leftOverflow > 2 || element.rightOverflow > 2))
+        .sort((a, b) => Math.max(b.leftOverflow, b.rightOverflow)
+          - Math.max(a.leftOverflow, a.rightOverflow)).slice(0, 8),
+    };
+  });
+}
+
 async function main() {
   const databaseUrl = process.env.V2_DATABASE_URL;
   if (!databaseUrl) {
@@ -55,6 +81,7 @@ async function main() {
   let recoveryContext;
   let webkitContext;
   let webkitManagerContext;
+  let webkitManagerPage;
   const evidenceDir = join(tmpdir(), `v2-manager-inventory-${randomUUID()}`);
   try {
     await mkdir(evidenceDir, { recursive: true });
@@ -317,7 +344,7 @@ async function main() {
     }
     if (webkitBrowser) {
       webkitManagerContext = await webkitBrowser.newContext({ viewport: { width: 1280, height: 900 } });
-      const webkitManagerPage = await webkitManagerContext.newPage();
+      webkitManagerPage = await webkitManagerContext.newPage();
       watchPage(webkitManagerPage);
       await webkitManagerPage.goto(baseUrl);
       await webkitManagerPage.locator("#auth-username").fill(MANAGER_USERNAME);
@@ -381,6 +408,13 @@ async function main() {
     const suffix = randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
     const productCode = `UI${suffix}`;
     const productName = `Browser Test Product ${suffix}`;
+    const rawCode = `RAW${suffix}`;
+    const preparedCode = `PREP${suffix}`;
+    const boxCode = `BOX${suffix}`;
+    const ingredientCode = `ING${suffix}`;
+    const mixCode = `MIX${suffix}`;
+    const recipeCode = `REC${suffix}`;
+    const productionSetupCode = `LINE${suffix}`;
     const firstWarehouse = `Browser Test Main ${suffix}`;
     const secondWarehouse = `Browser Test Overflow ${suffix}`;
 
@@ -388,7 +422,9 @@ async function main() {
     await page.locator("#import-file").setInputFiles({
       name: "browser-test-products.csv",
       mimeType: "text/csv",
-      buffer: Buffer.from(`code,name,unit\n${productCode},${productName},each\n`),
+      buffer: Buffer.from(
+        `code,name,unit\n${productCode},${productName},each\n${rawCode},Browser raw ingredient ${suffix},lb\n${preparedCode},Browser prepared mix ${suffix},lb\n${boxCode},Browser package ${suffix},each\n`,
+      ),
     });
     await page.getByRole("button", { name: "Validate and review" }).click();
     await page.locator("#import-preview").getByText(`Staged · products`).waitFor();
@@ -398,6 +434,78 @@ async function main() {
     await page.waitForFunction((code) =>
       [...document.querySelectorAll("#movement-product option")].some((option) => option.value === code),
     productCode);
+
+    await page.locator("#setup-catalog-family").selectOption("ingredients");
+    await page.locator("#setup-catalog-file").setInputFiles({
+      name: "browser-test-ingredients.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(
+        `code,name,categories_json,allergens_json,allergens_reviewed,merged_into_code,enabled\n${ingredientCode},Browser raw ingredient ${suffix},"[]","[]",true,,true\n`,
+      ),
+    });
+    await page.getByRole("button", { name: "Validate and stage for review" }).click();
+    await page.locator("#setup-catalog-preview").getByText("Validated setup · review before applying").waitFor();
+    await page.getByRole("button", { name: "Apply reviewed setup" }).click();
+    await page.locator("#setup-catalog-history").getByText("ingredients · 1 rows · applied").first().waitFor();
+
+    const components = JSON.stringify([{
+      ingredientName: `Browser raw ingredient ${suffix}`,
+      ingredientCode,
+      perPizzaOz: 0.1,
+      perBatchLbs: 2,
+    }]).replaceAll('"', '""');
+    await page.locator("#setup-catalog-family").selectOption("mixes");
+    await page.locator("#setup-catalog-file").setInputFiles({
+      name: "browser-test-mixes.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(
+        `code,name,brand,flavor,batch_size_lbs,days_early,notes,is_prep,enabled,components_json\n${mixCode},Browser prepared mix ${suffix},Test,Plain,20,0,,true,true,"${components}"\n`,
+      ),
+    });
+    await page.getByRole("button", { name: "Validate and stage for review" }).click();
+    await page.locator("#setup-catalog-preview").getByText("Validated setup · review before applying").waitFor();
+    await page.getByRole("button", { name: "Apply reviewed setup" }).click();
+    await page.locator("#setup-catalog-history").getByText("mixes · 1 rows · applied").first().waitFor();
+
+    await page.locator("#import-kind").selectOption("recipes");
+    await page.locator("#import-file").setInputFiles({
+      name: "browser-test-recipes.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from([
+        "code,name,product_code,definition_json",
+        [recipeCode, `Browser recipe ${suffix}`, productCode, JSON.stringify({
+          station_key: "dough",
+          ingredients: [{ product_code: rawCode, quantity: 2, unit: "lb" }],
+        })].map(csvCell).join(","),
+      ].join("\n") + "\n"),
+    });
+    await page.getByRole("button", { name: "Validate and review" }).click();
+    await page.locator("#import-preview").getByText("Staged · recipes").waitFor();
+    await page.getByRole("button", { name: "Apply reviewed import" }).click();
+    await page.locator("#import-history").getByText("recipes · applied").first().waitFor();
+
+    await page.locator("#import-kind").selectOption("production-setups");
+    await page.locator("#import-file").setInputFiles({
+      name: "browser-test-production-setups.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from([
+        "code,name,product_code,config_json",
+        [productionSetupCode, `Browser setup ${suffix}`, productCode, JSON.stringify({
+          recipe_codes: [recipeCode],
+          packaging_per_case: [{ product_code: boxCode, quantity: 1, unit: "each" }],
+        })].map(csvCell).join(","),
+      ].join("\n") + "\n"),
+    });
+    await page.getByRole("button", { name: "Validate and review" }).click();
+    await page.locator("#import-preview").getByText("Staged · production-setups").waitFor();
+    await page.getByRole("button", { name: "Apply reviewed import" }).click();
+    await page.locator("#import-history").getByText("production-setups · applied").first().waitFor();
+
+    await page.reload();
+    await page.locator("#manager-tools:not([hidden])").waitFor();
+    await page.waitForFunction((code) =>
+      [...document.querySelectorAll("#movement-product option")].some((option) => option.value === code),
+    rawCode);
 
     async function createWarehouse(name) {
       await page.locator("#warehouse-name").fill(name);
@@ -462,6 +570,8 @@ async function main() {
     });
     await page.locator("#movement-quantity").fill("4");
     await page.locator("#movement-reason").fill(`Browser receipt ${suffix}`);
+    await page.locator("#movement-lot").fill(`CASE-LOT-${suffix}`);
+    await page.locator("#movement-source").fill(`Delivery ${suffix}`);
     await page.getByRole("button", { name: "Record stock change" }).click();
     await page.locator("#movement-history").getByText(`Browser receipt ${suffix}`).waitFor();
     await page.waitForFunction(() =>
@@ -477,6 +587,107 @@ async function main() {
       }));
     });
 
+    await page.locator("#movement-product").selectOption(rawCode);
+    await page.locator("#movement-quantity").fill("20");
+    await page.locator("#movement-reason").fill(`Raw receipt ${suffix}`);
+    await page.locator("#movement-lot").fill(`RAW-LOT-${suffix}`);
+    await page.locator("#movement-source").fill(`Raw delivery ${suffix}`);
+    await page.getByRole("button", { name: "Record stock change" }).click();
+    await page.locator("#movement-history").getByText(`Raw receipt ${suffix}`).waitFor();
+
+    await page.locator("#preparation-link-kind").selectOption("ingredient");
+    await page.locator("#preparation-link-source").selectOption(ingredientCode);
+    await page.locator("#preparation-link-product").selectOption(rawCode);
+    await page.locator("#preparation-link-rate").fill("1");
+    await page.getByRole("button", { name: "Save link" }).click();
+    await page.locator("#preparation-link-status").getByText(`Linked to Browser raw ingredient ${suffix}`).waitFor();
+
+    await page.locator("#preparation-link-kind").selectOption("mix");
+    await page.locator("#preparation-link-source").selectOption(mixCode);
+    await page.locator("#preparation-link-product").selectOption(preparedCode);
+    await page.locator("#preparation-link-rate").fill("1");
+    await page.getByRole("button", { name: "Save link" }).click();
+    await page.locator("#preparation-link-status").getByText(`Linked to Browser prepared mix ${suffix}`).waitFor();
+
+    await page.locator("#preparation-mix").selectOption(mixCode);
+    await page.locator("#preparation-source-warehouse").selectOption({ label: firstWarehouse });
+    await page.locator("#preparation-output-warehouse").selectOption({ label: firstWarehouse });
+    await page.locator("#preparation-batches").fill("2");
+    await page.locator("#preparation-lot").fill(`PREP-LOT-${suffix}`);
+    await page.locator("#preparation-source").fill(`Mix sheet ${suffix}`);
+    await page.locator("#preparation-reason").fill(`Prepare two batches ${suffix}`);
+    await page.waitForFunction(() => {
+      const button = document.querySelector("#preparation-form button[type='submit']");
+      return button instanceof HTMLButtonElement && !button.disabled;
+    }, null, { timeout: 7000 }).catch(async () => {
+      const setupResponse = await page.evaluate(async () => {
+        const response = await fetch("/api/v2/inventory/preparation-setup");
+        return response.json();
+      });
+      throw new Error(JSON.stringify({
+        readiness: await page.locator("#preparation-readiness").textContent(),
+        selectedMix: await page.locator("#preparation-mix").inputValue(),
+        mixOptions: await page.locator("#preparation-mix").locator("option").allTextContents(),
+        ingredientStatus: await page.locator("#preparation-link-status").innerText(),
+        setupMix: setupResponse.mixes?.find((item) => item.code === mixCode),
+        selectedWarehouses: {
+          source: await page.locator("#preparation-source-warehouse").inputValue(),
+          output: await page.locator("#preparation-output-warehouse").inputValue(),
+        },
+        failedResponses,
+      }));
+    });
+    await page.getByRole("button", { name: "Record preparation" }).click();
+    await page.locator("#preparation-history").getByText(`40.000000 lb ${preparedCode}`).waitFor({ timeout: 10000 }).catch(async () => {
+      throw new Error(JSON.stringify({
+        managerMessage: await page.locator("#manager-error").textContent(),
+        preparationHistory: await page.locator("#preparation-history").innerText(),
+        preparationReadiness: await page.locator("#preparation-readiness").textContent(),
+        pendingInventoryRequest: await page.evaluate(() => localStorage.getItem("fieldline:v2:inventory-pending")),
+        failedResponses,
+      }));
+    });
+    await page.waitForFunction((code) => {
+      const row = [...document.querySelectorAll("#stock-rows tr")].find((item) => item.textContent?.includes(code));
+      return row?.querySelector(".quantity-cell")?.textContent === "16.000000";
+    }, rawCode);
+
+    await page.getByTestId("input-run-label").fill(`Substitution run ${suffix}`);
+    await page.getByTestId("input-target-cases").fill("1");
+    await page.getByTestId("select-run-product").selectOption(productCode);
+    await page.waitForFunction((setupCode) =>
+      [...document.querySelectorAll("#run-production-setup option")].some((option) => option.value === setupCode),
+    productionSetupCode, { timeout: 10000 }).catch(async () => {
+      const catalog = await page.evaluate(async () => {
+        const response = await fetch("/api/v2/runs/products");
+        return { status: response.status, body: await response.json() };
+      });
+      throw new Error(JSON.stringify({
+        setupOptions: await page.locator("#run-production-setup").locator("option").allTextContents(),
+        productOptions: await page.locator("#run-product").locator("option").allTextContents(),
+        runProduct: catalog.body.products?.find((item) => item.code === productCode),
+        failedResponses,
+      }));
+    });
+    await page.getByTestId("select-run-production-setup").selectOption(productionSetupCode);
+    await page.getByTestId("button-create-run").click();
+    await page.locator("#run-supply-panel:not([hidden])").waitFor();
+    await page.locator("#run-supply-planned").selectOption(rawCode);
+    await page.locator("#run-supply-actual").selectOption(preparedCode);
+    await page.locator("#run-supply-quantity").fill("2");
+    await page.locator("#run-supply-reason").fill(`Use prepared substitute ${suffix}`);
+    await page.getByRole("button", { name: "Stage supply" }).click();
+    await page.getByRole("status").getByText("Supply changes are recorded against this run.").waitFor();
+    await page.locator("#run-supply-history").getByText(
+      `Browser prepared mix ${suffix} for Browser raw ingredient ${suffix}`,
+    ).waitFor().catch(async () => {
+      throw new Error(JSON.stringify({
+        stagedSupplyHistory: await page.locator("#run-supply-history").innerText(),
+        runSupplyStatus: await page.locator("#run-supply-status").textContent(),
+        failedResponses,
+      }));
+    });
+
     await page.locator("#transfer-from").selectOption({ label: firstWarehouse });
     await page.locator("#transfer-to").selectOption({ label: secondWarehouse });
     await page.locator("#transfer-product").selectOption(productCode);
@@ -484,16 +695,42 @@ async function main() {
     await page.locator("#transfer-reason").fill(`Browser transfer ${suffix}`);
     await page.getByRole("button", { name: "Transfer stock" }).click();
     await page.locator("#movement-history").getByText(`Browser transfer ${suffix}`).waitFor();
-    await page.locator("#stock-rows").getByText("14.000000", { exact: true }).waitFor();
+    await page.waitForFunction((code) => {
+      const row = [...document.querySelectorAll("#stock-rows tr")].find((item) => item.textContent?.includes(code));
+      return row?.querySelector(".quantity-cell")?.textContent === "14.000000";
+    }, productCode);
     await page.screenshot({ path: join(evidenceDir, "manager-inventory-after-transfer.png"), fullPage: true });
 
+    await page.locator("#cycle-count-warehouse").selectOption({ label: secondWarehouse });
+    await page.locator("#cycle-count-file").setInputFiles({
+      name: "browser-test-cycle-count.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(`product_code,quantity\n${productCode},1\n`),
+    });
+    await page.locator("#cycle-count-reason").fill(`Verified cycle count ${suffix}`);
+    await page.getByRole("button", { name: "Stage cycle count" }).click();
+    await page.locator("#cycle-count-preview").getByText("staged · 1 counted products").waitFor();
+    await page.getByRole("button", { name: "Review fresh balances" }).click();
+    await page.locator("#cycle-count-preview").getByText("reviewed · 1 counted products").waitFor();
+    await page.getByRole("button", { name: "Confirm and apply count" }).click();
+    await page.locator("#cycle-count-preview").getByText("applied · 1 counted products").waitFor();
+    await page.locator("#cycle-count-history").getByText(`${secondWarehouse} · applied`).waitFor();
+
     await page.locator("#warehouse-select").selectOption({ label: secondWarehouse });
-    await page.locator("#stock-rows").getByText("2.000000", { exact: true }).waitFor();
+    await page.waitForFunction((code) => {
+      const row = [...document.querySelectorAll("#stock-rows tr")].find((item) => item.textContent?.includes(code));
+      return row?.querySelector(".quantity-cell")?.textContent === "1.000000";
+    }, productCode);
     await page.reload();
     await page.locator("#manager-tools:not([hidden])").waitFor();
     await page.locator("#warehouse-select").selectOption({ label: secondWarehouse });
-    await page.locator("#stock-rows").getByText("2.000000", { exact: true }).waitFor();
+    await page.waitForFunction((code) => {
+      const row = [...document.querySelectorAll("#stock-rows tr")].find((item) => item.textContent?.includes(code));
+      return row?.querySelector(".quantity-cell")?.textContent === "1.000000";
+    }, productCode);
     await page.locator("#opening-count-history").getByText(`${secondWarehouse} · applied`).waitFor();
+    await page.locator("#preparation-history").getByText(`40.000000 lb ${preparedCode}`).waitFor();
+    await page.locator("#cycle-count-history").getByText(`${secondWarehouse} · applied`).waitFor();
     await page.screenshot({ path: join(evidenceDir, "manager-inventory-after-reload.png"), fullPage: true });
 
     const scheduleDate = "2035-04-16";
@@ -556,12 +793,50 @@ async function main() {
 
     assert.deepEqual(errors, [], "manager recovery, inventory, die-default, and schedule journeys should have no browser or server errors");
     assert.ok(
-      failedResponses.length >= 2 && failedResponses.every((response) => response === "401 /api/v2/auth/session"),
-      "only expected unauthenticated session challenges should be rejected",
+      failedResponses.length > 0 && failedResponses.every((response) => response === "401 /api/v2/auth/session"),
+      `only unauthenticated session challenges should be rejected; received: ${failedResponses.join(", ")}`,
     );
     console.log("V2 authenticated Chromium journeys passed: reviewed die defaults, switch-aware run snapshot, inventory, schedule convergence, and reload persistence. Responsive emulation passed at desktop, phone, tablet portrait, and tablet landscape sizes.");
     console.log(`Password recovery browser coverage: Chromium PASS across phone, tablet portrait/landscape, and desktop; WebKit ${webkitLane}`);
-    console.log("V2 authenticated Chromium inventory journey passed: product import, reviewed opening counts, warehouse assignment, receipt, transfer, and reload persistence.");
+    await page.locator("#manager-tools:not([hidden])").waitFor();
+    for (const viewport of [
+      { width: 402, height: 874 },
+      { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
+    ]) {
+      await page.setViewportSize(viewport);
+      const dimensions = await inventoryPanelDimensions(page);
+      assert.ok(
+        dimensions.offenders.length === 0,
+        `Chromium inventory controls escape their panel at ${viewport.width}×${viewport.height}: ${JSON.stringify(dimensions)}`,
+      );
+      await page.screenshot({
+        path: join(evidenceDir, `chromium-inventory-${viewport.width}x${viewport.height}.png`),
+        fullPage: true,
+      });
+    }
+
+    if (webkitManagerPage) {
+      await webkitManagerPage.locator("#manager-tools:not([hidden])").waitFor();
+      for (const viewport of [
+        { width: 390, height: 844 },
+        { width: 768, height: 1024 },
+        { width: 1024, height: 768 },
+      ]) {
+        await webkitManagerPage.setViewportSize(viewport);
+        const dimensions = await inventoryPanelDimensions(webkitManagerPage);
+        assert.ok(
+          dimensions.offenders.length === 0,
+          `WebKit inventory controls escape their panel at ${viewport.width}×${viewport.height}: ${JSON.stringify(dimensions)}`,
+        );
+        await webkitManagerPage.screenshot({
+          path: join(evidenceDir, `webkit-inventory-${viewport.width}x${viewport.height}.png`),
+          fullPage: true,
+        });
+      }
+      console.log("V2 authenticated WebKit inventory layout passed at phone, tablet, and landscape sizes.");
+    }
+    console.log("V2 authenticated Chromium inventory parity passed: receipts, formula-based preparation, staging, transfers, cycle counts, and reload persistence.");
   } finally {
     if (webkitContext) await webkitContext.close();
     if (webkitManagerContext) await webkitManagerContext.close();

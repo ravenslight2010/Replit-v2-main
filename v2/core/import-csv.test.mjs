@@ -98,6 +98,23 @@ test("opening count requires each active product exactly once with explicit zero
   );
 });
 
+test("cycle count parser accepts a reviewed subset but still rejects unknown and duplicate products", () => {
+  const rows = parseOpeningCountCsv(
+    "product_code,quantity\nFLOUR,3.5\n",
+    ["FLOUR", "CHEESE"],
+    { requireAll: false },
+  );
+  assert.deepEqual(rows, [{ productCode: "FLOUR", quantity: "3.5" }]);
+  assert.throws(
+    () => parseOpeningCountCsv("product_code,quantity\nUNKNOWN,1\n", ["FLOUR"], { requireAll: false }),
+    /not active/u,
+  );
+  assert.throws(
+    () => parseOpeningCountCsv("product_code,quantity\nFLOUR,1\nflour,2\n", ["FLOUR"], { requireAll: false }),
+    /only once/u,
+  );
+});
+
 test("CSV quoting round-trips generated names without changing row boundaries", () => {
   let state = 0x5eed1234;
   const next = () => {

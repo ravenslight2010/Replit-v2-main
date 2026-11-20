@@ -1056,6 +1056,7 @@ main().catch((error) => {
     event: "v2.http_postgres_integration.failed",
     errorName: typeof error?.name === "string" ? error.name : "UnknownError",
     message: error instanceof Error ? error.message : "Integration assertion failed.",
+    stack: error instanceof Error ? error.stack : undefined,
   }));
   process.exitCode = 1;
 });

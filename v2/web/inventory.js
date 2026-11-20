@@ -33,9 +33,10 @@ const dom = {
   productionWarehouse: byId("production-warehouse-select"), productionWarehouseSet: byId("production-warehouse-set"),
   productionWarehouseStatus: byId("production-warehouse-status"),
   stockRows: byId("stock-rows"), stockEmpty: byId("stock-empty"), movementHistory: byId("movement-history"),
-  movementMore: byId("movement-load-more"),
+  movementMore: byId("movement-load-more"), lotHistory: byId("lot-history"),
   movementForm: byId("movement-form"), movementType: byId("movement-type"), movementProduct: byId("movement-product"),
   movementQuantity: byId("movement-quantity"), movementReason: byId("movement-reason"),
+  movementLot: byId("movement-lot"), movementSource: byId("movement-source"),
   transferForm: byId("transfer-form"), transferFrom: byId("transfer-from"), transferTo: byId("transfer-to"),
   transferProduct: byId("transfer-product"), transferQuantity: byId("transfer-quantity"), transferReason: byId("transfer-reason"),
   openingForm: byId("opening-count-form"), openingWarehouse: byId("opening-warehouse"), openingFile: byId("opening-count-file"),
@@ -45,6 +46,19 @@ const dom = {
   dieDefaultForm: byId("die-default-form"), dieDefaultType: byId("die-default-type"),
   dieDefaultState: byId("die-default-state"), dieDefaultSuggestion: byId("die-default-use-suggestion"),
   dieDefaultRetire: byId("die-default-retire"), dieDefaultHistory: byId("die-default-history"),
+  prepLinkForm: byId("preparation-link-form"), prepLinkKind: byId("preparation-link-kind"),
+  prepLinkSource: byId("preparation-link-source"), prepLinkProduct: byId("preparation-link-product"),
+  prepLinkRate: byId("preparation-link-rate"), prepLinkStatus: byId("preparation-link-status"),
+  prepForm: byId("preparation-form"), prepMix: byId("preparation-mix"),
+  prepSourceWarehouse: byId("preparation-source-warehouse"), prepOutputWarehouse: byId("preparation-output-warehouse"),
+  prepBatches: byId("preparation-batches"), prepLot: byId("preparation-lot"),
+  prepSource: byId("preparation-source"), prepReason: byId("preparation-reason"),
+  prepReadiness: byId("preparation-readiness"), prepHistory: byId("preparation-history"),
+  cycleForm: byId("cycle-count-form"), cycleWarehouse: byId("cycle-count-warehouse"),
+  cycleFile: byId("cycle-count-file"), cycleReason: byId("cycle-count-reason"),
+  cyclePreview: byId("cycle-count-preview"), cycleActions: byId("cycle-count-actions"),
+  cycleReview: byId("cycle-count-review"), cycleApply: byId("cycle-count-apply"),
+  cycleHistory: byId("cycle-count-history"),
 };
 
 let staff = null;
@@ -60,6 +74,10 @@ let openingCounts = [];
 let dieDefaults = [];
 let dieDefaultHistory = [];
 let currentCount = null;
+let preparationSetup = { ingredients: [], mixes: [] };
+let preparations = [];
+let cycleCounts = [];
+let currentCycleCount = null;
 let pending = loadPending();
 let loading = false;
 let inFlight = false;
@@ -73,6 +91,11 @@ function uuidOrNull(value) { return value === null || uuid(value); }
 function text(value, max = 500) { return typeof value === "string" && value.length <= max; }
 function quantity(value, allowNegative = false) {
   return typeof value === "string" && QTY.test(value) && (allowNegative || !value.startsWith("-"));
+}
+function unitRate(value) {
+  return typeof value === "string"
+    && /^(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,8})?$/u.test(value)
+    && Number(value) > 0;
 }
 function announce(message) {
   const live = byId("live-announcer");
@@ -134,11 +157,17 @@ function validPendingRoute(kind, endpoint) {
   if (kind === "transfer") return endpoint === `${INVENTORY}/transfers`;
   if (kind === "opening-count") return endpoint === `${INVENTORY}/opening-counts`;
   if (kind === "die-default") return endpoint === DIE_DEFAULTS;
+  if (kind === "cycle-count") return endpoint === `${INVENTORY}/cycle-counts`;
+  if (kind === "prep-link") return endpoint === `${INVENTORY}/preparation-links`;
+  if (kind === "prep-run") return endpoint === `${INVENTORY}/preparations`;
   if (kind === "import-apply" || kind === "import-undo") {
     return new RegExp(`^${IMPORTS}/[0-9a-f-]{36}/${kind.slice(7)}$`, "i").test(endpoint);
   }
   if (kind === "count-review" || kind === "count-apply") {
     return new RegExp(`^${INVENTORY}/opening-counts/[0-9a-f-]{36}/${kind.slice(6)}$`, "i").test(endpoint);
+  }
+  if (kind === "cycle-review" || kind === "cycle-apply") {
+    return new RegExp(`^${INVENTORY}/cycle-counts/[0-9a-f-]{36}/${kind.slice(6)}$`, "i").test(endpoint);
   }
   return false;
 }
@@ -220,14 +249,27 @@ function validateProduct(item) {
 }
 function validateStock(item) {
   return object(item) && uuid(item.productId) && CODE.test(item.code) && text(item.name, 120)
-    && text(item.unit, 16) && quantity(item.quantity) && Number.isSafeInteger(item.revision) && item.revision >= 0;
+    && text(item.unit, 16) && quantity(item.quantity) && quantity(item.stagedQuantity)
+    && quantity(item.availableQuantity) && quantity(item.lotQuantity)
+    && Number.isSafeInteger(item.revision) && item.revision >= 0;
 }
 function validateMovement(item) {
   return object(item) && text(item.type, 40) && quantity(item.quantityDelta, true)
-    && text(item.reason, 500) && uuid(item.actorId) && text(item.occurredAt, 40);
+    && text(item.reason, 500) && uuid(item.actorId) && text(item.occurredAt, 40)
+    && text(item.lotNumber, 120) && text(item.sourceReference, 200)
+    && Array.isArray(item.lotAllocations) && item.lotAllocations.every((allocation) =>
+      object(allocation) && uuid(allocation.lotId) && text(allocation.lotNumber, 120)
+        && quantity(allocation.quantityDelta, true));
 }
 function validateMovementCursor(value) {
   return value === null || object(value) && uuid(value.id) && text(value.occurredAt, 40);
+}
+function validateLot(item) {
+  return object(item) && uuid(item.id) && uuid(item.productId) && CODE.test(item.productCode)
+    && text(item.productName, 120) && text(item.unit, 16) && text(item.lotNumber, 120)
+    && text(item.sourceReference, 200) && text(item.receivedAt, 40)
+    && quantity(item.quantityReceived) && quantity(item.quantityRemaining)
+    && uuidOrNull(item.sourceLotId);
 }
 function validateCount(item) {
   return object(item) && uuid(item.id) && uuid(item.warehouseId) && text(item.status, 40)
@@ -242,13 +284,41 @@ function validateCountSummary(item) {
     && Number.isSafeInteger(item.rowCount) && item.rowCount >= 1 && item.rowCount <= 2000
     && text(item.createdAt, 40);
 }
+function validateCycleSummary(item) {
+  return object(item) && uuid(item.id) && uuid(item.warehouseId) && text(item.warehouseName, 120)
+    && ["staged", "reviewed", "applied", "stale"].includes(item.status)
+    && Number.isSafeInteger(item.rowCount) && item.rowCount > 0 && item.rowCount <= 2000
+    && uuid(item.createdBy) && uuidOrNull(item.reviewedBy) && uuidOrNull(item.appliedBy)
+    && text(item.createdAt, 40);
+}
+function validateCycleCount(item) {
+  return object(item) && uuid(item.id) && uuid(item.warehouseId)
+    && ["staged", "reviewed", "applied", "stale"].includes(item.status)
+    && Array.isArray(item.rows) && item.rows.length > 0 && item.rows.length <= 2000
+    && item.rows.every((row) => object(row) && CODE.test(row.productCode)
+      && quantity(row.quantity) && quantity(row.baselineQuantity)
+      && (row.baselineRevision === undefined || Number.isSafeInteger(row.baselineRevision)))
+    && uuid(item.createdBy) && uuidOrNull(item.reviewedBy) && uuidOrNull(item.appliedBy);
+}
+function validatePreparation(item) {
+  return object(item) && uuid(item.id) && CODE.test(item.mixCode) && text(item.mixName, 120)
+    && uuid(item.sourceWarehouseId) && text(item.sourceWarehouseName, 120)
+    && uuid(item.outputWarehouseId) && text(item.outputWarehouseName, 120)
+    && quantity(item.batchCount) && CODE.test(item.preparedProductCode)
+    && text(item.preparedProductName, 120) && text(item.preparedUnit, 16)
+    && quantity(item.preparedQuantity) && text(item.lotNumber, 120)
+    && text(item.sourceReference, 200) && text(item.reason, 500)
+    && uuid(item.actorId) && text(item.occurredAt, 40) && Array.isArray(item.components);
+}
 function setBusy(busy) {
   inFlight = busy;
   [dom.importApply, dom.workbookStage, dom.workbookApply, ...dom.importForm.querySelectorAll("button"),
     ...dom.workbookForm.querySelectorAll("button"), ...dom.warehouseForm.querySelectorAll("button"),
     ...dom.movementForm.querySelectorAll("button"), ...dom.transferForm.querySelectorAll("button"),
     ...dom.openingForm.querySelectorAll("button"), ...dom.dieDefaultForm.querySelectorAll("button"),
-    dom.openingReview, dom.openingApply].filter(Boolean)
+    ...dom.prepLinkForm.querySelectorAll("button"), ...dom.prepForm.querySelectorAll("button"),
+    ...dom.cycleForm.querySelectorAll("button"),
+    dom.openingReview, dom.openingApply, dom.cycleReview, dom.cycleApply].filter(Boolean)
     .forEach((button) => { button.disabled = busy || (button.dataset.requiresWrite === "true" && !writeGate); });
   updateReadOnly();
 }
@@ -504,7 +574,31 @@ function renderWarehouses() {
     dom.openingWarehouse.append(option);
   });
   if (openingPreferred) dom.openingWarehouse.value = openingPreferred;
+  const cyclePreferred = counted.some((item) => item.id === dom.cycleWarehouse.value)
+    ? dom.cycleWarehouse.value : counted[0]?.id || "";
+  dom.cycleWarehouse.replaceChildren();
+  counted.forEach((item) => {
+    const option = make("option", "", item.name);
+    option.value = item.id;
+    dom.cycleWarehouse.append(option);
+  });
+  if (cyclePreferred) dom.cycleWarehouse.value = cyclePreferred;
+  const prepSourcePreferred = counted.some((item) => item.id === dom.prepSourceWarehouse.value)
+    ? dom.prepSourceWarehouse.value : counted[0]?.id || "";
+  const prepOutputPreferred = counted.some((item) => item.id === dom.prepOutputWarehouse.value)
+    ? dom.prepOutputWarehouse.value : counted[0]?.id || "";
+  [dom.prepSourceWarehouse, dom.prepOutputWarehouse].forEach((select) => {
+    select.replaceChildren();
+    counted.forEach((item) => {
+      const option = make("option", "", item.name);
+      option.value = item.id;
+      select.append(option);
+    });
+  });
+  if (prepSourcePreferred) dom.prepSourceWarehouse.value = prepSourcePreferred;
+  if (prepOutputPreferred) dom.prepOutputWarehouse.value = prepOutputPreferred;
   renderProducts();
+  renderPreparationSetup();
   if (!active.length) {
     dom.stockRows.replaceChildren();
     dom.stockEmpty.hidden = false;
@@ -526,6 +620,80 @@ function renderProducts() {
   });
   [dom.movementProduct, dom.transferProduct].forEach((select) => { select.disabled = !writeGate || !products.length || inFlight; });
 }
+function renderPreparationSetup() {
+  const kind = dom.prepLinkKind.value === "mix" ? "mixes" : "ingredients";
+  const sourceList = preparationSetup[kind] || [];
+  const previous = dom.prepLinkSource.value;
+  dom.prepLinkSource.replaceChildren();
+  sourceList.forEach((item) => {
+    const label = `${item.name} · ${item.code}${item.productCode ? ` → ${item.productCode}` : " · mapping needed"}`;
+    const option = make("option", "", label);
+    option.value = item.code;
+    dom.prepLinkSource.append(option);
+  });
+  if (sourceList.some((item) => item.code === previous)) dom.prepLinkSource.value = previous;
+  const previousProduct = dom.prepLinkProduct.value;
+  dom.prepLinkProduct.replaceChildren();
+  products.forEach((product) => {
+    const option = make("option", "", `${product.name} · ${product.code} (${product.unit})`);
+    option.value = product.code;
+    dom.prepLinkProduct.append(option);
+  });
+  if (products.some((item) => item.code === previousProduct)) dom.prepLinkProduct.value = previousProduct;
+  const mixOptions = preparationSetup.mixes.filter((item) => item.isPrep === true);
+  const oldMix = dom.prepMix.value;
+  dom.prepMix.replaceChildren();
+  mixOptions.forEach((item) => {
+    const missing = !item.productCode || !Array.isArray(item.components)
+      || item.components.some((component) => !component.productCode || !unitRate(component.stockUnitsPerLb));
+    const option = make("option", "", `${item.name} · ${item.code}${missing ? " · incomplete links" : ""}`);
+    option.value = item.code;
+    dom.prepMix.append(option);
+  });
+  if (mixOptions.some((item) => item.code === oldMix)) dom.prepMix.value = oldMix;
+  const mix = mixOptions.find((item) => item.code === dom.prepMix.value);
+  const ready = Boolean(mix?.productCode && unitRate(mix.stockUnitsPerLb)
+    && Array.isArray(mix.components) && mix.components.length > 0
+    && mix.components.every((component) => component.productCode
+      && unitRate(component.stockUnitsPerLb) && quantity(component.perBatchLbs)));
+  dom.prepReadiness.textContent = mix
+    ? ready ? `Formula ready: output ${mix.productCode}; ${mix.components.length} linked raw ingredient${mix.components.length === 1 ? "" : "s"}.`
+      : "This mix cannot be prepared until its output, every ingredient, and unit conversions are linked."
+    : "No enabled prep mix is available.";
+  renderPreparationLinkStatus();
+  updateStockWriteState();
+}
+function renderPreparationLinkStatus() {
+  dom.prepLinkStatus.replaceChildren();
+  const rows = [
+    ...(preparationSetup.ingredients || []).map((item) => ({ ...item, kind: "Ingredient" })),
+    ...(preparationSetup.mixes || []).filter((item) => item.isPrep).map((item) => ({ ...item, kind: "Prepared mix" })),
+  ];
+  if (!rows.length) { listNotice(dom.prepLinkStatus, "No enabled ingredient or preparation-mix identities are available."); return; }
+  rows.forEach((item) => {
+    const li = make("li", "manager-list-item");
+    const copy = make("div", "manager-list-copy");
+    copy.append(make("strong", "", `${item.kind} · ${item.name} · ${item.code}`));
+    const details = item.productCode
+      ? `Linked to ${item.productName} · ${item.productCode} at ${item.stockUnitsPerLb} stock units/lb`
+      : "Inventory product or stock-unit conversion is not linked";
+    copy.append(make("span", "", details));
+    li.append(copy);
+    dom.prepLinkStatus.append(li);
+  });
+}
+function renderPreparationHistory() {
+  dom.prepHistory.replaceChildren();
+  if (!preparations.length) { listNotice(dom.prepHistory, "No preparation batches have been recorded."); return; }
+  preparations.forEach((item) => {
+    const li = make("li", "manager-list-item");
+    const copy = make("div", "manager-list-copy");
+    copy.append(make("strong", "", `${item.mixName} · ${item.batchCount} batches → ${item.preparedQuantity} ${item.preparedUnit} ${item.preparedProductCode}`));
+    copy.append(make("span", "", `${item.sourceWarehouseName} → ${item.outputWarehouseName} · lot ${item.lotNumber || "not supplied"} · ${item.sourceReference || "no source reference"} · ${item.reason} · ${safeDate(item.occurredAt)} · staff ${item.actorId.slice(0, 8)}`));
+    li.append(copy);
+    dom.prepHistory.append(li);
+  });
+}
 function renderStock() {
   dom.stockRows.replaceChildren();
   stock.forEach((item) => {
@@ -533,11 +701,25 @@ function renderStock() {
     const productCell = document.createElement("td");
     productCell.append(make("strong", "", item.name), make("span", "table-code", `${item.code} · ${item.unit}`));
     const qtyCell = make("td", "quantity-cell", item.quantity);
-    row.append(productCell, qtyCell);
+    const stagedCell = make("td", "quantity-cell", item.stagedQuantity);
+    const availableCell = make("td", "quantity-cell", item.availableQuantity);
+    row.append(productCell, qtyCell, stagedCell, availableCell);
     dom.stockRows.append(row);
   });
   dom.stockEmpty.hidden = stock.length > 0 || !warehouses.some((item) => item.active);
   if (!stock.length && warehouses.some((item) => item.active)) dom.stockEmpty.textContent = "No stock rows returned for this warehouse. Check the product register or opening count.";
+}
+function renderLots(lots) {
+  dom.lotHistory.replaceChildren();
+  if (!lots.length) { listNotice(dom.lotHistory, "No lot records are available for this warehouse."); return; }
+  lots.forEach((lot) => {
+    const li = make("li", "manager-list-item");
+    const copy = make("div", "manager-list-copy");
+    copy.append(make("strong", "", `${lot.productName} · ${lot.productCode} · lot ${lot.lotNumber || "not provided"}`));
+    copy.append(make("span", "", `${lot.quantityRemaining} ${lot.unit} remaining of ${lot.quantityReceived} · ${lot.sourceReference || "no source reference"} · received ${safeDate(lot.receivedAt)}`));
+    li.append(copy);
+    dom.lotHistory.append(li);
+  });
 }
 function renderMovements() {
   dom.movementHistory.replaceChildren();
@@ -550,7 +732,9 @@ function renderMovements() {
     const li = make("li", "manager-list-item");
     const detail = make("div", "manager-list-copy");
     detail.append(make("strong", "", `${item.type} · ${item.quantityDelta}`));
-    detail.append(make("span", "", `${item.reason} · manager ${item.actorId.slice(0, 8)} · ${safeDate(item.occurredAt)}`));
+    const lot = item.lotNumber ? ` · lot ${item.lotNumber}` : "";
+    const source = item.sourceReference ? ` · ${item.sourceReference}` : "";
+    detail.append(make("span", "", `${item.reason}${lot}${source} · staff ${item.actorId.slice(0, 8)} · ${safeDate(item.occurredAt)}`));
     li.append(detail);
     dom.movementHistory.append(li);
   });
@@ -574,11 +758,63 @@ function renderCountHistory() {
     dom.openingHistory.append(item);
   });
 }
+function renderCycleHistory() {
+  dom.cycleHistory.replaceChildren();
+  if (!cycleCounts.length) { listNotice(dom.cycleHistory, "No cycle counts have been staged."); return; }
+  cycleCounts.forEach((count) => {
+    const li = make("li", "manager-list-item");
+    const detail = make("div", "manager-list-copy");
+    detail.append(make("strong", "", `${count.warehouseName} · ${count.status}`));
+    detail.append(make("span", "", `${count.rowCount} products · staff ${count.createdBy.slice(0, 8)} · ${safeDate(count.createdAt)}`));
+    const button = make("button", "button button-secondary button-small", "Open count");
+    button.type = "button";
+    button.addEventListener("click", () => { void openCycleCount(count.id); });
+    li.append(detail, button);
+    dom.cycleHistory.append(li);
+  });
+}
+function renderCycleCount(count) {
+  currentCycleCount = count;
+  dom.cyclePreview.replaceChildren();
+  const heading = make("strong", "", `${count.status} · ${count.rows.length} counted products`);
+  const list = make("ul", "manager-list");
+  count.rows.forEach((row) => {
+    const li = make("li", "manager-list-item");
+    const copy = make("div", "manager-list-copy");
+    copy.append(make("strong", "", row.productCode));
+    const current = row.currentQuantity ?? row.baselineQuantity;
+    const variance = row.variance === undefined ? "not reviewed" : `${row.variance} ${row.unit || ""}`;
+    copy.append(make("span", "", `Counted ${row.quantity} · current ${current}${row.unit ? ` ${row.unit}` : ""} · variance ${variance}`));
+    li.append(copy);
+    list.append(li);
+  });
+  dom.cyclePreview.append(heading, list);
+  dom.cyclePreview.hidden = false;
+  dom.cycleActions.hidden = count.status === "applied";
+  if (count.status === "stale") dom.cycleActions.hidden = true;
+  dom.cycleReview.disabled = !writeGate || !lastConfirmed || count.status !== "staged" || inFlight;
+  dom.cycleApply.disabled = !writeGate || !lastConfirmed || count.status !== "reviewed" || inFlight;
+}
+async function refreshCycleCount(id) {
+  const body = await request(`${INVENTORY}/cycle-counts/${encodeURIComponent(id)}`);
+  if (!validateCycleCount(body.count) || body.count.id !== id) {
+    throw new Error("The server returned an invalid cycle count. Refresh before applying it.");
+  }
+  renderCycleCount(body.count);
+}
+async function openCycleCount(id) {
+  try {
+    await refreshCycleCount(id);
+    dom.cyclePreview.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  } catch (error) {
+    message(error instanceof Error ? error.message : "Cycle count could not be loaded.", "error");
+  }
+}
 async function loadWarehouseData({ appendMovements = false } = {}) {
   const id = dom.warehouseSelect.value;
   if (!id) {
     stock = []; movements = []; movementNextCursor = null; movementWarehouseId = null;
-    renderStock(); renderMovements(); return;
+    renderStock(); renderMovements(); renderLots([]); return;
   }
   if (!appendMovements || movementWarehouseId !== id) {
     movementNextCursor = null;
@@ -594,9 +830,13 @@ async function loadWarehouseData({ appendMovements = false } = {}) {
     request(`${INVENTORY}/stock?warehouseId=${encodeURIComponent(id)}`),
     request(`${INVENTORY}/movements?${params.toString()}`),
   ]);
+  const lotBody = appendMovements
+    ? null
+    : await request(`${INVENTORY}/lots?warehouseId=${encodeURIComponent(id)}&limit=100`);
   if (!Array.isArray(stockBody.stock) || !stockBody.stock.every(validateStock)
     || !Array.isArray(moveBody.movements) || !moveBody.movements.every(validateMovement)
-    || !validateMovementCursor(moveBody.nextCursor)) {
+    || !validateMovementCursor(moveBody.nextCursor)
+    || lotBody && (!Array.isArray(lotBody.lots) || !lotBody.lots.every(validateLot))) {
     throw new Error("The server returned an unexpected stock or movement list. Refresh to reload canonical inventory.");
   }
   stock = stockBody.stock;
@@ -604,6 +844,7 @@ async function loadWarehouseData({ appendMovements = false } = {}) {
   movementNextCursor = moveBody.nextCursor;
   movementWarehouseId = id;
   renderStock(); renderMovements();
+  if (lotBody) renderLots(lotBody.lots);
 }
 async function loadOlderMovements() {
   if (!movementNextCursor || inFlight || !lastConfirmed) return;
@@ -621,17 +862,22 @@ async function loadAll() {
   loading = true;
   dom.importHistory.setAttribute("aria-busy", "true");
   try {
-    const [importsBody, warehousesBody, productsBody, countsBody, dieDefaultsBody] = await Promise.all([
+    const [importsBody, warehousesBody, productsBody, countsBody, dieDefaultsBody,
+      prepSetupBody, prepHistoryBody, cycleCountsBody] = await Promise.all([
       request(`${IMPORTS}?limit=50`), request(`${INVENTORY}/warehouses`), request(`${INVENTORY}/products`),
-      request(`${INVENTORY}/opening-counts?limit=50`),
-      request(`${DIE_DEFAULTS}?limit=50`),
+      request(`${INVENTORY}/opening-counts?limit=50`), request(`${DIE_DEFAULTS}?limit=50`),
+      request(`${INVENTORY}/preparation-setup`), request(`${INVENTORY}/preparations?limit=50`),
+      request(`${INVENTORY}/cycle-counts?limit=50`),
     ]);
     if (!Array.isArray(importsBody.imports) || !importsBody.imports.every(validateImport)
       || !Array.isArray(warehousesBody.warehouses) || !warehousesBody.warehouses.every(validateWarehouse)
       || !Array.isArray(productsBody.products) || !productsBody.products.every(validateProduct)
       || !Array.isArray(countsBody.counts) || !countsBody.counts.every(validateCountSummary)
       || !Array.isArray(dieDefaultsBody.defaults) || !dieDefaultsBody.defaults.every(validateDieType)
-      || !Array.isArray(dieDefaultsBody.history) || !dieDefaultsBody.history.every(validateDieDefaultHistory)) {
+      || !Array.isArray(dieDefaultsBody.history) || !dieDefaultsBody.history.every(validateDieDefaultHistory)
+      || !object(prepSetupBody) || !Array.isArray(prepSetupBody.ingredients) || !Array.isArray(prepSetupBody.mixes)
+      || !Array.isArray(prepHistoryBody.preparations) || !prepHistoryBody.preparations.every(validatePreparation)
+      || !Array.isArray(cycleCountsBody.counts) || !cycleCountsBody.counts.every(validateCycleSummary)) {
       throw new Error("The server returned inventory data in an unexpected format. Refresh run state and reload manager data.");
     }
     imports = importsBody.imports;
@@ -640,7 +886,11 @@ async function loadAll() {
     openingCounts = countsBody.counts;
     dieDefaults = dieDefaultsBody.defaults;
     dieDefaultHistory = dieDefaultsBody.history;
+    preparationSetup = prepSetupBody;
+    preparations = prepHistoryBody.preparations;
+    cycleCounts = cycleCountsBody.counts;
     renderImports(); renderWarehouses(); renderCountHistory(); renderDieDefaults();
+    renderPreparationHistory(); renderCycleHistory();
     await loadWarehouseData();
     clearMessage();
     lastConfirmed = true;
@@ -1125,9 +1375,81 @@ async function submitMovement(event) {
     || reason.length < 3 || reason.length > 500) {
     message("Check product, quantity and reason. Use a non-zero quantity with up to six decimals; receipts must be positive.", "warning"); return;
   }
-  const payload = { commandId: crypto.randomUUID(), warehouseId: dom.warehouseSelect.value, productCode, type, quantity: quantityValue, reason };
+  const lotNumber = dom.movementLot.value.trim(), sourceReference = dom.movementSource.value.trim();
+  if (lotNumber.length > 120 || sourceReference.length > 200
+    || /[\u0000-\u001f\u007f]/u.test(lotNumber + sourceReference)) {
+    message("Lot and source references must be valid text within their length limits.", "warning"); return;
+  }
+  const payload = {
+    commandId: crypto.randomUUID(), warehouseId: dom.warehouseSelect.value, productCode,
+    type, quantity: quantityValue, reason, lotNumber, sourceReference,
+  };
   await operation({ kind: "movement", endpoint: `${INVENTORY}/movements`, payload, validate: validateMovementResult,
     label: "Stock change", refresh: async () => { dom.movementForm.reset(); await loadWarehouseData(); } });
+}
+async function submitPreparationLink(event) {
+  event.preventDefault();
+  if (!ensureWrite() || pending) { if (pending) message("Resolve the saved request before changing another inventory link.", "warning"); return; }
+  const kind = dom.prepLinkKind.value, sourceCode = dom.prepLinkSource.value, productCode = dom.prepLinkProduct.value;
+  const stockUnitsPerLb = dom.prepLinkRate.value.trim();
+  if (!["ingredient", "mix"].includes(kind) || !CODE.test(sourceCode) || !CODE.test(productCode)
+    || !QTY.test(stockUnitsPerLb) || stockUnitsPerLb.startsWith("-") || /^0(?:\.0{1,6})?$/.test(stockUnitsPerLb)) {
+    message("Choose a setup record and product, and enter a positive stock-units-per-pound conversion.", "warning"); return;
+  }
+  const payload = { commandId: crypto.randomUUID(), kind, sourceCode, productCode, stockUnitsPerLb };
+  await operation({ kind: "prep-link", endpoint: `${INVENTORY}/preparation-links`, payload,
+    validate: preparationLinkResponse, label: "Inventory product link", refresh: loadAll });
+}
+async function submitPreparation(event) {
+  event.preventDefault();
+  if (!ensureWrite() || pending) { if (pending) message("Resolve the saved request before recording another preparation.", "warning"); return; }
+  const mixCode = dom.prepMix.value, sourceWarehouseId = dom.prepSourceWarehouse.value;
+  const outputWarehouseId = dom.prepOutputWarehouse.value, batchCount = dom.prepBatches.value.trim();
+  const lotNumber = dom.prepLot.value.trim(), sourceReference = dom.prepSource.value.trim();
+  const reason = dom.prepReason.value.trim();
+  if (!CODE.test(mixCode) || !uuid(sourceWarehouseId) || !uuid(outputWarehouseId)
+    || !QTY.test(batchCount) || batchCount.startsWith("-") || /^0(?:\.0{1,6})?$/.test(batchCount)
+    || lotNumber.length > 120 || sourceReference.length > 200 || reason.length < 3 || reason.length > 500
+    || /[\u0000-\u001f\u007f]/u.test(lotNumber + sourceReference)) {
+    message("Check the mix, warehouses, positive batch count, lot/source references, and reason.", "warning"); return;
+  }
+  const payload = {
+    commandId: crypto.randomUUID(), mixCode, sourceWarehouseId, outputWarehouseId,
+    batchCount, lotNumber, sourceReference, reason,
+  };
+  await operation({ kind: "prep-run", endpoint: `${INVENTORY}/preparations`, payload,
+    validate: preparationResponse, label: "Preparation batch", refresh: async () => { dom.prepForm.reset(); await loadAll(); } });
+}
+async function submitCycleCount(event) {
+  event.preventDefault();
+  if (!ensureWrite() || pending) { if (pending) message("Resolve the saved request before staging another cycle count.", "warning"); return; }
+  const warehouseId = dom.cycleWarehouse.value, reason = dom.cycleReason.value.trim();
+  const file = dom.cycleFile.files?.[0];
+  if (!uuid(warehouseId) || !file || file.size > 1024 * 1024 || reason.length < 3 || reason.length > 500) {
+    message("Choose a warehouse and CSV up to 1 MiB, and enter a 3–500 character reason.", "warning"); return;
+  }
+  let csv;
+  try { csv = await file.text(); } catch {
+    message("The cycle-count CSV could not be read. Choose it again and retry.", "error");
+    return;
+  }
+  const payload = { requestId: crypto.randomUUID(), warehouseId, csv, reason };
+  await operation({ kind: "cycle-count", endpoint: `${INVENTORY}/cycle-counts`, payload,
+    validate: cycleStageResponse, label: "Cycle count",
+    refresh: async (result) => { await refreshCycleCount(result.countId); await loadAll(); } });
+}
+async function cycleAction(action) {
+  if (!currentCycleCount || !ensureWrite()) return;
+  const countId = currentCycleCount.id;
+  const payload = action === "apply" ? { acknowledged: true } : {};
+  await operation({
+    kind: `cycle-${action}`,
+    endpoint: `${INVENTORY}/cycle-counts/${encodeURIComponent(countId)}/${action}`,
+    payload,
+    validate: cycleActionResponse,
+    label: action === "review" ? "Cycle count review" : "Cycle count application",
+    refresh: async (result) => { await refreshCycleCount(result.countId); await loadAll(); },
+  });
 }
 function submitTransfer(event) {
   event.preventDefault();
@@ -1156,6 +1478,25 @@ function countActionResponse(item) {
   return object(item) && uuid(item.countId) && uuid(item.warehouseId)
     && ["reviewed", "applied"].includes(item.outcome)
     && Number.isSafeInteger(item.rowCount) && item.rowCount >= 1 && item.rowCount <= 2000;
+}
+function cycleStageResponse(item) {
+  return object(item) && uuid(item.countId) && uuid(item.warehouseId) && ["staged", "stale"].includes(item.outcome)
+    && Number.isSafeInteger(item.rowCount) && item.rowCount >= 1 && item.rowCount <= 2000;
+}
+function cycleActionResponse(item) {
+  return object(item) && uuid(item.countId) && uuid(item.warehouseId)
+    && ["reviewed", "applied"].includes(item.outcome) && Array.isArray(item.rows);
+}
+function preparationLinkResponse(item) {
+  return object(item) && item.outcome === "linked"
+    && ["ingredient", "mix"].includes(item.kind) && CODE.test(item.sourceCode)
+    && CODE.test(item.productCode) && unitRate(item.stockUnitsPerLb);
+}
+function preparationResponse(item) {
+  return object(item) && item.outcome === "prepared" && uuid(item.preparationId)
+    && CODE.test(item.mixCode) && CODE.test(item.preparedProductCode)
+    && quantity(item.batchCount) && quantity(item.preparedQuantity)
+    && Array.isArray(item.components) && text(item.occurredAt, 40);
 }
 function renderCount(count) {
   currentCount = count;
@@ -1186,6 +1527,9 @@ function updateStockWriteState() {
   const movementButton = dom.movementForm.querySelector('button[type="submit"]');
   const transferButton = dom.transferForm.querySelector('button[type="submit"]');
   const openingButton = dom.openingForm.querySelector('button[type="submit"]');
+  const prepLinkButton = dom.prepLinkForm.querySelector('button[type="submit"]');
+  const prepButton = dom.prepForm.querySelector('button[type="submit"]');
+  const cycleButton = dom.cycleForm.querySelector('button[type="submit"]');
   const selectedProduction = warehouses.find((item) =>
     item.id === dom.productionWarehouse.value && item.active && item.openingCountApplied);
   dom.productionWarehouseSet.disabled = !writable || !selectedProduction
@@ -1194,6 +1538,14 @@ function updateStockWriteState() {
   if (transferButton) transferButton.disabled = !transferReady;
   const countWarehouse = warehouses.find((item) => item.id === dom.openingWarehouse.value && item.active);
   if (openingButton) openingButton.disabled = !writable || products.length === 0 || !countWarehouse;
+  const countedWarehouses = warehouses.filter((item) => item.active && item.openingCountApplied);
+  const prepMix = preparationSetup.mixes.find((item) => item.code === dom.prepMix.value && item.isPrep);
+  const prepReady = Boolean(prepMix?.productCode && unitRate(prepMix.stockUnitsPerLb)
+    && prepMix.components?.length && prepMix.components.every((component) =>
+      component.productCode && unitRate(component.stockUnitsPerLb) && quantity(component.perBatchLbs)));
+  if (prepLinkButton) prepLinkButton.disabled = !writable || !products.length || !dom.prepLinkSource.value;
+  if (prepButton) prepButton.disabled = !writable || !prepReady || countedWarehouses.length === 0;
+  if (cycleButton) cycleButton.disabled = !writable || !countedWarehouses.some((item) => item.id === dom.cycleWarehouse.value);
   const movementNotice = byId("movement-stock-gate");
   if (movementNotice) {
     movementNotice.hidden = movementReady;
@@ -1222,6 +1574,8 @@ function updateStockWriteState() {
   if (dom.openingApply) {
     dom.openingApply.disabled = !writable || currentCount?.status !== "reviewed";
   }
+  if (dom.cycleReview) dom.cycleReview.disabled = !writable || currentCycleCount?.status !== "staged";
+  if (dom.cycleApply) dom.cycleApply.disabled = !writable || currentCycleCount?.status !== "reviewed";
 }
 async function refreshCount(id) {
   const body = await request(`${INVENTORY}/opening-counts/${encodeURIComponent(id)}`);
@@ -1271,6 +1625,10 @@ async function retrySavedRequest() {
       : saved.kind === "warehouse-create" ? validateWarehouseResult
         : saved.kind === "movement" ? validateMovementResult
           : saved.kind === "transfer" ? validateTransferResult
+            : saved.kind === "cycle-count" ? cycleStageResponse
+              : saved.kind === "cycle-review" || saved.kind === "cycle-apply" ? cycleActionResponse
+                : saved.kind === "prep-link" ? preparationLinkResponse
+                  : saved.kind === "prep-run" ? preparationResponse
             : (value) => object(value);
   await operation({
     kind: saved.kind, endpoint: saved.endpoint, payload: saved.payload,
@@ -1285,6 +1643,8 @@ async function retrySavedRequest() {
         const item = validateWarehouse(result) ? result : result.warehouse;
         warehouses = [...warehouses.filter((old) => old.id !== item.id), item];
         renderWarehouses(); dom.warehouseSelect.value = item.id;
+      } else if (saved.kind === "cycle-count" || saved.kind === "cycle-review" || saved.kind === "cycle-apply") {
+        await refreshCycleCount(result.countId);
       }
       await loadAll();
     },
@@ -1338,6 +1698,13 @@ function bind() {
   dom.transferTo.addEventListener("change", updateStockWriteState);
   dom.openingWarehouse.addEventListener("change", updateStockWriteState);
   dom.movementForm.addEventListener("submit", submitMovement);
+  dom.prepLinkKind.addEventListener("change", renderPreparationSetup);
+  dom.prepMix.addEventListener("change", updateStockWriteState);
+  dom.prepLinkForm.addEventListener("submit", submitPreparationLink);
+  dom.prepForm.addEventListener("submit", submitPreparation);
+  dom.cycleForm.addEventListener("submit", submitCycleCount);
+  dom.cycleReview.addEventListener("click", () => { void cycleAction("review"); });
+  dom.cycleApply.addEventListener("click", () => { void cycleAction("apply"); });
   dom.transferForm.addEventListener("submit", submitTransfer);
   dom.openingForm.addEventListener("submit", submitOpeningCount);
   dom.dieDefaultForm.addEventListener("submit", (event) => {
@@ -1370,16 +1737,19 @@ export function updateInventoryContext(nextStaff, canWrite) {
   if (!staff || !staff.capabilities?.includes("manage-inventory")) {
     dom.panel.hidden = true;
     imports = []; warehouses = []; products = []; stock = []; movements = []; currentCount = null;
-     openingCounts = [];
-      dieDefaults = []; dieDefaultHistory = [];
-     dom.importHistory.replaceChildren(); dom.stockRows.replaceChildren(); dom.movementHistory.replaceChildren(); dom.openingHistory.replaceChildren();
-      dom.dieDefaultHistory.replaceChildren();
+    openingCounts = [];
+    dieDefaults = []; dieDefaultHistory = [];
+    preparationSetup = { ingredients: [], mixes: [] }; preparations = []; cycleCounts = []; currentCycleCount = null;
+    dom.importHistory.replaceChildren(); dom.stockRows.replaceChildren(); dom.movementHistory.replaceChildren(); dom.openingHistory.replaceChildren();
+    dom.lotHistory.replaceChildren(); dom.prepHistory.replaceChildren(); dom.cycleHistory.replaceChildren();
+    dom.dieDefaultHistory.replaceChildren();
     return;
   }
   dom.panel.hidden = false;
   if (changedUser) {
     imports = []; warehouses = []; products = []; stock = []; movements = []; openingCounts = []; currentCount = null;
      dieDefaults = []; dieDefaultHistory = [];
+    preparationSetup = { ingredients: [], mixes: [] }; preparations = []; cycleCounts = []; currentCycleCount = null;
     dom.importPreview.hidden = true; dom.importActions.hidden = true; dom.workbookPreview.hidden = true; dom.workbookActions.hidden = true;
     dom.openingPreview.hidden = true; dom.openingActions.hidden = true;
   }

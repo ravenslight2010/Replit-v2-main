@@ -161,6 +161,7 @@
 - [Browser fixture seeding](browser-fixture-seeding.md) — reloads can replace browser-only master-data seeds during server hydration; seed through server fixtures or use stable built-ins.
 - [Shell lint inventory](shell-lint-inventory.md) — scripts/src shell files stay explicitly listed in check:shell; only documented fixture/generated files are excluded.
 - [V2 product boundaries](v2-product-boundaries.md) — upgraded successor, one facility with multiple warehouses, server-owned shared state, offline read-only, and fresh V2 sessions.
+- [V2 inventory preparation](v2-inventory-preparation.md) — prep quantities use the saved linked mix formula, with separate raw/prepared stock and explicit product-unit mappings.
 - [Configuration recovery scope](configuration-recovery-scope.md) — environment recovery can replace current startup wiring; verify its scope and the installer's chosen Nix representation.
 - [Schedule timezone](schedule-timezone.md) — production schedule dates and estimates use America/Chicago, independent of the viewer's device timezone.
 - [Version capability catalog](version-capability-catalog.md) — future major versions start from a portable, evidence-linked feature inventory; unapproved candidates remain distinct from requirements.

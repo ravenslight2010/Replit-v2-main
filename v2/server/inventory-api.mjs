@@ -84,6 +84,14 @@ function requireKeys(body, keys) {
   }
 }
 
+function requireKeysWithOptional(body, required, optional) {
+  const allowed = new Set([...required, ...optional]);
+  const actual = Object.keys(body);
+  if (required.some((key) => !Object.hasOwn(body, key)) || actual.some((key) => !allowed.has(key))) {
+    throw new InventoryApiError(400, "The request contains missing or unsupported fields.");
+  }
+}
+
 function validateRequestId(value) {
   if (typeof value !== "string" || !REQUEST_ID.test(value)) {
     throw new InventoryApiError(400, "Enter a valid request ID.");
@@ -104,6 +112,21 @@ function validateReason(value) {
     throw new InventoryApiError(400, "Enter a reason from 3 to 500 characters.");
   }
   return value.trim();
+}
+
+function validateLabel(value, name, maxLength) {
+  if (typeof value !== "string" || value.length > maxLength
+    || /[\u0000-\u001f\u007f]/u.test(value)) {
+    throw new InventoryApiError(400, `Enter a valid ${name}.`);
+  }
+  return value.trim();
+}
+
+function validateProductCode(value, name = "product code") {
+  if (typeof value !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/u.test(value)) {
+    throw new InventoryApiError(400, `Enter a valid ${name}.`);
+  }
+  return value;
 }
 
 function validateQuantity(value, { positive = false, nonzero = false } = {}) {
@@ -160,9 +183,10 @@ function safeStatus(error) {
     case "23503":
     case "40001":
     case "55000":
+    case "23514":
     case "22003": return 409;
     case "22023":
-    case "23514": return 400;
+      return 400;
     default: return 500;
   }
 }
@@ -376,7 +400,21 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
         throw new InventoryApiError(400, "This request does not accept query parameters.");
       }
       const auth = await authenticate(request);
-      requireManager(auth);
+      const runStageRoute = url.pathname === `${INVENTORY_PATH}/run-staged-supplies`;
+      const runProductsRoute = url.pathname === `${INVENTORY_PATH}/run-products`;
+      if (runStageRoute || runProductsRoute) {
+        if (auth?.verified !== true) throw new InventoryApiError(401, "Sign in to access run supplies.");
+        if (typeof auth.actorId !== "string" || !UUID.test(auth.actorId)
+          || typeof auth.facilityId !== "string" || !UUID.test(auth.facilityId)) {
+          throw new InventoryApiError(401, "Refresh your V2 session before continuing.");
+        }
+        const requiredCapability = request.method === "POST" ? "run.lifecycle.command" : "run.read";
+        const allowed = Array.isArray(auth.capabilities)
+          && (auth.capabilities.includes("manage-inventory") || auth.capabilities.includes(requiredCapability));
+        if (!allowed) throw new InventoryApiError(403, "Run access is required for this supply action.");
+      } else {
+        requireManager(auth);
+      }
       if (request.method !== "GET") {
         if (request.method !== "POST") throw new InventoryApiError(405, "This method is not allowed.");
         if (await verifyCsrf(request, auth) !== true) {
@@ -389,6 +427,7 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
           || url.pathname === SETUP_CATALOG_PATH
           || url.pathname === SOURCE_WORKBOOK_PREVIEW_PATH
           || url.pathname === `${INVENTORY_PATH}/opening-counts`
+          || url.pathname === `${INVENTORY_PATH}/cycle-counts`
         ) {
           const limit = uploadLimiter.consume(auth.actorId);
           if (!limit.allowed) {
@@ -758,6 +797,163 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
         sendJson(response, 200, { stock: resultValue(result) });
         return true;
       }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/lots` && request.method === "GET") {
+        operation = "list_lots";
+        const allowed = new Set(["warehouseId", "productId", "limit"]);
+        if (url.searchParams.getAll("warehouseId").length !== 1
+          || [...url.searchParams.keys()].some((key) => !allowed.has(key))
+          || url.searchParams.getAll("productId").length > 1) {
+          throw new InventoryApiError(400, "Specify one warehouseId and an optional productId.");
+        }
+        const warehouseId = validateUuid(url.searchParams.get("warehouseId"), "Warehouse ID");
+        const productId = url.searchParams.has("productId")
+          ? validateUuid(url.searchParams.get("productId"), "Product ID")
+          : null;
+        const limit = parseLimit(url, { extra: ["warehouseId", "productId"] });
+        const result = await pool.query(
+          "SELECT v2.list_inventory_lots($1::uuid, $2::uuid, $3::uuid, $4::integer) AS result",
+          [...scope, warehouseId, productId, limit],
+        );
+        sendJson(response, 200, { lots: resultValue(result) });
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/run-products` && request.method === "GET") {
+        operation = "list_run_products";
+        if (url.search) throw new InventoryApiError(400, "This request does not accept query parameters.");
+        const result = await pool.query(
+          "SELECT v2.list_run_inventory_products($1::uuid) AS result",
+          scope,
+        );
+        sendJson(response, 200, { products: resultValue(result) });
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/preparation-setup` && request.method === "GET") {
+        operation = "list_preparation_setup";
+        const result = await pool.query(
+          "SELECT v2.list_inventory_preparation_setup($1::uuid) AS result",
+          scope,
+        );
+        sendJson(response, 200, resultValue(result));
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/preparations` && request.method === "GET") {
+        operation = "list_preparations";
+        const result = await pool.query(
+          "SELECT v2.list_inventory_preparations($1::uuid,$2::integer) AS result",
+          [...scope, parseLimit(url)],
+        );
+        sendJson(response, 200, { preparations: resultValue(result) });
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/preparation-links` && request.method === "POST") {
+        operation = "set_preparation_link";
+        const body = await readJsonBody(request);
+        requireKeys(body, ["commandId", "kind", "sourceCode", "productCode", "stockUnitsPerLb"]);
+        const commandId = validateRequestId(body.commandId);
+        if (!["ingredient", "mix"].includes(body.kind)) throw new InventoryApiError(400, "Choose an ingredient or preparation mix.");
+        const sourceCode = validateProductCode(body.sourceCode, "setup code");
+        const productCode = validateProductCode(body.productCode);
+        const stockUnitsPerLb = validateQuantity(body.stockUnitsPerLb, { positive: true, nonzero: true });
+        const payload = { kind: body.kind, sourceCode, productCode, stockUnitsPerLb };
+        const result = await pool.query(
+          "SELECT v2.set_setup_inventory_link($1::uuid,$2::uuid,$3::text,$4::text,$5::text,$6::text,$7::text,$8::numeric) AS result",
+          [...scope, actor, commandId, hashRequest(payload), body.kind, sourceCode, productCode, stockUnitsPerLb],
+        );
+        sendJson(response, 200, resultValue(result));
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/preparations` && request.method === "POST") {
+        operation = "prepare_mix";
+        const body = await readJsonBody(request);
+        requireKeys(body, [
+          "commandId", "mixCode", "sourceWarehouseId", "outputWarehouseId",
+          "batchCount", "lotNumber", "sourceReference", "reason",
+        ]);
+        const commandId = validateRequestId(body.commandId);
+        const mixCode = validateProductCode(body.mixCode, "mix code");
+        const sourceId = validateUuid(body.sourceWarehouseId, "Source warehouse ID");
+        const outputId = validateUuid(body.outputWarehouseId, "Output warehouse ID");
+        const batchCount = validateQuantity(body.batchCount, { positive: true, nonzero: true });
+        const lotNumber = validateLabel(body.lotNumber, "lot number", 120);
+        const sourceReference = validateLabel(body.sourceReference, "source reference", 200);
+        const reason = validateReason(body.reason);
+        const payload = { mixCode, sourceId, outputId, batchCount, lotNumber, sourceReference, reason };
+        const result = await pool.query(
+          "SELECT v2.prepare_inventory_mix($1::uuid,$2::uuid,$3::text,$4::text,$5::text,$6::uuid,$7::uuid,$8::numeric,$9::text,$10::text,$11::text) AS result",
+          [...scope, actor, commandId, hashRequest(payload), mixCode, sourceId, outputId,
+            batchCount, lotNumber, sourceReference, reason],
+        );
+        const value = resultValue(result);
+        sendJson(response, value?.replayed ? 200 : 201, value);
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/cycle-counts` && request.method === "GET") {
+        operation = "list_cycle_counts";
+        const result = await pool.query(
+          "SELECT v2.list_inventory_cycle_counts($1::uuid,$2::integer) AS result",
+          [...scope, parseLimit(url)],
+        );
+        sendJson(response, 200, { counts: resultValue(result) });
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/cycle-counts` && request.method === "POST") {
+        operation = "stage_cycle_count";
+        const body = await readJsonBody(request);
+        requireKeys(body, ["requestId", "warehouseId", "csv", "reason"]);
+        const requestId = validateRequestId(body.requestId);
+        const warehouseId = validateUuid(body.warehouseId, "Warehouse ID");
+        const reason = validateReason(body.reason);
+        const productsResult = await pool.query(
+          "SELECT v2.list_inventory_products($1::uuid) AS result",
+          scope,
+        );
+        const products = resultValue(productsResult);
+        if (!Array.isArray(products) || products.length === 0) {
+          throw new InventoryApiError(409, "Import products before starting a cycle count.");
+        }
+        const rows = parseOpeningCountCsv(body.csv, products.map((product) => product.code), { requireAll: false });
+        const requestHash = hashRequest({ warehouseId, rows, reason });
+        const result = await pool.query(
+          "SELECT v2.stage_inventory_cycle_count($1::uuid,$2::uuid,$3::text,$4::text,$5::uuid,$6::jsonb,$7::text) AS result",
+          [...scope, actor, requestId, requestHash, warehouseId, JSON.stringify(rows), reason],
+        );
+        const value = resultValue(result);
+        sendJson(response, value?.replayed ? 200 : 201, value);
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/run-staged-supplies` && request.method === "GET") {
+        operation = "list_staged_supplies";
+        if ([...url.searchParams.keys()].some((key) => key !== "runId")
+          || url.searchParams.getAll("runId").length !== 1) {
+          throw new InventoryApiError(400, "Specify one runId.");
+        }
+        const runId = validateUuid(url.searchParams.get("runId"), "Run ID");
+        const result = await pool.query(
+          "SELECT v2.list_run_inventory_staged_supplies($1::uuid,$2::uuid) AS result",
+          [...scope, runId],
+        );
+        sendJson(response, 200, { supplies: resultValue(result) });
+        return true;
+      }
+      if (isInventory && url.pathname === `${INVENTORY_PATH}/run-staged-supplies` && request.method === "POST") {
+        operation = "stage_run_supply";
+        const body = await readJsonBody(request);
+        requireKeys(body, ["commandId", "runId", "plannedProductCode", "actualProductCode", "quantity", "reason"]);
+        const commandId = validateRequestId(body.commandId);
+        const runId = validateUuid(body.runId, "Run ID");
+        const plannedProductCode = validateProductCode(body.plannedProductCode, "planned product code");
+        const actualProductCode = validateProductCode(body.actualProductCode, "replacement product code");
+        const quantity = validateQuantity(body.quantity, { positive: true, nonzero: true });
+        const reason = validateReason(body.reason);
+        const payload = { runId, plannedProductCode, actualProductCode, quantity, reason };
+        const result = await pool.query(
+          "SELECT v2.stage_run_inventory_supply($1::uuid,$2::uuid,$3::text,$4::text,$5::uuid,$6::text,$7::text,$8::numeric,$9::text) AS result",
+          [...scope, actor, commandId, hashRequest(payload), runId, plannedProductCode, actualProductCode, quantity, reason],
+        );
+        const value = resultValue(result);
+        sendJson(response, value?.replayed ? 200 : 201, value);
+        return true;
+      }
       if (isInventory && url.pathname === `${INVENTORY_PATH}/movements` && request.method === "GET") {
         operation = "list_movements";
         const warehouseId = parseWarehouseId(url, { allowMovementCursor: true });
@@ -774,12 +970,14 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
       if (isInventory && url.pathname === `${INVENTORY_PATH}/movements` && request.method === "POST") {
         operation = "record_movement";
         const body = await readJsonBody(request);
-        requireKeys(body, ["commandId", "warehouseId", "productCode", "type", "quantity", "reason"]);
+        requireKeysWithOptional(
+          body,
+          ["commandId", "warehouseId", "productCode", "type", "quantity", "reason"],
+          ["lotNumber", "sourceReference"],
+        );
         const commandId = validateRequestId(body.commandId);
         const warehouseId = validateUuid(body.warehouseId, "Warehouse ID");
-        if (typeof body.productCode !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(body.productCode)) {
-          throw new InventoryApiError(400, "Enter a valid product code.");
-        }
+        const productCode = validateProductCode(body.productCode);
         if (body.type !== "receipt" && body.type !== "adjustment") {
           throw new InventoryApiError(400, "Choose a receipt or stock adjustment.");
         }
@@ -788,10 +986,12 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
           throw new InventoryApiError(400, "A receipt quantity must be positive.");
         }
         const reason = validateReason(body.reason);
-        const payload = { warehouseId, productCode: body.productCode, type: body.type, quantity, reason };
+        const lotNumber = validateLabel(body.lotNumber ?? "", "lot number", 120);
+        const sourceReference = validateLabel(body.sourceReference ?? "", "source reference", 200);
+        const payload = { warehouseId, productCode, type: body.type, quantity, reason, lotNumber, sourceReference };
         const result = await pool.query(
-          "SELECT v2.record_inventory_movement($1::uuid, $2::uuid, $3::text, $4::text, $5::uuid, $6::text, $7::text, $8::numeric, $9::text) AS result",
-          [...scope, actor, commandId, hashRequest(payload), warehouseId, body.productCode, body.type, quantity, reason],
+          "SELECT v2.record_inventory_movement_with_lot($1::uuid,$2::uuid,$3::text,$4::text,$5::uuid,$6::text,$7::text,$8::numeric,$9::text,$10::text,$11::text) AS result",
+          [...scope, actor, commandId, hashRequest(payload), warehouseId, productCode, body.type, quantity, reason, lotNumber, sourceReference],
         );
         sendJson(response, 200, resultValue(result));
         return true;
@@ -875,6 +1075,37 @@ export function createInventoryApi({ pool, authenticate, verifyCsrf, logger = ()
             `SELECT v2.${functionName}($1::uuid, $2::uuid, $3::uuid) AS result`,
             [...scope, actor, countId],
           );
+          sendJson(response, 200, resultValue(result));
+          return true;
+        }
+      }
+      const cycleAction = url.pathname.match(/^\/api\/v2\/inventory\/cycle-counts\/([^/]+)(?:\/(review|apply))?$/);
+      if (isInventory && cycleAction) {
+        const countId = validateUuid(cycleAction[1], "Count ID");
+        const action = cycleAction[2];
+        if (!action && request.method === "GET") {
+          operation = "get_cycle_count";
+          const result = await pool.query(
+            "SELECT v2.get_inventory_cycle_count($1::uuid,$2::uuid) AS result",
+            [...scope, countId],
+          );
+          const value = resultValue(result);
+          if (!value) throw new InventoryApiError(404, "Cycle count not found.");
+          sendJson(response, 200, { count: value });
+          return true;
+        }
+        if (action && request.method === "POST") {
+          operation = `${action}_cycle_count`;
+          const body = await readJsonBody(request);
+          if (action === "review") requireKeys(body, []);
+          else {
+            requireKeys(body, ["acknowledged"]);
+            if (body.acknowledged !== true) throw new InventoryApiError(400, "Confirm the reviewed count before applying it.");
+          }
+          const functionName = action === "review" ? "review_inventory_cycle_count" : "apply_inventory_cycle_count";
+          const result = action === "review"
+            ? await pool.query(`SELECT v2.${functionName}($1::uuid,$2::uuid,$3::uuid) AS result`, [...scope, actor, countId])
+            : await pool.query(`SELECT v2.${functionName}($1::uuid,$2::uuid,$3::uuid,$4::boolean) AS result`, [...scope, actor, countId, true]);
           sendJson(response, 200, resultValue(result));
           return true;
         }

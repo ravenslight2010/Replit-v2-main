@@ -6,6 +6,7 @@ import { updateScheduleContext } from "./schedule.js";
 
 const API = "/api/v2/runs";
 const AUTH_API = "/api/v2/auth";
+const RUN_INVENTORY_API = "/api/v2/inventory";
 const POLL_INTERVAL_MS = 3000;
 const STATION_STATUSES = new Set(["not_started", "running", "paused", "completed"]);
 const TIMER_STATUSES = new Set(["idle", "running", "paused"]);
@@ -107,6 +108,16 @@ const el = {
   stationSaveNote: document.querySelector("#station-save-note"),
   stationTimerValue: document.querySelector("#station-timer-value"),
   stationTimerControls: document.querySelector("#station-timer-controls"),
+  runSupplyPanel: document.querySelector("#run-supply-panel"),
+  runSupplyStatus: document.querySelector("#run-supply-status"),
+  runSupplyForm: document.querySelector("#run-supply-form"),
+  runSupplyPlanned: document.querySelector("#run-supply-planned"),
+  runSupplyActual: document.querySelector("#run-supply-actual"),
+  runSupplyQuantity: document.querySelector("#run-supply-quantity"),
+  runSupplyReason: document.querySelector("#run-supply-reason"),
+  runSupplySubmit: document.querySelector("#run-supply-submit"),
+  runSupplyRetry: document.querySelector("#run-supply-retry"),
+  runSupplyHistory: document.querySelector("#run-supply-history"),
 };
 
 let runs = [];
@@ -124,6 +135,16 @@ let runProducts = [];
 let dieTypes = [];
 let lastSelectedDieCode = "";
 let productionWarehouse = null;
+let runInventoryProducts = [];
+let runInventoryProductsLoaded = false;
+let stagedSupplies = [];
+let stagedSuppliesRunId = null;
+let stagedSuppliesLoadedAt = 0;
+let stagedSuppliesLoading = false;
+let stagedSuppliesDirty = true;
+let runSupplyBusy = false;
+let stageSupplyError = "";
+let supplyPanelRunId = null;
 let authGeneration = 0;
 let bootstrapAvailable = false;
 let bootstrapStatusInFlight = false;
@@ -361,6 +382,12 @@ function clearUserScopedState() {
   lastKnownRun = null;
   serverStateConfirmed = false;
   stationConflictDraft = null;
+  runInventoryProducts = [];
+  runInventoryProductsLoaded = false;
+  stagedSupplies = [];
+  stagedSuppliesRunId = null;
+  stagedSuppliesLoadedAt = 0;
+  supplyPanelRunId = null;
   updateInventoryContext(currentStaff, false);
   updateScheduleContext(currentStaff, false);
   render();
@@ -1411,7 +1438,11 @@ function renderInventoryReceipt(receipt) {
     const shortage = Number(line.shortfall) > 0
       ? ` · short by ${escapeHtml(line.shortfall)} ${escapeHtml(line.unit)}`
       : "";
-    return `<li><span>${escapeHtml(line.productName)} · ${escapeHtml(line.productCode)}</span><span>${escapeHtml(line.deducted)} ${escapeHtml(line.unit)} deducted${shortage}</span></li>`;
+    const substitution = line.plannedProductCode && line.plannedProductCode !== line.productCode
+      ? ` · for ${escapeHtml(line.plannedProductCode)}`
+      : "";
+    const staged = line.staged ? " · staged" : "";
+    return `<li><span>${escapeHtml(line.productName)} · ${escapeHtml(line.productCode)}${substitution}${staged}</span><span>${escapeHtml(line.deducted)} ${escapeHtml(line.unit)} deducted${shortage}</span></li>`;
   }).join("");
   const extra = receipt.lines.length > 20
     ? `<p class="manager-help">${receipt.lines.length - 20} additional inventory lines are included in the receipt.</p>`
@@ -1424,6 +1455,276 @@ function renderInventoryReceipt(receipt) {
       : ""}
     ${lines ? `<ul>${lines}</ul>` : "<p>No tracked recipe or packaging quantities were consumed.</p>"}${extra}
   </section>`;
+}
+
+function isRunStageItem(item) {
+  return isObject(item) && UUID.test(item.id) && UUID.test(item.runId)
+    && UUID.test(item.warehouseId) && typeof item.plannedProductCode === "string"
+    && typeof item.plannedProductName === "string" && typeof item.actualProductCode === "string"
+    && typeof item.actualProductName === "string" && typeof item.unit === "string"
+    && typeof item.quantity === "string" && /^(0|[1-9][0-9]{0,11})(\.[0-9]{1,6})?$/u.test(item.quantity)
+    && typeof item.used === "string" && typeof item.released === "string"
+    && typeof item.reason === "string" && typeof item.actorId === "string"
+    && UUID.test(item.actorId) && typeof item.occurredAt === "string"
+    && Number.isFinite(Date.parse(item.occurredAt));
+}
+
+function stagePendingKey(runId) {
+  return `fieldline:v2:staged-supply:${runId}`;
+}
+
+function loadStagePending(runId) {
+  try {
+    const value = JSON.parse(localStorage.getItem(stagePendingKey(runId)) || "null");
+    const payload = value?.payload;
+    if (!isObject(value) || !UUID.test(value.actorId) || !isObject(payload)
+      || typeof payload.commandId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/u.test(payload.commandId)
+      || payload.runId !== runId || typeof payload.plannedProductCode !== "string"
+      || typeof payload.actualProductCode !== "string" || typeof payload.quantity !== "string"
+      || typeof payload.reason !== "string") return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+function plannedInventoryProducts(run) {
+  const plan = run?.setupSnapshot?.productionPlan;
+  if (!plan) return [];
+  const lines = [
+    ...plan.recipes.flatMap((recipe) => recipe.ingredients),
+    ...plan.packagingPerCase,
+  ];
+  const unique = new Map(lines.map((line) => [line.productId, line]));
+  return [...unique.values()].sort((a, b) => a.productName.localeCompare(b.productName));
+}
+
+function fillSupplySelect(select, records, preferred, label) {
+  select.replaceChildren();
+  records.forEach((record) => {
+    const option = document.createElement("option");
+    option.value = record.productCode;
+    option.textContent = `${record.productName} · ${record.productCode} (${record.unit})${label ? ` · ${label}` : ""}`;
+    select.append(option);
+  });
+  if (records.some((record) => record.productCode === preferred)) select.value = preferred;
+}
+
+function updateSupplyActualChoices(run) {
+  const planned = plannedInventoryProducts(run).find((item) => item.productCode === el.runSupplyPlanned.value);
+  const matching = runInventoryProducts.filter((item) => item.unit.toLowerCase() === planned?.unit.toLowerCase());
+  fillSupplySelect(el.runSupplyActual, matching, el.runSupplyActual.value);
+  if (!matching.length) {
+    el.runSupplyStatus.textContent = "No same-unit products are available to stage.";
+  }
+}
+
+function renderStagedSupplies() {
+  el.runSupplyHistory.replaceChildren();
+  if (!stagedSupplies.length) {
+    const empty = document.createElement("li");
+    empty.className = "manager-list-notice";
+    empty.textContent = "No staged supply substitutions are recorded for this run.";
+    el.runSupplyHistory.append(empty);
+    return;
+  }
+  stagedSupplies.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "manager-list-item";
+    const copy = document.createElement("div");
+    copy.className = "manager-list-copy";
+    const title = document.createElement("strong");
+    title.textContent = `${item.quantity} ${item.unit} · ${item.actualProductName} for ${item.plannedProductName}`;
+    const detail = document.createElement("span");
+    detail.textContent = `${item.reason} · used ${item.used} · released ${item.released} · staff ${item.actorId.slice(0, 8)} · ${formatDate(item.occurredAt)}`;
+    copy.append(title, detail);
+    li.append(copy);
+    el.runSupplyHistory.append(li);
+  });
+}
+
+async function loadRunInventoryProducts() {
+  if (runInventoryProductsLoaded) return;
+  const response = await fetch(`${RUN_INVENTORY_API}/run-products`, {
+    credentials: "same-origin",
+    headers: { Accept: "application/json" },
+  });
+  const body = await readJson(response);
+  if (!Array.isArray(body.products) || body.products.some((item) =>
+    !isObject(item) || !UUID.test(item.id) || typeof item.code !== "string"
+      || typeof item.name !== "string" || typeof item.unit !== "string")) {
+    throw new Error("The server returned an invalid stock-product list. Refresh the page to retry.");
+  }
+  runInventoryProducts = body.products.map((item) => ({
+    productId: item.id, productCode: item.code, productName: item.name, unit: item.unit,
+  }));
+  runInventoryProductsLoaded = true;
+}
+
+async function refreshStagedSupplies(run, { force = false } = {}) {
+  if (!run?.id || stagedSuppliesLoading || (!force && Date.now() - stagedSuppliesLoadedAt < 10_000)) return;
+  stagedSuppliesLoading = true;
+  try {
+    const response = await fetch(`${RUN_INVENTORY_API}/run-staged-supplies?runId=${encodeURIComponent(run.id)}`, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    });
+    const body = await readJson(response);
+    if (!Array.isArray(body.supplies) || body.supplies.some((item) => !isRunStageItem(item))) {
+      throw new Error("The server returned invalid staged supply records. Refresh to retry.");
+    }
+    if (supplyPanelRunId === run.id) {
+      stagedSupplies = body.supplies;
+      stagedSuppliesRunId = run.id;
+      stagedSuppliesLoadedAt = Date.now();
+      stagedSuppliesDirty = false;
+      stageSupplyError = "";
+      renderStagedSupplies();
+    }
+  } catch (error) {
+    stageSupplyError = error instanceof Error ? error.message : "Staged supplies could not be refreshed.";
+    if (supplyPanelRunId === run.id) el.runSupplyStatus.textContent = stageSupplyError;
+  } finally {
+    stagedSuppliesLoading = false;
+  }
+}
+
+function renderRunSupplyPanel(run) {
+  const canRead = currentStaff?.capabilities?.includes("run.read")
+    || currentStaff?.capabilities?.includes("manage-inventory");
+  if (!run || !run.setupSnapshot.productionPlan || !canRead) {
+    el.runSupplyPanel.hidden = true;
+    supplyPanelRunId = null;
+    return;
+  }
+  el.runSupplyPanel.hidden = false;
+  const changedRun = supplyPanelRunId !== run.id;
+  if (changedRun) {
+    supplyPanelRunId = run.id;
+    stagedSupplies = [];
+    stagedSuppliesRunId = run.id;
+    stagedSuppliesLoadedAt = 0;
+    stagedSuppliesDirty = true;
+    stageSupplyError = "";
+    el.runSupplyHistory.replaceChildren();
+    const planned = plannedInventoryProducts(run);
+    fillSupplySelect(el.runSupplyPlanned, planned, planned[0]?.productCode);
+    if (runInventoryProductsLoaded) updateSupplyActualChoices(run);
+    else {
+      el.runSupplyActual.replaceChildren();
+      void loadRunInventoryProducts().then(() => {
+        if (supplyPanelRunId === run.id) updateSupplyActualChoices(run);
+      }).catch((error) => {
+        stageSupplyError = error instanceof Error ? error.message : "Stock products could not be loaded.";
+        el.runSupplyStatus.textContent = stageSupplyError;
+      });
+    }
+    void refreshStagedSupplies(run, { force: true });
+  }
+  const canStage = run.status !== "completed" && canWriteNow()
+    && (currentStaff?.capabilities?.includes("run.lifecycle.command")
+      || currentStaff?.capabilities?.includes("manage-inventory"));
+  const pending = loadStagePending(run.id);
+  const pendingOwned = pending?.actorId === currentStaff?.userId;
+  const unresolvedOther = pending && !pendingOwned;
+  el.runSupplyForm.hidden = run.status === "completed" || !canStage;
+  el.runSupplySubmit.disabled = !canStage || runSupplyBusy || Boolean(pending);
+  el.runSupplyRetry.hidden = !pendingOwned;
+  el.runSupplyRetry.disabled = !canStage || runSupplyBusy;
+  if (unresolvedOther) el.runSupplyStatus.textContent = "A saved request belongs to another staff account.";
+  else if (stageSupplyError) el.runSupplyStatus.textContent = stageSupplyError;
+  else if (!canWriteNow()) el.runSupplyStatus.textContent = "Read-only until the server confirms a fresh run state.";
+  else if (run.status === "completed") el.runSupplyStatus.textContent = "Run complete; staged stock has been reconciled.";
+  else if (pendingOwned) el.runSupplyStatus.textContent = "Confirm the saved request before staging another supply.";
+  else if (stagedSuppliesRunId === run.id) el.runSupplyStatus.textContent = "Supply changes are recorded against this run.";
+  void refreshStagedSupplies(run);
+}
+
+async function submitRunStagedSupply(event, retry = false) {
+  event.preventDefault();
+  const run = selectedRun();
+  if (!run || !canWriteNow() || runSupplyBusy) return;
+  let pending = loadStagePending(run.id);
+  if (!retry) {
+    if (pending) {
+      el.runSupplyStatus.textContent = pending.actorId === currentStaff?.userId
+        ? "Retry the saved request before starting another supply change."
+        : "A saved request belongs to another staff account.";
+      return;
+    }
+    const plannedProductCode = el.runSupplyPlanned.value;
+    const actualProductCode = el.runSupplyActual.value;
+    const quantity = el.runSupplyQuantity.value.trim();
+    const reason = el.runSupplyReason.value.trim();
+    const planned = plannedInventoryProducts(run).find((item) => item.productCode === plannedProductCode);
+    const actual = runInventoryProducts.find((item) => item.productCode === actualProductCode);
+    if (!planned || !actual || planned.unit.toLowerCase() !== actual.unit.toLowerCase()
+      || !/^(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,6})?$/u.test(quantity) || Number(quantity) <= 0
+      || reason.length < 3 || reason.length > 500) {
+      el.runSupplyStatus.textContent = "Choose products with the same stock unit and enter a positive quantity and reason.";
+      return;
+    }
+    pending = {
+      actorId: currentStaff.userId,
+      payload: {
+        commandId: crypto.randomUUID(),
+        runId: run.id,
+        plannedProductCode,
+        actualProductCode,
+        quantity,
+        reason,
+      },
+    };
+    try {
+      localStorage.setItem(stagePendingKey(run.id), JSON.stringify(pending));
+    } catch {
+      el.runSupplyStatus.textContent = "This device could not save a retry identity. No request was sent.";
+      return;
+    }
+  }
+  if (!pending || pending.actorId !== currentStaff?.userId || pending.payload.runId !== run.id) {
+    el.runSupplyStatus.textContent = "Sign in as the original staff member to confirm the saved request.";
+    return;
+  }
+  runSupplyBusy = true;
+  renderRunSupplyPanel(run);
+  const csrf = getCsrfHeaders();
+  if (!csrf) {
+    runSupplyBusy = false;
+    el.runSupplyStatus.textContent = "The secure session token is unavailable. Refresh your session before changing stock.";
+    return;
+  }
+  try {
+    const response = await fetch(`${RUN_INVENTORY_API}/run-staged-supplies`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", Accept: "application/json", ...csrf },
+      body: JSON.stringify(pending.payload),
+    });
+    const body = await readJson(response);
+    if (!isObject(body) || body.outcome !== "staged" || !UUID.test(body.stageId)
+      || body.runId !== run.id || typeof body.quantity !== "string") {
+      throw new Error("The server did not confirm the staged supply. Retry the same request.");
+    }
+    localStorage.removeItem(stagePendingKey(run.id));
+    el.runSupplyForm.reset();
+    stageSupplyError = "";
+    stagedSuppliesDirty = true;
+    stagedSuppliesLoadedAt = 0;
+    announce("Run supply staged and confirmed by the server.");
+    await refreshStagedSupplies(run, { force: true });
+  } catch (error) {
+    if (error instanceof ApiError && [400, 409].includes(error.status)) {
+      localStorage.removeItem(stagePendingKey(run.id));
+      stageSupplyError = `${error.message} Review the current run and stock before trying again.`;
+    } else {
+      stageSupplyError = error instanceof Error ? error.message : "The staged supply was not confirmed.";
+    }
+    el.runSupplyStatus.textContent = stageSupplyError;
+  } finally {
+    runSupplyBusy = false;
+    renderRunSupplyPanel(selectedRun());
+  }
 }
 
 function escapeHtml(value) {
@@ -1660,6 +1961,7 @@ function render() {
   renderRuns();
   renderRun(selectedRun());
   renderStationPanel(selectedRun());
+  renderRunSupplyPanel(selectedRun());
 }
 
 const STATION_FIELD_META = Object.freeze({
@@ -2542,6 +2844,12 @@ if (pendingCreate) {
 }
 
 initializeInventory();
+el.runSupplyForm.addEventListener("submit", (event) => { void submitRunStagedSupply(event); });
+el.runSupplyRetry.addEventListener("click", (event) => { void submitRunStagedSupply(event, true); });
+el.runSupplyPlanned.addEventListener("change", () => {
+  const run = selectedRun();
+  if (run) updateSupplyActualChoices(run);
+});
 el.refresh.addEventListener("click", () => fetchRuns());
 el.createForm.addEventListener("submit", createRun);
 el.product.addEventListener("change", renderRunProductionSetups);

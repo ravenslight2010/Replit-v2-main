@@ -134,6 +134,17 @@ target, but is not published.
 - The manager workspace in `web/` reviews import history and rows, manages
   warehouse stock/transfers, reopens physical counts, and shows the actor,
   reason, and timestamp for paginated ledger entries.
+- `db/0008-inventory-parity.sql` adds V2 lot provenance, linked-mix preparation
+  from the selected `perBatchLbs` formula, partial cycle counts with stale
+  revision fences and explicit apply acknowledgement, and run-scoped staged
+  supply substitutions. Raw and prepared stock remain separate products; the
+  stock view distinguishes on-hand, staged, and available quantities.
+- The inventory API exposes manager receipt/adjustment, transfer, lot,
+  preparation, and cycle-count history/actions. Run readers can see product
+  identities and their own staged-supply history; an authorized operator or
+  manager can reserve same-unit substitutes. The existing run-completion
+  transaction remains the only automatic production-consumption path and
+  records actual versus planned product identities.
 - `server/auth-adapter.mjs` provides V2-owned Argon2id password verification,
   rate-limited sign-in service logic, opaque hashed sessions, CSRF verification,
   and run/station action authorization.
@@ -187,10 +198,13 @@ target, but is not published.
   Chromium integration now exercises manager product import, physical-count
   review/application, production-warehouse selection, receipt, transfer, and
   reload persistence against the real V2 server and a disposable PostgreSQL
-  cluster. A separate emulated Chromium manager setup journey covers family
-  templates, stage/review/apply/undo, and desktop, phone, tablet-portrait, and
-  tablet-landscape widths. WebKit and physical-device behavior are not proven
-  by this emulation.
+  cluster. The same Chromium inventory journey covers linked-formula
+  preparation, a prepared-for-raw run substitution, transfers, and cycle-count
+  review/application. Authenticated WebKit checks load the manager UI at desktop,
+  phone, tablet-portrait, and tablet-landscape widths; they do not repeat the
+  transactional journey. A separate emulated Chromium manager setup journey
+  covers family templates, stage/review/apply/undo, and those responsive widths.
+  Physical-device behavior is not proven by emulation.
 - The V2 preview now runs the API and database-leased worker as separate,
   supervised processes; browsers only refresh canonical state and never submit
   automatic-progress ticks. Development restart was tested and the worker
@@ -207,10 +221,15 @@ target, but is not published.
   data has been imported. No run or inventory data has been seeded.
 - The V1 production source received a limited read-only aggregate audit; no
   source records were exported, imported, or changed.
-- Production database function/trigger/grant setup, full manager inventory
-  browser verification, WebKit, physical-device verification, and
-  production publish remain future work. Do not publish until the
-  least-privilege runtime access and V2 production database objects are reviewed.
+- Disposable PostgreSQL checks now cover receiving lots, linked preparation,
+  transfer lineage, reserved staged stock, exact-once completion, stale count
+  fencing, nonnegative balances, and ledger/lot reconciliation. The signed-in
+  browser check covers manager receipt, setup links, preparation, transfer,
+  cycle-count review/apply, and reload persistence in Chromium and WebKit at
+  desktop, phone, and tablet viewports. Physical iOS/Android behavior,
+  production database function/trigger/grant setup, and production publish
+  remain future work. Do not publish until the least-privilege runtime access
+  and V2 production database objects are reviewed.
   The deployment run command currently refuses to publish; the `Project`
   workflow remains available for the private preview.
 - The latest in-workspace pilot status, evidence, and remaining actions are recorded

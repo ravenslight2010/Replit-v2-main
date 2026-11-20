@@ -700,6 +700,9 @@ fi
 " >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-approved-setup-catalogs.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-reviewed-die-defaults.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0008-inventory-parity.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0009-production-schedules.sql" >/dev/null
 "${PSQL[@]}" -c "
   GRANT EXECUTE ON FUNCTION v2.stage_setup_catalog_import(uuid, uuid, text, text, text, jsonb, jsonb) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.apply_setup_catalog_import(uuid, uuid, uuid) TO v2_api_test;
@@ -709,10 +712,33 @@ fi
   GRANT EXECUTE ON FUNCTION v2.list_die_defaults(uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_die_default_events(uuid, integer) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.save_die_default(uuid, uuid, text, text, text, bigint, jsonb, boolean) TO v2_api_test;
-" >/dev/null
-"${PSQL[@]}" -f "$ROOT/v2/db/0008-production-rule-enforcement.sql" >/dev/null
-"${PSQL[@]}" -f "$ROOT/v2/db/0009-production-schedules.sql" >/dev/null
-"${PSQL[@]}" -c "
+  REVOKE EXECUTE ON FUNCTION v2.record_inventory_movement(
+    uuid, uuid, text, text, uuid, text, text, numeric, text
+  ) FROM v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.record_inventory_movement_with_lot(
+    uuid, uuid, text, text, uuid, text, text, numeric, text, text, text
+  ) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_inventory_lots(uuid, uuid, uuid, integer) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_run_inventory_products(uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_inventory_preparation_setup(uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_inventory_preparations(uuid, integer) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.set_setup_inventory_link(
+    uuid, uuid, text, text, text, text, text, numeric
+  ) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.prepare_inventory_mix(
+    uuid, uuid, text, text, text, uuid, uuid, numeric, text, text, text
+  ) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.stage_inventory_cycle_count(
+    uuid, uuid, text, text, uuid, jsonb, text
+  ) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.get_inventory_cycle_count(uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.review_inventory_cycle_count(uuid, uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.apply_inventory_cycle_count(uuid, uuid, uuid, boolean) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_inventory_cycle_counts(uuid, integer) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.stage_run_inventory_supply(
+    uuid, uuid, text, text, uuid, text, text, numeric, text
+  ) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_run_inventory_staged_supplies(uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.schedule_default_start_time(uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.get_production_schedule(uuid, date) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_schedule_run_templates(uuid) TO v2_api_test;
@@ -735,6 +761,14 @@ assert_no_direct_table_access "v2.die_default_settings"
 assert_no_direct_table_access "v2.die_default_events"
 assert_no_direct_table_access "v2.production_schedules"
 assert_no_direct_table_access "v2.production_schedule_receipts"
+assert_no_direct_table_access "v2.inventory_lots"
+assert_no_direct_table_access "v2.inventory_movement_lot_allocations"
+assert_no_direct_table_access "v2.inventory_cycle_counts"
+assert_no_direct_table_access "v2.setup_ingredient_inventory_links"
+assert_no_direct_table_access "v2.setup_mix_inventory_links"
+assert_no_direct_table_access "v2.inventory_preparations"
+assert_no_direct_table_access "v2.run_inventory_staged_supplies"
+assert_no_direct_table_access "v2.run_inventory_stage_receipts"
 INVENTORY_COMPLETION_PRIVILEGES="$("${PSQL[@]}" -c "
   SET ROLE v2_api_test;
   SELECT has_function_privilege(current_user,
@@ -776,6 +810,7 @@ V2_TEST_ADMIN_URL="$V2_TEST_ADMIN_URL" V2_DATABASE_URL="$V2_API_URL" \
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-reviewed-die-defaults.test.sql"
 V2_DATABASE_URL="$V2_API_URL" NODE_ENV=development \
   node "$ROOT/v2/server/http-postgres.browser.integration.mjs"
+"${PSQL[@]}" -f "$ROOT/v2/db/0008-inventory-parity.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-staff-role-equivalents.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0007-staff-role-equivalents.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/cutover-transfer-rehearsal.test.sql"

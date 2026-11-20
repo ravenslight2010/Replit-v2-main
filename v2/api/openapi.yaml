@@ -1565,6 +1565,394 @@ paths:
           $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
+  /api/v2/inventory/lots:
+    get:
+      operationId: listInventoryLots
+      summary: List tracked stock lots in one warehouse
+      parameters:
+        - in: query
+          name: warehouseId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: productId
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Bounded lot history with source and transfer lineage
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [lots]
+                properties:
+                  lots:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InventoryLot"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/run-products:
+    get:
+      operationId: listRunSupplyProducts
+      summary: List products available for a run supply substitution
+      description: Run-capability readers receive product identity and unit only, never manager stock data.
+      responses:
+        "200":
+          description: Active product codes and their stock units
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products]
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RunSupplyProduct"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/preparation-setup:
+    get:
+      operationId: listPreparationSetup
+      summary: List linked raw ingredients and preparation mixes
+      responses:
+        "200":
+          description: Explicit inventory links for setup ingredients and mixes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreparationSetup"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/preparation-links:
+    post:
+      operationId: setPreparationInventoryLink
+      summary: Link an approved setup identity to a stock product
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreparationLinkRequest"
+      responses:
+        "200":
+          description: Link saved or confirmed by retry
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/preparations:
+    get:
+      operationId: listInventoryPreparations
+      summary: List recent preparation movements
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Bounded preparation history
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [preparations]
+                properties:
+                  preparations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PreparationRecord"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: prepareInventoryMix
+      summary: Prepare a linked mix from raw stock using its batch formula
+      description: The server calculates raw ingredient pounds from the linked mix's per-batch formula and records a prepared-stock lot.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreparationRequest"
+      responses:
+        "201":
+          description: Preparation consumed raw stock and received prepared stock atomically
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreparationResult"
+        "200":
+          description: Previously completed preparation confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreparationResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/cycle-counts:
+    get:
+      operationId: listInventoryCycleCounts
+      summary: List recent cycle counts and review states
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Facility-scoped physical count summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [counts]
+                properties:
+                  counts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CycleCountSummary"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: stageInventoryCycleCount
+      summary: Stage a partial physical count for fresh review
+      description: Counts only submitted product codes; absolute values must be reviewed against current balance revisions before explicit acknowledgement and apply.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CycleCountRequest"
+      responses:
+        "201":
+          description: Count staged or marked stale
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CycleCountActionResult"
+        "200":
+          description: Previously staged count confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CycleCountActionResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+        "413":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/cycle-counts/{countId}:
+    get:
+      operationId: getInventoryCycleCount
+      summary: Read cycle-count rows and their current status
+      parameters:
+        - $ref: "#/components/parameters/CountId"
+      responses:
+        "200":
+          description: Count detail, including captured balance revisions and variances
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count:
+                    $ref: "#/components/schemas/CycleCountRecord"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/cycle-counts/{countId}/review:
+    post:
+      operationId: reviewInventoryCycleCount
+      summary: Review a cycle count against current stock revisions
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CountId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        "200":
+          description: Review recorded or stale count fenced from application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CycleCountActionResult"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/cycle-counts/{countId}/apply:
+    post:
+      operationId: applyInventoryCycleCount
+      summary: Apply a freshly reviewed absolute count after acknowledgement
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CountId"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [acknowledged]
+              properties:
+                acknowledged:
+                  const: true
+      responses:
+        "200":
+          description: Absolute-count correction applied or confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CycleCountActionResult"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+  /api/v2/inventory/run-staged-supplies:
+    get:
+      operationId: listRunStagedSupplies
+      summary: List staged substitutions for one run
+      description: Available to run readers and inventory managers; returns no unrelated warehouse stock.
+      parameters:
+        - in: query
+          name: runId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Run-scoped staged supply and completion receipts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [supplies]
+                properties:
+                  supplies:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RunStagedSupply"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: stageRunInventorySupply
+      summary: Reserve an equivalent-unit stock substitute for a run
+      description: The reservation is deducted only by the server's run-completion transaction; unused staged stock is released when the run completes.
+      security:
+        - v2Session: []
+          v2CsrfCookie: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunStagedSupplyRequest"
+      responses:
+        "201":
+          description: Run supply reservation recorded or confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunStagedSupplyResult"
+        "200":
+          description: Previously recorded reservation confirmed by retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunStagedSupplyResult"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
   /api/v2/inventory/movements:
     get:
       operationId: listInventoryMovements
@@ -3412,7 +3800,7 @@ components:
           type: boolean
     StockItem:
       type: object
-      required: [productId, code, name, unit, quantity, revision]
+      required: [productId, code, name, unit, quantity, revision, lotQuantity, stagedQuantity, availableQuantity]
       properties:
         productId:
           type: string
@@ -3429,6 +3817,451 @@ components:
         revision:
           type: integer
           minimum: 0
+        lotQuantity:
+          type: string
+        stagedQuantity:
+          type: string
+        availableQuantity:
+          type: string
+    InventoryLot:
+      type: object
+      required: [id, productId, productCode, productName, unit, lotNumber, sourceReference, receivedAt, quantityReceived, quantityRemaining, sourceLotId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productCode:
+          type: string
+        productName:
+          type: string
+        unit:
+          type: string
+        lotNumber:
+          type: string
+        sourceReference:
+          type: string
+        receivedAt:
+          type: string
+          format: date-time
+        quantityReceived:
+          type: string
+        quantityRemaining:
+          type: string
+        sourceLotId:
+          type: [string, "null"]
+          format: uuid
+    RunSupplyProduct:
+      type: object
+      required: [id, code, name, unit]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        unit:
+          type: string
+    PreparationComponent:
+      type: object
+      properties:
+        ingredientCode:
+          type: string
+        ingredientName:
+          type: string
+        perBatchLbs:
+          type: [string, "null"]
+        productCode:
+          type: [string, "null"]
+        productName:
+          type: [string, "null"]
+        productUnit:
+          type: [string, "null"]
+        stockUnitsPerLb:
+          type: [string, "null"]
+        quantity:
+          type: string
+    PreparationSetup:
+      type: object
+      required: [ingredients, mixes]
+      properties:
+        ingredients:
+          type: array
+          items:
+            type: object
+            required: [code, name, enabled, productCode, productName, productUnit, stockUnitsPerLb]
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              enabled:
+                type: boolean
+              productCode:
+                type: [string, "null"]
+              productName:
+                type: [string, "null"]
+              productUnit:
+                type: [string, "null"]
+              stockUnitsPerLb:
+                type: [string, "null"]
+        mixes:
+          type: array
+          items:
+            type: object
+            required: [code, name, enabled, isPrep, batchSizeLbs, productCode, productName, productUnit, stockUnitsPerLb, components]
+            properties:
+              code:
+                type: string
+              name:
+                type: string
+              enabled:
+                type: boolean
+              isPrep:
+                type: boolean
+              batchSizeLbs:
+                type: [number, "null"]
+              productCode:
+                type: [string, "null"]
+              productName:
+                type: [string, "null"]
+              productUnit:
+                type: [string, "null"]
+              stockUnitsPerLb:
+                type: [string, "null"]
+              components:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PreparationComponent"
+    PreparationLinkRequest:
+      type: object
+      additionalProperties: false
+      required: [commandId, kind, sourceCode, productCode, stockUnitsPerLb]
+      properties:
+        commandId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        kind:
+          type: string
+          enum: [ingredient, mix]
+        sourceCode:
+          type: string
+        productCode:
+          type: string
+        stockUnitsPerLb:
+          type: string
+          pattern: "^[1-9][0-9]*(\\.[0-9]{1,6})?$"
+    PreparationRequest:
+      type: object
+      additionalProperties: false
+      required: [commandId, mixCode, sourceWarehouseId, outputWarehouseId, batchCount, lotNumber, sourceReference, reason]
+      properties:
+        commandId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        mixCode:
+          type: string
+        sourceWarehouseId:
+          type: string
+          format: uuid
+        outputWarehouseId:
+          type: string
+          format: uuid
+        batchCount:
+          type: string
+          pattern: "^[1-9][0-9]*(\\.[0-9]{1,6})?$"
+        lotNumber:
+          type: string
+          maxLength: 120
+        sourceReference:
+          type: string
+          maxLength: 200
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+    PreparationRecord:
+      type: object
+      required: [id, mixCode, mixName, sourceWarehouseId, sourceWarehouseName, outputWarehouseId, outputWarehouseName, batchCount, preparedProductCode, preparedProductName, preparedUnit, preparedQuantity, lotNumber, sourceReference, reason, actorId, occurredAt, components]
+      properties:
+        id:
+          type: string
+          format: uuid
+        mixCode:
+          type: string
+        mixName:
+          type: string
+        sourceWarehouseId:
+          type: string
+          format: uuid
+        sourceWarehouseName:
+          type: string
+        outputWarehouseId:
+          type: string
+          format: uuid
+        outputWarehouseName:
+          type: string
+        batchCount:
+          type: string
+        preparedProductCode:
+          type: string
+        preparedProductName:
+          type: string
+        preparedUnit:
+          type: string
+        preparedQuantity:
+          type: string
+        lotNumber:
+          type: string
+        sourceReference:
+          type: string
+        reason:
+          type: string
+        actorId:
+          type: string
+          format: uuid
+        occurredAt:
+          type: string
+          format: date-time
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreparationComponent"
+    PreparationResult:
+      type: object
+      required: [outcome, replayed, preparationId, mixCode, preparedProductCode, preparedQuantity, preparedUnit, batchCount, components, occurredAt]
+      properties:
+        outcome:
+          const: prepared
+        replayed:
+          type: boolean
+        preparationId:
+          type: string
+          format: uuid
+        mixCode:
+          type: string
+        preparedProductCode:
+          type: string
+        preparedQuantity:
+          type: string
+        preparedUnit:
+          type: string
+        batchCount:
+          type: string
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreparationComponent"
+        occurredAt:
+          type: string
+          format: date-time
+    CycleCountRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, warehouseId, csv, reason]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        warehouseId:
+          type: string
+          format: uuid
+        csv:
+          type: string
+          maxLength: 1048576
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+    CycleCountRow:
+      type: object
+      required: [productCode, quantity, baselineQuantity, baselineRevision]
+      properties:
+        productCode:
+          type: string
+        quantity:
+          type: string
+        baselineQuantity:
+          type: string
+        baselineRevision:
+          type: integer
+        variance:
+          type: string
+    CycleCountSummary:
+      type: object
+      required: [id, warehouseId, warehouseName, status, rowCount, createdBy, createdAt, reviewedBy, reviewedAt, appliedBy, appliedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        warehouseName:
+          type: string
+        status:
+          type: string
+          enum: [staged, reviewed, applied, stale]
+        rowCount:
+          type: integer
+          minimum: 1
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        reviewedBy:
+          type: [string, "null"]
+          format: uuid
+        reviewedAt:
+          type: [string, "null"]
+          format: date-time
+        appliedBy:
+          type: [string, "null"]
+          format: uuid
+        appliedAt:
+          type: [string, "null"]
+          format: date-time
+    CycleCountRecord:
+      allOf:
+        - $ref: "#/components/schemas/CycleCountSummary"
+        - type: object
+          required: [rows, reason, result]
+          properties:
+            rows:
+              type: array
+              items:
+                $ref: "#/components/schemas/CycleCountRow"
+            reason:
+              type: string
+            result:
+              type: [object, "null"]
+    CycleCountActionResult:
+      type: object
+      required: [outcome, countId, warehouseId, replayed]
+      properties:
+        outcome:
+          type: string
+          enum: [staged, reviewed, applied, stale]
+        countId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        rowCount:
+          type: integer
+          minimum: 0
+        replayed:
+          type: boolean
+        reason:
+          type: string
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/CycleCountRow"
+    RunStagedSupply:
+      type: object
+      required: [id, runId, warehouseId, plannedProductId, plannedProductCode, plannedProductName, actualProductId, actualProductCode, actualProductName, unit, quantity, reason, actorId, occurredAt, used, released]
+      properties:
+        id:
+          type: string
+          format: uuid
+        runId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        plannedProductId:
+          type: string
+          format: uuid
+        plannedProductCode:
+          type: string
+        plannedProductName:
+          type: string
+        actualProductId:
+          type: string
+          format: uuid
+        actualProductCode:
+          type: string
+        actualProductName:
+          type: string
+        unit:
+          type: string
+        quantity:
+          type: string
+        reason:
+          type: string
+        actorId:
+          type: string
+          format: uuid
+        occurredAt:
+          type: string
+          format: date-time
+        used:
+          type: string
+        released:
+          type: string
+    RunStagedSupplyRequest:
+      type: object
+      additionalProperties: false
+      required: [commandId, runId, plannedProductCode, actualProductCode, quantity, reason]
+      properties:
+        commandId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        runId:
+          type: string
+          format: uuid
+        plannedProductCode:
+          type: string
+        actualProductCode:
+          type: string
+        quantity:
+          type: string
+          pattern: "^[1-9][0-9]*(\\.[0-9]{1,6})?$"
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 500
+    RunStagedSupplyResult:
+      type: object
+      required: [outcome, replayed, stageId, runId, warehouseId, plannedProductCode, actualProductCode, quantity, reason, occurredAt]
+      properties:
+        outcome:
+          const: staged
+        replayed:
+          type: boolean
+        stageId:
+          type: string
+          format: uuid
+        runId:
+          type: string
+          format: uuid
+        warehouseId:
+          type: string
+          format: uuid
+        plannedProductCode:
+          type: string
+        actualProductCode:
+          type: string
+        quantity:
+          type: string
+        reason:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
     InventoryMovement:
       type: object
       required: [id, movementGroupId, productCode, productName, unit, type, quantityDelta, reason, actorId, occurredAt]
@@ -3447,11 +4280,15 @@ components:
           type: string
         type:
           type: string
-          enum: [receipt, adjustment, transfer_out, transfer_in, opening_count]
+          enum: [receipt, adjustment, transfer_out, transfer_in, opening_count, cycle_count, prep_consume, prep_receive, run_consume]
         quantityDelta:
           type: string
         reason:
           type: string
+        lotNumber:
+          type: [string, "null"]
+        sourceReference:
+          type: [string, "null"]
         actorId:
           type: string
           format: uuid
@@ -3482,6 +4319,12 @@ components:
           type: string
           minLength: 3
           maxLength: 500
+        lotNumber:
+          type: string
+          maxLength: 120
+        sourceReference:
+          type: string
+          maxLength: 200
     InventoryMovementResult:
       type: object
       required: [outcome, replayed, movementId, warehouseId, productCode, quantity, revision]
