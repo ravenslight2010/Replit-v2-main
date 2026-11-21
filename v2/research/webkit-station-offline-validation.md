@@ -7,6 +7,7 @@
 - Node `v24.22.3`
 - Chromium `138.0.7204.100`
 - Nix `playwright-test` `1.52.0`, WebKit `18.4`
+- Project-pinned Playwright `1.65.1`, WPE WebKit `27.2` (`webkit-2388` bundle)
 - Headless WPE runtime with the Nix Mesa EGL manifest
 - Browser tests ran serially. `V2_REQUIRE_WEBKIT=true` was set, and
   `V2_SKIP_WEBKIT` was not set.
@@ -58,17 +59,47 @@ Call log:
 
 The same failure was reproduced using Playwright's `domcontentloaded` reload
 wait condition; changing the wait condition does not avoid it. The focused
-regression test now reports this exact WebKit 18.4 failure as a skip, rather
-than claiming the cached station view restored. On other WebKit versions, the
-test continues and requires the restored station to remain read-only offline
-and to adopt the latest server state after reconnecting.
+regression test reports this exact WebKit 18.4 failure as a skip, rather than
+claiming the cached station view restored.
 
-Latest focused result: Chromium's offline reload journey and WebKit's existing
-same-page offline/reconnect journey passed; the installed-shell WebKit test
-skipped with the limitation above. Therefore this host has evidence that WPE
-can install and populate the V2 cache, but **does not have evidence of an
-offline WebKit app-shell reload, restored station view, or reconnect after that
-reload**.
+### Newer WPE runtime result
+
+The project-pinned Playwright `1.65.1` cache includes WPE WebKit `27.2`
+(`webkit-2388`). Its bundled host-dependency check could not see the Nix
+libraries, so this run used a temporary, uncommitted launcher wrapper to expose
+the matching Nix shared libraries and Mesa EGL manifest; application
+dependencies and the repository's Nix configuration were unchanged.
+
+The installed-shell journey was run serially with
+`V2_REQUIRE_WEBKIT=true`, the WebKit 27.2 launcher, and:
+
+```sh
+node --test --test-concurrency=1 --test-reporter=spec \
+  --test-name-pattern='WebKit installed shell reloads offline' \
+  v2/e2e/station-sync.browser.test.mjs
+```
+
+Result:
+
+```text
+✔ WebKit installed shell reloads offline read-only and adopts fresh server state
+ℹ tests 1
+ℹ pass 1
+ℹ fail 0
+ℹ skipped 0
+```
+
+The station restored the cached paused run (`casesProduced: 12`) read-only after
+an offline app-shell reload. Once reconnected, it adopted the updated server
+state (`running`, `casesProduced: 20`) and re-enabled station controls. The
+test fixture now blocks its own HTTP server during the offline phase and
+provides fixture API responses after reconnect; WebKit can bypass Playwright's
+route hooks after a service worker takes control, so this keeps the offline
+reload and reconnect assertions meaningful.
+
+Latest installed-shell evidence: WPE WebKit 27.2 passed the offline reload,
+read-only restoration, and reconnect-to-latest-state journey. The WebKit 18.4
+runtime remains skipped for its reproduced pre-commit navigation error.
 
 ## Runner and suite results
 

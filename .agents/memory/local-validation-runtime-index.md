@@ -52,6 +52,21 @@ shell were confirmed available, including when using both `commit` and
 rerun the installed-shell journey on a newer supported WebKit runtime before
 claiming offline reload coverage.
 
+Playwright's newer WPE WebKit 27.2 bundle can run with Nix-provided host
+libraries, but service-worker-controlled pages may bypass Playwright route
+hooks. An offline fixture must block its own HTTP server, then serve the
+current fixture API state after reconnect; route-hook mocks alone can return
+server 404s and falsely fail recovery.
+
+**Why:** The 27.2 installed-shell journey reached the cached read-only station,
+but reconnect requests bypassed the registered route hooks and hit the
+fixture's static-server 404 handler.
+
+**How to apply:** For WebKit offline reload tests, make the fixture server
+explicitly reject traffic during the offline phase and delegate post-reconnect
+API requests to the same stateful fixture handlers. Keep the service worker
+enabled so the shell-cache behavior remains under test.
+
 - [Runner locks](release-runner-lock-history.md) — local lock history is private, not platform task history.
 - [Package-manager bootstrap](native-pnpm-runtime.md) — distinguish runtime bootstrap from application failures; preserve exact engine and lockfile constraints.
 - [Pinned Node](pinned-node-nix-runner.md) — use the exact installed Node when provisioning fails.

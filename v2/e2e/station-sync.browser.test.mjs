@@ -269,9 +269,58 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
     notFoundRoutes: [],
     operationalStatus: operationalStatus(RUN_ID),
     operationalStatusCalls: 0,
+    webkitOffline: false,
+    webkitApiHandler: null,
   };
   const server = createServer(async (request, response) => {
-    const asset = WEB_ASSETS.get(new URL(request.url, "http://v2.test").pathname);
+    const url = new URL(request.url, "http://v2.test");
+    // A service-worker-controlled WebKit page can bypass Playwright's route hooks.
+    // Refuse all fixture-server traffic offline, then delegate API requests after reconnect.
+    if (browserEngine === webkit && fixture.webkitOffline) {
+      response.destroy();
+      return;
+    }
+    if (browserEngine === webkit && url.pathname.startsWith("/api/v2/") && fixture.webkitApiHandler) {
+      const chunks = [];
+      for await (const chunk of request) chunks.push(chunk);
+      const postData = Buffer.concat(chunks).toString("utf8");
+      const apiRequest = {
+        url: () => `http://127.0.0.1:${server.address().port}${request.url}`,
+        method: () => request.method,
+        headers: () => request.headers,
+        postData: () => postData,
+        postDataJSON: () => postData ? JSON.parse(postData) : {},
+      };
+      let responseHandled = false;
+      const apiRoute = {
+        request: () => apiRequest,
+        fulfill: async ({ status = 200, contentType, headers = {}, body = "" } = {}) => {
+          responseHandled = true;
+          response.writeHead(status, {
+            ...(contentType ? { "Content-Type": contentType } : {}),
+            ...headers,
+          });
+          response.end(body);
+        },
+        abort: async () => {
+          responseHandled = true;
+          response.destroy();
+        },
+      };
+      try {
+        await fixture.webkitApiHandler(apiRoute);
+      } catch {
+        if (!response.destroyed && !response.writableEnded) {
+          response.writeHead(500).end();
+        }
+        return;
+      }
+      if (!responseHandled && !response.destroyed && !response.writableEnded) {
+        response.writeHead(500).end();
+      }
+      return;
+    }
+    const asset = WEB_ASSETS.get(url.pathname);
     if (!asset || !["GET", "HEAD"].includes(request.method)) {
       response.writeHead(404).end();
       return;
@@ -1713,10 +1762,11 @@ test(
     );
     fixture.run.status = "paused";
     fixture.run.stationProgress.line = stationSnapshot({ progress: { casesProduced: 12 } });
-    const { context, page } = await openDevice(
+    const { context, page, routeApi } = await openDevice(
       { width: 390, height: 844 },
       { canApprove: false, serviceWorkers: "allow" },
     );
+    fixture.webkitApiHandler = routeApi;
     const progressInput = page.locator('[data-station-field="casesProduced"]');
     await page.evaluate(async () => {
       await navigator.serviceWorker.ready;
@@ -1740,6 +1790,8 @@ test(
     assert.deepEqual(cachedShell, { document: true, app: true },
       "the installed V2 shell and station application must be cached before disconnecting");
 
+    await context.unroute("**/api/v2/**", routeApi);
+    fixture.webkitOffline = true;
     await context.setOffline(true);
     try {
       await page.reload({ waitUntil: "commit" });
@@ -1762,10 +1814,13 @@ test(
     assert.equal(await page.getByTestId("button-save-station").isDisabled(), true);
     assert.equal(await progressInput.isDisabled(), true);
     assert.equal(await page.getByTestId("button-resume").isDisabled(), true);
+    const offlineConsoleErrorCount = fixture.consoleErrors.length;
 
     fixture.run.status = "running";
     fixture.run.revision += 1;
     fixture.run.stationProgress.line.progress.casesProduced = 20;
+    fixture.webkitOffline = false;
+    await context.route("**/api/v2/**", routeApi);
     await context.setOffline(false);
     await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
     await page.waitForFunction(
@@ -1778,7 +1833,7 @@ test(
     assert.equal(await page.getByTestId("button-pause").isDisabled(), false);
     assert.equal(await page.getByTestId("button-save-station").isDisabled(), false);
     assert.deepEqual(fixture.pageErrors, []);
-    assert.deepEqual(fixture.consoleErrors, []);
+    assert.deepEqual(fixture.consoleErrors.slice(offlineConsoleErrorCount), []);
   },
 );
 
