@@ -1079,12 +1079,15 @@ async function main() {
     await recoveryPage.locator("#auth-password").fill("v2-test-browser-recovery-password");
     await recoveryPage.locator("#auth-submit").click();
     await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor({ timeout: 20000 }).catch(async () => {
-      throw new Error(JSON.stringify({
+      const diag = {
         step: "late-operator-sign-in",
         authStatus: await recoveryPage.locator("#auth-status").textContent().catch(() => ""),
         authError: await recoveryPage.locator("#auth-error-message").textContent().catch(() => ""),
         formHidden: await recoveryPage.locator("#auth-form").getAttribute("hidden"),
-      }));
+        url: recoveryPage.url(),
+      };
+      console.log(JSON.stringify({ event: "v2.late_operator_sign_in_diag", ...diag }));
+      throw new Error("late operator sign-in did not reach the authenticated app");
     });
     await recoveryPage.locator("#manager-operations-nav-link").waitFor({ state: "hidden" });
     await recoveryPage.locator("#manager-operations").waitFor({ state: "hidden" });
