@@ -292,6 +292,16 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
+  let browser;
+  t.after(async () => {
+    try {
+      await browser?.close();
+    } finally {
+      if (server.listening) {
+        await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+      }
+    }
+  });
   const launchOptions = { headless: true };
   if (browserEngine === chromium) {
     launchOptions.executablePath = process.env.CHROMIUM_PATH
@@ -309,11 +319,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         : {}),
     };
   }
-  const browser = await browserEngine.launch(launchOptions);
-  t.after(async () => {
-    await browser.close();
-    await new Promise((resolve) => server.close(resolve));
-  });
+  browser = await browserEngine.launch(launchOptions);
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
   async function openDevice(deviceViewport = viewport, { canApprove = manager, withQc = false, initScript } = {}) {
@@ -1642,6 +1648,48 @@ test("offline reload stays read-only and wakes into the latest server state", as
   assert.equal(await page.getByTestId("button-save-station").isDisabled(), false);
   assert.deepEqual(fixture.pageErrors, []);
 });
+
+test(
+  "WebKit station stays read-only offline and refreshes after reconnecting",
+  {
+    skip: !webkitInstalled ? "Playwright WebKit is not installed on this host." : false,
+    timeout: 60_000,
+  },
+  async (t) => {
+    const { fixture, openDevice } = await createFixture(
+      t,
+      { width: 390, height: 844 },
+      { manager: true, browserEngine: webkit },
+    );
+    fixture.run.status = "paused";
+    fixture.run.stationProgress.line = stationSnapshot({ progress: { casesProduced: 12 } });
+    const { context, page } = await openDevice(
+      { width: 390, height: 844 },
+      { canApprove: false },
+    );
+    const progressInput = page.locator('[data-station-field="casesProduced"]');
+
+    await context.setOffline(true);
+    await page.locator("#connection-indicator[data-state='offline']").waitFor();
+    assert.equal(await progressInput.inputValue(), "12");
+    assert.equal(await progressInput.isDisabled(), true);
+    assert.equal(await page.getByTestId("button-save-station").isDisabled(), true);
+    assert.equal(await page.getByTestId("button-resume").isDisabled(), true);
+
+    fixture.run.revision += 1;
+    fixture.run.stationProgress.line.progress.casesProduced = 20;
+    await context.setOffline(false);
+    await page.waitForFunction(
+      () => document.querySelector('[data-station-field="casesProduced"]')?.value === "20",
+      null,
+      { timeout: 7_000 },
+    );
+    assert.equal(await page.locator("#connection-indicator[data-state='online']").count(), 1);
+    assert.equal(await page.getByTestId("button-resume").isDisabled(), false);
+    assert.deepEqual(fixture.pageErrors, []);
+    assert.deepEqual(fixture.consoleErrors, []);
+  },
+);
 
 test("server auto-tracking and station timers are shared across devices", async (t) => {
   const { fixture, openDevice } = await createFixture(t);
