@@ -1,6 +1,6 @@
 # Transferable Agent Handbook
 
-**Status:** Approved design; awaiting review of this written specification  
+**Status:** Approved design; updated with the test-preview requirement; awaiting review of this written specification
 **Date:** 2026-11-19
 
 ## Purpose
@@ -79,7 +79,7 @@ Create `docs/agent-transfer/` with these focused documents:
    - State source precedence, freshness rules, evidence labels, and the
      instruction to inspect current code and the live task board before acting.
    - Link to the capability catalog, V2 handoff, V1-to-V2 research, recovery
-     report, and technical memory.
+     report, technical memory, and the safe V2 Agent Test Preview instructions.
 
 2. **`owner-and-project-context.md` — Durable decisions and work guidance**
    - Record only project-relevant decisions and working preferences.
@@ -139,9 +139,28 @@ Create `docs/agent-transfer/` with these focused documents:
      data in the test.
 
 `replit.md` will become a brief current-V2 entry point to this handbook and
-current runtime instructions. Its V1-specific material will be retained only
-where useful, clearly marked historical, and moved or linked into the
-historical reference section. Add a prominent pointer to the handbook in
+current runtime instructions. It will include an immediately usable section for
+the **V2 Agent Test Preview**:
+
+1. Stop **V2 Production Assistant** before starting the test preview because
+   both web workflows use port 5000.
+2. Start the configured **V2 Agent Test Preview** workflow, not the shared
+   database workflow, for interactive test changes.
+3. Sign in with the clearly labeled synthetic-manager button. Do not copy or
+   request credentials.
+4. Explain that the preview creates a temporary loopback-only PostgreSQL
+   cluster, seeds synthetic records, refuses project/production database
+   configuration, and removes the database and its test writes when stopped.
+   Preview data does not survive a workflow restart.
+5. After testing, stop the preview and restart **V2 Production Assistant** to
+   restore the ordinary development preview.
+6. Provide the automated browser journey command:
+   `pnpm --filter @workspace/lucia-v2 run test:agent-preview`.
+
+Document the preview's pinned-Node, non-root, and development-mode
+requirements, as enforced by its launcher. Its V1-specific material will be
+retained only where useful, clearly marked historical, and moved or linked into
+the historical reference section. Add a prominent pointer to the handbook in
 `.agents/memory/MEMORY.md`, preserving that file's technical-topic index role.
 
 ## Source precedence and freshness policy
@@ -213,7 +232,11 @@ The documentation task is complete when:
    linked sources, with citations or explicit unknowns.
 7. No secrets, credentials, customer workbook content, production records, or
    personal information are introduced.
-8. Existing documentation links and relevant repository documentation checks
+8. An agent can locate the test preview, start it without risking the shared
+   database, use its synthetic sign-in, understand data cleanup and port
+   contention, run its browser test, and restore the normal development
+   workflow.
+9. Existing documentation links and relevant repository documentation checks
    pass.
 
 ## Review checklist
