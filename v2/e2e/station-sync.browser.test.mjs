@@ -320,15 +320,21 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
       return;
     }
     const asset = WEB_ASSETS.get(url.pathname);
-    if (!asset || !["GET", "HEAD"].includes(request.method)) {
+    const clientRoute = !url.pathname.startsWith("/api/")
+      && !/\.[^/]+$/u.test(url.pathname)
+      && ["GET", "HEAD"].includes(request.method);
+    const documentAsset = asset ?? (clientRoute
+      ? ["../web/index.html", "text/html; charset=utf-8"]
+      : null);
+    if (!documentAsset) {
       response.writeHead(404).end();
       return;
     }
     try {
-      const file = new URL(asset[0], import.meta.url);
+      const file = new URL(documentAsset[0], import.meta.url);
       const content = await readFile(file);
       response.writeHead(200, {
-        "Content-Type": asset[1],
+        "Content-Type": documentAsset[1],
         "Cache-Control": "no-cache",
         "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; worker-src 'self'",
         "X-Content-Type-Options": "nosniff",
@@ -384,6 +390,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
       withQc = false,
       initScript,
       serviceWorkers = browserEngine === webkit ? "block" : "allow",
+      startPath = "/",
     } = {},
   ) {
     const context = await browser.newContext({
@@ -1081,7 +1088,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
       }
       fixture.consoleErrors.push(`${message.text()} [${JSON.stringify(message.location())}]`);
     });
-    await page.goto(baseUrl);
+    await page.goto(new URL(startPath, baseUrl).href);
     try {
       await page.locator("#station-panel:not([hidden])").waitFor({ timeout: 5000 });
     } catch (error) {
@@ -1093,6 +1100,24 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
 
   return { baseUrl, browser, fixture, openDevice };
 }
+
+test("V2 initializes from a nested URL and remains usable after refresh", async (t) => {
+  const { fixture, openDevice } = await createFixture(t);
+  const startPath = "/setup/profiles/?source=direct";
+  const { page } = await openDevice(undefined, { startPath });
+
+  assert.equal(new URL(page.url()).pathname, "/setup/profiles/");
+  assert.equal(new URL(page.url()).search, "?source=direct");
+  await page.getByTestId("tab-station-line").waitFor();
+  await page.getByTestId("tab-station-dough").click();
+  await page.getByTestId("tab-station-line").click();
+  await page.reload();
+  await page.locator("#station-panel:not([hidden])").waitFor({ timeout: 5000 });
+  await page.getByTestId("tab-station-line").waitFor();
+  assert.equal(new URL(page.url()).pathname, "/setup/profiles/");
+  assert.equal(new URL(page.url()).search, "?source=direct");
+  assert.deepEqual(fixture.pageErrors, []);
+});
 
 async function waitForState(predicate, timeoutMs = 7000) {
   const started = Date.now();

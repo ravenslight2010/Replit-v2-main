@@ -423,17 +423,23 @@ async function validateV2StaticArtifactHttp(root) {
       );
     }
 
-    const nestedRoute = "/setup/profiles";
-    const routeResponse = await fetch(new URL(nestedRoute, origin));
-    const routeBody = await routeResponse.text();
     const appShell = await readFile(join(publicDir, "index.html"), "utf8");
-    assertClientRouteResponse(
-      nestedRoute,
-      routeResponse.status,
-      routeResponse.headers.get("content-type"),
-      routeBody,
-      appShell,
-    );
+    for (const nestedRoute of [
+      "/setup/profiles",
+      "/setup/profiles/",
+      "/setup/profiles?source=direct",
+      "/setup/profiles/?source=direct",
+    ]) {
+      const routeResponse = await fetch(new URL(nestedRoute, origin));
+      const routeBody = await routeResponse.text();
+      assertClientRouteResponse(
+        nestedRoute,
+        routeResponse.status,
+        routeResponse.headers.get("content-type"),
+        routeBody,
+        appShell,
+      );
+    }
   } finally {
     await new Promise((resolveClose, rejectClose) => {
       server.close((error) => (error ? rejectClose(error) : resolveClose()));
