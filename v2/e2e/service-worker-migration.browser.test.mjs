@@ -293,3 +293,107 @@ self.addEventListener("message", (event) => {
 
   await context.close();
 });
+
+test("a newer V2 worker replaces the old V2 shell cache and restores the current shell offline", {
+  timeout: 60_000,
+}, async (t) => {
+  const OLD_V2_HTML = `<!doctype html>
+<html lang="en"><head><title>Fieldline V2 old shell</title></head>
+<body><main id="old-v2-shell">Old V2 production shell</main></body></html>`;
+  let servedVersion = "old";
+  const server = createServer(async (request, response) => {
+    const pathname = new URL(request.url, "http://127.0.0.1").pathname;
+    if (!["GET", "HEAD"].includes(request.method)) {
+      response.writeHead(405).end();
+      return;
+    }
+    if (pathname === "/" || pathname === "/v2/web/app-shell.html") {
+      const contents = servedVersion === "old"
+        ? Buffer.from(OLD_V2_HTML)
+        : await readFile(new URL("../web/index.html", import.meta.url));
+      response.writeHead(200, {
+        "Cache-Control": "no-cache",
+        "Content-Length": contents.byteLength,
+        "Content-Type": "text/html; charset=utf-8",
+      });
+      response.end(request.method === "HEAD" ? undefined : contents);
+      return;
+    }
+    if (pathname === "/service-worker.js") {
+      let contents = await readFile(new URL("../web/service-worker.js", import.meta.url), "utf8");
+      if (servedVersion === "old") {
+        assert.match(contents, /fieldline-v2-shell-12/u);
+        contents = contents.replace("fieldline-v2-shell-12", "fieldline-v2-shell-11");
+      }
+      response.writeHead(200, {
+        "Cache-Control": "no-cache",
+        "Content-Length": Buffer.byteLength(contents),
+        "Content-Type": "text/javascript; charset=utf-8",
+      });
+      response.end(request.method === "HEAD" ? undefined : contents);
+      return;
+    }
+    const asset = V2_ASSETS.get(pathname);
+    if (!asset) {
+      response.writeHead(404).end();
+      return;
+    }
+    try {
+      const contents = await readFile(new URL(asset[0], import.meta.url));
+      response.writeHead(200, {
+        "Cache-Control": "no-cache",
+        "Content-Length": contents.byteLength,
+        "Content-Type": asset[1],
+      });
+      response.end(request.method === "HEAD" ? undefined : contents);
+    } catch {
+      response.writeHead(500).end();
+    }
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => new Promise((resolve) => server.close(resolve)));
+
+  const browserPath = process.env.CHROMIUM_PATH
+    || execFileSync("which", ["chromium"], { encoding: "utf8" }).trim();
+  const browser = await chromium.launch({ headless: true, executablePath: browserPath, args: ["--no-sandbox"] });
+  t.after(() => browser.close());
+  const context = await browser.newContext();
+  t.after(() => context.close());
+  const page = await context.newPage();
+  await page.goto(`http://127.0.0.1:${server.address().port}/`);
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
+    await navigator.serviceWorker.ready;
+  });
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  await page.waitForFunction(async () => {
+    const cache = await caches.open("fieldline-v2-shell-11");
+    const shell = await cache.match("/");
+    return Boolean(shell && (await shell.text()).includes("Old V2 production shell"));
+  });
+
+  servedVersion = "new";
+  await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.getRegistration("/");
+    await registration.update();
+  });
+  await page.waitForFunction(async () => {
+    const registration = await navigator.serviceWorker.getRegistration("/");
+    const cacheNames = await caches.keys();
+    return cacheNames.includes("fieldline-v2-shell-12")
+      && !cacheNames.includes("fieldline-v2-shell-11")
+      && registration?.active?.state === "activated"
+      && navigator.serviceWorker.controller === registration.active;
+  });
+
+  await context.setOffline(true);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.locator("#auth-panel").waitFor({ timeout: 7000 });
+  assert.equal(await page.title(), "Run control — Fieldline");
+  assert.match(await page.locator("#auth-heading").textContent(), /Sign in to the floor/u);
+  assert.equal(await page.locator("#old-v2-shell").count(), 0);
+  const cachedCurrentShell = await page.evaluate(async () => (
+    await (await caches.open("fieldline-v2-shell-12")).match("/")
+  )?.text());
+  assert.match(cachedCurrentShell ?? "", /Sign in to the floor/u);
+});

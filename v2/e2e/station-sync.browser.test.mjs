@@ -1687,15 +1687,27 @@ test("offline reload stays read-only and wakes into the latest server state", as
   await page.evaluate(() => navigator.serviceWorker.ready);
   assert.equal(await page.getByTestId("status-run").textContent(), "paused");
   assert.equal(await page.getByTestId("button-resume").isDisabled(), false);
+  const savedAtBeforeDisconnect = await page.evaluate(() => (
+    JSON.parse(localStorage.getItem("fieldline:v2:last-confirmed-state")).savedAt
+  ));
+  const savedTimeLabel = await page.evaluate((savedAt) => new Intl.DateTimeFormat(undefined, {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  }).format(new Date(savedAt)), savedAtBeforeDisconnect);
 
   await context.unroute("**/api/v2/**", routeApi);
   await context.setOffline(true);
   await page.reload();
   await page.locator("#station-panel:not([hidden])").waitFor({ timeout: 7000 });
+  assert.equal(await page.locator("#error-title").textContent(), "Offline — read-only");
+  assert.match(await page.locator("#error-message").textContent(), /Showing the last server-confirmed state saved/u);
+  assert.ok((await page.locator("#error-message").textContent()).includes(savedTimeLabel),
+    "The offline notice must display the saved server-state time.");
   assert.equal(await page.locator('[data-station-field="casesProduced"]').inputValue(), "12");
   assert.equal(await page.getByTestId("status-run").textContent(), "paused");
   assert.equal(await page.getByTestId("button-save-station").isDisabled(), true);
   assert.equal(await page.locator('[data-station-field="casesProduced"]').isDisabled(), true);
+  assert.equal(await page.getByTestId("button-resume").isDisabled(), true);
+  assert.equal(await page.getByTestId("button-complete").isDisabled(), true);
 
   await otherDevice.page.getByTestId("button-resume").click();
   await otherDevice.page.getByTestId("status-run").getByText("running").waitFor();
@@ -1704,6 +1716,11 @@ test("offline reload stays read-only and wakes into the latest server state", as
   await otherDevice.page.getByText("Saved to the shared run.").waitFor();
   assert.equal(fixture.run.stationProgress.line.progress.casesProduced, 20);
   assert.equal(fixture.run.revision, 3, "the connected session owns the latest run revision");
+  const acceptedWritesBeforeReconnect = {
+    lifecycleCalls: fixture.lifecycleCalls,
+    stationCommands: [...fixture.browserStationCommands],
+    runRevision: fixture.run.revision,
+  };
 
   await context.route("**/api/v2/**", routeApi);
   await context.setOffline(false);
@@ -1714,6 +1731,11 @@ test("offline reload stays read-only and wakes into the latest server state", as
   assert.equal(await page.getByTestId("status-run").textContent(), "running");
   assert.equal(await page.getByTestId("button-pause").isDisabled(), false);
   assert.equal(await page.getByTestId("button-save-station").isDisabled(), false);
+  assert.deepEqual({
+    lifecycleCalls: fixture.lifecycleCalls,
+    stationCommands: fixture.browserStationCommands,
+    runRevision: fixture.run.revision,
+  }, acceptedWritesBeforeReconnect, "Reconnection must adopt current state without replaying a stale offline write.");
   assert.deepEqual(fixture.pageErrors, []);
 });
 
