@@ -1099,6 +1099,7 @@ test("More update check is accessible, distinguishes outcomes, and never reloads
   assert.ok(reducedTransition <= 0.001, `reduced motion transition must be near-zero, got ${reducedTransition}`);
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => !document.querySelector("#update-dialog").open);
+  await page.waitForFunction(() => document.activeElement === document.querySelector("#more-menu summary"));
   assert.equal(await page.locator("#more-menu summary").evaluate((element) => element === document.activeElement),
     true, "closing the dialog returns focus to the More menu control");
   assert.equal(await topbarMenu.getAttribute("open"), null);

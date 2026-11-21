@@ -205,7 +205,7 @@ export function initializeUpdateControls({
   dialog.addEventListener("close", () => {
     const moreMenu = openButton.closest("details");
     if (moreMenu) moreMenu.open = false;
-    (moreMenu?.querySelector("summary") || openButton).focus();
+    window.setTimeout(() => (moreMenu?.querySelector("summary") || openButton).focus(), 0);
   });
 
   const hasUnsavedWork = () => dirtyForms.size > 0;
