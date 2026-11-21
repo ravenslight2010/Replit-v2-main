@@ -40,6 +40,18 @@ Never set `LD_PRELOAD` globally. Suppress only optional Google Fonts TLS errors
 in isolated local browser journeys, not app/API failures or normal TLS
 verification.
 
+WPE WebKit 18.4 can install and populate the V2 service-worker cache, but an
+offline navigation reload fails with `WebKit encountered an internal error`
+before commit. A same-page offline/reconnect pass is not reload evidence.
+
+**Why:** The headless WPE navigation path failed after the worker and cached
+shell were confirmed available, including when using both `commit` and
+`domcontentloaded` reload waits.
+
+**How to apply:** Keep the WPE 18.4 offline-reload limitation explicit, and
+rerun the installed-shell journey on a newer supported WebKit runtime before
+claiming offline reload coverage.
+
 - [Runner locks](release-runner-lock-history.md) — local lock history is private, not platform task history.
 - [Package-manager bootstrap](native-pnpm-runtime.md) — distinguish runtime bootstrap from application failures; preserve exact engine and lockfile constraints.
 - [Pinned Node](pinned-node-nix-runner.md) — use the exact installed Node when provisioning fails.

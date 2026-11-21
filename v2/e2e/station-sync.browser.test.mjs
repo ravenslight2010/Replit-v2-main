@@ -322,10 +322,18 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
   browser = await browserEngine.launch(launchOptions);
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
-  async function openDevice(deviceViewport = viewport, { canApprove = manager, withQc = false, initScript } = {}) {
+  async function openDevice(
+    deviceViewport = viewport,
+    {
+      canApprove = manager,
+      withQc = false,
+      initScript,
+      serviceWorkers = browserEngine === webkit ? "block" : "allow",
+    } = {},
+  ) {
     const context = await browser.newContext({
       viewport: deviceViewport,
-      ...(browserEngine === webkit ? { serviceWorkers: "block" } : {}),
+      serviceWorkers,
     });
     if (initScript) await context.addInitScript(initScript);
     const routeApi = async (route) => {
@@ -1686,6 +1694,89 @@ test(
     );
     assert.equal(await page.locator("#connection-indicator[data-state='online']").count(), 1);
     assert.equal(await page.getByTestId("button-resume").isDisabled(), false);
+    assert.deepEqual(fixture.pageErrors, []);
+    assert.deepEqual(fixture.consoleErrors, []);
+  },
+);
+
+test(
+  "WebKit installed shell reloads offline read-only and adopts fresh server state",
+  {
+    skip: !webkitInstalled ? "Playwright WebKit is not installed on this host." : false,
+    timeout: 60_000,
+  },
+  async (t) => {
+    const { browser, fixture, openDevice } = await createFixture(
+      t,
+      { width: 390, height: 844 },
+      { manager: true, browserEngine: webkit },
+    );
+    fixture.run.status = "paused";
+    fixture.run.stationProgress.line = stationSnapshot({ progress: { casesProduced: 12 } });
+    const { context, page } = await openDevice(
+      { width: 390, height: 844 },
+      { canApprove: false, serviceWorkers: "allow" },
+    );
+    const progressInput = page.locator('[data-station-field="casesProduced"]');
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) {
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error("V2 service worker did not control the installed shell.")), 5000);
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            clearTimeout(timeout);
+            resolve();
+          }, { once: true });
+        });
+      }
+    });
+    const cachedShell = await page.evaluate(async () => {
+      const cache = await caches.open("fieldline-v2-shell-12");
+      return {
+        document: Boolean(await cache.match("/")),
+        app: Boolean(await cache.match("/v2/web/app.js")),
+      };
+    });
+    assert.deepEqual(cachedShell, { document: true, app: true },
+      "the installed V2 shell and station application must be cached before disconnecting");
+
+    await context.setOffline(true);
+    try {
+      await page.reload({ waitUntil: "commit" });
+    } catch (error) {
+      const browserVersion = browser.version();
+      if (/^18\.4(?:\b|$)/u.test(browserVersion)
+        && error instanceof Error
+        && error.message.includes("WebKit encountered an internal error")) {
+        t.skip(
+          `WPE WebKit ${browserVersion} fails offline service-worker navigation before the cached shell can restore; offline reload remains unverified on this runtime.`,
+        );
+        return;
+      }
+      throw error;
+    }
+    await page.locator("#station-panel:not([hidden])").waitFor({ timeout: 7000 });
+    assert.equal(await page.title(), "Run control — Fieldline");
+    assert.equal(await progressInput.inputValue(), "12");
+    assert.equal(await page.getByTestId("status-run").textContent(), "paused");
+    assert.equal(await page.getByTestId("button-save-station").isDisabled(), true);
+    assert.equal(await progressInput.isDisabled(), true);
+    assert.equal(await page.getByTestId("button-resume").isDisabled(), true);
+
+    fixture.run.status = "running";
+    fixture.run.revision += 1;
+    fixture.run.stationProgress.line.progress.casesProduced = 20;
+    await context.setOffline(false);
+    await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    await page.waitForFunction(
+      () => document.querySelector('[data-station-field="casesProduced"]')?.value === "20",
+      null,
+      { timeout: 7000 },
+    );
+    assert.equal(await page.getByTestId("status-run").textContent(), "running");
+    assert.equal(await page.locator("#connection-indicator[data-state='online']").count(), 1);
+    assert.equal(await page.getByTestId("button-pause").isDisabled(), false);
+    assert.equal(await page.getByTestId("button-save-station").isDisabled(), false);
     assert.deepEqual(fixture.pageErrors, []);
     assert.deepEqual(fixture.consoleErrors, []);
   },

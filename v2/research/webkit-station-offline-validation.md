@@ -38,8 +38,37 @@ e2e/qc-workflow.browser.test.mjs`; it reported:
 ```
 
 Added a WebKit offline station test that confirms a paused run remains visible
-but read-only while offline, then refreshes to the latest server-owned progress
-after reconnecting.
+but read-only while the page stays open, then refreshes to the latest
+server-owned progress after reconnecting. This is not installed-shell offline
+reload coverage.
+
+## Installed-shell offline reload probe
+
+The focused installed-shell WebKit test enables service workers, waits for the
+V2 worker to control the page, and confirms both `/` and `/v2/web/app.js` are in
+`fieldline-v2-shell-12`. On the Nix `playwright-test` 1.52.0 runtime with WPE
+WebKit 18.4, the subsequent offline `page.reload()` fails before navigation
+commits with:
+
+```text
+page.reload: WebKit encountered an internal error
+Call log:
+  - waiting for navigation until "commit"
+```
+
+The same failure was reproduced using Playwright's `domcontentloaded` reload
+wait condition; changing the wait condition does not avoid it. The focused
+regression test now reports this exact WebKit 18.4 failure as a skip, rather
+than claiming the cached station view restored. On other WebKit versions, the
+test continues and requires the restored station to remain read-only offline
+and to adopt the latest server state after reconnecting.
+
+Latest focused result: Chromium's offline reload journey and WebKit's existing
+same-page offline/reconnect journey passed; the installed-shell WebKit test
+skipped with the limitation above. Therefore this host has evidence that WPE
+can install and populate the V2 cache, but **does not have evidence of an
+offline WebKit app-shell reload, restored station view, or reconnect after that
+reload**.
 
 ## Runner and suite results
 
