@@ -6,14 +6,18 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium, webkit as localWebkit } from "../node_modules/playwright/index.mjs";
+import {
+  AGENT_PREVIEW_PASSWORD,
+  AGENT_PREVIEW_USERNAME,
+} from "./agent-preview-config.mjs";
 import { startV2Server } from "./main.mjs";
 
 const webkit = process.env.V2_WEBKIT_PLAYWRIGHT_MODULE
   ? createRequire(import.meta.url)(process.env.V2_WEBKIT_PLAYWRIGHT_MODULE).webkit
   : localWebkit;
 
-const MANAGER_USERNAME = "V2IntegrationManager";
-const MANAGER_PASSWORD = "v2-test-manager-password";
+const MANAGER_USERNAME = AGENT_PREVIEW_USERNAME;
+const MANAGER_PASSWORD = AGENT_PREVIEW_PASSWORD;
 const csvCell = (value) => `"${String(value).replaceAll('"', '""')}"`;
 
 async function authenticateBrowserContext(baseUrl, context) {
@@ -167,7 +171,7 @@ async function main() {
       ["active", "standby", "degraded", "stale", "unavailable"].includes(
         document.querySelector("#station-worker-status")?.textContent?.trim() ?? "",
       ));
-    for (const username of ["V2IntegrationManager", "V2IntegrationOperator", "V2RecoveryOperator"]) {
+    for (const username of [AGENT_PREVIEW_USERNAME, "V2IntegrationOperator", "V2RecoveryOperator"]) {
       await page.locator("#staff-history-list").getByText(username, { exact: false }).first().waitFor();
     }
     for (const viewport of [
@@ -806,7 +810,8 @@ async function main() {
     const exportedCsv = await readFile(csvPath, "utf8");
     assert.match(exportedCsv, /V2 manager operations summary/u);
     assert.ok(exportedCsv.includes('"source_coverage:syncConflicts","unavailable"'));
-    assert.doesNotMatch(exportedCsv, /must not be returned|v2-test-manager-password|v2-test-browser-recovery-password|V2RecoveryOperator/i);
+    assert.doesNotMatch(exportedCsv, /must not be returned|v2-test-browser-recovery-password|V2RecoveryOperator/i);
+    assert.equal(exportedCsv.includes(AGENT_PREVIEW_PASSWORD), false);
 
     await page.reload();
     await page.locator("#manager-operations-nav-link").click();

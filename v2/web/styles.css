@@ -227,6 +227,9 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .auth-form .field input[aria-invalid="true"] { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
 .auth-submit { width: 100%; min-height: 52px; margin-top: 3px; }
 .auth-submit:disabled { cursor: progress; }
+.agent-preview-sign-in { width: 100%; min-height: 48px; margin-top: 10px; border-color: var(--warning-border); color: var(--warning-text); }
+.agent-preview-sign-in:hover:not(:disabled) { background: var(--warning-bg); }
+.agent-preview-sign-in:disabled { cursor: progress; opacity: .6; }
 .auth-retry { margin-top: 12px; border-color: var(--line-strong); color: var(--ink-soft); min-height: 40px; }
 .auth-retry[hidden] { display: none; }
 .password-recovery-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }

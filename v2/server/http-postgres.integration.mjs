@@ -3,9 +3,13 @@ import { createHash } from "node:crypto";
 import * as XLSX from "xlsx";
 import { Pool } from "pg";
 import { buildAllowlistedCutoverBatch } from "../core/cutover-transform.mjs";
+import {
+  AGENT_PREVIEW_PASSWORD,
+  AGENT_PREVIEW_USERNAME,
+} from "./agent-preview-config.mjs";
 import { startV2Server } from "./main.mjs";
 
-const MANAGER_PASSWORD = "v2-test-manager-password";
+const MANAGER_PASSWORD = AGENT_PREVIEW_PASSWORD;
 const OPERATOR_PASSWORD = "v2-test-operator-password";
 const RECOVERY_PASSWORD = "v2-test-recovery-password";
 const BOOTSTRAP_CODE = "v2-test-initial-manager-bootstrap-code";
@@ -84,7 +88,7 @@ async function bootstrap(baseUrl, bootstrapCode) {
     },
     body: JSON.stringify({
       bootstrapCode,
-      username: "V2IntegrationManager",
+      username: AGENT_PREVIEW_USERNAME,
       password: MANAGER_PASSWORD,
     }),
   });
@@ -139,7 +143,8 @@ async function main() {
     assert.equal(bootstrapBody.staff.role, "manager");
     const MANAGER_ID = bootstrapBody.staff.userId;
     const cutoverBatch = allowlistedRehearsalBatch();
-    assert.doesNotMatch(JSON.stringify(bootstrapBody), /v2-test-initial-manager-bootstrap-code|v2-test-manager-password|argon2id|v2_session/);
+    assert.doesNotMatch(JSON.stringify(bootstrapBody), /v2-test-initial-manager-bootstrap-code|argon2id|v2_session/);
+    assert.equal(JSON.stringify(bootstrapBody).includes(AGENT_PREVIEW_PASSWORD), false);
     const managerCookies = bootstrapResponse.headers.getSetCookie().map((cookie) => cookie.split(";", 1)[0]);
     const manager = {
       cookieHeader: managerCookies.join("; "),
@@ -169,7 +174,7 @@ async function main() {
     });
     assert.equal(createStaff.status, 201);
     const directory = await jsonResponse(createStaff);
-    assert.ok(directory.staff.some((staff) => staff.username.toLowerCase() === "v2integrationmanager"));
+    assert.ok(directory.staff.some((staff) => staff.username.toLowerCase() === AGENT_PREVIEW_USERNAME));
     assert.ok(directory.staff.some((staff) => staff.username.toLowerCase() === "v2integrationoperator"));
     assert.ok(directory.roles.some((role) => role.name === "manager"));
     assert.ok(directory.roles.some((role) => role.name === "operator"));
@@ -447,7 +452,7 @@ async function main() {
     });
     await adminPool.query("COMMIT");
 
-    const secondManager = await signIn(baseUrl, "V2IntegrationManager", MANAGER_PASSWORD);
+    const secondManager = await signIn(baseUrl, AGENT_PREVIEW_USERNAME, MANAGER_PASSWORD);
     const operatorSchedule = await fetch(`${baseUrl}/api/v2/schedules?date=2035-04-15`, {
       headers: { Cookie: operator.cookieHeader, Accept: "application/json" },
     });

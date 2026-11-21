@@ -34,6 +34,7 @@ const el = {
   authUsername: document.querySelector("#auth-username"),
   authPassword: document.querySelector("#auth-password"),
   authSubmit: document.querySelector("#auth-submit"),
+  agentPreviewSignIn: document.querySelector("#agent-preview-sign-in"),
   authRetry: document.querySelector("#auth-retry"),
   passwordRecoveryLinks: document.querySelector("#password-recovery-links"),
   passwordResetRequestToggle: document.querySelector("#password-reset-request-toggle"),
@@ -1443,6 +1444,54 @@ async function submitSignIn(event) {
   } finally {
     authInFlight = false;
     if (!currentStaff) el.authSubmit.disabled = false;
+  }
+}
+
+async function initializeAgentPreviewSignIn() {
+  try {
+    const response = await fetch("/api/v2/agent-test-preview/credentials", {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) return;
+    const body = await response.json();
+    if (body?.enabled === true
+      && typeof body.username === "string"
+      && typeof body.password === "string"
+      && !currentStaff) {
+      el.agentPreviewSignIn.hidden = false;
+    }
+  } catch {
+    // A failed preview check must leave the synthetic sign-in hidden.
+  }
+}
+
+async function submitAgentPreviewSignIn() {
+  if (authInFlight || currentStaff) return;
+  el.agentPreviewSignIn.disabled = true;
+  try {
+    const response = await fetch("/api/v2/agent-test-preview/credentials", {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    const body = await readJson(response);
+    if (body.enabled !== true || typeof body.username !== "string" || typeof body.password !== "string") {
+      throw new Error("The synthetic preview account is unavailable.");
+    }
+    el.authUsername.value = body.username;
+    el.authPassword.value = body.password;
+    el.authForm.requestSubmit();
+  } catch (error) {
+    showAuthError(
+      "Preview sign-in unavailable",
+      error instanceof Error ? error.message : "The synthetic preview account could not be loaded.",
+    );
+  } finally {
+    el.agentPreviewSignIn.disabled = false;
   }
 }
 
@@ -3085,6 +3134,7 @@ el.productionSetup.addEventListener("change", renderRunDieSetup);
 el.dieType.addEventListener("change", selectRunDie);
 el.stationForm.addEventListener("submit", submitStationForm);
 el.authForm.addEventListener("submit", submitSignIn);
+el.agentPreviewSignIn.addEventListener("click", submitAgentPreviewSignIn);
 el.passwordResetRequestForm.addEventListener("submit", submitPasswordResetRequest);
 el.passwordResetCompletionForm.addEventListener("submit", submitPasswordResetCompletion);
 el.passwordResetRequestToggle.addEventListener("click", () => showPasswordResetForm("request"));
@@ -3102,6 +3152,7 @@ el.passwordResetQueue.addEventListener("click", handlePasswordResetAction);
 el.passwordResetRefresh.addEventListener("click", () => void loadPasswordResetQueue());
 el.authRetry.addEventListener("click", checkSession);
 el.signOut.addEventListener("click", signOut);
+void initializeAgentPreviewSignIn();
 window.addEventListener("v2:select-run", async (event) => {
   const runId = event.detail?.runId;
   if (!currentStaff || !UUID.test(runId || "")) return;

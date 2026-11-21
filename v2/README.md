@@ -79,6 +79,13 @@ connection string. The V2 server requires
 cannot connect. The Replit launcher may map the managed `DATABASE_URL` only
 when `V2_USE_PROJECT_DATABASE=true`; keep V2 SQL confined to schema `v2` and
 preserve all V1 schemas and records. No V1 sessions or data have been copied.
+The separate **V2 Agent Test Preview** workflow starts a loopback-only,
+temporary PostgreSQL cluster, applies the V2 schema, and seeds only synthetic
+preview records. Its sign-in page offers a clearly labeled synthetic-manager
+button that uses the normal V2 sign-in endpoint. Stopping that workflow removes
+the cluster and all preview writes; it never changes the Project workflow's
+database target. The automated browser journey is available with
+`pnpm --filter @workspace/lucia-v2 run test:agent-preview`.
 Authentication uses the Node 24.22.2 built-in Argon2id implementation with a
 bounded number of concurrent password hash and verification operations; only
 salted password hashes are stored in the V2 database.
@@ -94,6 +101,7 @@ Run the current focused checks from the repository root:
 pnpm --filter @workspace/lucia-v2 test
 pnpm --filter @workspace/lucia-v2 test:browser
 pnpm --filter @workspace/lucia-v2 test:db
+pnpm --filter @workspace/lucia-v2 run test:agent-preview
 node --check v2/server/main.mjs
 node --check v2/web/app.js
 ```

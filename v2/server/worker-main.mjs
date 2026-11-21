@@ -4,10 +4,12 @@ import pg from "pg";
 import { createStationAutoTrackWorker } from "../core/station-auto-track-worker.mjs";
 import {
   boundedInteger,
+  readAgentPreviewDatabaseIdentity,
   readRuntimeDatabaseRole,
   requiredV2DatabaseUrl,
   V2StartupError,
 } from "./main.mjs";
+import { AgentPreviewConfigError, assertAgentPreviewTarget } from "./agent-preview-config.mjs";
 
 const { Pool } = pg;
 
@@ -66,6 +68,14 @@ function listen(server, port) {
 
 export async function startStationWorkerProcess({ env = process.env, logger = logStructured } = {}) {
   const connectionString = requiredV2DatabaseUrl(env);
+  try {
+    assertAgentPreviewTarget(env, connectionString);
+  } catch (error) {
+    if (error instanceof AgentPreviewConfigError) {
+      throw new V2StartupError(error.code, error.message);
+    }
+    throw error;
+  }
   const poolMax = boundedInteger(
     env.V2_WORKER_DB_POOL_MAX,
     2,
@@ -123,6 +133,18 @@ export async function startStationWorkerProcess({ env = process.env, logger = lo
   let worker;
   try {
     const runtimeRole = await readRuntimeDatabaseRole(pool);
+    if (env.V2_AGENT_TEST_PREVIEW === "true") {
+      const identity = await readAgentPreviewDatabaseIdentity(pool);
+      if (
+        identity.databaseName !== "v2_agent_preview"
+        || !["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(identity.serverAddress)
+      ) {
+        throw new V2StartupError(
+          "V2_AGENT_PREVIEW_DATABASE_IDENTITY",
+          "V2 could not verify its isolated agent preview database.",
+        );
+      }
+    }
     logger({
       event: "v2.worker.database_identity",
       role: runtimeRole,

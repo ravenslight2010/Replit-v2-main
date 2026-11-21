@@ -3,6 +3,11 @@ import { isIP } from "node:net";
 import { pathToFileURL } from "node:url";
 import pg from "pg";
 import { createAuthAdapter } from "./auth-adapter.mjs";
+import {
+  AGENT_PREVIEW_PASSWORD,
+  AGENT_PREVIEW_USERNAME,
+} from "./agent-preview-fixture.mjs";
+import { AgentPreviewConfigError, assertAgentPreviewTarget } from "./agent-preview-config.mjs";
 import { createV2Api } from "./api.mjs";
 import { readStationWorkerHealth } from "./worker-health.mjs";
 
@@ -55,6 +60,17 @@ export async function readRuntimeDatabaseRole(pool) {
   return runtimeRole;
 }
 
+export async function readAgentPreviewDatabaseIdentity(pool) {
+  const result = await pool.query({
+    text: "SELECT current_database() AS database_name, host(inet_server_addr()) AS server_address",
+    query_timeout: 3000,
+  });
+  return {
+    databaseName: result.rows?.[0]?.database_name,
+    serverAddress: result.rows?.[0]?.server_address,
+  };
+}
+
 export function boundedInteger(value, fallback, minimum, maximum, name, errorCode) {
   if (value === undefined || value === "") return fallback;
   const parsed = Number(value);
@@ -99,6 +115,15 @@ function listen(server, port) {
 
 export async function startV2Server({ env = process.env, logger = logStructured } = {}) {
   const connectionString = requiredV2DatabaseUrl(env);
+  let agentTestPreview = false;
+  try {
+    agentTestPreview = assertAgentPreviewTarget(env, connectionString);
+  } catch (error) {
+    if (error instanceof AgentPreviewConfigError) {
+      throw new V2StartupError(error.code, error.message);
+    }
+    throw error;
+  }
   const port = boundedInteger(env.PORT, 5000, 0, 65535, "PORT", "V2_INVALID_PORT");
   const poolMax = boundedInteger(
     env.V2_API_DB_POOL_MAX,
@@ -129,6 +154,18 @@ export async function startV2Server({ env = process.env, logger = logStructured 
 
   try {
     const runtimeRole = await readRuntimeDatabaseRole(pool);
+    if (agentTestPreview) {
+      const identity = await readAgentPreviewDatabaseIdentity(pool);
+      if (
+        identity.databaseName !== "v2_agent_preview"
+        || !["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(identity.serverAddress)
+      ) {
+        throw new V2StartupError(
+          "V2_AGENT_PREVIEW_DATABASE_IDENTITY",
+          "V2 could not verify its isolated agent preview database.",
+        );
+      }
+    }
     logger({
       event: "v2.startup.database_identity",
       role: runtimeRole,
@@ -146,6 +183,7 @@ export async function startV2Server({ env = process.env, logger = logStructured 
       event: "v2.startup.database_unavailable",
       errorName: typeof error?.name === "string" ? error.name.slice(0, 80) : "UnknownError",
     });
+    if (error instanceof V2StartupError) throw error;
     throw new V2StartupError("V2_DATABASE_UNAVAILABLE", "V2 could not connect to its configured database.");
   }
 
@@ -159,6 +197,9 @@ export async function startV2Server({ env = process.env, logger = logStructured 
     authAdapter,
     getClientKey: getClientKeyResolver(env),
     secureCookies: env.NODE_ENV !== "development",
+    agentTestPreview: agentTestPreview
+      ? { username: AGENT_PREVIEW_USERNAME, password: AGENT_PREVIEW_PASSWORD }
+      : null,
     logger,
     workerHealth: () => readStationWorkerHealth({ port: workerHealthPort }),
   });

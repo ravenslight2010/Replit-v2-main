@@ -2,10 +2,14 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { chromium } from "../node_modules/playwright/index.mjs";
+import {
+  AGENT_PREVIEW_PASSWORD,
+  AGENT_PREVIEW_USERNAME,
+} from "./agent-preview-config.mjs";
 import { startV2Server } from "./main.mjs";
 
-const MANAGER_USERNAME = "V2IntegrationManager";
-const MANAGER_PASSWORD = "v2-test-manager-password";
+const MANAGER_USERNAME = AGENT_PREVIEW_USERNAME;
+const MANAGER_PASSWORD = AGENT_PREVIEW_PASSWORD;
 
 async function signIn(baseUrl, context) {
   const unauthenticated = await fetch(`${baseUrl}/api/v2/auth/session`);

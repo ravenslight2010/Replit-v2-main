@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createAuthApi } from "./auth-api.mjs";
+import { createAgentPreviewApi } from "./agent-preview-api.mjs";
 import { createInventoryApi } from "./inventory-api.mjs";
 import { createMixPlanApi } from "./mix-plan-api.mjs";
 import { createManagerOperationsApi } from "./manager-operations-api.mjs";
@@ -102,6 +103,7 @@ function safeRouteName(url) {
   if (url.pathname === "/v2/web/styles.css") return "web.styles";
   if (url.pathname === "/healthz") return "health";
   if (url.pathname === "/api/v2/auth/sign-in") return "auth.sign_in";
+  if (url.pathname === "/api/v2/agent-test-preview/credentials") return "agent_preview.credentials";
   if (url.pathname === "/api/v2/auth/session") return "auth.session";
   if (url.pathname === "/api/v2/auth/sign-out") return "auth.sign_out";
   if (url.pathname === "/api/v2/auth/bootstrap-status") return "auth.bootstrap_status";
@@ -149,6 +151,7 @@ export function createV2Api({
   logger = (record) => console.log(JSON.stringify(record)),
   healthTimeoutMs = 2000,
   workerHealth,
+  agentTestPreview = null,
 }) {
   if (!pool || typeof pool.query !== "function") throw new TypeError("A V2 PostgreSQL pool is required.");
   for (const method of ["authenticate", "verifyCsrf", "authorizeRun", "signIn", "signOut", "sessionCookie", "csrfCookie"]) {
@@ -177,6 +180,11 @@ export function createV2Api({
     getClientKey,
     secureCookies,
     logger,
+  });
+  const agentPreviewApi = createAgentPreviewApi({
+    enabled: agentTestPreview !== null,
+    username: agentTestPreview?.username,
+    password: agentTestPreview?.password,
   });
   const managerDiagnosticsApi = createManagerDiagnosticsApi({
     authenticate: (request) => authAdapter.authenticate(request),
@@ -273,6 +281,7 @@ export function createV2Api({
         return;
       }
 
+      if (await agentPreviewApi(request, response)) return;
       if (await authApi(request, response)) return;
       if (await managerDiagnosticsApi(request, response)) return;
       if (await mixPlanApi(request, response)) return;
