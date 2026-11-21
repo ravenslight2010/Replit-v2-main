@@ -15,6 +15,24 @@
   `docs/recovery/v2-restoration-2026-11-19.md`. Restored historical pilot/readiness
   documents are not proof of the current deployment state.
 
+## Safe agent test preview
+
+- Use **V2 Agent Test Preview** for interactive UI tests that need sign-in or
+  mutable setup. It uses the same web port (5000) as **V2 Production Assistant**:
+  stop the regular workflow before starting the test preview.
+- Start the configured **V2 Agent Test Preview** workflow. Sign in with the
+  clearly labeled synthetic-manager button; do not use or request production
+  credentials.
+- The launcher requires the pinned Node version, a non-root user, and
+  development mode. It creates a loopback-only temporary PostgreSQL cluster,
+  seeds synthetic records, refuses project/production database configuration,
+  and does not pass `DATABASE_URL` to the preview services.
+- Stopping the test-preview workflow deletes its database and all preview
+  changes. Test data does not persist across restarts. After testing, stop the
+  preview and restart **V2 Production Assistant** to restore the usual preview.
+- Run the isolated automated browser journey with
+  `pnpm --filter @workspace/lucia-v2 run test:agent-preview`.
+
 # Legacy V1 reference
 
 ## Run & Operate
