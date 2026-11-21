@@ -16,7 +16,9 @@ import {
   RELEASE_CHECK_DEFAULT_CONCURRENCY,
   defaultReleaseEvidenceDir,
   formatReleaseReport,
+  isV2BrowserFailureEvidence,
   isLegacyV1ReleaseGate,
+  parseV2BrowserJUnit,
   parseBrowserDurationRegressions,
   releaseConcurrencyLimit,
   releaseGateLabelsForMode,
@@ -26,6 +28,10 @@ import {
   validateReleaseReport,
   verifyReleaseEvidence,
 } from "./release-check.mts";
+
+const baseEvidenceAllowlist = RELEASE_EVIDENCE_ALLOWLIST.filter(
+  (file) => file !== "v2-browser-failures.json",
+);
 
 async function fixture(
   files: readonly string[] = ["release-check-report.md"],
@@ -263,6 +269,117 @@ async function run(): Promise<void> {
       expectedLabels: validLabels,
     }),
   );
+  const junitSummary = parseV2BrowserJUnit(`<?xml version="1.0"?>
+<testsuites>
+  <testcase name="station passes" file="/workspace/v2/e2e/station-sync.browser.test.mjs"/>
+  <testcase name="station fails" file="/workspace/v2/e2e/station-sync.browser.test.mjs">
+    <failure message="expected &lt;ready&gt;">Error: expected &lt;ready&gt;
+      at station-sync.browser.test.mjs:12:3
+    </failure>
+  </testcase>
+  <testcase name="QC skips" file="/workspace/v2/e2e/qc-workflow.browser.test.mjs">
+    <skipped message="not applicable"/>
+  </testcase>
+  <testcase name="unrelated file" file="/workspace/v2/e2e/other.browser.test.mjs">
+    <failure message="must not be retained">unrelated stack</failure>
+  </testcase>
+</testsuites>`);
+  assert.deepEqual(
+    junitSummary.map(({ file, tests, passed, skipped, failed }) => ({
+      file,
+      tests,
+      passed,
+      skipped,
+      failed,
+    })),
+    [
+      {
+        file: "e2e/station-sync.browser.test.mjs",
+        tests: 2,
+        passed: 1,
+        skipped: 0,
+        failed: 1,
+      },
+      {
+        file: "e2e/qc-workflow.browser.test.mjs",
+        tests: 1,
+        passed: 0,
+        skipped: 1,
+        failed: 0,
+      },
+    ],
+    "JUnit results should be grouped by the two allowlisted V2 browser files",
+  );
+  assert.equal(junitSummary[0]?.failures[0]?.message, "expected <ready>");
+  assert.match(
+    junitSummary[0]?.failures[0]?.trace ?? "",
+    /station-sync\.browser\.test\.mjs:12:3/,
+  );
+  const v2BrowserGate = "V2 critical Chromium workflows";
+  const failureEvidence = {
+    schemaVersion: 1 as const,
+    revision: "current-revision",
+    gate: v2BrowserGate,
+    files: junitSummary,
+  };
+  assert.equal(isV2BrowserFailureEvidence(failureEvidence), true);
+  const v2FailureReport = formatReleaseReport(
+    [{ label: v2BrowserGate, status: "FAIL", elapsedMs: 100 }],
+    "standard",
+    new Set(["v2-browser-failures.json"]),
+    {
+      revision: "current-revision",
+      environment: "disposable release test",
+      decision: "NO-GO",
+      expectedLabels: [v2BrowserGate],
+      v2BrowserFailures: junitSummary,
+    },
+  );
+  assert.match(v2FailureReport, /\| V2 critical Chromium workflows \| FAIL \|/);
+  assert.match(
+    v2FailureReport,
+    /\[failure details\]\(v2-browser-failures\.json\)/,
+    "the failed V2 gate should link directly to its retained traces",
+  );
+  assert.match(v2FailureReport, /e2e\/station-sync\.browser\.test\.mjs.*1 failed/);
+  const v2FailureRoot = await fixture(
+    ["release-check-report.md", "v2-browser-failures.json"],
+    v2FailureReport,
+  );
+  try {
+    await writeFile(
+      join(v2FailureRoot, "v2-browser-failures.json"),
+      `${JSON.stringify(failureEvidence, null, 2)}\n`,
+      "utf8",
+    );
+    await assert.doesNotReject(
+      verifyReleaseEvidence(v2FailureRoot, {
+        currentRevision: "current-revision",
+        expectedMode: "standard",
+        expectedLabels: [v2BrowserGate],
+      }),
+      "current-revision failure evidence linked from its failed gate should verify",
+    );
+    await writeFile(
+      join(v2FailureRoot, "v2-browser-failures.json"),
+      `${JSON.stringify({
+        ...failureEvidence,
+        revision: "older-revision",
+      })}\n`,
+      "utf8",
+    );
+    await assert.rejects(
+      verifyReleaseEvidence(v2FailureRoot, {
+        currentRevision: "current-revision",
+        expectedMode: "standard",
+        expectedLabels: [v2BrowserGate],
+      }),
+      /V2 Chromium failure evidence is stale/,
+      "failure evidence from a different revision must be rejected",
+    );
+  } finally {
+    await rm(v2FailureRoot, { recursive: true, force: true });
+  }
   const timedReport = formatReleaseReport(
     validLabels.map((label) => ({
       label,
@@ -515,7 +632,7 @@ async function run(): Promise<void> {
     /\| signaled-child fixture \| INFRASTRUCTURE ERROR \|/,
   );
 
-  const allowlistedFiles = [...RELEASE_EVIDENCE_ALLOWLIST];
+  const allowlistedFiles = [...baseEvidenceAllowlist];
   const root = await fixture(allowlistedFiles, validReport);
   try {
     await assert.doesNotReject(
@@ -565,7 +682,7 @@ async function run(): Promise<void> {
   }
 
   const missingModeRoot = await fixture(
-    RELEASE_EVIDENCE_ALLOWLIST,
+    baseEvidenceAllowlist,
     validReport.replace("Mode: standard\n", ""),
   );
   try {
@@ -583,7 +700,7 @@ async function run(): Promise<void> {
 
   const fullLabels = releaseGateLabelsForMode("full");
   const fullRoot = await fixture(
-    RELEASE_EVIDENCE_ALLOWLIST.filter((file) => !file.startsWith("browser-full/")),
+    baseEvidenceAllowlist.filter((file) => !file.startsWith("browser-full/")),
     formatReleaseReport(
       fullLabels.map((label) => ({
         label,
@@ -600,7 +717,7 @@ async function run(): Promise<void> {
     ),
   );
   const standardModeRoot = await fixture(
-    RELEASE_EVIDENCE_ALLOWLIST,
+    baseEvidenceAllowlist,
     validReport,
   );
   try {
@@ -690,7 +807,7 @@ async function run(): Promise<void> {
     );
 
     const staleReportRoot = await fixture(
-      RELEASE_EVIDENCE_ALLOWLIST,
+      baseEvidenceAllowlist,
       formatReleaseReport(
         validLabels.map((label) => ({
           label,

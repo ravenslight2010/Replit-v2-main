@@ -9,6 +9,7 @@ import {
   rm,
   writeFile,
 } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 export type ReleaseStep = {
@@ -87,6 +88,11 @@ const FULL_BROWSER_TIMEOUT_MS = 30 * 60_000;
 const FULL_BROWSER_WARNING_MS = 25 * 60_000;
 const FULL_BROWSER_EXPECTED_CASES = 113;
 const FULL_BROWSER_GATE_LABEL = "full browser E2E suite";
+const V2_CHROMIUM_GATE_LABEL = "V2 critical Chromium workflows";
+const V2_BROWSER_TEST_FILES = [
+  "e2e/station-sync.browser.test.mjs",
+  "e2e/qc-workflow.browser.test.mjs",
+] as const;
 const rootDir = new URL("../../", import.meta.url).pathname;
 const STATEFUL_RELEASE_LOCK_DIR =
   "/tmp/run-calculator-release-stateful-gates.lock";
@@ -170,6 +176,15 @@ const fullBrowserReportPath = resolve(
   releaseEvidenceDir,
   "browser-full/FINAL-REPORT.md",
 );
+const v2BrowserFailureEvidencePath = resolve(
+  rootDir,
+  releaseEvidenceDir,
+  "v2-browser-failures.json",
+);
+const v2BrowserJunitReportPath = resolve(
+  tmpdir(),
+  `v2-browser-${process.pid}-${fullRun ? "full" : "standard"}.xml`,
+);
 export const RELEASE_EVIDENCE_ALLOWLIST = [
   "release-check-report.md",
   "release-check-checkpoint.md",
@@ -180,10 +195,144 @@ export const RELEASE_EVIDENCE_ALLOWLIST = [
   "clean-start/startup-web.log",
   "clean-start/startup-mockup.log",
   "browser-full/FINAL-REPORT.md",
+  "v2-browser-failures.json",
   "release-check.log",
   "release-check-state.json",
 ] as const;
 export const RELEASE_CHECKPOINT_REPORT = "release-check-checkpoint.md";
+
+export type V2BrowserFailure = {
+  test: string;
+  message: string;
+  trace: string;
+};
+
+export type V2BrowserFileSummary = {
+  file: (typeof V2_BROWSER_TEST_FILES)[number];
+  tests: number;
+  passed: number;
+  skipped: number;
+  failed: number;
+  failures: V2BrowserFailure[];
+};
+
+export type V2BrowserFailureEvidence = {
+  schemaVersion: 1;
+  revision: string;
+  gate: typeof V2_CHROMIUM_GATE_LABEL;
+  files: V2BrowserFileSummary[];
+};
+
+function decodeXml(value: string): string {
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+function xmlAttribute(attributes: string, name: string): string | undefined {
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = attributes.match(
+    new RegExp(`(?:^|\\s)${escapedName}="([^"]*)"`),
+  );
+  return match?.[1] === undefined ? undefined : decodeXml(match[1]);
+}
+
+export function parseV2BrowserJUnit(
+  report: string,
+): V2BrowserFileSummary[] {
+  const files = new Map(
+    V2_BROWSER_TEST_FILES.map((file) => [
+      file,
+      {
+        file,
+        tests: 0,
+        passed: 0,
+        skipped: 0,
+        failed: 0,
+        failures: [] as V2BrowserFailure[],
+      } satisfies V2BrowserFileSummary,
+    ]),
+  );
+  const testCases =
+    /<testcase\b([^>]*?)(?:\/>|>([\s\S]*?)<\/testcase>)/g;
+
+  for (const match of report.matchAll(testCases)) {
+    const attributes = match[1] ?? "";
+    const body = match[2] ?? "";
+    const sourceFile = xmlAttribute(attributes, "file")?.replaceAll("\\", "/");
+    const file = V2_BROWSER_TEST_FILES.find((candidate) =>
+      sourceFile?.endsWith(candidate),
+    );
+    if (!file) continue;
+
+    const summary = files.get(file)!;
+    const name = xmlAttribute(attributes, "name") ?? "Unnamed browser test";
+    summary.tests += 1;
+    const failureMatch = body.match(
+      /<(failure|error)\b([^>]*)>([\s\S]*?)<\/\1>/,
+    );
+    if (failureMatch) {
+      const failureAttributes = failureMatch[2] ?? "";
+      const message =
+        xmlAttribute(failureAttributes, "message") ??
+        xmlAttribute(attributes, "failure") ??
+        "Browser test failed.";
+      const trace = decodeXml(failureMatch[3] ?? "").trim() || message;
+      summary.failed += 1;
+      summary.failures.push({ test: name, message, trace });
+    } else if (/<skipped\b/.test(body)) {
+      summary.skipped += 1;
+    } else {
+      summary.passed += 1;
+    }
+  }
+
+  return V2_BROWSER_TEST_FILES.map((file) => files.get(file)!);
+}
+
+export function isV2BrowserFailureEvidence(
+  value: unknown,
+): value is V2BrowserFailureEvidence {
+  if (value === null || typeof value !== "object") return false;
+  const evidence = value as Partial<V2BrowserFailureEvidence>;
+  if (
+    evidence.schemaVersion !== 1 ||
+    typeof evidence.revision !== "string" ||
+    evidence.revision.length === 0 ||
+    evidence.gate !== V2_CHROMIUM_GATE_LABEL ||
+    !Array.isArray(evidence.files) ||
+    evidence.files.length !== V2_BROWSER_TEST_FILES.length
+  ) {
+    return false;
+  }
+  return evidence.files.every((file, index) => {
+    if (
+      file === null ||
+      typeof file !== "object" ||
+      file.file !== V2_BROWSER_TEST_FILES[index] ||
+      !Number.isInteger(file.tests) ||
+      !Number.isInteger(file.passed) ||
+      !Number.isInteger(file.skipped) ||
+      !Number.isInteger(file.failed) ||
+      file.tests !== file.passed + file.skipped + file.failed ||
+      !Array.isArray(file.failures) ||
+      file.failures.length !== file.failed
+    ) {
+      return false;
+    }
+    return file.failures.every(
+      (failure) =>
+        failure !== null &&
+        typeof failure === "object" &&
+        typeof failure.test === "string" &&
+        typeof failure.message === "string" &&
+        typeof failure.trace === "string",
+    );
+  }) && evidence.files.some((file) => file.failed > 0);
+}
 
 function reportGateStatus(report: string, label: string): string | undefined {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -469,7 +618,7 @@ const steps: ReleaseStep[] = [
     concurrencyLimit: 1,
   },
   {
-    label: "V2 critical Chromium workflows",
+    label: V2_CHROMIUM_GATE_LABEL,
     args: [
       "--filter",
       "@workspace/lucia-v2",
@@ -477,6 +626,10 @@ const steps: ReleaseStep[] = [
       "node",
       "--test",
       "--test-concurrency=1",
+      "--test-reporter=spec",
+      "--test-reporter-destination=stdout",
+      "--test-reporter=junit",
+      `--test-reporter-destination=${v2BrowserJunitReportPath}`,
       "e2e/station-sync.browser.test.mjs",
       "e2e/qc-workflow.browser.test.mjs",
     ],
@@ -766,6 +919,29 @@ export async function verifyReleaseEvidence(
     expectedMode: options.expectedMode,
     expectedLabels: options.expectedLabels,
   });
+  if (files.includes("v2-browser-failures.json")) {
+    const failureEvidence = JSON.parse(
+      await readFile(resolve(evidenceRoot, "v2-browser-failures.json"), "utf8"),
+    ) as unknown;
+    if (!isV2BrowserFailureEvidence(failureEvidence)) {
+      throw new Error("V2 Chromium failure evidence is malformed.");
+    }
+    if (failureEvidence.revision !== revision) {
+      throw new Error(
+        `V2 Chromium failure evidence is stale (expected ${revision}).`,
+      );
+    }
+    if (reportGateStatus(report, V2_CHROMIUM_GATE_LABEL) !== "FAIL") {
+      throw new Error(
+        "V2 Chromium failure evidence is present without a failed V2 Chromium gate.",
+      );
+    }
+    if (!report.includes("](v2-browser-failures.json)")) {
+      throw new Error(
+        "Release report is missing its V2 Chromium failure evidence link.",
+      );
+    }
+  }
   if (
     evidenceMode === "full" &&
     reportGateStatus(report, FULL_BROWSER_GATE_LABEL) === "PASS"
@@ -1215,6 +1391,7 @@ export function formatReleaseReport(
     environment?: string;
     decision?: "GO" | "NO-GO";
     browserDurationRegressions?: readonly BrowserDurationRegression[];
+    v2BrowserFailures?: readonly V2BrowserFileSummary[];
     expectedLabels?: readonly string[];
     timing?: ReleaseTiming;
     reportKind?: "retained" | "checkpoint";
@@ -1267,6 +1444,11 @@ export function formatReleaseReport(
     items.length === 0
       ? "none"
       : items.map((item) => `${item.label} (${item.status})`).join("; ");
+  const v2BrowserEvidenceLink = availableEvidenceFiles.has(
+    "v2-browser-failures.json",
+  )
+    ? " [failure details](v2-browser-failures.json)"
+    : "";
   const revision = metadata.revision ?? "unknown";
   const decision =
     metadata.decision ??
@@ -1313,10 +1495,15 @@ export function formatReleaseReport(
     "| Gate | Result | Elapsed | Command |",
     "| --- | --- | ---: | --- |",
     ...applicableResults.map(
-      (result) =>
-        `| ${result.label} | ${result.status} | ${Math.round(
+      (result) => {
+        const commandLink =
+          result.label === V2_CHROMIUM_GATE_LABEL
+            ? v2BrowserEvidenceLink
+            : "";
+        return `| ${result.label} | ${result.status} | ${Math.round(
           result.elapsedMs / 1000,
-        )}s | \`${commandFor(result.label)}\` |`,
+        )}s | \`${commandFor(result.label)}\`${commandLink} |`;
+      },
     ),
     "",
     "## Legacy V1 coverage (informational; excluded from the V2 decision)",
@@ -1357,6 +1544,24 @@ export function formatReleaseReport(
     evidenceLink("clean-start/startup-mockup.log", "Mockup startup log"),
     evidenceLink("browser-full/FINAL-REPORT.md", "Full browser report"),
     "",
+    "## V2 Chromium failure details",
+    "",
+    ...(metadata.v2BrowserFailures === undefined
+      ? [
+          "No revision-matched V2 Chromium failure artifact was retained.",
+          "",
+        ]
+      : [
+          ...metadata.v2BrowserFailures.map(
+            (file) =>
+              `- \`${file.file}\`: ${file.tests} test(s), ${file.passed} passed, ${file.skipped} skipped, ${file.failed} failed`,
+          ),
+          evidenceLink(
+            "v2-browser-failures.json",
+            "Failure traces and per-file results",
+          ),
+          "",
+        ]),
     "## Browser duration review",
     "",
     ...(metadata.browserDurationRegressions === undefined
@@ -1471,6 +1676,33 @@ async function writeReleaseReport(
     // Full browser evidence validation below reports a missing file when the
     // full release decision requires it.
   }
+  let v2BrowserFailures: V2BrowserFileSummary[] | undefined;
+  try {
+    const failureEvidence = JSON.parse(
+      await readFile(v2BrowserFailureEvidencePath, "utf8"),
+    ) as unknown;
+    if (!isV2BrowserFailureEvidence(failureEvidence)) {
+      throw new Error("V2 Chromium failure evidence is malformed.");
+    }
+    if (
+      failureEvidence.revision !== metadata.revision ||
+      results.find((result) => result.label === V2_CHROMIUM_GATE_LABEL)
+        ?.status !== "FAIL"
+    ) {
+      await rm(v2BrowserFailureEvidencePath, { force: true });
+    } else {
+      v2BrowserFailures = failureEvidence.files;
+      availableEvidenceFiles.add("v2-browser-failures.json");
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw new Error(
+        `Could not read V2 Chromium failure evidence: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
   let browserDurationRegressions: BrowserDurationRegression[] | undefined;
   if (fullRun) {
     try {
@@ -1499,6 +1731,7 @@ async function writeReleaseReport(
         ...metadata,
         environment: process.env.CI ? "CI release validation" : "local release validation",
         browserDurationRegressions,
+        v2BrowserFailures,
         timing: metadata.timing,
       },
     ),
@@ -1612,6 +1845,42 @@ async function currentRevision(): Promise<string> {
   });
 }
 
+async function retainV2BrowserFailureEvidence(
+  revision: string,
+  status: StepStatus,
+): Promise<void> {
+  try {
+    const junitReport = await readFile(v2BrowserJunitReportPath, "utf8");
+    const files = parseV2BrowserJUnit(junitReport);
+    const evidence: V2BrowserFailureEvidence = {
+      schemaVersion: 1,
+      revision,
+      gate: V2_CHROMIUM_GATE_LABEL,
+      files,
+    };
+    if (
+      status !== "FAIL" ||
+      !files.some((file) => file.failed > 0) ||
+      !isV2BrowserFailureEvidence(evidence)
+    ) {
+      await rm(v2BrowserFailureEvidencePath, { force: true });
+      return;
+    }
+    await writeFile(
+      v2BrowserFailureEvidencePath,
+      `${JSON.stringify(evidence, null, 2)}\n`,
+      "utf8",
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    console.warn(
+      "V2 Chromium JUnit results were not available; failure details remain in the release log only.",
+    );
+  } finally {
+    await rm(v2BrowserJunitReportPath, { force: true });
+  }
+}
+
 async function main(): Promise<void> {
   if (process.argv.includes("--help") || process.argv.includes("-h")) {
     printHelp();
@@ -1691,6 +1960,7 @@ async function main(): Promise<void> {
     );
   } else {
     await rm(checkpointReportPath, { force: true });
+    await rm(v2BrowserFailureEvidencePath, { force: true });
     await writeFile(
       logPath,
       `Release check ${new Date().toISOString()} revision ${revision} mode ${
@@ -1810,6 +2080,10 @@ async function main(): Promise<void> {
                 : step;
             let result: ReleaseStepResult & { passed: boolean };
             try {
+              if (step.label === V2_CHROMIUM_GATE_LABEL) {
+                await rm(v2BrowserJunitReportPath, { force: true });
+                await rm(v2BrowserFailureEvidencePath, { force: true });
+              }
               const { exitCode, elapsedMs, status, output } = await runStep(
                 effectiveStep,
                 {
@@ -1818,6 +2092,9 @@ async function main(): Promise<void> {
                   deferLog: true,
                 },
               );
+              if (step.label === V2_CHROMIUM_GATE_LABEL) {
+                await retainV2BrowserFailureEvidence(revision, status);
+              }
               stageLogs.set(step.label, output ?? "");
               result = {
                 label: step.label,
@@ -1831,6 +2108,10 @@ async function main(): Promise<void> {
                   error instanceof Error ? error.message : String(error)
                 }`,
               );
+              if (step.label === V2_CHROMIUM_GATE_LABEL) {
+                await rm(v2BrowserJunitReportPath, { force: true });
+                await rm(v2BrowserFailureEvidencePath, { force: true });
+              }
               result = {
                 label: step.label,
                 passed: false,
