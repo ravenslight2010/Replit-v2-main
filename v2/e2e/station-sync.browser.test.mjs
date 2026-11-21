@@ -76,6 +76,7 @@ const WEB_ASSETS = new Map([
   ["/v2/web/inventory.js", ["../web/inventory.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/inventory-export.mjs", ["../web/inventory-export.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/web/setup-catalog.js", ["../web/setup-catalog.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/manager-operations.js", ["../web/manager-operations.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/schedule.js", ["../web/schedule.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/mix-plan.js", ["../web/mix-plan.js", "text/javascript; charset=utf-8"]],
   ["/v2/core/mix-plan.mjs", ["../core/mix-plan.mjs", "text/javascript; charset=utf-8"]],
@@ -130,6 +131,25 @@ function newRun(overrides = {}) {
 function snapshot(fixture) {
   fixture.run.serverNow = new Date().toISOString();
   return JSON.parse(JSON.stringify(fixture.run));
+}
+
+function operationalStatus(runId) {
+  const allergenFootprint = {
+    status: "unknown",
+    allergens: [],
+    ingredientCount: 0,
+    unknownIngredients: [],
+  };
+  return {
+    runId,
+    substitutions: [],
+    allergenFootprint,
+    stations: Object.fromEntries(["dough", "cheese", "pepperoni", "sauce", "frontline"].map((key) => [
+      key,
+      { substitutions: [], allergenFootprint },
+    ])),
+    limitations: { allergens: "incomplete" },
+  };
 }
 
 function applyCommand(fixture, command) {
@@ -245,6 +265,8 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
     mixPlanCalls: [],
     mixPlanRevision: 0,
     notFoundRoutes: [],
+    operationalStatus: operationalStatus(RUN_ID),
+    operationalStatusCalls: 0,
   };
   const server = createServer(async (request, response) => {
     const asset = WEB_ASSETS.get(new URL(request.url, "http://v2.test").pathname);
@@ -292,7 +314,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
   });
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
-  async function openDevice(deviceViewport = viewport, { canApprove = manager } = {}) {
+  async function openDevice(deviceViewport = viewport, { canApprove = manager, withQc = false } = {}) {
     const context = await browser.newContext({
       viewport: deviceViewport,
       ...(browserEngine === webkit ? { serviceWorkers: "block" } : {}),
@@ -310,7 +332,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
               userId: STAFF_ID,
               username: "station_tester",
               role: canApprove ? "manager" : "operator",
-              capabilities: ["station.command", "run.read", ...(canApprove ? [
+              capabilities: ["station.command", "run.read", ...(withQc ? ["record-qc"] : []), ...(canApprove ? [
                 "manage-inventory", "manage-factory-settings",
               ] : [])],
             },
@@ -412,7 +434,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
         return;
       }
       if (manager && url.pathname === "/api/v2/schedules" && request.method() === "GET") {
-        const date = url.searchParams.get("date");
+        const date = url.searchParams.get("date") || "2026-11-20";
         if (!fixture.schedule || fixture.schedule.date !== date) fixture.schedule = emptySchedule(date);
         await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ schedule: fixture.schedule }) });
         return;
@@ -638,6 +660,44 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
       }
       if (url.pathname === "/api/v2/runs" && request.method() === "GET") {
         await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ runs: [snapshot(fixture)] }) });
+        return;
+      }
+      const operationalStatusMatch = url.pathname.match(
+        /^\/api\/v2\/qc\/runs\/([0-9a-f-]{36})\/operational-status$/i,
+      );
+      if (operationalStatusMatch && request.method() === "GET") {
+        fixture.operationalStatusCalls += 1;
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ ...fixture.operationalStatus, runId: operationalStatusMatch[1] }),
+        });
+        return;
+      }
+      if (withQc && /^\/api\/v2\/qc\/runs\/[0-9a-f-]{36}$/i.test(url.pathname)
+        && request.method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            run: snapshot(fixture),
+            items: [],
+            events: [],
+            settings: [],
+            substitutions: [],
+            components: [],
+            componentProducts: [],
+            review: { status: "needs-review", signedOffAt: null, signedOffBy: null },
+            allergenFootprint: fixture.operationalStatus.allergenFootprint,
+            limitations: { allergens: "incomplete", components: "available", reason: null },
+          }),
+        });
+        return;
+      }
+      if (withQc && url.pathname === "/api/v2/qc/history" && request.method() === "GET") {
+        await route.fulfill({
+          status: 200, contentType: "application/json", body: JSON.stringify({ events: [] }),
+        });
         return;
       }
       if (url.pathname === "/api/v2/runs/products" && request.method() === "GET") {
@@ -967,6 +1027,130 @@ async function waitForState(predicate, timeoutMs = 7000) {
 }
 
 for (const browserEngine of [chromium, webkit]) {
+test(`run substitution and allergen status stays run-bound and readable in ${browserEngine.name()}`,
+  { skip: browserEngine === webkit && !webkitInstalled ? "Playwright WebKit is not installed on this host." : false },
+  async (t) => {
+    const state = await createFixture(t, { width: 1440, height: 900 }, { manager: true, browserEngine });
+    const replacement = {
+      id: "76000000-0000-4000-8000-000000000001",
+      revision: 2,
+      sourceItems: [{
+        productId: "76000000-0000-4000-8000-000000000002",
+        productCode: "CHEDDAR",
+        productName: "Cheddar",
+        recipeCode: "CHEESE-BASE",
+        recipeName: "Cheese recipe",
+        stationKey: "cheese",
+        quantity: "12.5",
+        unit: "lb",
+      }],
+      replacementProductId: "76000000-0000-4000-8000-000000000003",
+      replacementProductCode: "ALT-MOZZ",
+      replacementProductName: "Alternate mozzarella",
+      replacementQuantity: "10",
+      replacementUnit: "lb",
+      movementGroupId: "76000000-0000-4000-8000-000000000004",
+      occurredAt: "2026-11-19T10:00:00.000Z",
+    };
+    const uncertain = {
+      status: "unknown",
+      allergens: ["milk"],
+      ingredientCount: 2,
+      unknownIngredients: [{
+        productId: null,
+        productCode: null,
+        productName: "Approved substitution",
+        stationKey: "run",
+        reason: "substitution-remaining-quantity-not-final",
+      }],
+    };
+    state.fixture.operationalStatus = operationalStatus(RUN_ID);
+    state.fixture.operationalStatus = {
+      ...state.fixture.operationalStatus,
+      substitutions: [replacement],
+      allergenFootprint: uncertain,
+      stations: {
+        ...state.fixture.operationalStatus.stations,
+        cheese: { substitutions: [replacement], allergenFootprint: uncertain },
+      },
+    };
+    const operator = await state.openDevice({ width: 1440, height: 900 }, { canApprove: false });
+    const { page } = operator;
+    const evidence = page.getByTestId("run-operational-evidence");
+    await evidence.getByText(/Cheddar \(CHEDDAR\): 12\.5 lb → Alternate mozzarella \(ALT-MOZZ\): 10 lb/u).waitFor();
+    await evidence.getByText(/Known tracked allergens: milk\. Other ingredient facts are unknown/u).waitFor();
+    await evidence.getByText(/not safety clearance or label approval/u).waitFor();
+    assert.equal(await evidence.getByText(/Inventory movement 76000000-0000-4000-8000-000000000004/u).count(), 1);
+    assert.equal(await page.getByRole("link", { name: "Open the QC substitution record" }).count(), 0);
+    await page.getByTestId("tab-station-cheese").click();
+    const stationEvidence = page.getByTestId("station-operational-evidence");
+    await stationEvidence.waitFor({ state: "visible" });
+    assert.match(await stationEvidence.innerText(), /1 approved substitution affects this station/u);
+    assert.match(await stationEvidence.innerText(), /Cheddar \(CHEDDAR\): 12\.5 lb → Alternate mozzarella/u);
+    assert.match(await page.getByTestId("tab-station-cheese").getAttribute("aria-label"), /1 substitution; allergen facts unknown/u);
+
+    const authorized = await state.openDevice({ width: 1280, height: 800 }, { canApprove: false, withQc: true });
+    const qcLink = authorized.page.getByRole("link", { name: "Open the QC substitution record" });
+    await qcLink.waitFor();
+    await qcLink.click();
+    assert.equal(new URL(authorized.page.url()).hash, "#qc-panel");
+    await authorized.page.locator("#qc-panel:not([hidden])").waitFor();
+
+    const secondSession = await state.openDevice({ width: 390, height: 844 }, { canApprove: false });
+    await secondSession.page.getByTestId("run-operational-evidence")
+      .getByText(/Alternate mozzarella \(ALT-MOZZ\)/u).waitFor();
+    await secondSession.context.setOffline(true);
+    await secondSession.page.getByText(/Run substitution and allergen status unavailable: Run status is unavailable while offline/u).waitFor();
+    assert.equal(await secondSession.page.getByTestId("run-operational-evidence").getByText(/ALT-MOZZ/u).count(), 0);
+    state.fixture.operationalStatus = {
+      ...operationalStatus(RUN_ID),
+      allergenFootprint: {
+        status: "complete",
+        allergens: [],
+        ingredientCount: 1,
+        unknownIngredients: [],
+      },
+      stations: Object.fromEntries(["dough", "cheese", "pepperoni", "sauce", "frontline"].map((key) => [
+        key,
+        {
+          substitutions: [],
+          allergenFootprint: {
+            status: "complete",
+            allergens: [],
+            ingredientCount: key === "cheese" ? 1 : 0,
+            unknownIngredients: [],
+          },
+        },
+      ])),
+    };
+    await evidence.getByText(/No current approved substitutions recorded/u).waitFor({ timeout: 9000 });
+    await evidence.getByText(/Reviewed ingredient records list none of the tracked allergens/u).waitFor();
+    assert.equal(await evidence.getByText(/ALT-MOZZ/u).count(), 0, "a prior session’s substitution disappears after refresh");
+    await secondSession.context.setOffline(false);
+    await secondSession.page.getByTestId("run-operational-evidence")
+      .getByText(/No current approved substitutions recorded/u).waitFor();
+    await secondSession.page.reload();
+    const reloadedEvidence = secondSession.page.getByTestId("run-operational-evidence");
+    await reloadedEvidence.getByText(/No current approved substitutions recorded/u).waitFor();
+    await secondSession.page.getByTestId("tab-station-cheese").click();
+    await secondSession.page.getByTestId("station-operational-evidence")
+      .getByText(/No current approved substitutions affect this station/u).waitFor();
+    assert.match(await secondSession.page.getByTestId("tab-station-cheese").getAttribute("aria-label"), /No substitution; allergen facts reviewed/u);
+    for (const size of [
+      { width: 390, height: 844 },
+      { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
+    ]) {
+      await secondSession.page.setViewportSize(size);
+      await reloadedEvidence.waitFor({ state: "visible" });
+      await secondSession.page.getByTestId("station-operational-evidence").waitFor();
+    }
+    assert.ok(state.fixture.operationalStatusCalls >= 3);
+    assert.deepEqual(state.fixture.pageErrors, []);
+    assert.deepEqual(state.fixture.notFoundRoutes, []);
+    assert.deepEqual(state.fixture.consoleErrors, []);
+  });
+
 test(`operators can review the read-only Mix Plan across roles, reload, and responsive widths in ${browserEngine.name()}`,
   { skip: browserEngine === webkit && !webkitInstalled ? "Playwright WebKit is not installed on this host." : false },
   async (t) => {

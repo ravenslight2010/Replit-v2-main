@@ -167,6 +167,17 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .station-tabs { display: flex; gap: 7px; margin: 22px 0 17px; padding-bottom: 8px; overflow-x: auto; border-bottom: 1px solid var(--line); }
 .station-tab { flex: 0 0 auto; min-height: 40px; padding: 0 14px; border: 1px solid var(--line); background: transparent; color: var(--neutral-text); font-size: 12px; font-weight: 600; cursor: pointer; }
 .station-tab[aria-selected="true"] { border-color: var(--brand); background: var(--brand); color: var(--brand-foreground); }
+.station-tab-evidence { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 5px; border: 1px solid currentColor; font-size: 9px; font-weight: 600; white-space: nowrap; }
+.run-operational-evidence { display: grid; gap: 8px; margin-top: 13px; padding: 12px 14px; border: 1px solid var(--line-strong); background: var(--surface-raised); }
+.run-operational-evidence h3 { margin: 0; font-size: 13px; }
+.run-evidence-note { display: flex; align-items: start; gap: 8px; margin: 0; color: var(--ink); font-size: 12px; line-height: 1.5; }
+.run-evidence-note > span, .evidence-icon { display: inline-grid; width: 20px; height: 20px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line-strong); font: 600 12px var(--mono); }
+.run-evidence-substitutions { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.run-evidence-substitutions li { display: flex; align-items: start; gap: 8px; padding: 8px; border: 1px solid var(--line); background: var(--surface); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.run-evidence-substitutions small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+.run-evidence-link { width: fit-content; color: var(--ink); font-size: 12px; font-weight: 600; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.station-evidence { display: flex; align-items: start; gap: 9px; grid-column: 1 / -1; padding: 10px 11px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.station-evidence ul { display: grid; gap: 3px; margin: 6px 0 0; padding-left: 18px; }
 .station-content { display: grid; grid-template-columns: minmax(250px, .8fr) minmax(0, 1.2fr); gap: 22px; align-items: start; }
 .station-summary { display: grid; gap: 15px; }
 .station-summary-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }

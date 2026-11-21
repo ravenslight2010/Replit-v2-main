@@ -344,6 +344,112 @@ test("run history keeps unlinked ingredient allergens unknown and lists componen
   assert.equal(body.limitations.components, "available");
 });
 
+test("run.read receives only run-scoped substitution and allergen status", async (t) => {
+  const substitution = {
+    id: "10000000-0000-4000-8000-000000000010",
+    proposalEventId: "10000000-0000-4000-8000-000000000011",
+    revision: 2,
+    sourceItems: [{
+      productId: PRODUCT_ID,
+      recipeCode: "DOUGH-BASE",
+      recipeName: "Dough base",
+      stationKey: "dough",
+      quantity: "12.5",
+      unit: "lb",
+    }],
+    replacementProductId: "10000000-0000-4000-8000-000000000012",
+    replacementProductCode: "ALT-FLOUR",
+    replacementProductName: "Alternate flour",
+    replacementQuantity: "10",
+    replacementUnit: "lb",
+    replacementIngredientSnapshot: null,
+    movementGroupId: "10000000-0000-4000-8000-000000000013",
+    occurredAt: "2026-11-19T10:00:00.000Z",
+  };
+  const api = await withApi(t, {
+    auth: { ...OPERATOR, capabilities: ["run.read"] },
+    query: async (queryConfig) => {
+      if (queryConfig.text.includes("v2.get_run")) return { rows: [{ result: RUN }] };
+      if (queryConfig.text.includes("v2.list_run_operational_substitutions")) {
+        return { rows: [{ result: [substitution] }] };
+      }
+      throw new Error("unexpected query");
+    },
+  });
+  const response = await send(api.baseUrl, `/api/v2/qc/runs/${RUN_ID}/operational-status`);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.substitutions[0].sourceItems[0].productName, "Flour");
+  assert.equal(body.substitutions[0].replacementProductCode, "ALT-FLOUR");
+  assert.equal(body.substitutions[0].replacementQuantity, "10");
+  assert.equal(body.substitutions[0].movementGroupId, substitution.movementGroupId);
+  assert.equal(body.allergenFootprint.status, "unknown");
+  assert.equal(body.stations.dough.substitutions.length, 1);
+  assert.equal(body.stations.dough.allergenFootprint.status, "unknown");
+  assert.equal(api.calls.some((call) => call.text.includes("list_qc_events")), false);
+  assert.equal(api.calls.some((call) => call.text.includes("list_qc_settings")), false);
+
+  const denied = await withApi(t, {
+    auth: { ...OPERATOR, capabilities: ["manage-inventory"] },
+  });
+  assert.equal(
+    (await send(denied.baseUrl, `/api/v2/qc/runs/${RUN_ID}/operational-status`)).status,
+    403,
+  );
+  assert.equal(denied.calls.length, 0);
+});
+
+test("completed run status reads only the frozen substitution receipt", async (t) => {
+  const receiptSubstitution = {
+    id: "10000000-0000-4000-8000-000000000020",
+    revision: 1,
+    sourceItems: [{
+      productId: PRODUCT_ID,
+      recipeCode: "DOUGH-BASE",
+      stationKey: "dough",
+      quantity: "12.5",
+      unit: "lb",
+    }],
+    replacementProductId: "10000000-0000-4000-8000-000000000021",
+    replacementProductCode: "ALT-FLOUR",
+    replacementProductName: "Alternate flour",
+    replacementQuantity: "10",
+    replacementUnit: "lb",
+    replacementIngredientSnapshot: {
+      status: "linked",
+      ingredientCode: "ALT-FLOUR",
+      ingredientName: "Alternate flour",
+      allergens: [],
+      allergensReviewed: true,
+    },
+    movementGroupId: "10000000-0000-4000-8000-000000000022",
+    occurredAt: "2026-11-19T10:00:00.000Z",
+  };
+  const completed = {
+    ...RUN,
+    status: "completed",
+    inventoryConsumption: {
+      componentDemand: [],
+      qcSubstitutions: [receiptSubstitution],
+    },
+  };
+  const api = await withApi(t, {
+    auth: { ...OPERATOR, capabilities: ["run.read"] },
+    query: async (queryConfig) => {
+      if (queryConfig.text.includes("v2.get_run")) return { rows: [{ result: completed }] };
+      throw new Error("Completed evidence must not re-read the mutable QC substitution table.");
+    },
+  });
+  const response = await send(api.baseUrl, `/api/v2/qc/runs/${RUN_ID}/operational-status`);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.substitutions[0].id, receiptSubstitution.id);
+  assert.equal(body.substitutions[0].sourceItems[0].productName, "Flour");
+  assert.equal(body.allergenFootprint.status, "complete");
+  assert.deepEqual(body.allergenFootprint.allergens, []);
+  assert.equal(api.calls.length, 1);
+});
+
 test("reviewed-empty means none of the nine while unreviewed facts remain unknown", async (t) => {
   async function getFootprint(run) {
     const api = await withApi(t, {

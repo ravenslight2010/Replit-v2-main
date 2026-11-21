@@ -827,6 +827,7 @@ V2_TEST_ADMIN_URL="$V2_TEST_ADMIN_URL" V2_DATABASE_URL="$V2_API_URL" \
 "${PSQL[@]}" -f "$ROOT/v2/db/0010-qc-substitutions.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0011-qc-checkpoint-review.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0011-manager-operations.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0011-run-operational-substitution-status.sql" >/dev/null
 "${PSQL[@]}" -c "
   GRANT EXECUTE ON FUNCTION v2.record_qc_event(uuid, uuid, uuid, text, text, text, jsonb) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_qc_events(uuid, uuid, uuid, integer) TO v2_api_test;
@@ -836,6 +837,7 @@ V2_TEST_ADMIN_URL="$V2_TEST_ADMIN_URL" V2_DATABASE_URL="$V2_API_URL" \
   GRANT EXECUTE ON FUNCTION v2.list_qc_ingredient_links(uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_qc_component_products(uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_qc_run_substitutions(uuid, uuid, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_run_operational_substitutions(uuid, uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.record_qc_substitution(uuid, uuid, uuid, text, text, text, uuid, uuid, jsonb) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.get_manager_operations_snapshot(uuid, uuid, date, date, integer, timestamptz, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_manager_operation_events(uuid, uuid, date, date, integer, uuid, timestamptz, uuid, bigint) TO v2_api_test;

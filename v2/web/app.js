@@ -11,6 +11,9 @@ const API = "/api/v2/runs";
 const AUTH_API = "/api/v2/auth";
 const RUN_INVENTORY_API = "/api/v2/inventory";
 const qc = initializeQc();
+let runEvidenceRunId = null;
+let runOperationalEvidence = null;
+let runEvidenceError = "";
 const POLL_INTERVAL_MS = 3000;
 const STATION_STATUSES = new Set(["not_started", "running", "paused", "completed"]);
 const TIMER_STATUSES = new Set(["idle", "running", "paused"]);
@@ -454,6 +457,12 @@ function enterOfflineMode() {
   updateCreateFormForAuth();
   renderRun(selectedRun());
   renderStationPanel(selectedRun());
+  qc.updateContext({
+    staff: currentStaff,
+    run: selectedRun(),
+    writable: false,
+    onEvidenceChange: handleRunEvidenceChange,
+  });
   if (currentStaff) {
     saveOfflineCache();
     showError("This device is offline. V2 is read-only until a fresh server check succeeds.", "Offline — read-only");
@@ -1673,6 +1682,7 @@ function renderRun(run) {
   el.runContent.innerHTML = `<div class="status-row"><span class="status-pill ${run.status}" data-testid="status-run">${statusLabel(run.status)}</span></div>
     <h2 class="run-label" id="run-label" data-testid="text-run-label">${escapeHtml(run.setupSnapshot.label)}</h2>
     <div class="run-meta"><span><i class="meta-marker" aria-hidden="true"></i>${run.setupSnapshot.targetCases.toLocaleString()} target cases</span><span><i class="meta-marker" aria-hidden="true"></i>${run.setupSnapshot.productCode ? escapeHtml(productName(run.setupSnapshot.productCode)) : "Product not linked"}</span><span><i class="meta-marker" aria-hidden="true"></i>${run.setupSnapshot.productionPlan ? `Setup ${escapeHtml(run.setupSnapshot.productionPlan.name)}` : "Production setup not linked"}</span><span><i class="meta-marker" aria-hidden="true"></i>${run.startedAt ? `Started ${escapeHtml(formatDate(run.startedAt))}` : `Created ${escapeHtml(formatDate(run.createdAt))}`}</span></div>
+    ${renderRunOperationalEvidence(run)}
     <div class="run-divider"></div><p class="control-label">RUN CONTROLS</p>
     ${renderProductionRules(run.productionRules)}
     <div class="controls">${actionMarkup}</div>${pendingMarkup}${inventoryMarkup}`;
@@ -1681,6 +1691,102 @@ function renderRun(run) {
   });
   const retry = el.runContent.querySelector("[data-retry-command]");
   if (retry) retry.addEventListener("click", () => retryCommand(run.id));
+}
+
+function runEvidenceFor(run) {
+  return run && runEvidenceRunId === run.id ? runOperationalEvidence : null;
+}
+
+function allergenFactsText(footprint) {
+  if (!footprint || !Array.isArray(footprint.allergens)) return "Allergen facts: Unknown.";
+  if (footprint.status === "unknown") {
+    return footprint.allergens.length
+      ? `Known tracked allergens: ${footprint.allergens.join(", ")}. Other ingredient facts are unknown.`
+      : "Allergen facts: Unknown because some ingredient links or reviews are missing.";
+  }
+  return footprint.allergens.length
+    ? `Tracked allergens in reviewed ingredient records: ${footprint.allergens.join(", ")}.`
+    : "Reviewed ingredient records list none of the tracked allergens.";
+}
+
+function substitutionSummary(substitution) {
+  const sources = Array.isArray(substitution.sourceItems) ? substitution.sourceItems : [];
+  const sourceText = sources.map((source) =>
+    `${source.productName || source.productCode || "Source product"} (${source.productCode || "code unavailable"}): ${source.quantity} ${source.unit}`,
+  ).join("; ");
+  return `${sourceText || "Source quantity unavailable"} → ${substitution.replacementProductName} (${substitution.replacementProductCode}): ${substitution.replacementQuantity} ${substitution.replacementUnit}`;
+}
+
+function runSubstitutionMarkup(evidence) {
+  const substitutions = Array.isArray(evidence?.substitutions) ? evidence.substitutions : [];
+  if (!substitutions.length) {
+    return `<p class="run-evidence-note"><span aria-hidden="true">✓</span> No current approved substitutions recorded.</p>`;
+  }
+  return `<ul class="run-evidence-substitutions">${substitutions.map((substitution) =>
+    `<li><span class="evidence-icon" aria-hidden="true">↔</span><span><strong>Substitution</strong> ${escapeHtml(substitutionSummary(substitution))}<small>Inventory movement ${escapeHtml(substitution.movementGroupId || "reference unavailable")}</small></span></li>`,
+  ).join("")}</ul>`;
+}
+
+function renderRunOperationalEvidence(run) {
+  if (!run) return "";
+  if (runEvidenceRunId !== run.id) {
+    return `<section class="run-operational-evidence" aria-label="Run substitution and allergen status" data-testid="run-operational-evidence" aria-live="polite"><p class="run-evidence-note"><span aria-hidden="true">…</span> Loading run substitution and allergen status.</p></section>`;
+  }
+  if (runEvidenceError || !runOperationalEvidence) {
+    return `<section class="run-operational-evidence" aria-label="Run substitution and allergen status" data-testid="run-operational-evidence" aria-live="polite"><p class="run-evidence-note"><span aria-hidden="true">?</span> Run substitution and allergen status unavailable: ${escapeHtml(runEvidenceError || "not yet confirmed by the server")}.</p></section>`;
+  }
+  const evidence = runOperationalEvidence;
+  const footprint = evidence.allergenFootprint;
+  const qcAccess = currentStaff?.capabilities?.some((capability) =>
+    ["record-qc", "manage-qc"].includes(capability));
+  return `<section class="run-operational-evidence" aria-label="Run substitution and allergen status" data-testid="run-operational-evidence" aria-live="polite">
+    <h3>Run ingredient status</h3>
+    ${runSubstitutionMarkup(evidence)}
+    <p class="run-evidence-note"><span aria-hidden="true">${footprint.status === "complete" ? "i" : "?"}</span><strong>Allergen facts:</strong> ${escapeHtml(allergenFactsText(footprint))} This is visibility into reviewed ingredient records, not safety clearance or label approval.</p>
+    ${qcAccess ? '<a class="run-evidence-link" href="#qc-panel">Open the QC substitution record</a>' : ""}
+  </section>`;
+}
+
+function stationEvidenceFor(run, stationKey) {
+  return runEvidenceFor(run)?.stations?.[stationKey] ?? null;
+}
+
+function stationEvidenceLabel(evidence) {
+  if (!evidence) return "Substitution and allergen status unavailable.";
+  const substitutions = Array.isArray(evidence.substitutions) ? evidence.substitutions : [];
+  const prefix = substitutions.length
+    ? `${substitutions.length} approved substitution${substitutions.length === 1 ? " affects" : "s affect"} this station.`
+    : "No current approved substitutions affect this station.";
+  return `${prefix} ${allergenFactsText(evidence.allergenFootprint)}`;
+}
+
+function renderStationEvidence(run, stationKey) {
+  const evidence = stationEvidenceFor(run, stationKey);
+  if (!evidence) {
+    const message = runEvidenceError || (runEvidenceRunId === run?.id
+      ? "Run status is not yet confirmed by the server."
+      : "Loading run status from the server.");
+    return `<div class="station-evidence" role="status" aria-live="polite" data-testid="station-operational-evidence"><span class="evidence-icon" aria-hidden="true">?</span><span>Run substitution and allergen status unavailable: ${escapeHtml(message)}</span></div>`;
+  }
+  const substitutions = Array.isArray(evidence.substitutions) ? evidence.substitutions : [];
+  return `<div class="station-evidence" role="status" aria-live="polite" data-testid="station-operational-evidence">
+    <span class="evidence-icon" aria-hidden="true">${substitutions.length ? "↔" : "i"}</span>
+    <span>${escapeHtml(stationEvidenceLabel(evidence))}
+      ${substitutions.length ? `<ul>${substitutions.map((substitution) =>
+        `<li>${escapeHtml(substitutionSummary(substitution))}</li>`,
+      ).join("")}</ul>` : ""}
+    </span>
+  </div>`;
+}
+
+function handleRunEvidenceChange(runId, evidence, error = "") {
+  runEvidenceRunId = runId;
+  runOperationalEvidence = evidence;
+  runEvidenceError = error;
+  const run = selectedRun();
+  if (!run || run.id !== runId) return;
+  renderRun(run);
+  renderStationPanel(run);
 }
 
 function renderProductionRules(findings) {
@@ -2229,7 +2335,12 @@ function render() {
   renderRun(selectedRun());
   renderStationPanel(selectedRun());
   renderRunSupplyPanel(selectedRun());
-  qc.updateContext({ staff: currentStaff, run: selectedRun(), writable: canWriteNow() });
+  qc.updateContext({
+    staff: currentStaff,
+    run: selectedRun(),
+    writable: canWriteNow(),
+    onEvidenceChange: handleRunEvidenceChange,
+  });
 }
 
 const STATION_FIELD_META = Object.freeze({
@@ -2370,10 +2481,17 @@ function renderStationPanel(run) {
   el.stationPanel.hidden = false;
   if (!Object.hasOwn(STATIONS, selectedStationKey)) selectedStationKey = "line";
   el.stationRevision.textContent = `RUN REV ${String(run.revision).padStart(2, "0")}`;
-  el.stationTabs.innerHTML = Object.entries(STATIONS).map(([key, station]) => `
+  el.stationTabs.innerHTML = Object.entries(STATIONS).map(([key, station]) => {
+    const evidence = stationEvidenceFor(run, key);
+    const substitutionCount = evidence?.substitutions?.length ?? 0;
+    const tabEvidence = evidence
+      ? `${substitutionCount ? `${substitutionCount} substitution${substitutionCount === 1 ? "" : "s"}` : "No substitution"}; ${evidence.allergenFootprint?.status === "complete" ? "allergen facts reviewed" : "allergen facts unknown"}`
+      : "status unavailable";
+    return `
     <button type="button" class="station-tab" role="tab" aria-selected="${key === selectedStationKey}"
-      aria-controls="station-fields" data-station-key="${key}" data-testid="tab-station-${key}">${station.label}</button>
-  `).join("");
+      aria-controls="station-fields" aria-label="${escapeHtml(`${station.label}: ${tabEvidence}`)}" data-station-key="${key}" data-testid="tab-station-${key}">${station.label}${evidence ? `<span class="station-tab-evidence"><span aria-hidden="true">${substitutionCount ? "↔" : "i"}</span>${substitutionCount ? "Changed" : "Status"}</span>` : ""}</button>
+  `;
+  }).join("");
   el.stationTabs.querySelectorAll("[data-station-key]").forEach((button) => {
     button.addEventListener("click", () => {
       selectedStationKey = button.dataset.stationKey;
@@ -2406,7 +2524,10 @@ function renderStationPanel(run) {
   const doughHelp = selectedStationKey === "dough"
     ? `<p class="station-help">Example: 645.19 doughballs ÷ 12 pizzas per case = 53.7658 cases per batch. Batch estimates round up to whole batches: 53 cases needs 1; 54 needs 2.</p>`
     : "";
-  el.stationMetrics.innerHTML = `${metricMarkup}${doughHelp}${capacityNotice}`;
+  const stationEvidenceMarkup = ["dough", "cheese", "pepperoni", "sauce", "frontline"].includes(selectedStationKey)
+    ? renderStationEvidence(run, selectedStationKey)
+    : "";
+  el.stationMetrics.innerHTML = `${stationEvidenceMarkup}${metricMarkup}${doughHelp}${capacityNotice}`;
 
   const makeFields = (title, group, fields) => `
     <div class="station-field-group">
@@ -3127,7 +3248,10 @@ el.runSupplyPlanned.addEventListener("change", () => {
   const run = selectedRun();
   if (run) updateSupplyActualChoices(run);
 });
-el.refresh.addEventListener("click", () => fetchRuns());
+el.refresh.addEventListener("click", async () => {
+  const refreshed = await fetchRuns();
+  if (refreshed) void qc.refreshEvidence();
+});
 el.createForm.addEventListener("submit", createRun);
 el.product.addEventListener("change", renderRunProductionSetups);
 el.productionSetup.addEventListener("change", renderRunDieSetup);

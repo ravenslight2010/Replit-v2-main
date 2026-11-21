@@ -1,5 +1,6 @@
 const API = "/api/v2/qc";
 const REFRESH_MS = 7000;
+const OPERATOR_STATUS_REFRESH_MS = 4000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const el = {
@@ -26,6 +27,9 @@ let renderedSettingsFingerprint = null;
 let contextCapabilities = "";
 let renderedRunEventsFingerprint = null;
 let renderedFacilityEventsFingerprint = null;
+let evidenceListener = () => {};
+let evidenceGeneration = 0;
+let evidenceLoadInFlight = false;
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({
@@ -64,6 +68,48 @@ function canManageAllergens() {
 
 function canRecord() {
   return staff?.capabilities?.includes("record-qc") === true || canManage();
+}
+
+function canReadOperationalEvidence() {
+  return staff?.capabilities?.some((capability) =>
+    ["run.read", "record-qc", "manage-qc"].includes(capability)) === true;
+}
+
+function reportOperationalEvidence(evidence, error = "") {
+  evidenceListener(run?.id ?? null, evidence, error);
+}
+
+async function loadOperationalEvidence() {
+  if (!canReadOperationalEvidence() || !run || navigator.onLine === false || evidenceLoadInFlight) return false;
+  evidenceLoadInFlight = true;
+  const generation = evidenceGeneration;
+  const runId = run.id;
+  try {
+    const response = await fetch(`${API}/runs/${encodeURIComponent(runId)}/operational-status`, {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    });
+    const body = await readBody(response);
+    if (generation !== evidenceGeneration || run?.id !== runId) return false;
+    if (body.runId !== runId || !Array.isArray(body.substitutions)
+      || !body.allergenFootprint || !["complete", "unknown"].includes(body.allergenFootprint.status)
+      || !body.stations || !["dough", "cheese", "pepperoni", "sauce", "frontline"].every((key) =>
+        body.stations[key] && Array.isArray(body.stations[key].substitutions)
+        && ["complete", "unknown"].includes(body.stations[key].allergenFootprint?.status))) {
+      throw new Error("Run substitution and allergen status is incomplete.");
+    }
+    reportOperationalEvidence(body);
+    return true;
+  } catch (error) {
+    if (generation !== evidenceGeneration) return false;
+    reportOperationalEvidence(
+      null,
+      error instanceof Error ? error.message : "Run substitution and allergen status could not be refreshed.",
+    );
+    return false;
+  } finally {
+    evidenceLoadInFlight = false;
+  }
 }
 
 function runItems() {
@@ -1038,6 +1084,7 @@ async function load({ quiet = false } = {}) {
     el.error.hidden = true;
     refreshStatus("QC history is current on this device.");
     render();
+    void loadOperationalEvidence();
     return true;
   } catch (error) {
     if (generation !== requestGeneration) return false;
@@ -1051,10 +1098,13 @@ async function load({ quiet = false } = {}) {
 }
 
 function clear() {
+  const previousRunId = run?.id ?? null;
   requestGeneration += 1;
+  evidenceGeneration += 1;
   staff = null;
   run = null;
   data = null;
+  evidenceListener(previousRunId, null, "");
   writable = false;
   el.panel.hidden = true;
   el.forms.replaceChildren();
@@ -1064,12 +1114,10 @@ function clear() {
   renderedRunEventsFingerprint = null;
   renderedFacilityEventsFingerprint = null;
   contextCapabilities = "";
-  if (timer) window.clearInterval(timer);
-  timer = null;
 }
 
 export function initializeQc() {
-  if (!el.panel) return { updateContext() {}, clear() {} };
+  if (!el.panel) return { updateContext() {}, clear() {}, refreshEvidence() {} };
   el.refresh.addEventListener("click", () => void load());
   el.export.addEventListener("click", async () => {
     if (!canManage() || !writable) return;
@@ -1096,14 +1144,24 @@ export function initializeQc() {
     }
   });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) void load({ quiet: true });
+    if (!document.hidden) {
+      void load({ quiet: true });
+      void loadOperationalEvidence();
+    }
   });
-  window.addEventListener("online", () => void load({ quiet: true }));
+  window.addEventListener("online", () => {
+    void load({ quiet: true });
+    void loadOperationalEvidence();
+  });
   timer = window.setInterval(() => {
-    if (!document.hidden) void load({ quiet: true });
-  }, REFRESH_MS);
+    if (!document.hidden) {
+      void load({ quiet: true });
+      void loadOperationalEvidence();
+    }
+  }, Math.min(REFRESH_MS, OPERATOR_STATUS_REFRESH_MS));
 
   return {
+    refreshEvidence: loadOperationalEvidence,
     updateContext(context) {
       const nextStaff = context?.staff ?? null;
       const nextRun = context?.run ?? null;
@@ -1113,6 +1171,7 @@ export function initializeQc() {
       const nextCapabilities = JSON.stringify(nextStaff?.capabilities ?? []);
       const accessChanged = contextCapabilities !== nextCapabilities;
       const wasWritable = writable;
+      if (typeof context?.onEvidenceChange === "function") evidenceListener = context.onEvidenceChange;
       staff = nextStaff;
       run = nextRun;
       contextCapabilities = nextCapabilities;
@@ -1128,6 +1187,11 @@ export function initializeQc() {
       el.export.disabled = !writable || !canManage();
       if (changed) {
         requestGeneration += 1;
+        evidenceGeneration += 1;
+        reportOperationalEvidence(
+          null,
+          canReadOperationalEvidence() && run ? "Loading run status from the server." : "",
+        );
         data = null;
         facilityEvents = [];
         renderedSettingsFingerprint = null;
@@ -1137,7 +1201,19 @@ export function initializeQc() {
         el.history.replaceChildren();
         el.facilityHistory.replaceChildren();
         if (canRecord() && run) void load();
-      } else if (data && (accessChanged || wasWritable !== writable)) {
+        if (canReadOperationalEvidence() && run) void loadOperationalEvidence();
+      } else if (accessChanged || wasWritable !== writable) {
+        if (!canReadOperationalEvidence()) {
+          evidenceGeneration += 1;
+          reportOperationalEvidence(null, "Run status is not available for this role.");
+        } else if (navigator.onLine === false) {
+          evidenceGeneration += 1;
+          reportOperationalEvidence(null, "Run status is unavailable while offline.");
+        } else {
+          void loadOperationalEvidence();
+        }
+      }
+      if (data && (accessChanged || wasWritable !== writable)) {
         const noBrixProduct = typeof data.run?.setupSnapshot?.productCode !== "string";
         el.forms.querySelectorAll("button, input, select").forEach((control) => {
           control.disabled = !writable

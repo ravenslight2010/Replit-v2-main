@@ -5,6 +5,8 @@ DECLARE
   v_facility uuid;
   v_manager uuid := '99000000-0000-4000-8000-000000000201';
   v_operator uuid := '99000000-0000-4000-8000-000000000202';
+  v_status_reader uuid := '99000000-0000-4000-8000-000000000203';
+  v_unprivileged uuid := '99000000-0000-4000-8000-000000000204';
   v_monterey uuid := '99000000-0000-4000-8000-000000000210';
   v_mozzarella uuid := '99000000-0000-4000-8000-000000000211';
   v_replacement uuid := '99000000-0000-4000-8000-000000000212';
@@ -21,6 +23,7 @@ DECLARE
   v_after_movements integer;
   v_events_before integer;
   v_substitution jsonb;
+  v_operational_status jsonb;
   v_now timestamptz := clock_timestamp();
 BEGIN
   SELECT facility_id INTO STRICT v_facility
@@ -30,8 +33,19 @@ BEGIN
   VALUES
     (v_manager, 'QCSubstitutionManager', 'argon2id$v=19$m=19456,t=2,p=1$c2FsdA==$aGFzaA=='),
     (v_operator, 'QCSubstitutionOperator', 'argon2id$v=19$m=19456,t=2,p=1$c2FsdA==$aGFzaA==');
+  INSERT INTO v2.staff_accounts (id, username, password_hash)
+  VALUES
+    (v_status_reader, 'QCSubstitutionStatusReader', 'argon2id$v=19$m=19456,t=2,p=1$c2FsdA==$aGFzaA=='),
+    (v_unprivileged, 'QCSubstitutionUnprivileged', 'argon2id$v=19$m=19456,t=2,p=1$c2FsdA==$aGFzaA==');
   INSERT INTO v2.user_roles (user_id, role_name)
-  VALUES (v_manager, 'qc-manager'), (v_operator, 'qc-operator');
+  VALUES
+    (v_manager, 'qc-manager'),
+    (v_operator, 'qc-operator'),
+    (v_unprivileged, 'operator');
+  INSERT INTO v2.roles (name, capabilities, builtin)
+  VALUES ('qc-substitution-status-reader', '["run.read"]'::jsonb, false);
+  INSERT INTO v2.user_roles (user_id, role_name)
+  VALUES (v_status_reader, 'qc-substitution-status-reader');
   INSERT INTO v2.products (facility_id, id, code, name, base_unit)
   VALUES
     (v_facility, v_monterey, 'QC-MONTEREY', 'Monterey cheese', 'lb'),
@@ -247,6 +261,22 @@ BEGIN
   IF (v_substitution->>'replacementQuantity')::numeric <> 35
      OR jsonb_array_length(v_substitution->'sourceItems') <> 2 THEN
     RAISE EXCEPTION 'The current substitution projection lost its corrected multi-source details';
+  END IF;
+  v_operational_status := v2.list_run_operational_substitutions(v_facility, v_status_reader, v_run);
+  IF jsonb_array_length(v_operational_status) <> 1
+     OR v_operational_status->0->>'replacementProductId' <> v_replacement::text
+     OR (v_operational_status->0->>'replacementQuantity')::numeric <> 35
+     OR jsonb_array_length(v_operational_status->0->'sourceItems') <> 2
+     OR v_operational_status->0->>'movementGroupId' IS NULL THEN
+    RAISE EXCEPTION 'A run reader did not receive the current exact substitution evidence';
+  END IF;
+  v_failed := false;
+  BEGIN
+    PERFORM v2.list_run_operational_substitutions(v_facility, v_unprivileged, v_run);
+  EXCEPTION WHEN SQLSTATE '42501' THEN v_failed := true;
+  END;
+  IF NOT v_failed THEN
+    RAISE EXCEPTION 'A user without run-read or QC access received substitution evidence';
   END IF;
 
   RAISE NOTICE 'V2 QC substitution approval, correction, and inventory accounting checks passed';

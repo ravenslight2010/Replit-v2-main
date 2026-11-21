@@ -156,6 +156,29 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
       response.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
       response.end(JSON.stringify(body));
     };
+    if (pathname === `${QC_API}/runs/${RUN_ID}/operational-status` && request.method === "GET") {
+      const allergenFootprint = {
+        status: "unknown",
+        allergens: [],
+        ingredientCount: items.length,
+        unknownIngredients: [],
+      };
+      json(200, {
+        runId: RUN_ID,
+        substitutions,
+        allergenFootprint,
+        stations: Object.fromEntries(["dough", "cheese", "pepperoni", "sauce", "frontline"].map((key) => [
+          key,
+          {
+            substitutions: substitutions.filter((substitution) =>
+              substitution.sourceItems.some((source) => source.stationKey === key)),
+            allergenFootprint,
+          },
+        ])),
+        limitations: { allergens: "incomplete" },
+      });
+      return;
+    }
     if (pathname === `${QC_API}/runs/${RUN_ID}` && request.method === "GET") {
       json(200, {
         run,

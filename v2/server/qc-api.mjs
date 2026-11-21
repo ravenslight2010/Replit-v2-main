@@ -203,6 +203,18 @@ function requireQcAccess(auth, capability) {
   }
 }
 
+function requireOperationalEvidenceAccess(auth) {
+  if (auth?.verified !== true) throw new QcApiError(401, "Sign in to access run details.");
+  if (!Array.isArray(auth.capabilities)
+    || !auth.capabilities.some((capability) =>
+      ["run.read", "record-qc", "manage-qc"].includes(capability))) {
+    throw new QcApiError(403, "Run read access is required for substitution status.");
+  }
+  if (!UUID.test(auth.actorId || "") || !UUID.test(auth.facilityId || "")) {
+    throw new QcApiError(401, "Refresh your V2 session before continuing.");
+  }
+}
+
 function parseLimit(url, maximum = 100) {
   for (const key of url.searchParams.keys()) {
     if (key !== "limit") throw new QcApiError(400, "Unsupported QC history query parameter.");
@@ -393,6 +405,60 @@ function componentChecklist(run, items, substitutions) {
   ])).values()];
 }
 
+function deriveStationEvidence(run, items, substitutions) {
+  return Object.fromEntries([...STATIONS].map((stationKey) => {
+    const stationItems = items.filter((item) => item.stationKey === stationKey);
+    const stationSubstitutions = substitutions.filter((substitution) =>
+      (substitution.sourceItems ?? []).some((source) => source.stationKey === stationKey));
+    const stationFootprintSubstitutions = stationSubstitutions.map((substitution) => ({
+      ...substitution,
+      sourceItems: substitution.sourceItems.filter((source) => source.stationKey === stationKey),
+    }));
+    const stationRun = run?.status === "completed" && run.inventoryConsumption
+      ? {
+        ...run,
+        inventoryConsumption: {
+          ...run.inventoryConsumption,
+          qcSubstitutions: stationFootprintSubstitutions,
+        },
+      }
+      : run;
+    return [stationKey, {
+      substitutions: stationSubstitutions,
+      allergenFootprint: deriveAllergenFootprint(
+        stationRun,
+        stationItems,
+        stationFootprintSubstitutions,
+      ),
+    }];
+  }));
+}
+
+function enrichOperationalSubstitutions(substitutions, items, consumption) {
+  const consumedItems = Array.isArray(consumption?.componentDemand)
+    ? consumption.componentDemand
+    : [];
+  return substitutions.map((substitution) => ({
+    ...substitution,
+    sourceItems: (Array.isArray(substitution.sourceItems) ? substitution.sourceItems : []).map((source) => {
+      const item = items.find((candidate) =>
+        candidate.productId === String(source.productId).toLowerCase()
+        && candidate.stationKey === source.stationKey
+        && candidate.recipeCode === source.recipeCode);
+      const consumed = consumedItems.find((candidate) =>
+        String(candidate.productId).toLowerCase() === String(source.productId).toLowerCase()
+        && candidate.stationKey === source.stationKey
+        && candidate.recipeCode === source.recipeCode);
+      return {
+        ...source,
+        productCode: source.productCode ?? item?.productCode ?? consumed?.productCode,
+        productName: source.productName ?? item?.productName ?? consumed?.productName,
+        recipeName: source.recipeName ?? item?.recipeName ?? consumed?.recipeName,
+      };
+    }),
+  }));
+}
+
 function findRunItem(run, input) {
   const productId = validateUuid(input.productId, "Ingredient");
   const stationKey = typeof input.stationKey === "string" ? input.stationKey : "";
@@ -517,6 +583,19 @@ export function createQcApi({ pool, authenticate, verifyCsrf, logger = () => {} 
     return substitutions;
   }
 
+  async function listOperationalSubstitutions(auth, runId) {
+    const result = await pool.query({
+      text: "SELECT v2.list_run_operational_substitutions($1::uuid, $2::uuid, $3::uuid) AS result",
+      values: [auth.facilityId.toLowerCase(), auth.actorId.toLowerCase(), runId],
+      query_timeout: 3000,
+    });
+    const substitutions = resultValue(result);
+    if (!Array.isArray(substitutions)) {
+      throw new QcApiError(502, "Run substitution status is temporarily unavailable.");
+    }
+    return substitutions;
+  }
+
   async function recordSubstitution(auth, runId, requestId, action, proposalEventId, targetSubstitutionId, details) {
     const requestHash = hashRequest({
       runId, action, proposalEventId, targetSubstitutionId, details,
@@ -574,7 +653,14 @@ export function createQcApi({ pool, authenticate, verifyCsrf, logger = () => {} 
     let actorId = null;
     try {
       const auth = await authenticate(request);
-      requireQcAccess(auth, url.pathname === INGREDIENT_LINKS_PATH ? "manage-allergens" : undefined);
+      const operationalStatusMatch = url.pathname.match(
+        /^\/api\/v2\/qc\/runs\/([^/]+)\/operational-status$/,
+      );
+      if (operationalStatusMatch && request.method === "GET") {
+        requireOperationalEvidenceAccess(auth);
+      } else {
+        requireQcAccess(auth, url.pathname === INGREDIENT_LINKS_PATH ? "manage-allergens" : undefined);
+      }
       actorId = auth.actorId.toLowerCase();
 
       if (request.method !== "GET") {
@@ -588,6 +674,33 @@ export function createQcApi({ pool, authenticate, verifyCsrf, logger = () => {} 
 
       const scope = auth.facilityId.toLowerCase();
       const actor = auth.actorId.toLowerCase();
+
+      if (operationalStatusMatch && request.method === "GET") {
+        operation = "get_run_operational_status";
+        if (url.search) throw new QcApiError(400, "Run operational status does not accept query parameters.");
+        const runId = decodePathUuid(operationalStatusMatch[1], "Run ID");
+        const run = await loadRun(scope, runId);
+        const items = flattenRunItems(run);
+        const rawSubstitutions = run.status === "completed" && Array.isArray(run.inventoryConsumption?.qcSubstitutions)
+          ? run.inventoryConsumption.qcSubstitutions
+          : await listOperationalSubstitutions(auth, runId);
+        const substitutions = enrichOperationalSubstitutions(
+          rawSubstitutions,
+          items,
+          run.inventoryConsumption,
+        );
+        const allergenFootprint = deriveAllergenFootprint(run, items, substitutions);
+        sendJson(response, 200, {
+          runId,
+          substitutions,
+          allergenFootprint,
+          stations: deriveStationEvidence(run, items, substitutions),
+          limitations: {
+            allergens: allergenFootprint.status === "unknown" ? "incomplete" : "available",
+          },
+        });
+        return true;
+      }
 
       if (url.pathname === INGREDIENT_LINKS_PATH && request.method === "GET") {
         operation = "list_ingredient_links";

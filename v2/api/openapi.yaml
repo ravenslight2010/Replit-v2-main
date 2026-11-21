@@ -2404,6 +2404,34 @@ paths:
           $ref: "#/components/responses/Error"
         "404":
           $ref: "#/components/responses/Error"
+  /api/v2/qc/runs/{runId}/operational-status:
+    get:
+      operationId: getRunOperationalSubstitutionStatus
+      summary: Read run-bound substitutions and allergen facts
+      description: >
+        Requires run.read or a QC role. Returns only the current approved
+        substitutions and the existing run-snapshot allergen derivation, not QC
+        history, settings, or editable inventory data. Completed runs use their
+        immutable consumption receipt. Unknown allergen facts remain unknown;
+        this response never represents clearance, label safety, or a production
+        decision.
+      parameters:
+        - $ref: "#/components/parameters/RunId"
+      responses:
+        "200":
+          description: Run and station substitution status with allergen uncertainty
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunOperationalStatus"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
   /api/v2/qc/runs/{runId}/substitutions:
     post:
       operationId: proposeQcRunSubstitution
@@ -3179,6 +3207,72 @@ components:
               productName: { type: string }
               stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
               reason: { type: string }
+    RunOperationalSourceItem:
+      type: object
+      required: [productId, quantity, unit, stationKey, recipeCode]
+      properties:
+        productId: { type: string, format: uuid }
+        productCode: { type: string }
+        productName: { type: string }
+        recipeCode: { type: string }
+        recipeName: { type: string }
+        stationKey: { type: string, enum: [dough, cheese, pepperoni, sauce, frontline] }
+        quantity: { type: string }
+        unit: { type: string }
+    RunOperationalSubstitution:
+      type: object
+      required: [id, revision, sourceItems, replacementProductId, replacementProductCode, replacementProductName, replacementQuantity, replacementUnit, movementGroupId, occurredAt]
+      properties:
+        id: { type: string, format: uuid }
+        proposalEventId: { type: string, format: uuid }
+        revision: { type: integer, minimum: 1 }
+        sourceItems:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items: { $ref: "#/components/schemas/RunOperationalSourceItem" }
+        replacementProductId: { type: string, format: uuid }
+        replacementProductCode: { type: string }
+        replacementProductName: { type: string }
+        replacementQuantity: { type: string }
+        replacementUnit: { type: string }
+        movementGroupId: { type: string, format: uuid }
+        occurredAt: { type: string, format: date-time }
+    RunOperationalStationStatus:
+      type: object
+      required: [substitutions, allergenFootprint]
+      properties:
+        substitutions:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/RunOperationalSubstitution" }
+        allergenFootprint:
+          $ref: "#/components/schemas/QcAllergenFootprint"
+    RunOperationalStatus:
+      type: object
+      required: [runId, substitutions, allergenFootprint, stations, limitations]
+      properties:
+        runId: { type: string, format: uuid }
+        substitutions:
+          type: array
+          maxItems: 200
+          items: { $ref: "#/components/schemas/RunOperationalSubstitution" }
+        allergenFootprint:
+          $ref: "#/components/schemas/QcAllergenFootprint"
+        stations:
+          type: object
+          required: [dough, cheese, pepperoni, sauce, frontline]
+          properties:
+            dough: { $ref: "#/components/schemas/RunOperationalStationStatus" }
+            cheese: { $ref: "#/components/schemas/RunOperationalStationStatus" }
+            pepperoni: { $ref: "#/components/schemas/RunOperationalStationStatus" }
+            sauce: { $ref: "#/components/schemas/RunOperationalStationStatus" }
+            frontline: { $ref: "#/components/schemas/RunOperationalStationStatus" }
+        limitations:
+          type: object
+          required: [allergens]
+          properties:
+            allergens: { type: string, enum: [available, incomplete] }
     QcEvent:
       type: object
       required: [id, runId, actorId, eventType, payload, occurredAt]
