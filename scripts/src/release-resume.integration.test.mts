@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdir, readFile, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -1036,6 +1036,181 @@ async function runLegacyCoverageDecisionScenario(): Promise<void> {
   console.log("Release decision scope tests passed (legacy V1 separated from V2).");
 }
 
+async function runV2BrowserFailureEvidenceLifecycleScenario(): Promise<void> {
+  const evidenceDir = await mkdtemp(
+    join(tmpdir(), "release-v2-browser-evidence-lifecycle-"),
+  );
+  const fixtureDir = await mkdtemp(
+    join(tmpdir(), "release-v2-browser-evidence-lifecycle-fixture-"),
+  );
+  const runnerPidPath = join(fixtureDir, "runner-pid");
+  const junitFixtureScript = [
+    "const fs = require('node:fs');",
+    "const os = require('node:os');",
+    "const path = require('node:path');",
+    "const failed = process.env.RELEASE_V2_FIXTURE_RESULT === 'fail';",
+    "const junitPath = path.join(os.tmpdir(), `v2-browser-${process.ppid}-standard.xml`);",
+    "fs.writeFileSync(process.env.RELEASE_V2_FIXTURE_RUNNER_PID, String(process.ppid));",
+    "const failure = failed ? '<failure message=\"controlled V2 failure\">controlled V2 stack</failure>' : '';",
+    "const unrelated = '<testcase name=\"unrelated failure\" file=\"e2e/unrelated.browser.test.mjs\"><failure message=\"must not be retained\">UNRELATED_TEST_STACK</failure></testcase>';",
+    "const xml = `<?xml version=\"1.0\"?><testsuites><testcase name=\"station sync\" file=\"e2e/station-sync.browser.test.mjs\">${failure}</testcase>${unrelated}</testsuites>`;",
+    "fs.writeFileSync(junitPath, xml);",
+    "process.exit(failed ? 1 : 0);",
+  ].join("");
+  const v2Step = (result: "fail" | "pass"): FixtureStep[] => [
+    {
+      label: "V2 critical Chromium workflows",
+      command: process.execPath,
+      args: ["-e", junitFixtureScript],
+      env: {
+        RELEASE_V2_FIXTURE_RESULT: result,
+        RELEASE_V2_FIXTURE_RUNNER_PID: runnerPidPath,
+      },
+      stage: "v2-browser",
+    },
+  ];
+  const readJunitPath = async (): Promise<string> =>
+    join(
+      tmpdir(),
+      `v2-browser-${(await readFile(runnerPidPath, "utf8")).trim()}-standard.xml`,
+    );
+
+  try {
+    const failure = await runReleaseCheck(evidenceDir, v2Step("fail"));
+    assert.equal(failure.code, 1, failure.output);
+
+    const revision = await getCurrentRevision();
+    const failureEvidencePath = join(
+      evidenceDir,
+      "v2-browser-failures.json",
+    );
+    const failureEvidence = JSON.parse(
+      await readFile(failureEvidencePath, "utf8"),
+    ) as {
+      revision: string;
+      files: Array<{
+        file: string;
+        failed: number;
+        failures: Array<{ message: string; trace: string }>;
+      }>;
+    };
+    assert.equal(failureEvidence.revision, revision);
+    assert.deepEqual(
+      failureEvidence.files.map(({ file, failed }) => ({ file, failed })),
+      [
+        { file: "e2e/station-sync.browser.test.mjs", failed: 1 },
+        { file: "e2e/qc-workflow.browser.test.mjs", failed: 0 },
+      ],
+      "only allowlisted V2 test files should be retained",
+    );
+    assert.match(
+      failureEvidence.files[0]?.failures[0]?.trace ?? "",
+      /controlled V2 stack/,
+    );
+    assert.doesNotMatch(
+      JSON.stringify(failureEvidence),
+      /UNRELATED_TEST_STACK|unrelated\.browser\.test\.mjs/,
+      "unrelated test failures must not enter the retained artifact",
+    );
+    const checkpointReport = await readFile(
+      join(evidenceDir, "release-check-checkpoint.md"),
+      "utf8",
+    );
+    assert.match(
+      checkpointReport,
+      /\[failure details\]\(v2-browser-failures\.json\)/,
+      "the failed V2 report should link its matching-revision artifact",
+    );
+    const failedJunitPath = await readJunitPath();
+    await assert.rejects(
+      readFile(failedJunitPath, "utf8"),
+      "temporary JUnit output must be removed after the failed run",
+    );
+    assert.equal(
+      (await readdir(evidenceDir)).some((file) => file.endsWith(".xml")),
+      false,
+      "temporary JUnit output must not be retained in the evidence directory",
+    );
+
+    const passing = await runReleaseCheck(evidenceDir, v2Step("pass"));
+    assert.equal(passing.code, 0, passing.output);
+    const passingReport = await readFile(
+      join(evidenceDir, "release-check-report.md"),
+      "utf8",
+    );
+    assert.match(passingReport, /^Decision: GO$/m);
+    assert.doesNotMatch(
+      passingReport,
+      /\[failure details\]\(v2-browser-failures\.json\)/,
+      "a passing rerun must not link the previous failure artifact",
+    );
+    await assert.rejects(
+      readFile(failureEvidencePath, "utf8"),
+      "a passing rerun must remove the previous failure artifact",
+    );
+    const passingJunitPath = await readJunitPath();
+    await assert.rejects(
+      readFile(passingJunitPath, "utf8"),
+      "temporary JUnit output must be removed after the passing rerun",
+    );
+
+    await writeFile(
+      failureEvidencePath,
+      `${JSON.stringify(
+        { ...failureEvidence, revision: `${revision}-stale` },
+        null,
+        2,
+      )}\n`,
+      "utf8",
+    );
+    await writeFile(
+      join(evidenceDir, "release-check-state.json"),
+      `${JSON.stringify(
+        {
+          revision,
+          mode: "standard",
+          results: [
+            {
+              label: "V2 critical Chromium workflows",
+              passed: true,
+              status: "PASS",
+              elapsedMs: 1,
+            },
+          ],
+        },
+        null,
+        2,
+      )}\n`,
+      "utf8",
+    );
+    const resumed = await runReleaseCheck(evidenceDir, v2Step("pass"), [
+      "--resume",
+    ]);
+    assert.equal(resumed.code, 0, resumed.output);
+    const resumedReport = await readFile(
+      join(evidenceDir, "release-check-report.md"),
+      "utf8",
+    );
+    assert.match(resumedReport, /^Decision: GO$/m);
+    assert.doesNotMatch(
+      resumedReport,
+      /\[failure details\]\(v2-browser-failures\.json\)/,
+      "stale-revision failure evidence must never be linked from the report",
+    );
+    await assert.rejects(
+      readFile(failureEvidencePath, "utf8"),
+      "the runner must discard stale-revision failure evidence",
+    );
+
+    console.log(
+      "V2 browser failure evidence lifecycle passed (failure, passing rerun, stale revision, and cleanup).",
+    );
+  } finally {
+    await rm(evidenceDir, { recursive: true, force: true });
+    await rm(fixtureDir, { recursive: true, force: true });
+  }
+}
+
 async function runApiShardConcurrencyScenario(): Promise<void> {
   const evidenceDir = await mkdtemp(join(tmpdir(), "release-resume-api-cap-"));
   const markerDir = await mkdtemp(
@@ -1405,6 +1580,7 @@ if (process.env.RELEASE_STOPPED_SUMMARY_ONLY === "1") {
   await run();
   await runOnboardingGuardStopScenario();
   await runLegacyCoverageDecisionScenario();
+  await runV2BrowserFailureEvidenceLifecycleScenario();
   await runParallelStageScenario();
   await runApiShardConcurrencyScenario();
   await runParallelResumeScenario();
