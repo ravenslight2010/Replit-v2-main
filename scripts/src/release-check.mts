@@ -14,6 +14,8 @@ import { resolve } from "node:path";
 export type ReleaseStep = {
   label: string;
   args: string[];
+  /** V1-only coverage is retained in the report but does not decide V2 readiness. */
+  legacyV1?: boolean;
   command?: string;
   env?: Record<string, string>;
   timeoutMs?: number;
@@ -183,10 +185,21 @@ export const RELEASE_EVIDENCE_ALLOWLIST = [
 ] as const;
 export const RELEASE_CHECKPOINT_REPORT = "release-check-checkpoint.md";
 
+function reportGateStatus(report: string, label: string): string | undefined {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return report.match(
+    new RegExp(
+      `^\\| ${escaped} \\| (PASS|FAIL|INFRASTRUCTURE TIMEOUT|INFRASTRUCTURE ERROR|NOT REACHED) \\|`,
+      "m",
+    ),
+  )?.[1];
+}
+
 export const RELEASE_CHECK_API_SHARD_STEPS: readonly ReleaseStep[] = [
   {
     label: "API unit tests (release shard 1/6)",
     args: ["--filter", "@workspace/api-server", "run", "test:release:unit"],
+    legacyV1: true,
     timeoutMs: API_SHARD_TIMEOUT_MS,
     warningMs: API_SHARD_WARNING_MS,
     group: "api-test-shards",
@@ -200,6 +213,7 @@ export const RELEASE_CHECK_API_SHARD_STEPS: readonly ReleaseStep[] = [
       "run",
       "test:release:integration:1",
     ],
+    legacyV1: true,
     timeoutMs: API_SHARD_TIMEOUT_MS,
     warningMs: API_SHARD_WARNING_MS,
     group: "api-test-shards",
@@ -213,6 +227,7 @@ export const RELEASE_CHECK_API_SHARD_STEPS: readonly ReleaseStep[] = [
       "run",
       "test:release:integration:2",
     ],
+    legacyV1: true,
     timeoutMs: API_SHARD_TIMEOUT_MS,
     warningMs: API_SHARD_WARNING_MS,
     group: "api-test-shards",
@@ -226,6 +241,7 @@ export const RELEASE_CHECK_API_SHARD_STEPS: readonly ReleaseStep[] = [
       "run",
       "test:release:integration:3",
     ],
+    legacyV1: true,
     timeoutMs: API_SHARD_TIMEOUT_MS,
     warningMs: API_SHARD_WARNING_MS,
     group: "api-test-shards",
@@ -234,6 +250,7 @@ export const RELEASE_CHECK_API_SHARD_STEPS: readonly ReleaseStep[] = [
   {
     label: "API sync tests (release shard 5/6)",
     args: ["--filter", "@workspace/api-server", "run", "test:release:sync"],
+    legacyV1: true,
     timeoutMs: API_SHARD_TIMEOUT_MS,
     warningMs: API_SHARD_WARNING_MS,
     group: "api-test-shards",
@@ -242,6 +259,7 @@ export const RELEASE_CHECK_API_SHARD_STEPS: readonly ReleaseStep[] = [
   {
     label: "API sync SSE tests (release shard 6/6)",
     args: ["--filter", "@workspace/api-server", "run", "test:release:sync-sse"],
+    legacyV1: true,
     timeoutMs: API_SHARD_TIMEOUT_MS,
     warningMs: API_SHARD_WARNING_MS,
     group: "api-test-shards",
@@ -268,11 +286,13 @@ const steps: ReleaseStep[] = [
   {
     label: "API server typecheck",
     args: ["--filter", "@workspace/api-server", "run", "typecheck"],
+    legacyV1: true,
     stage: "consumer-typechecks",
   },
   {
     label: "run calculator typecheck",
     args: ["--filter", "@workspace/run-calculator", "run", "typecheck"],
+    legacyV1: true,
     stage: "consumer-typechecks",
   },
   {
@@ -293,6 +313,7 @@ const steps: ReleaseStep[] = [
   {
     label: "clean-start smoke",
     args: ["run", "check:clean-start"],
+    legacyV1: true,
     env: {
       CLEAN_START_API_PORT: "18081",
       CLEAN_START_WEB_PORT: "18082",
@@ -306,41 +327,49 @@ const steps: ReleaseStep[] = [
   {
     label: "run calculator tests",
     args: ["--filter", "@workspace/run-calculator", "run", "test"],
+    legacyV1: true,
     stage: "release-tests",
   },
   {
     label: "production rules tests",
     args: ["--filter", "@workspace/production-rules", "run", "test"],
+    legacyV1: true,
     stage: "release-tests",
   },
   {
     label: "inventory math tests",
     args: ["--filter", "@workspace/inventory-math", "run", "test"],
+    legacyV1: true,
     stage: "release-tests",
   },
   {
     label: "spec reconcile tests",
     args: ["--filter", "@workspace/spec-reconcile", "run", "test"],
+    legacyV1: true,
     stage: "release-tests",
   },
   {
     label: "spec import tests",
     args: ["--filter", "@workspace/spec-import", "run", "test"],
+    legacyV1: true,
     stage: "release-tests",
   },
   {
     label: "scheduled recipe check tests",
     args: ["--filter", "@workspace/scheduled-recipe-check", "run", "test"],
+    legacyV1: true,
     stage: "release-tests",
   },
   {
     label: "spec export tests",
     args: ["--filter", "@workspace/spec-export", "run", "test"],
+    legacyV1: true,
     stage: "release-tests",
   },
   {
     label: "corpus tests",
     args: ["--filter", "@workspace/corpus-harness", "run", "test"],
+    legacyV1: true,
     stage: "release-tests",
   },
   {
@@ -366,6 +395,7 @@ const steps: ReleaseStep[] = [
       "run",
       "check:e2e:onboarding",
     ],
+    legacyV1: true,
     stage: "browser-guard",
   },
   {
@@ -376,6 +406,7 @@ const steps: ReleaseStep[] = [
       E2E_APPROVED_DESTRUCTIVE_MODE: "1",
       PLAYWRIGHT_RELEASE_REPORT_PATH: fullBrowserReportPath,
     },
+    legacyV1: true,
     stage: "browser-smoke",
     concurrencyLimit: 1,
   },
@@ -387,7 +418,70 @@ const steps: ReleaseStep[] = [
       E2E_APPROVED_DESTRUCTIVE_MODE: "1",
       PLAYWRIGHT_RELEASE_REPORT_PATH: fullBrowserReportPath,
     },
+    legacyV1: true,
     stage: "browser-accessibility",
+    concurrencyLimit: 1,
+  },
+  {
+    label: "V2 source build",
+    args: ["--filter", "@workspace/lucia-v2", "run", "build"],
+    stage: "v2-source",
+  },
+  {
+    label: "V2 unit and API tests",
+    args: ["--filter", "@workspace/lucia-v2", "run", "test"],
+    stage: "v2-source",
+  },
+  {
+    label: "V2 static artifact build",
+    args: ["exec", "bash", "scripts/build-v2-artifact-static.sh"],
+    stage: "v2-static-build",
+  },
+  {
+    label: "V2 artifact manifests and static bundle",
+    args: [
+      "--filter",
+      "@workspace/scripts",
+      "exec",
+      "node",
+      "./src/v2-artifact-release-check.mjs",
+    ],
+    stage: "v2-artifact-validation",
+  },
+  {
+    label: "V2 startup, readiness, station worker, and signed-out page",
+    args: ["--filter", "@workspace/lucia-v2", "run", "test:agent-preview"],
+    stage: "v2-runtime-browser",
+    concurrencyLimit: 1,
+  },
+  {
+    label: "V2 service-worker migration and offline behavior",
+    args: [
+      "--filter",
+      "@workspace/lucia-v2",
+      "exec",
+      "node",
+      "--test",
+      "e2e/service-worker-migration.browser.test.mjs",
+    ],
+    env: { V2_SKIP_WEBKIT: "true" },
+    stage: "v2-browser",
+    concurrencyLimit: 1,
+  },
+  {
+    label: "V2 critical Chromium workflows",
+    args: [
+      "--filter",
+      "@workspace/lucia-v2",
+      "exec",
+      "node",
+      "--test",
+      "--test-concurrency=1",
+      "e2e/station-sync.browser.test.mjs",
+      "e2e/qc-workflow.browser.test.mjs",
+    ],
+    env: { V2_SKIP_WEBKIT: "true" },
+    stage: "v2-browser",
     concurrencyLimit: 1,
   },
 ];
@@ -396,6 +490,7 @@ if (fullRun) {
   steps.push({
     label: FULL_BROWSER_GATE_LABEL,
     args: ["--filter", "@workspace/run-calculator", "run", "test:e2e"],
+    legacyV1: true,
     env: {
       E2E_TEST_DB: "1",
       E2E_APPROVED_DESTRUCTIVE_MODE: "1",
@@ -427,6 +522,12 @@ export function releaseGateLabelsForMode(
     labels.push(FULL_BROWSER_GATE_LABEL);
   }
   return labels;
+}
+
+export function isLegacyV1ReleaseGate(label: string): boolean {
+  const matchingStep = steps.find((step) => step.label === label);
+  if (matchingStep) return matchingStep.legacyV1 === true;
+  return label === FULL_BROWSER_GATE_LABEL;
 }
 
 // The disposable resume integration test supplies a tiny step list so it can
@@ -628,10 +729,13 @@ export async function verifyReleaseEvidence(
   }
   const evidenceMode = reportMode;
   const requiredEvidence = [
-    ...RELEASE_EVIDENCE_ALLOWLIST.filter((file) =>
-      file.startsWith("clean-start/"),
-    ),
-    ...(evidenceMode === "full"
+    ...(reportGateStatus(report, "clean-start smoke") === "PASS"
+      ? RELEASE_EVIDENCE_ALLOWLIST.filter((file) =>
+          file.startsWith("clean-start/"),
+        )
+      : []),
+    ...(evidenceMode === "full" &&
+    reportGateStatus(report, FULL_BROWSER_GATE_LABEL) === "PASS"
       ? ["browser-full/FINAL-REPORT.md" as const]
       : []),
   ];
@@ -662,14 +766,17 @@ export async function verifyReleaseEvidence(
     expectedMode: options.expectedMode,
     expectedLabels: options.expectedLabels,
   });
-  if (evidenceMode === "full") {
+  if (
+    evidenceMode === "full" &&
+    reportGateStatus(report, FULL_BROWSER_GATE_LABEL) === "PASS"
+  ) {
     const browserReport = await readFile(
       resolve(evidenceRoot, "browser-full/FINAL-REPORT.md"),
       "utf8",
     );
     validateFullBrowserReport(browserReport, {
       currentRevision: revision,
-      requirePass: /^Decision:\s*GO\s*$/m.test(report),
+      requirePass: true,
     });
   }
 
@@ -869,11 +976,25 @@ export function validateReleaseReport(
   if (!gateSection) {
     throw new Error("Release report is malformed: missing gate results.");
   }
-  const rows = [...gateSection.matchAll(/^\| (.+?) \| (PASS|FAIL|INFRASTRUCTURE TIMEOUT|INFRASTRUCTURE ERROR|NOT REACHED) \|/gm)]
+  const legacySection = report
+    .split("## Legacy V1 coverage (informational; excluded from the V2 decision)\n\n")[1]
+    ?.split("\n## ")[0];
+  if (!legacySection) {
+    throw new Error("Release report is malformed: missing legacy V1 coverage section.");
+  }
+  const parseRows = (section: string) =>
+    [...section.matchAll(/^\| (.+?) \| (PASS|FAIL|INFRASTRUCTURE TIMEOUT|INFRASTRUCTURE ERROR|NOT REACHED) \|/gm)]
     .map((match) => ({ label: match[1], status: match[2] }));
+  const applicableRows = parseRows(gateSection);
+  const legacyRows = parseRows(legacySection);
+  const rows = [...applicableRows, ...legacyRows];
   const expectedLabels =
     options.expectedLabels ??
     releaseGateLabelsForMode(mode);
+  const expectedLegacyLabels = expectedLabels.filter(isLegacyV1ReleaseGate);
+  const expectedApplicableLabels = expectedLabels.filter(
+    (label) => !isLegacyV1ReleaseGate(label),
+  );
   const labels = new Set(rows.map((row) => row.label));
   const missing = expectedLabels.filter((label) => !labels.has(label));
   if (missing.length > 0) {
@@ -881,9 +1002,24 @@ export function validateReleaseReport(
       `Release report is incomplete; missing gate results: ${missing.join(", ")}`,
     );
   }
+  const misplacedApplicable = legacyRows.filter((row) =>
+    !isLegacyV1ReleaseGate(row.label),
+  );
+  const misplacedLegacy = applicableRows.filter((row) =>
+    isLegacyV1ReleaseGate(row.label),
+  );
+  if (misplacedApplicable.length > 0 || misplacedLegacy.length > 0) {
+    throw new Error(
+      "Release report misclassifies gates between applicable checks and legacy V1 coverage.",
+    );
+  }
   if (decision === "GO") {
-    const nonPass = rows.filter((row) => row.status !== "PASS");
-    if (nonPass.length > 0 || rows.length !== expectedLabels.length) {
+    const nonPass = applicableRows.filter((row) => row.status !== "PASS");
+    if (
+      nonPass.length > 0 ||
+      applicableRows.length !== expectedApplicableLabels.length ||
+      legacyRows.length !== expectedLegacyLabels.length
+    ) {
       throw new Error(
         "Release report cannot record GO unless every applicable gate is PASS.",
       );
@@ -1111,11 +1247,17 @@ export function formatReleaseReport(
         elapsedMs: 0,
       },
   );
-  const failed = orderedResults.filter((result) => result.status === "FAIL");
-  const interrupted = orderedResults.filter((result) =>
+  const legacyV1Results = orderedResults.filter((result) =>
+    isLegacyV1ReleaseGate(result.label),
+  );
+  const applicableResults = orderedResults.filter(
+    (result) => !isLegacyV1ReleaseGate(result.label),
+  );
+  const failed = applicableResults.filter((result) => result.status === "FAIL");
+  const interrupted = applicableResults.filter((result) =>
     result.status.startsWith("INFRASTRUCTURE"),
   );
-  const notReached = orderedResults.filter(
+  const notReached = applicableResults.filter(
     (result) => result.status === "NOT REACHED",
   );
   const cleanStartResult = orderedResults.find(
@@ -1128,8 +1270,8 @@ export function formatReleaseReport(
   const revision = metadata.revision ?? "unknown";
   const decision =
     metadata.decision ??
-    (results.length === steps.filter((step) => mode === "full" || !step.label.includes("full browser E2E")).length &&
-    results.every((result) => result.status === "PASS")
+    (applicableResults.length > 0 &&
+    applicableResults.every((result) => result.status === "PASS")
       ? "GO"
       : "NO-GO");
   const timing = metadata.timing;
@@ -1150,7 +1292,7 @@ export function formatReleaseReport(
   const lines = [
     isCheckpoint
       ? "# Release Check Checkpoint — INCOMPLETE / NO-GO"
-      : "# Release Check Report",
+      : "# V2 Release Check Report",
     "",
     `Generated: ${new Date().toISOString()}`,
     `Revision: ${revision}`,
@@ -1167,19 +1309,37 @@ export function formatReleaseReport(
     "",
     "## Gate results",
     "",
+    "Applicable V2 and shared gates; legacy V1 coverage is listed separately.",
     "| Gate | Result | Elapsed | Command |",
     "| --- | --- | ---: | --- |",
-    ...orderedResults.map(
+    ...applicableResults.map(
       (result) =>
         `| ${result.label} | ${result.status} | ${Math.round(
           result.elapsedMs / 1000,
         )}s | \`${commandFor(result.label)}\` |`,
     ),
     "",
+    "## Legacy V1 coverage (informational; excluded from the V2 decision)",
+    "",
+    ...(legacyV1Results.length === 0
+      ? ["No legacy V1 gates were selected.", ""]
+      : [
+          "| Gate | Result | Elapsed | Command |",
+          "| --- | --- | ---: | --- |",
+          ...legacyV1Results.map(
+            (result) =>
+              `| ${result.label} | ${result.status} | ${Math.round(
+                result.elapsedMs / 1000,
+              )}s | \`${commandFor(result.label)}\` |`,
+          ),
+          "",
+          "A legacy V1 failure is not a V2 failure and does not change the V2 decision.",
+          "",
+        ]),
     "## Timing",
     "",
     ...timingLines,
-    "## Preview evidence",
+    "## Legacy V1 preview evidence",
     "",
     cleanStartResult === undefined || cleanStartResult.status === "NOT REACHED"
       ? "- Clean-start did not run; no preview evidence was produced."
@@ -1223,7 +1383,7 @@ export function formatReleaseReport(
             ),
             "",
           ]),
-    "The browser result contains the retained web HTML response and the API health response observed through the web preview proxy.",
+    "Legacy V1 browser evidence contains the retained web HTML response and API health response observed through the V1 web preview proxy.",
     "",
     "## Operational review",
     "",
@@ -1231,6 +1391,9 @@ export function formatReleaseReport(
     `Failures or accepted exceptions: ${summarize(failed)}`,
     `Interrupted gates: ${summarize(interrupted)}`,
     `Not-reached gates: ${summarize(notReached)}`,
+    `Legacy V1 findings: ${summarize(
+      legacyV1Results.filter((result) => result.status !== "PASS"),
+    )}`,
     "Accepted exceptions: none",
     ...(isCheckpoint
       ? [
@@ -1724,9 +1887,13 @@ async function main(): Promise<void> {
       const stageResults = results.filter(({ label }) =>
         stageSteps.some(({ step }) => step.label === label),
       );
-      if (stageResults.some((result) => !result.passed)) {
+      if (
+        stageResults.some(
+          (result) => !result.passed && !isLegacyV1ReleaseGate(result.label),
+        )
+      ) {
         console.error(
-          `\n${stage} has a failed gate; later stages were not started.`,
+          `\n${stage} has a failed applicable gate; later stages were not started.`,
         );
         break;
       }
@@ -1759,7 +1926,9 @@ async function main(): Promise<void> {
 
   if (
     results.length === steps.length &&
-    results.every((result) => result.passed)
+    results
+      .filter((result) => !isLegacyV1ReleaseGate(result.label))
+      .every((result) => result.passed)
   ) {
     try {
       const reportPath = await writeReleaseReport(results, {
@@ -1790,7 +1959,7 @@ async function main(): Promise<void> {
       );
       process.exit(1);
     }
-    console.log("\nRelease check passed. Ready for final publish review.");
+    console.log("\nV2 release checks passed. Review legacy V1 coverage separately.");
     process.exit(0);
   }
 

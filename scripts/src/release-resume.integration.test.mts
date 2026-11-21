@@ -9,6 +9,7 @@ type FixtureStep = {
   label: string;
   command: string;
   args: string[];
+  legacyV1?: boolean;
   timeoutMs?: number;
   env?: Record<string, string>;
   stage?: string;
@@ -937,7 +938,7 @@ async function runOnboardingGuardStopScenario(): Promise<void> {
     );
     assert.match(
       result.output,
-      /browser-guard has a failed gate; later stages were not started\./,
+      /browser-guard has a failed applicable gate; later stages were not started\./,
       "the runner must stop after the onboarding guard stage",
     );
     assert.deepEqual(
@@ -975,6 +976,64 @@ async function runOnboardingGuardStopScenario(): Promise<void> {
   console.log(
     "Release onboarding guard scenario passed (actionable failure stops browser evidence).",
   );
+}
+
+async function runLegacyCoverageDecisionScenario(): Promise<void> {
+  const evidenceDir = await mkdtemp(join(tmpdir(), "release-legacy-scope-"));
+  const legacyFailureSteps: FixtureStep[] = [
+    {
+      label: "legacy V1 browser check",
+      command: process.execPath,
+      args: ["-e", "process.exit(1)"],
+      legacyV1: true,
+      stage: "legacy-v1",
+    },
+    {
+      label: "V2 release check",
+      command: process.execPath,
+      args: ["-e", "process.exit(0)"],
+      stage: "v2",
+    },
+  ];
+  try {
+    const result = await runReleaseCheck(evidenceDir, legacyFailureSteps);
+    assert.equal(result.code, 0, result.output);
+    const report = await readFile(
+      join(evidenceDir, "release-check-report.md"),
+      "utf8",
+    );
+    assert.match(report, /^Decision: GO$/m);
+    assert.match(
+      report,
+      /## Legacy V1 coverage[\s\S]*\| legacy V1 browser check \| FAIL \|/,
+    );
+    assert.match(report, /\| V2 release check \| PASS \|/);
+  } finally {
+    await rm(evidenceDir, { recursive: true, force: true });
+  }
+
+  const failedV2EvidenceDir = await mkdtemp(
+    join(tmpdir(), "release-v2-failure-"),
+  );
+  try {
+    const result = await runReleaseCheck(failedV2EvidenceDir, [
+      {
+        label: "V2 release check",
+        command: process.execPath,
+        args: ["-e", "process.exit(1)"],
+        stage: "v2",
+      },
+    ]);
+    assert.equal(result.code, 1, result.output);
+    const checkpoint = await readFile(
+      join(failedV2EvidenceDir, "release-check-checkpoint.md"),
+      "utf8",
+    );
+    assert.match(checkpoint, /^Decision: NO-GO$/m);
+  } finally {
+    await rm(failedV2EvidenceDir, { recursive: true, force: true });
+  }
+  console.log("Release decision scope tests passed (legacy V1 separated from V2).");
 }
 
 async function runApiShardConcurrencyScenario(): Promise<void> {
@@ -1345,6 +1404,7 @@ if (process.env.RELEASE_STOPPED_SUMMARY_ONLY === "1") {
 } else {
   await run();
   await runOnboardingGuardStopScenario();
+  await runLegacyCoverageDecisionScenario();
   await runParallelStageScenario();
   await runApiShardConcurrencyScenario();
   await runParallelResumeScenario();

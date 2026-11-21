@@ -3,9 +3,11 @@ import { execFileSync } from "node:child_process";
 import { access, mkdtemp, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { createServer as createTcpServer } from "node:net";
 import { chromium } from "../node_modules/playwright/index.mjs";
 import pg from "pg";
 import { applyAgentPreviewSchema } from "../db/agent-preview-schema.mjs";
+import { startStationWorkerProcess } from "./worker-main.mjs";
 import {
   AGENT_PREVIEW_PASSWORD,
   AGENT_PREVIEW_USERNAME,
@@ -32,8 +34,22 @@ const adminPool = new Pool({
   connectionTimeoutMillis: 3000,
 });
 let postgresStarted = false;
+let worker;
 let app;
 let browser;
+
+async function nextLoopbackPort() {
+  const server = createTcpServer();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const port = server.address().port;
+  await new Promise((resolve, reject) => {
+    server.close((error) => error ? reject(error) : resolve());
+  });
+  return port;
+}
 
 try {
   execFileSync(`${pgBin}/initdb`, [
@@ -83,16 +99,42 @@ try {
     "the preview contains only synthetic products",
   );
 
+  const workerHealthPort = await nextLoopbackPort();
+  const runtimeEnv = {
+    NODE_ENV: "development",
+    V2_AGENT_TEST_PREVIEW: "true",
+    V2_DATABASE_URL: databaseUrl,
+    V2_WORKER_HEALTH_PORT: String(workerHealthPort),
+  };
+  worker = await startStationWorkerProcess({
+    env: runtimeEnv,
+    logger: () => {},
+  });
   app = await startV2Server({
     env: {
-      NODE_ENV: "development",
-      V2_AGENT_TEST_PREVIEW: "true",
-      V2_DATABASE_URL: databaseUrl,
+      ...runtimeEnv,
       PORT: "0",
     },
     logger: () => {},
   });
   const baseUrl = `http://127.0.0.1:${app.server.address().port}`;
+  let readyResponse;
+  let readiness;
+  const readinessDeadline = Date.now() + 10_000;
+  while (Date.now() < readinessDeadline) {
+    readyResponse = await fetch(`${baseUrl}/api/healthz`);
+    if (readyResponse.ok) {
+      readiness = await readyResponse.json();
+      if (["active", "standby"].includes(readiness.stationWorker?.status)) break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  assert.equal(readyResponse.status, 200, "the V2 readiness endpoint includes the started station worker");
+  assert.equal(readiness.status, "ok");
+  assert.ok(
+    ["active", "standby"].includes(readiness.stationWorker?.status),
+    `the V2 station worker must be ready, received ${readiness.stationWorker?.status ?? "no status"}`,
+  );
   const chromiumPath = process.env.CHROMIUM_PATH
     || execFileSync("which", ["chromium"], { encoding: "utf8" }).trim();
   browser = await chromium.launch({ headless: true, executablePath: chromiumPath, args: ["--no-sandbox"] });
@@ -102,6 +144,8 @@ try {
   page.on("pageerror", (error) => pageErrors.push(error.message));
 
   await page.goto(baseUrl);
+  await page.locator("#auth-panel:not([hidden])").waitFor();
+  await page.getByRole("heading", { name: "Sign in to the floor." }).waitFor();
   const previewSignIn = page.getByTestId("button-agent-preview-sign-in");
   await previewSignIn.waitFor({ state: "visible" });
   const signInRequest = page.waitForRequest((request) =>
@@ -165,6 +209,7 @@ try {
 } finally {
   await browser?.close();
   await app?.close();
+  await worker?.close();
   await adminPool.end();
   if (postgresStarted) {
     execFileSync(`${pgBin}/pg_ctl`, ["-D", dataDir, "-m", "immediate", "-w", "stop"], { stdio: "ignore" });

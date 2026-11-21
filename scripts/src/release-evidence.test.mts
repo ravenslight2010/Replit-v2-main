@@ -16,6 +16,7 @@ import {
   RELEASE_CHECK_DEFAULT_CONCURRENCY,
   defaultReleaseEvidenceDir,
   formatReleaseReport,
+  isLegacyV1ReleaseGate,
   parseBrowserDurationRegressions,
   releaseConcurrencyLimit,
   releaseGateLabelsForMode,
@@ -112,6 +113,88 @@ async function run(): Promise<void> {
     releaseConcurrencyLimit({ label: "browser", args: [], concurrencyLimit: 1 }, 4),
     1,
     "stateful browser work must remain serial",
+  );
+  assert.equal(
+    isLegacyV1ReleaseGate("browser accessibility tests"),
+    true,
+    "legacy browser findings must be reported separately from V2",
+  );
+  assert.equal(
+    isLegacyV1ReleaseGate("full browser E2E suite"),
+    true,
+    "full-mode legacy coverage must remain classified as V1 even in standard verifier mode",
+  );
+  const scopedLabels = [
+    "V2 artifact manifests and static bundle",
+    "browser accessibility tests",
+  ];
+  const legacyFailureReport = formatReleaseReport(
+    [
+      { label: scopedLabels[0], status: "PASS", elapsedMs: 100 },
+      { label: scopedLabels[1], status: "FAIL", elapsedMs: 200 },
+    ],
+    "standard",
+    new Set(),
+    {
+      revision: "current-revision",
+      expectedLabels: scopedLabels,
+    },
+  );
+  assert.match(legacyFailureReport, /^Decision: GO$/m);
+  assert.match(
+    legacyFailureReport,
+    /\| browser accessibility tests \| FAIL \|/,
+    "legacy V1 failures remain visible in the report",
+  );
+  assert.doesNotThrow(
+    () => validateReleaseReport(legacyFailureReport, {
+      currentRevision: "current-revision",
+      expectedLabels: scopedLabels,
+    }),
+    "a V1-only failure must not invalidate a passing V2 decision",
+  );
+  const legacyFailureRoot = await fixture(
+    ["release-check-report.md"],
+    legacyFailureReport,
+  );
+  try {
+    await assert.doesNotReject(
+      verifyReleaseEvidence(legacyFailureRoot, {
+        currentRevision: "current-revision",
+        expectedLabels: scopedLabels,
+      }),
+      "legacy-only failures must not prevent retaining V2 release evidence",
+    );
+  } finally {
+    await rm(legacyFailureRoot, { recursive: true, force: true });
+  }
+  const failedV2Report = formatReleaseReport(
+    [
+      { label: scopedLabels[0], status: "FAIL", elapsedMs: 100 },
+      { label: scopedLabels[1], status: "PASS", elapsedMs: 200 },
+    ],
+    "standard",
+    new Set(),
+    {
+      revision: "current-revision",
+      expectedLabels: scopedLabels,
+    },
+  );
+  assert.match(failedV2Report, /^Decision: NO-GO$/m);
+  assert.doesNotThrow(
+    () => validateReleaseReport(failedV2Report, {
+      currentRevision: "current-revision",
+      expectedLabels: scopedLabels,
+    }),
+    "a NO-GO report with a failed V2 gate remains valid evidence",
+  );
+  assert.throws(
+    () => validateReleaseReport(failedV2Report.replace("Decision: NO-GO", "Decision: GO"), {
+      currentRevision: "current-revision",
+      expectedLabels: scopedLabels,
+    }),
+    /every applicable gate is PASS/,
+    "a failed V2 gate must invalidate a GO decision",
   );
 
   const timedOut = await runStep({
@@ -498,10 +581,11 @@ async function run(): Promise<void> {
     await rm(missingModeRoot, { recursive: true, force: true });
   }
 
+  const fullLabels = releaseGateLabelsForMode("full");
   const fullRoot = await fixture(
     RELEASE_EVIDENCE_ALLOWLIST.filter((file) => !file.startsWith("browser-full/")),
     formatReleaseReport(
-      validLabels.map((label) => ({
+      fullLabels.map((label) => ({
         label,
         status: "PASS" as const,
         elapsedMs: 100,
@@ -523,7 +607,7 @@ async function run(): Promise<void> {
     await assert.rejects(
       verifyReleaseEvidence(fullRoot, {
         currentRevision: "current-revision",
-        expectedLabels: validLabels,
+        expectedLabels: fullLabels,
       }),
       /browser-full\/FINAL-REPORT\.md/,
       "full mode must require browser evidence",
@@ -532,33 +616,29 @@ async function run(): Promise<void> {
       "# Full Browser Release Run",
       "",
       "Revision: current-revision",
-      "Result: FAIL",
+      "Result: PASS",
       "Expected cases: 113",
       "Enumerated cases: 113",
-      "Completed cases: 0",
-      "Passed cases: 0",
+      "Completed cases: 113",
+      "Passed cases: 113",
       "Skipped cases: 0",
       "Failed cases: 0",
-      "Not-run cases: 113",
-      "Coverage: INCOMPLETE",
-      "Duration: 0ms",
+      "Not-run cases: 0",
+      "Coverage: COMPLETE",
+      "Duration: 100ms",
       "## Per-file duration",
       "",
       "| File | Cases | Completed | Passed | Skipped | Failed | Not run | Duration |",
       "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-      "| `e2e/example.spec.ts` | 113 | 0 | 0 | 0 | 0 | 113 | 0ms |",
+      "| `e2e/example.spec.ts` | 113 | 113 | 113 | 0 | 0 | 0 | 100ms |",
       "",
     ].join("\n");
     const invalidPassingBrowserReport = validBrowserReport
-      .replace("Result: FAIL", "Result: PASS")
-      .replace("Completed cases: 0", "Completed cases: 113")
-      .replace("Passed cases: 0", "Passed cases: 111")
+      .replace("Passed cases: 113", "Passed cases: 112")
       .replace("Failed cases: 0", "Failed cases: 1")
-      .replace("Not-run cases: 113", "Not-run cases: 0")
-      .replace("Coverage: INCOMPLETE", "Coverage: COMPLETE")
       .replace(
-        "| `e2e/example.spec.ts` | 113 | 0 | 0 | 0 | 0 | 113 | 0ms |",
-        "| `e2e/example.spec.ts` | 113 | 113 | 112 | 0 | 1 | 0 | 0ms |",
+        "| `e2e/example.spec.ts` | 113 | 113 | 113 | 0 | 0 | 0 | 100ms |",
+        "| `e2e/example.spec.ts` | 113 | 113 | 112 | 0 | 1 | 0 | 100ms |",
       );
     assert.throws(
       () => validateFullBrowserReport(invalidPassingBrowserReport, {
@@ -577,7 +657,7 @@ async function run(): Promise<void> {
     await assert.doesNotReject(
       verifyReleaseEvidence(fullRoot, {
         currentRevision: "current-revision",
-        expectedLabels: validLabels,
+        expectedLabels: fullLabels,
       }),
       "the report mode should automatically select the full evidence contract",
     );
@@ -585,7 +665,7 @@ async function run(): Promise<void> {
       verifyReleaseEvidence(fullRoot, {
         currentRevision: "current-revision",
         expectedMode: "standard",
-        expectedLabels: validLabels,
+        expectedLabels: fullLabels,
       }),
       /contains a full report, but standard verification was requested.*--full/,
       "standard verification must not accept a full evidence directory",
@@ -594,7 +674,7 @@ async function run(): Promise<void> {
       verifyReleaseEvidence(standardModeRoot, {
         currentRevision: "current-revision",
         expectedMode: "full",
-        expectedLabels: validLabels,
+        expectedLabels: fullLabels,
       }),
       /contains a standard report, but full verification was requested/,
       "full verification must not accept a standard evidence directory",
@@ -630,7 +710,7 @@ async function run(): Promise<void> {
       await assert.rejects(
         verifyReleaseEvidence(staleReportRoot, {
           currentRevision: "current-revision",
-          expectedLabels: validLabels,
+          expectedLabels: fullLabels,
         }),
         /Release report revision is missing or stale/,
         "a stale release report must remain invalid even when mode is auto-detected",
