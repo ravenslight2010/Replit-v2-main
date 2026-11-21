@@ -1078,7 +1078,14 @@ async function main() {
     await recoveryPage.locator("#auth-username").fill("V2RecoveryOperator");
     await recoveryPage.locator("#auth-password").fill("v2-test-browser-recovery-password");
     await recoveryPage.locator("#auth-submit").click();
-    await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor({ timeout: 20000 });
+    await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor({ timeout: 20000 }).catch(async () => {
+      throw new Error(JSON.stringify({
+        step: "late-operator-sign-in",
+        authStatus: await recoveryPage.locator("#auth-status").textContent().catch(() => ""),
+        authError: await recoveryPage.locator("#auth-error-message").textContent().catch(() => ""),
+        formHidden: await recoveryPage.locator("#auth-form").getAttribute("hidden"),
+      }));
+    });
     await recoveryPage.locator("#manager-operations-nav-link").waitFor({ state: "hidden" });
     await recoveryPage.locator("#manager-operations").waitFor({ state: "hidden" });
     await recoveryPage.locator("#staff-panel").waitFor({ state: "hidden" });
