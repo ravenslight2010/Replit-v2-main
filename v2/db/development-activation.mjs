@@ -9,8 +9,10 @@ const SOURCES = [
   ["0008-production-rule-enforcement.sql", "d248bb1d6c9b4a781d001f0720376bce827b78c3f8f3f8a03a59eb86334cc5a2"],
   ["0009-staff-password-resets.sql", "750028e6833d5136aa15d47eae4c698bc9393b4c72aba763878c32bb3b10be7a"],
   ["0010-workbook-link-corrections.sql", "c081dfc240d80fc39e499813ca490b80248cc4d0ef17a5795e765d1dbc257406"],
+  ["0011-manager-operations.sql", "f2a847de6e0b6790e2dc20443e2814ae44b9cc2b56360ce73922ad37da8c41a0"],
+  ["0012-staff-account-history.sql", "b24c0b52ee2b7a97746ca9334a9405a1129a50648289d0cfc916235f1c7bd709"],
 ];
-const RUNTIME_ACCESS_SHA256 = "64220e1d038330dde7f9b028f431d81bb2f679f3095c16b2fe6eeb4745bc87da";
+const RUNTIME_ACCESS_SHA256 = "7c94160b90c40f3ccb1caae9c5d8dbb1601fb27213c9a5041630bb44ab57ca4e";
 const MANAGED_BASELINE = "8563f4c4b177a2c0a864491f9d5ed5db";
 const TABLES = [
   "command_receipts", "facility_scope", "inventory_balances", "inventory_movements",
@@ -103,11 +105,15 @@ BEGIN
   IF (${snapshotSql()}) IS DISTINCT FROM current_setting('v2.activation_snapshot') THEN
     RAISE EXCEPTION 'V2 activation changed existing records';
   END IF;
-  IF (SELECT count(*) FROM pg_tables WHERE schemaname = 'v2') <> 34 OR
-      (SELECT count(*) FROM pg_proc WHERE pronamespace = 'v2'::regnamespace) <> 69 OR
+  IF (SELECT count(*) FROM pg_tables WHERE schemaname = 'v2') <> 36 OR
+      (SELECT count(*) FROM pg_proc WHERE pronamespace = 'v2'::regnamespace) <> 76 OR
      (SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
-      WHERE c.relnamespace = 'v2'::regnamespace AND NOT t.tgisinternal) <> 11 THEN
-    RAISE EXCEPTION 'V2 activation did not produce the reviewed schema';
+      WHERE c.relnamespace = 'v2'::regnamespace AND NOT t.tgisinternal) <> 13 THEN
+    RAISE EXCEPTION 'V2 activation did not produce the reviewed schema (tables %, functions %, triggers %)',
+      (SELECT count(*) FROM pg_tables WHERE schemaname = 'v2'),
+      (SELECT count(*) FROM pg_proc WHERE pronamespace = 'v2'::regnamespace),
+      (SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
+       WHERE c.relnamespace = 'v2'::regnamespace AND NOT t.tgisinternal);
   END IF;
   IF has_schema_privilege('v2_runtime_access', 'v2', 'CREATE') OR
      EXISTS (SELECT 1 FROM pg_class c
@@ -118,7 +124,9 @@ BEGIN
          AND has_table_privilege('v2_runtime_access', c.oid,
            'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')) OR
      (SELECT count(*) FROM pg_proc p WHERE p.pronamespace = 'v2'::regnamespace
-        AND has_function_privilege('v2_runtime_access', p.oid, 'EXECUTE')) <> 50 OR
+        AND has_function_privilege('v2_runtime_access', p.oid, 'EXECUTE')) <> 55 OR
+     NOT has_function_privilege('v2_runtime_access',
+       'v2.list_staff_account_change_history(uuid,integer,timestamptz,uuid)', 'EXECUTE') OR
      NOT has_function_privilege('v2_runtime_access',
        'v2.request_staff_password_reset(text)', 'EXECUTE') OR
      NOT has_function_privilege('v2_runtime_access',
@@ -132,7 +140,15 @@ BEGIN
       NOT has_function_privilege('v2_runtime_access',
         'v2.correct_workbook_source_link(uuid,uuid,text,text,text,text,text,text)', 'EXECUTE') OR
      has_function_privilege('v2_runtime_access', 'v2.bootstrap_first_manager(text,text)', 'EXECUTE') THEN
-    RAISE EXCEPTION 'V2 activation did not produce the reviewed runtime permissions';
+    RAISE EXCEPTION 'V2 activation did not produce the reviewed runtime permissions (grants %, direct-table-access %, history-grant %)',
+      (SELECT count(*) FROM pg_proc p WHERE p.pronamespace = 'v2'::regnamespace
+        AND has_function_privilege('v2_runtime_access', p.oid, 'EXECUTE')),
+      EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'v2' AND c.relkind IN ('r','p','v','m','f')
+          AND has_table_privilege('v2_runtime_access', c.oid,
+            'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')),
+      has_function_privilege('v2_runtime_access',
+        'v2.list_staff_account_change_history(uuid,integer,timestamptz,uuid)', 'EXECUTE');
   END IF;
 END
 $verify$;

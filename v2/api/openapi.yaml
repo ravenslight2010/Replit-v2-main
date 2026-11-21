@@ -292,6 +292,43 @@ paths:
           $ref: "#/components/responses/Error"
         "405":
           $ref: "#/components/responses/Error"
+  /api/v2/auth/staff-history:
+    get:
+      operationId: listStaffAccountChangeHistory
+      summary: Read a bounded page of V2 staff account changes
+      description: Requires the manage-staff capability. Passwords, hashes, bootstrap codes, sessions, and CSRF values are never returned.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 256
+      responses:
+        "200":
+          description: Append-only account changes and an optional next-page cursor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffAccountChangeHistory"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
   /api/v2/auth/password-reset-requests:
     get:
       operationId: listStaffPasswordResetRequests
@@ -2729,6 +2766,28 @@ paths:
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
+  /api/v2/manager-diagnostics/station-worker:
+    get:
+      operationId: getStationWorkerDiagnostic
+      summary: Read safe station-worker status for managers
+      description: Requires the manage-staff capability. Returns a bounded status, last-cycle age, and a safe next step without worker identifiers or private errors.
+      responses:
+        "200":
+          description: Active, standby, degraded, stale, or unavailable worker status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StationWorkerDiagnosticResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "503":
+          $ref: "#/components/responses/Error"
+        "405":
+          $ref: "#/components/responses/Error"
   /api/v2/manager-operations:
     get:
       operationId: getManagerOperationsSnapshot
@@ -3700,6 +3759,61 @@ components:
           type: array
           items:
             type: string
+    StaffAccountState:
+      type: object
+      additionalProperties: false
+      required: [roleName, disabled]
+      properties:
+        roleName: { type: string, maxLength: 80 }
+        disabled: { type: boolean }
+    StaffAccountChange:
+      type: object
+      additionalProperties: false
+      required: [id, actorId, actorType, actorUsername, targetId, targetUsername, changeType, before, after, occurredAt]
+      properties:
+        id: { type: string, format: uuid }
+        actorId: { type: [string, "null"], format: uuid }
+        actorType: { type: string, enum: [staff, bootstrap] }
+        actorUsername: { type: string, maxLength: 40 }
+        targetId: { type: string, format: uuid }
+        targetUsername: { type: string, maxLength: 40 }
+        changeType: { type: string, enum: [created, updated] }
+        before:
+          oneOf:
+            - $ref: "#/components/schemas/StaffAccountState"
+            - type: "null"
+        after:
+          $ref: "#/components/schemas/StaffAccountState"
+        occurredAt: { type: string, format: date-time }
+    StaffAccountChangeHistory:
+      type: object
+      additionalProperties: false
+      required: [events, hasMore, nextCursor]
+      properties:
+        events:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/StaffAccountChange"
+        hasMore: { type: boolean }
+        nextCursor: { type: [string, "null"], maxLength: 256 }
+    StationWorkerDiagnosticResponse:
+      type: object
+      additionalProperties: false
+      required: [stationWorker]
+      properties:
+        stationWorker:
+          type: object
+          additionalProperties: false
+          required: [status, checkedAt, lastCycleAt, ageSeconds, consecutiveFailures, processedLastCycle, nextStep]
+          properties:
+            status: { type: string, enum: [active, standby, degraded, stale, unavailable] }
+            checkedAt: { type: string, format: date-time }
+            lastCycleAt: { type: [string, "null"], format: date-time }
+            ageSeconds: { type: [integer, "null"], minimum: 0 }
+            consecutiveFailures: { type: [integer, "null"], minimum: 0, maximum: 1000000 }
+            processedLastCycle: { type: [integer, "null"], minimum: 0, maximum: 1000000 }
+            nextStep: { type: string, maxLength: 160 }
     AuthSession:
       type: object
       required: [staff, expiresAt]

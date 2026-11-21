@@ -264,6 +264,26 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
 .staff-action-button.danger { border-color: var(--danger-border); color: var(--danger-text); }
 .staff-action-button:disabled { opacity: .5; cursor: not-allowed; }
 .staff-self-note { color: var(--muted); font-size: 11px; }
+.manager-diagnostics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+.manager-diagnostics-card { min-width: 0; padding: 16px; border: 1px solid var(--line); background: var(--surface-raised); }
+.manager-diagnostics-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.manager-diagnostics-heading h3 { margin: 5px 0 0; font-size: 17px; letter-spacing: -.035em; }
+.manager-diagnostics-status { margin: 14px 0 10px; color: var(--ink-soft); font-size: 13px; font-weight: 600; text-transform: capitalize; }
+.manager-diagnostics-status[data-state="active"] { color: var(--success-text); }
+.manager-diagnostics-status[data-state="standby"] { color: var(--neutral-text); }
+.manager-diagnostics-status[data-state="degraded"], .manager-diagnostics-status[data-state="stale"], .manager-diagnostics-status[data-state="unavailable"] { color: var(--warning-text); }
+.manager-diagnostics-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.manager-diagnostics-facts div { min-width: 0; padding: 9px; border: 1px solid var(--line); }
+.manager-diagnostics-facts dt { color: var(--muted); font: 500 9px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.manager-diagnostics-facts dd { margin: 5px 0 0; overflow-wrap: anywhere; color: var(--ink); font-size: 12px; }
+.manager-diagnostics-next-step { margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.staff-history-list { display: grid; gap: 8px; margin: 10px 0 12px; padding: 0; list-style: none; }
+.staff-history-item { display: grid; gap: 7px; padding: 10px; border: 1px solid var(--line); }
+.staff-history-item > div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.staff-history-item strong { overflow-wrap: anywhere; font-size: 12px; }
+.staff-history-item span, .staff-history-item time { color: var(--muted); font-size: 11px; }
+.staff-history-item time { flex: 0 0 auto; font-family: var(--mono); font-size: 9px; }
+.staff-history-attribution { color: var(--muted-soft); }
 .password-reset-panel { margin-top: 0; }
 .password-reset-refresh { min-height: 36px; margin: -5px 0 8px; }
 .password-reset-code { display: grid; gap: 8px; margin-top: 15px; padding: 14px; border: 1px solid var(--warning-border); background: var(--warning-bg); color: var(--warning-text); overflow-wrap: anywhere; }
@@ -501,6 +521,9 @@ h1 { margin: 13px 0 5px; font-size: clamp(38px, 5vw, 62px); line-height: .98; fo
   .staff-table tbody th { border-bottom: 1px solid var(--line); font-size: 14px; }
   .staff-table td::before { content: attr(data-label); flex: 0 0 62px; color: var(--muted); font: 500 9px var(--mono); letter-spacing: .05em; text-transform: uppercase; }
   .staff-actions { justify-content: flex-end; }
+  .manager-diagnostics-grid { grid-template-columns: 1fr; }
+  .manager-diagnostics-facts { grid-template-columns: 1fr 1fr; }
+  .staff-history-item > div { align-items: start; flex-direction: column; gap: 4px; }
   .manager-tools { margin-top: 42px; }
   .manager-tools-heading { align-items: start; }
   .manager-grid { grid-template-columns: 1fr; }

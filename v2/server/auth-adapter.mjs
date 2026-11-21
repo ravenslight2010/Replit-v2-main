@@ -29,6 +29,7 @@ const BOOTSTRAP_OPEN_SQL = "SELECT v2.staff_bootstrap_open() AS available";
 const BOOTSTRAP_MANAGER_SQL = "SELECT v2.bootstrap_first_manager($1::text, $2::text) AS created";
 const LIST_STAFF_SQL = "SELECT * FROM v2.list_staff_accounts($1::uuid)";
 const LIST_STAFF_ROLES_SQL = "SELECT * FROM v2.list_staff_roles($1::uuid)";
+const LIST_STAFF_HISTORY_SQL = "SELECT * FROM v2.list_staff_account_change_history($1::uuid, $2::integer, $3::timestamptz, $4::uuid)";
 const CREATE_STAFF_SQL = "SELECT v2.create_staff_account($1::uuid, $2::text, $3::text, $4::text) AS outcome";
 const UPDATE_STAFF_SQL = "SELECT v2.update_staff_account($1::uuid, $2::uuid, $3::boolean, $4::text) AS outcome";
 const REQUEST_PASSWORD_RESET_SQL = "SELECT v2.request_staff_password_reset($1::text) AS accepted";
@@ -443,6 +444,65 @@ export function createAuthAdapter({
     };
   }
 
+  async function listStaffChangeHistory({ actorId, limit = 20, before = null }) {
+    validateActorId(actorId);
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50) {
+      throw new V2AuthError(400, "Choose a valid account history page size.");
+    }
+    if (before !== null && (
+      !before
+      || typeof before.occurredAt !== "string"
+      || Number.isNaN(Date.parse(before.occurredAt))
+      || new Date(before.occurredAt).toISOString() !== before.occurredAt
+      || typeof before.id !== "string"
+      || !UUID_PATTERN.test(before.id)
+    )) {
+      throw new V2AuthError(400, "Choose a valid account history page.");
+    }
+    consumeLimit(
+      staffReadLimiter,
+      [`actor:${actorId}`],
+      "Account history reads are temporarily limited. Wait and try again.",
+    );
+    let result;
+    try {
+      result = await query(LIST_STAFF_HISTORY_SQL, [
+        actorId,
+        limit,
+        before?.occurredAt ?? null,
+        before?.id ?? null,
+      ]);
+    } catch (error) {
+      if (error?.code === "42501") {
+        throw new V2AuthError(403, "You do not have permission to view account history.");
+      }
+      throw error;
+    }
+    const rows = result?.rows ?? [];
+    const hasMore = rows.length > limit;
+    const visibleRows = rows.slice(0, limit);
+    const events = visibleRows.map((row) => ({
+      id: row.event_id,
+      actorId: row.actor_id,
+      actorType: row.actor_type,
+      actorUsername: row.actor_username,
+      targetId: row.target_id,
+      targetUsername: row.target_username,
+      changeType: row.change_type,
+      before: row.before_state,
+      after: row.after_state,
+      occurredAt: new Date(row.occurred_at).toISOString(),
+    }));
+    const last = visibleRows.at(-1);
+    return {
+      events,
+      hasMore,
+      nextCursor: hasMore && last
+        ? { occurredAt: new Date(last.occurred_at).toISOString(), id: last.event_id }
+        : null,
+    };
+  }
+
   async function bootstrapAvailable({ clientKey } = {}) {
     if (!bootstrapIsConfigured) return false;
     const clientHash = validateClientKey(clientKey, "Setup status request is invalid.");
@@ -704,6 +764,7 @@ export function createAuthAdapter({
     bootstrapManager,
 
     listStaff,
+    listStaffChangeHistory,
 
     createStaffAccount,
 

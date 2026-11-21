@@ -4,6 +4,7 @@ import { createAuthApi } from "./auth-api.mjs";
 import { createInventoryApi } from "./inventory-api.mjs";
 import { createMixPlanApi } from "./mix-plan-api.mjs";
 import { createManagerOperationsApi } from "./manager-operations-api.mjs";
+import { createManagerDiagnosticsApi } from "./manager-diagnostics-api.mjs";
 import { createQcApi } from "./qc-api.mjs";
 import { createRunApiForDatabase } from "./run-api.mjs";
 import { createScheduleApi } from "./schedule-api.mjs";
@@ -106,12 +107,14 @@ function safeRouteName(url) {
   if (url.pathname === "/api/v2/auth/bootstrap-status") return "auth.bootstrap_status";
   if (url.pathname === "/api/v2/auth/bootstrap") return "auth.bootstrap";
   if (url.pathname === "/api/v2/auth/staff") return "auth.staff";
+  if (url.pathname === "/api/v2/auth/staff-history") return "auth.staff_history";
   if (url.pathname === "/api/v2/auth/password-reset-requests") return "auth.password_reset_requests";
   if (url.pathname === "/api/v2/auth/password-reset-completions") return "auth.password_reset_completion";
   if (/^\/api\/v2\/auth\/password-reset-requests\/[0-9a-f-]{36}\/(decision|reissue)$/i.test(url.pathname)) {
     return "auth.password_reset_action";
   }
   if (/^\/api\/v2\/auth\/staff\/[0-9a-f-]{36}$/i.test(url.pathname)) return "auth.staff_item";
+  if (url.pathname === "/api/v2/manager-diagnostics/station-worker") return "manager_diagnostics.station_worker";
   if (url.pathname === "/api/v2/runs") return "runs.collection";
   if (url.pathname === "/api/v2/runs/products") return "runs.products";
   if (/^\/api\/v2\/runs\/[^/]+\/commands$/.test(url.pathname)) return "runs.command";
@@ -174,6 +177,10 @@ export function createV2Api({
     getClientKey,
     secureCookies,
     logger,
+  });
+  const managerDiagnosticsApi = createManagerDiagnosticsApi({
+    authenticate: (request) => authAdapter.authenticate(request),
+    workerHealth: workerHealth ?? (async () => null),
   });
   const inventoryApi = createInventoryApi({
     pool,
@@ -267,6 +274,7 @@ export function createV2Api({
       }
 
       if (await authApi(request, response)) return;
+      if (await managerDiagnosticsApi(request, response)) return;
       if (await mixPlanApi(request, response)) return;
       if (await managerOperationsApi(request, response)) return;
       if (await inventoryApi(request, response)) return;

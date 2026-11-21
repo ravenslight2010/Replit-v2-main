@@ -60,6 +60,9 @@ function makeAuth() {
     async listStaff() {
       return { staff: [], roles: [] };
     },
+    async listStaffChangeHistory() {
+      return { events: [], hasMore: false, nextCursor: null };
+    },
     async createStaffAccount() {
       throw new V2AuthError(403, "Staff management is not authorized.");
     },
@@ -429,6 +432,74 @@ test("manager staff routes require authorization and CSRF and accept only known 
     current = { ...manager, capabilities: [] };
     const forbidden = await fetch(`${baseUrl}/api/v2/auth/staff`);
     assert.equal(forbidden.status, 403);
+  });
+});
+
+test("manager account history is authorized, bounded, paginated, and excludes sensitive fields", async () => {
+  const auth = makeAuth();
+  const manager = {
+    verified: true,
+    actorId: "10000000-0000-4000-8000-000000000011",
+    username: "manager",
+    role: "manager",
+    capabilities: ["manage-staff"],
+    sessionExpiresAt: "2026-11-17T00:00:00.000Z",
+  };
+  let current = manager;
+  const calls = [];
+  const event = {
+    id: "10000000-0000-4000-8000-000000000021",
+    actorId: manager.actorId,
+    actorType: "staff",
+    actorUsername: "manager",
+    targetId: "10000000-0000-4000-8000-000000000022",
+    targetUsername: "operator",
+    changeType: "updated",
+    before: { roleName: "operator", disabled: false },
+    after: { roleName: "manager", disabled: false },
+    occurredAt: "2026-11-16T12:00:00.000Z",
+  };
+  auth.authenticate = async () => current;
+  auth.listStaffChangeHistory = async (input) => {
+    calls.push(input);
+    return { events: [event], hasMore: true, nextCursor: { occurredAt: event.occurredAt, id: event.id } };
+  };
+  const handler = createAuthApi({ auth, getClientKey: () => "test-client" });
+
+  await withServer(handler, async (baseUrl) => {
+    const first = await fetch(`${baseUrl}/api/v2/auth/staff-history?limit=2`);
+    assert.equal(first.status, 200);
+    const firstBody = await first.json();
+    assert.equal(firstBody.events.length, 1);
+    assert.equal(firstBody.hasMore, true);
+    assert.deepEqual(JSON.parse(Buffer.from(firstBody.nextCursor, "base64url").toString("utf8")), {
+      occurredAt: event.occurredAt,
+      id: event.id,
+    });
+    assert.doesNotMatch(JSON.stringify(firstBody), /password|hash|bootstrapCode|session|csrf/i);
+    assert.deepEqual(calls[0], { actorId: manager.actorId, limit: 2, before: null });
+
+    const cursor = firstBody.nextCursor;
+    const next = await fetch(`${baseUrl}/api/v2/auth/staff-history?limit=2&cursor=${encodeURIComponent(cursor)}`);
+    assert.equal(next.status, 200);
+    assert.deepEqual(calls[1], {
+      actorId: manager.actorId,
+      limit: 2,
+      before: { occurredAt: event.occurredAt, id: event.id },
+    });
+
+    const invalidLimit = await fetch(`${baseUrl}/api/v2/auth/staff-history?limit=02`);
+    assert.equal(invalidLimit.status, 400);
+    const invalidCursor = await fetch(`${baseUrl}/api/v2/auth/staff-history?cursor=not-a-cursor`);
+    assert.equal(invalidCursor.status, 400);
+
+    current = { ...manager, capabilities: [] };
+    const denied = await fetch(`${baseUrl}/api/v2/auth/staff-history`);
+    assert.equal(denied.status, 403);
+    current = null;
+    const signedOut = await fetch(`${baseUrl}/api/v2/auth/staff-history`);
+    assert.equal(signedOut.status, 401);
+    assert.equal(calls.length, 2);
   });
 });
 

@@ -168,6 +168,30 @@
               <tbody id="staff-list"></tbody>
             </table>
           </div>
+          <div class="manager-diagnostics-grid">
+            <section class="manager-diagnostics-card" aria-labelledby="station-worker-heading">
+              <div class="manager-diagnostics-heading">
+                <div><p class="eyebrow">AUTOMATIC PROGRESS</p><h3 id="station-worker-heading">Station worker</h3></div>
+                <button class="button button-secondary button-small" id="station-worker-refresh" type="button">Refresh</button>
+              </div>
+              <p class="manager-diagnostics-status" id="station-worker-status" role="status" aria-live="polite">Checking worker status…</p>
+              <dl class="manager-diagnostics-facts">
+                <div><dt>Last cycle</dt><dd id="station-worker-last-cycle">Not recorded</dd></div>
+                <div><dt>Cycle age</dt><dd id="station-worker-cycle-age">Unknown</dd></div>
+                <div><dt>Recent failures</dt><dd id="station-worker-failures">Unknown</dd></div>
+                <div><dt>Processed last cycle</dt><dd id="station-worker-processed">Unknown</dd></div>
+              </dl>
+              <p class="manager-diagnostics-next-step" id="station-worker-next-step"></p>
+            </section>
+            <section class="manager-diagnostics-card" aria-labelledby="staff-history-heading">
+              <div class="manager-diagnostics-heading">
+                <div><p class="eyebrow">ACCESS ACCOUNTABILITY</p><h3 id="staff-history-heading">Account change history</h3></div>
+              </div>
+              <p class="manager-diagnostics-status" id="staff-history-status" role="status" aria-live="polite">Loading account history…</p>
+              <ol class="staff-history-list" id="staff-history-list" aria-live="polite"></ol>
+              <button class="button button-secondary button-small" id="staff-history-more" type="button" hidden>Load older changes</button>
+            </section>
+          </div>
         </section>
 
         <section class="staff-panel password-reset-panel" id="password-reset-panel" aria-labelledby="password-reset-heading" hidden>

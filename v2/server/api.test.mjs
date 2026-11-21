@@ -27,6 +27,9 @@ function fakeAuthAdapter({ session = null } = {}) {
     async listStaff() {
       return { staff: [], roles: [] };
     },
+    async listStaffChangeHistory() {
+      return { events: [], hasMore: false, nextCursor: null };
+    },
     async createStaffAccount() {
       throw new Error("not used");
     },

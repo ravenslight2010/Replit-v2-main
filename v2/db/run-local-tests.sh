@@ -75,6 +75,8 @@ if [[ "$("${PSQL[@]}" -c "SELECT v2.staff_bootstrap_open();")" != "t" ]]; then
   exit 1
 fi
 "${PSQL[@]}" -f "$ROOT/v2/db/0002-staff-auth.test.sql"
+"${PSQL[@]}" -f "$ROOT/v2/db/0012-staff-account-history.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0012-staff-account-history.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0003-production-stations.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0003-production-stations.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0003-worker-leases.test.sql"
@@ -151,6 +153,7 @@ fi
   GRANT EXECUTE ON FUNCTION v2.list_staff_roles(uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.create_staff_account(uuid, text, text, text) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.update_staff_account(uuid, uuid, boolean, text) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_staff_account_change_history(uuid, integer, timestamptz, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_inventory_warehouses(uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_inventory_products(uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_inventory_stock(uuid, uuid) TO v2_api_test;

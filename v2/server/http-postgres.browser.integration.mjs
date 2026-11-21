@@ -161,6 +161,43 @@ async function main() {
     await page.locator("#manager-tools:not([hidden])").waitFor();
     await page.locator("#warehouse-select").waitFor({ state: "visible" });
     await page.waitForFunction(() => document.querySelectorAll("#warehouse-select option").length > 0);
+    await page.locator("#staff-panel:not([hidden])").waitFor();
+    await page.locator("#staff-history-list li").first().waitFor();
+    await page.waitForFunction(() =>
+      ["active", "standby", "degraded", "stale", "unavailable"].includes(
+        document.querySelector("#station-worker-status")?.textContent?.trim() ?? "",
+      ));
+    for (const username of ["V2IntegrationManager", "V2IntegrationOperator", "V2RecoveryOperator"]) {
+      await page.locator("#staff-history-list").getByText(username, { exact: false }).first().waitFor();
+    }
+    for (const viewport of [
+      { name: "phone", width: 390, height: 844 },
+      { name: "tablet portrait", width: 768, height: 1024 },
+      { name: "tablet landscape", width: 1024, height: 768 },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      const layout = await page.locator("#staff-panel").evaluate((panel) => {
+        const grid = panel.querySelector(".manager-diagnostics-grid");
+        return {
+          panelVisible: panel instanceof HTMLElement && !panel.hidden,
+          panelOverflow: panel.scrollWidth > panel.clientWidth + 1,
+          gridOverflow: grid instanceof HTMLElement && grid.scrollWidth > grid.clientWidth + 1,
+          pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        };
+      });
+      assert.deepEqual(layout, {
+        panelVisible: true,
+        panelOverflow: false,
+        gridOverflow: false,
+        pageOverflow: false,
+      }, `Manager diagnostics must fit ${viewport.name}`);
+    }
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.screenshot({ path: join(evidenceDir, "manager-diagnostics-desktop.png"), fullPage: true });
+    await page.reload();
+    await page.locator("#staff-panel:not([hidden])").waitFor();
+    await page.locator("#staff-history-list").getByText("V2RecoveryOperator", { exact: false }).first().waitFor();
+    assert.equal(await page.locator("#staff-history-list li").count() >= 3, true);
 
     await page.locator("#die-default-type").selectOption("DIE-REVIEW-TEST");
     await page.locator('[data-manager-die-field="crustsPerCycle"]').fill("42");
@@ -926,6 +963,16 @@ async function main() {
     await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor();
     await recoveryPage.locator("#manager-operations-nav-link").waitFor({ state: "hidden" });
     await recoveryPage.locator("#manager-operations").waitFor({ state: "hidden" });
+    await recoveryPage.locator("#staff-panel").waitFor({ state: "hidden" });
+    const managerDiagnosticsDenied = await recoveryPage.evaluate(async () => {
+      const [history, stationWorker] = await Promise.all([
+        fetch("/api/v2/auth/staff-history", { credentials: "same-origin" }),
+        fetch("/api/v2/manager-diagnostics/station-worker", { credentials: "same-origin" }),
+      ]);
+      return [history.status, stationWorker.status];
+    });
+    assert.deepEqual(managerDiagnosticsDenied, [403, 403],
+      "operator browser session must not read staff history or station-worker status");
     expectedManagerForbidden = true;
     const operatorReadStatus = await recoveryPage.evaluate(async () => {
       const response = await fetch("/api/v2/manager-operations?from=2026-01-01&to=2026-01-01", {

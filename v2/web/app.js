@@ -66,6 +66,16 @@ const el = {
   staffRole: document.querySelector("#new-staff-role"),
   staffCreateButton: document.querySelector("#create-staff-button"),
   staffList: document.querySelector("#staff-list"),
+  stationWorkerStatus: document.querySelector("#station-worker-status"),
+  stationWorkerLastCycle: document.querySelector("#station-worker-last-cycle"),
+  stationWorkerCycleAge: document.querySelector("#station-worker-cycle-age"),
+  stationWorkerFailures: document.querySelector("#station-worker-failures"),
+  stationWorkerProcessed: document.querySelector("#station-worker-processed"),
+  stationWorkerNextStep: document.querySelector("#station-worker-next-step"),
+  stationWorkerRefresh: document.querySelector("#station-worker-refresh"),
+  staffHistoryStatus: document.querySelector("#staff-history-status"),
+  staffHistoryList: document.querySelector("#staff-history-list"),
+  staffHistoryMore: document.querySelector("#staff-history-more"),
   passwordResetPanel: document.querySelector("#password-reset-panel"),
   passwordResetQueueStatus: document.querySelector("#password-reset-queue-status"),
   passwordResetRefresh: document.querySelector("#password-reset-refresh"),
@@ -156,6 +166,10 @@ let bootstrapInFlight = false;
 let staffInFlight = false;
 let staffGeneration = 0;
 let staffDirectory = null;
+let staffHistoryCursor = null;
+let staffHistoryInFlight = false;
+let managerDiagnosticsInFlight = false;
+let managerDiagnosticsGeneration = 0;
 let serverStateConfirmed = false;
 let lastKnownRun = null;
 let selectedStationKey = "line";
@@ -399,6 +413,11 @@ function isStaffRecord(staff) {
 
 function clearUserScopedState() {
   authGeneration += 1;
+  staffGeneration += 1;
+  staffHistoryCursor = null;
+  staffHistoryInFlight = false;
+  managerDiagnosticsGeneration += 1;
+  managerDiagnosticsInFlight = false;
   qc.clear();
   runs = [];
   selectedRunId = null;
@@ -584,6 +603,10 @@ function showSignIn(message = null, { title = "Sign-in needed", retry = false } 
   currentStaff = null;
   staffGeneration += 1;
   staffDirectory = null;
+  staffHistoryCursor = null;
+  staffHistoryInFlight = false;
+  managerDiagnosticsGeneration += 1;
+  managerDiagnosticsInFlight = false;
   updateInventoryContext(null, false);
   updateScheduleContext(null, false);
   updateMixPlanContext(null, false);
@@ -642,7 +665,11 @@ function showAuthenticated(staff) {
   updateCreateFormForAuth();
   const canManageStaff = staffManagementAllowed(staff);
   el.staffPanel.hidden = !canManageStaff;
-  if (canManageStaff) void loadStaffDirectory();
+  if (canManageStaff) {
+    void loadStaffDirectory();
+    void loadStaffHistory();
+    void loadStationWorkerStatus();
+  }
   const canApprovePasswordResets = staff.capabilities.includes("approve-password-resets");
   document.querySelector("#schedule-nav-link").hidden = !staff.capabilities.includes("manage-factory-settings");
   document.querySelector("#setup-nav-link").hidden = !staff.capabilities.includes("manage-inventory");
@@ -1039,6 +1066,165 @@ function isStaffDirectory(body) {
       && role.capabilities.every((capability) => typeof capability === "string" && capability.length <= 80));
 }
 
+function isStaffAccountState(value) {
+  return isObject(value)
+    && Object.keys(value).sort().join(",") === "disabled,roleName"
+    && typeof value.disabled === "boolean"
+    && typeof value.roleName === "string"
+    && value.roleName.length > 0
+    && value.roleName.length <= 80;
+}
+
+function isStaffHistoryPage(body) {
+  return isObject(body)
+    && Array.isArray(body.events)
+    && body.events.length <= 50
+    && body.events.every((event) => isObject(event)
+      && UUID.test(event.id || "")
+      && (event.actorType === "staff" && UUID.test(event.actorId || "")
+        || event.actorType === "bootstrap" && event.actorId === null)
+      && UUID.test(event.targetId || "")
+      && typeof event.actorUsername === "string" && event.actorUsername.length >= 3 && event.actorUsername.length <= 40
+      && typeof event.targetUsername === "string" && event.targetUsername.length >= 3 && event.targetUsername.length <= 40
+      && ["created", "updated"].includes(event.changeType)
+      && (event.before === null || isStaffAccountState(event.before))
+      && isStaffAccountState(event.after)
+      && isTimestamp(event.occurredAt))
+    && typeof body.hasMore === "boolean"
+    && (body.nextCursor === null || typeof body.nextCursor === "string"
+      && body.nextCursor.length > 0 && body.nextCursor.length <= 256);
+}
+
+function isStationWorkerDiagnostic(value) {
+  return isObject(value)
+    && ["active", "standby", "degraded", "stale", "unavailable"].includes(value.status)
+    && isTimestamp(value.checkedAt)
+    && isTimestamp(value.lastCycleAt, true)
+    && (value.ageSeconds === null || Number.isSafeInteger(value.ageSeconds) && value.ageSeconds >= 0)
+    && (value.consecutiveFailures === null
+      || Number.isSafeInteger(value.consecutiveFailures) && value.consecutiveFailures >= 0)
+    && (value.processedLastCycle === null
+      || Number.isSafeInteger(value.processedLastCycle) && value.processedLastCycle >= 0)
+    && typeof value.nextStep === "string" && value.nextStep.length > 0 && value.nextStep.length <= 160
+    && Object.keys(value).sort().join(",")
+      === ["ageSeconds", "checkedAt", "consecutiveFailures", "lastCycleAt", "nextStep", "processedLastCycle", "status"].sort().join(",");
+}
+
+function staffChangeSummary(event) {
+  if (event.changeType === "created") {
+    return `Created account · ${event.after.roleName} · ${event.after.disabled ? "disabled" : "enabled"}`;
+  }
+  const changes = [];
+  if (event.before.roleName !== event.after.roleName) {
+    changes.push(`Role ${event.before.roleName} → ${event.after.roleName}`);
+  }
+  if (event.before.disabled !== event.after.disabled) {
+    changes.push(event.after.disabled ? "Account disabled" : "Account enabled");
+  }
+  return changes.length ? changes.join(" · ") : "Account settings updated";
+}
+
+function renderStaffHistory(events, { append = false } = {}) {
+  if (!append) el.staffHistoryList.replaceChildren();
+  const markup = events.map((event) => `<li class="staff-history-item">
+    <div><strong>${escapeHtml(event.targetUsername)}</strong><span>${escapeHtml(staffChangeSummary(event))}</span></div>
+    <div class="staff-history-attribution"><span>${escapeHtml(event.actorUsername)}</span><time datetime="${escapeHtml(event.occurredAt)}">${escapeHtml(new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(event.occurredAt)))}</time></div>
+  </li>`).join("");
+  if (append) el.staffHistoryList.insertAdjacentHTML("beforeend", markup);
+  else el.staffHistoryList.innerHTML = markup;
+}
+
+async function loadStaffHistory({ append = false } = {}) {
+  if (!staffManagementAllowed() || staffHistoryInFlight) return;
+  if (!append) staffHistoryCursor = null;
+  staffHistoryInFlight = true;
+  const generation = staffGeneration;
+  el.staffHistoryStatus.textContent = append ? "Loading older account changes…" : "Loading account history…";
+  el.staffHistoryMore.disabled = true;
+  try {
+    const params = new URLSearchParams({ limit: "20" });
+    if (append && staffHistoryCursor) params.set("cursor", staffHistoryCursor);
+    const response = await fetch(`${AUTH_API}/staff-history?${params}`, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    });
+    const body = await readJson(response);
+    if (!isStaffHistoryPage(body)) throw new Error("The server returned an unexpected account history page.");
+    if (generation !== staffGeneration || !staffManagementAllowed()) return;
+    renderStaffHistory(body.events, { append });
+    staffHistoryCursor = body.nextCursor;
+    el.staffHistoryMore.hidden = !body.hasMore;
+    el.staffHistoryStatus.textContent = body.events.length
+      ? `${append ? "More" : "Recent"} changes · ${body.events.length} shown on this page`
+      : append ? "No older account changes." : "No account changes have been recorded.";
+  } catch (error) {
+    if (generation !== staffGeneration) return;
+    if (error instanceof ApiError && error.status === 401) {
+      showSignIn("Your session has ended. Sign in again to view account history.");
+      return;
+    }
+    el.staffHistoryStatus.textContent = "Account history could not be loaded.";
+  } finally {
+    staffHistoryInFlight = false;
+    el.staffHistoryMore.disabled = false;
+  }
+}
+
+async function loadStationWorkerStatus() {
+  if (!staffManagementAllowed() || managerDiagnosticsInFlight) return;
+  managerDiagnosticsInFlight = true;
+  const generation = managerDiagnosticsGeneration;
+  el.stationWorkerRefresh.disabled = true;
+  el.stationWorkerStatus.textContent = "Checking worker status…";
+  try {
+    const response = await fetch("/api/v2/manager-diagnostics/station-worker", {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    });
+    const body = await readJson(response);
+    if (!isStationWorkerDiagnostic(body.stationWorker)) {
+      throw new Error("The server returned unexpected station-worker status.");
+    }
+    if (generation !== managerDiagnosticsGeneration || !staffManagementAllowed()) return;
+    const status = body.stationWorker;
+    el.stationWorkerStatus.textContent = status.status;
+    el.stationWorkerStatus.dataset.state = status.status;
+    el.stationWorkerLastCycle.textContent = status.lastCycleAt
+      ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(status.lastCycleAt))
+      : "Not recorded";
+    el.stationWorkerCycleAge.textContent = status.ageSeconds === null
+      ? "Unknown"
+      : status.ageSeconds < 60
+        ? `${status.ageSeconds} seconds`
+        : `${Math.floor(status.ageSeconds / 60)} minutes`;
+    el.stationWorkerFailures.textContent = status.consecutiveFailures === null
+      ? "Unknown"
+      : String(status.consecutiveFailures);
+    el.stationWorkerProcessed.textContent = status.processedLastCycle === null
+      ? "Unknown"
+      : String(status.processedLastCycle);
+    el.stationWorkerNextStep.textContent = status.nextStep;
+  } catch (error) {
+    if (generation !== managerDiagnosticsGeneration) return;
+    if (error instanceof ApiError && error.status === 401) {
+      showSignIn("Your session has ended. Sign in again to view station-worker status.");
+      return;
+    }
+    el.stationWorkerStatus.textContent = "Status unavailable";
+    el.stationWorkerStatus.dataset.state = "unavailable";
+    el.stationWorkerLastCycle.textContent = "Not available";
+    el.stationWorkerCycleAge.textContent = "Unknown";
+    el.stationWorkerFailures.textContent = "Unknown";
+    el.stationWorkerProcessed.textContent = "Unknown";
+    el.stationWorkerNextStep.textContent = "Refresh the status; if it remains unavailable, check the V2 services.";
+  } finally {
+    managerDiagnosticsInFlight = false;
+    el.stationWorkerRefresh.disabled = false;
+  }
+}
+
 function showStaffError(message) {
   el.staffError.textContent = message;
   el.staffError.hidden = false;
@@ -1134,6 +1320,7 @@ async function sendStaffMutation(url, method, body) {
     if (!isStaffDirectory(result)) throw new Error("The server returned an unexpected staff list.");
     renderStaffDirectory(result);
     el.staffStatus.textContent = `${result.staff.length} staff account${result.staff.length === 1 ? "" : "s"}`;
+    void loadStaffHistory();
     announce("Staff account changes saved.");
     return result;
   } catch (error) {
@@ -2909,6 +3096,8 @@ el.setupToggle.addEventListener("click", () => toggleBootstrapForm(true));
 el.setupCancel.addEventListener("click", () => toggleBootstrapForm(false));
 el.staffCreateForm.addEventListener("submit", submitStaffCreate);
 el.staffList.addEventListener("click", handleStaffAction);
+el.stationWorkerRefresh.addEventListener("click", () => void loadStationWorkerStatus());
+el.staffHistoryMore.addEventListener("click", () => void loadStaffHistory({ append: true }));
 el.passwordResetQueue.addEventListener("click", handlePasswordResetAction);
 el.passwordResetRefresh.addEventListener("click", () => void loadPasswordResetQueue());
 el.authRetry.addEventListener("click", checkSession);
@@ -2933,16 +3122,29 @@ window.addEventListener("online", () => {
 });
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) return;
-  if (currentStaff) fetchRuns({ quiet: true });
+  if (currentStaff) {
+    fetchRuns({ quiet: true });
+    if (staffManagementAllowed()) void loadStationWorkerStatus();
+  }
   else checkSession();
 });
 window.addEventListener("focus", () => {
-  if (currentStaff) fetchRuns({ quiet: true });
+  if (currentStaff) {
+    fetchRuns({ quiet: true });
+    if (staffManagementAllowed()) void loadStationWorkerStatus();
+  }
   else checkSession();
 });
 window.setInterval(() => {
-  if (!document.hidden && currentStaff && navigator.onLine !== false) fetchRuns({ quiet: true });
+  if (!document.hidden && currentStaff && navigator.onLine !== false) {
+    fetchRuns({ quiet: true });
+  }
 }, POLL_INTERVAL_MS);
+window.setInterval(() => {
+  if (!document.hidden && currentStaff && navigator.onLine !== false && staffManagementAllowed()) {
+    void loadStationWorkerStatus();
+  }
+}, 15_000);
 window.setInterval(updateStationTimer, 500);
 if ("serviceWorker" in navigator) {
   void navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch(() => {

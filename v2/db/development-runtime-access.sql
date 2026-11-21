@@ -37,6 +37,7 @@ GRANT EXECUTE ON FUNCTION
   v2.list_setup_catalog_imports(uuid, integer),
   v2.list_setup_imports(uuid, integer),
   v2.list_staff_accounts(uuid),
+  v2.list_staff_account_change_history(uuid, integer, timestamptz, uuid),
   v2.list_staff_password_reset_requests(uuid),
   v2.list_staff_roles(uuid),
   v2.list_workbook_source_links(uuid, text),

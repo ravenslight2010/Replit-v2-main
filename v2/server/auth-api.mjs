@@ -112,6 +112,7 @@ function routeOperation(pathname) {
   if (pathname === `${AUTH_PREFIX}/bootstrap-status`) return "bootstrap_status";
   if (pathname === `${AUTH_PREFIX}/bootstrap`) return "bootstrap";
   if (pathname === `${AUTH_PREFIX}/staff`) return "staff_collection";
+  if (pathname === `${AUTH_PREFIX}/staff-history`) return "staff_history";
   if (pathname === `${AUTH_PREFIX}/password-reset-requests`) return "password_reset_collection";
   if (pathname === `${AUTH_PREFIX}/password-reset-completions`) return "password_reset_completion";
   if (/^\/api\/v2\/auth\/password-reset-requests\/[0-9a-f-]{36}\/(decision|reissue)$/i.test(pathname)) {
@@ -139,6 +140,7 @@ export function createAuthApi({
     "bootstrapAvailable",
     "bootstrapManager",
     "listStaff",
+    "listStaffChangeHistory",
     "createStaffAccount",
     "updateStaffAccount",
     "requestPasswordReset",
@@ -303,6 +305,62 @@ export function createAuthApi({
           clientKey: getClientKey(request),
         });
         sendJson(response, 201, await auth.listStaff(current.actorId));
+        return true;
+      }
+
+      if (operation === "staff_history") {
+        if (request.method !== "GET") {
+          sendJson(response, 405, { error: "This method is not allowed for account history." }, { Allow: "GET" });
+          return true;
+        }
+        const allowedParams = new Set(["limit", "cursor"]);
+        if ([...url.searchParams.keys()].some((key) => !allowedParams.has(key))
+          || ["limit", "cursor"].some((key) => url.searchParams.getAll(key).length > 1)) {
+          throw new V2AuthError(400, "Account history query parameters are invalid.");
+        }
+        const limitText = url.searchParams.get("limit");
+        const limit = limitText === null ? 20 : Number(limitText);
+        if (!/^(?:[1-9]|[1-4][0-9]|50)$/.test(limitText ?? "20")) {
+          throw new V2AuthError(400, "Choose a valid account history page size.");
+        }
+        let before = null;
+        const cursor = url.searchParams.get("cursor");
+        if (cursor !== null) {
+          if (cursor.length > 256 || !/^[A-Za-z0-9_-]+$/.test(cursor)) {
+            throw new V2AuthError(400, "Choose a valid account history page.");
+          }
+          let parsed;
+          try {
+            const decoded = Buffer.from(cursor, "base64url").toString("utf8");
+            parsed = JSON.parse(decoded);
+            if (Buffer.from(JSON.stringify(parsed)).toString("base64url") !== cursor) throw new Error("Invalid cursor.");
+          } catch {
+            throw new V2AuthError(400, "Choose a valid account history page.");
+          }
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)
+            || Object.keys(parsed).sort().join(",") !== "id,occurredAt") {
+            throw new V2AuthError(400, "Choose a valid account history page.");
+          }
+          before = parsed;
+        }
+        const current = await auth.authenticate(request);
+        if (current?.verified !== true) {
+          sendJson(response, 401, { error: "Sign in to view account history." });
+          return true;
+        }
+        if (!current.capabilities.includes("manage-staff")) {
+          sendJson(response, 403, { error: "You do not have permission to view account history." });
+          return true;
+        }
+        const page = await auth.listStaffChangeHistory({
+          actorId: current.actorId,
+          limit,
+          before,
+        });
+        const nextCursor = page.nextCursor
+          ? Buffer.from(JSON.stringify(page.nextCursor)).toString("base64url")
+          : null;
+        sendJson(response, 200, { ...page, nextCursor });
         return true;
       }
 

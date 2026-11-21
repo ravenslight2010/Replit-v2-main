@@ -317,6 +317,80 @@ test("password recovery hides account existence, hashes codes, and uses a one-ti
   assert.equal(JSON.stringify(logs).includes(reissued.code), false);
 });
 
+test("staff account history uses a stable bounded cursor and exposes only allowlisted values", async () => {
+  const calls = [];
+  const occurredAt = "2026-11-16T12:00:00.000Z";
+  const eventId = "71000000-0000-4000-8000-000000000010";
+  const adapter = createAuthAdapter({
+    query: async (sql, params) => {
+      calls.push({ sql, params });
+      const rows = [
+        {
+          event_id: eventId,
+          actor_id: USER_ID,
+          actor_type: "staff",
+          actor_username: "ShiftManager",
+          target_id: "71000000-0000-4000-8000-000000000002",
+          target_username: "ShiftOperator",
+          change_type: "updated",
+          before_state: { roleName: "operator", disabled: false },
+          after_state: { roleName: "manager", disabled: false },
+          occurred_at: occurredAt,
+          password_hash: "must-not-escape",
+          csrf_hash: "must-not-escape",
+        },
+        {
+          event_id: "71000000-0000-4000-8000-000000000011",
+          actor_id: null,
+          actor_type: "bootstrap",
+          actor_username: "First-manager setup",
+          target_id: USER_ID,
+          target_username: "ShiftManager",
+          change_type: "created",
+          before_state: null,
+          after_state: { roleName: "manager", disabled: false },
+          occurred_at: occurredAt,
+        },
+      ];
+      return {
+        rows: params[2] === null ? rows : rows.slice(1),
+      };
+    },
+    passwordResetMinimumResponseMs: 0,
+  });
+
+  const page = await adapter.listStaffChangeHistory({ actorId: USER_ID, limit: 1 });
+  assert.equal(calls[0].sql.includes("list_staff_account_change_history"), true);
+  assert.deepEqual(calls[0].params, [USER_ID, 1, null, null]);
+  assert.equal(page.events.length, 1);
+  assert.equal(page.hasMore, true);
+  assert.deepEqual(page.nextCursor, { occurredAt, id: eventId });
+  assert.deepEqual(page.events[0], {
+    id: eventId,
+    actorId: USER_ID,
+    actorType: "staff",
+    actorUsername: "ShiftManager",
+    targetId: "71000000-0000-4000-8000-000000000002",
+    targetUsername: "ShiftOperator",
+    changeType: "updated",
+    before: { roleName: "operator", disabled: false },
+    after: { roleName: "manager", disabled: false },
+    occurredAt,
+  });
+  assert.equal(JSON.stringify(page).includes("must-not-escape"), false);
+
+  const nextPage = await adapter.listStaffChangeHistory({
+    actorId: USER_ID,
+    limit: 1,
+    before: { occurredAt, id: eventId },
+  });
+  assert.deepEqual(calls[1].params, [USER_ID, 1, occurredAt, eventId]);
+  assert.equal(nextPage.events[0].actorType, "bootstrap");
+  assert.equal(nextPage.events[0].actorId, null);
+  assert.equal(nextPage.hasMore, false);
+  assert.equal(nextPage.nextCursor, null);
+});
+
 test("password recovery converts database permission races into a safe forbidden response", async () => {
   const adapter = createAuthAdapter({
     query: async () => {
