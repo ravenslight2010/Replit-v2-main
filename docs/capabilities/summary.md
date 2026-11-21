@@ -12,52 +12,52 @@ This is a bounded inventory, not proof that every V1 behavior was discovered: ed
 
 | Stable ID | Capability | Workflow / roles | Decision | Release | Implementation | Depends on | Evidence |
 |---|---|---|---|---|---|---|---|
-| `CAP-ACCESSIBILITY-RESPONSIVE` | Accessible responsive operations | Use operational screens on web devices (operator, manager, QC manager, warehouse) | approved | current | in-progress | — | [handoff](v2/HANDOFF.md), [validation-plan](.local/tasks/v2-update-operational-validation.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
+| `CAP-ACCESSIBILITY-RESPONSIVE` | Accessible responsive operations | Use operational screens on web devices (operator, manager, QC manager, warehouse) | approved | current | in-progress | — | [handoff](v2/HANDOFF.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
 | `CAP-AI-IMPORT-MATCHING` | AI-assisted import matching | Review import match suggestions (manager) | candidate | none | not-started | — | [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md), [import-matrix](v2/research/v1-import-source-matrix.md) |
 | `CAP-AI-OPERATIONAL-ASSISTANCE` | AI operational assistance | Review optional AI assistance (operator, manager) | candidate | none | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
-| `CAP-ALLERGEN-EVIDENCE` | Allergen review and run visibility | Review allergen mappings and run status (operator, QC manager, manager) | approved | current | in-progress | `CAP-SETUP-CATALOG`, `CAP-QC-EVIDENCE` | [qc-plan](.local/tasks/v2-qc-allergen-workflows.md), [substitution-plan](.local/tasks/v2-substitution-station-visibility.md), [v1-v2](v2/research/v1-to-v2.md) |
-| `CAP-APP-UPDATES` | Safe application updates | Check and apply an app update (operator, manager) | approved | current | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [validation-plan](.local/tasks/v2-update-operational-validation.md) |
+| `CAP-ALLERGEN-EVIDENCE` | Allergen review and run visibility | Review allergen mappings and run status (operator, QC manager, manager) | approved | current | in-progress | `CAP-SETUP-CATALOG`, `CAP-QC-EVIDENCE` | [v1-v2](v2/research/v1-to-v2.md) |
+| `CAP-APP-UPDATES` | Safe application updates | Check and apply an app update (operator, manager) | approved | current | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
 | `CAP-AUTOMATIC-TRACKING` | Automatic station progress | Advance station progress in the background (operator, manager, system worker) | approved | current | implemented | `CAP-PRODUCTION-STATIONS` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md) |
 | `CAP-CAST-SCREENS` | Cast production status to screens | View production status on a shared screen (operator, manager) | candidate | none | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
 | `CAP-CUTOVER-BOUNDARY` | Safe V1-to-V2 cutover boundary | Prepare and review a future cutover (owner, manager, administrator) | approved | current | blocked | `CAP-IDENTITY-ROLES`, `CAP-SETUP-CATALOG`, `CAP-INVENTORY-LEDGER` | [handoff](v2/HANDOFF.md), [gaps](v2/research/gaps.md), [research-readme](v2/research/README.md) |
 | `CAP-DEPLOYMENT-BOUNDARY` | Isolated V2 deployment and worker | Provision and verify a V2 deployment (owner, administrator) | approved | current | blocked | `CAP-IDENTITY-ROLES` | [handoff](v2/HANDOFF.md), [gaps](v2/research/gaps.md), [v1-v2](v2/research/v1-to-v2.md) |
-| `CAP-DIE-DEFAULTS` | Reviewed die and line defaults | Review defaults and configure a run (manager, operator) | approved | current | implemented | `CAP-SETUP-CATALOG` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [die-plan](.local/tasks/v2-operational-die-defaults.md), [die-test](v2/core/die-defaults.test.mjs) |
+| `CAP-DIE-DEFAULTS` | Reviewed die and line defaults | Review defaults and configure a run (manager, operator) | approved | current | implemented | `CAP-SETUP-CATALOG` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [die-test](v2/core/die-defaults.test.mjs) |
 | `CAP-EXPORT-RECIPES` | Recipe and specification export | Export specification data (manager) | candidate | none | not-started | — | [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
-| `CAP-FINISHED-GOODS` | Finished-case corrections | Correct finished-case records (warehouse, manager) | approved | current | in-progress | `CAP-INVENTORY-LEDGER` | [v1-v2](v2/research/v1-to-v2.md), [inventory-plan](.local/tasks/v2-inventory-workflows.md) |
-| `CAP-FREEZER-CYCLE-COUNTS` | Freezer pulls and cycle counts | Plan freezer pulls and count inventory (warehouse, operator, manager) | approved | current | in-progress | `CAP-INVENTORY-LEDGER` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [inventory-plan](.local/tasks/v2-inventory-workflows.md) |
-| `CAP-IDENTITY-ROLES` | Staff sign-in and role-based access | Sign in, act, and sign out (operator, manager, administrator) | approved | current | implemented | — | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md), [v1-manager-bundle](_archived/v1/artifacts/run-calculator/dist/public/assets/StaffManagementSurface-DRoVU1GR.js) |
-| `CAP-IMPORT-CHEESE` | Cheese mix specification import | Review and link cheese specifications (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md), [import-plan](.local/tasks/v2-remaining-import-workflows.md) |
-| `CAP-IMPORT-DOUGH` | Dough guide import | Review dough guide assignments (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md), [import-plan](.local/tasks/v2-remaining-import-workflows.md) |
-| `CAP-IMPORT-PREMIX` | Premix workbook import | Review and apply premix formulas (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md), [import-plan](.local/tasks/v2-remaining-import-workflows.md) |
-| `CAP-IMPORT-SAUCE` | Sauce guide import | Review sauce guide assignments (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md), [import-plan](.local/tasks/v2-remaining-import-workflows.md) |
+| `CAP-FINISHED-GOODS` | Finished-case corrections | Correct finished-case records (warehouse, manager) | approved | current | in-progress | `CAP-INVENTORY-LEDGER` | [v1-v2](v2/research/v1-to-v2.md) |
+| `CAP-FREEZER-CYCLE-COUNTS` | Freezer pulls and cycle counts | Plan freezer pulls and count inventory (warehouse, operator, manager) | approved | current | in-progress | `CAP-INVENTORY-LEDGER` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
+| `CAP-IDENTITY-ROLES` | Staff sign-in and role-based access | Sign in, act, and sign out (operator, manager, administrator) | approved | current | implemented | — | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md) |
+| `CAP-IMPORT-CHEESE` | Cheese mix specification import | Review and link cheese specifications (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
+| `CAP-IMPORT-DOUGH` | Dough guide import | Review dough guide assignments (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
+| `CAP-IMPORT-PREMIX` | Premix workbook import | Review and apply premix formulas (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
+| `CAP-IMPORT-SAUCE` | Sauce guide import | Review sauce guide assignments (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
 | `CAP-IMPORT-SCHEDULING` | Scheduled recurring imports | Schedule a future import (manager) | candidate | none | not-started | — | [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
-| `CAP-IMPORT-SHIPPING` | Shipping guide import | Review packaging guide mappings (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md), [import-plan](.local/tasks/v2-remaining-import-workflows.md) |
-| `CAP-IMPORT-SPEC` | Specification workbook import | Review and apply product specifications (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md), [import-plan](.local/tasks/v2-remaining-import-workflows.md) |
-| `CAP-INCIDENT-QUEUE` | Reported issue and incident queue | Review reported issues (manager) | candidate | none | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [manager-plan](.local/tasks/v2-manager-operations-history.md) |
-| `CAP-INVENTORY-LEDGER` | Warehouse inventory and opening counts | Count, transfer, and reconcile stock (warehouse, manager) | approved | current | implemented | `CAP-IDENTITY-ROLES` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md), [v1-inventory-plan](v2/research/archive/repo-mirror/docs/inventory-autodeduction-plan.md), [inventory-plan](.local/tasks/v2-inventory-workflows.md) |
-| `CAP-MANAGER-OPERATIONS` | Manager action queue and operational history | Review operational status and follow-up (manager) | approved | current | not-started | `CAP-IDENTITY-ROLES` | [manager-plan](.local/tasks/v2-manager-operations-history.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
-| `CAP-MIX-PLAN` | Operational make-day mix plan | Review today's mix needs (operator, manager) | approved | current | not-started | `CAP-SCHEDULE-PLANNING`, `CAP-SETUP-CATALOG`, `CAP-PREP-MIX-STOCK` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [mix-plan](.local/tasks/v2-operational-mix-plan.md) |
-| `CAP-MULTIDEVICE-OFFLINE` | Shared runs and read-only offline access | Share, disconnect, and reconnect (operator, manager) | approved | current | implemented | `CAP-RUN-LIFECYCLE` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md), [validation-plan](.local/tasks/v2-update-operational-validation.md) |
+| `CAP-IMPORT-SHIPPING` | Shipping guide import | Review packaging guide mappings (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
+| `CAP-IMPORT-SPEC` | Specification workbook import | Review and apply product specifications (manager) | approved | current | implemented | `CAP-SETUP-CATALOG` | [import-matrix](v2/research/v1-import-source-matrix.md), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
+| `CAP-INCIDENT-QUEUE` | Reported issue and incident queue | Review reported issues (manager) | candidate | none | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
+| `CAP-INVENTORY-LEDGER` | Warehouse inventory and opening counts | Count, transfer, and reconcile stock (warehouse, manager) | approved | current | implemented | `CAP-IDENTITY-ROLES` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md), [v1-inventory-plan](v2/research/archive/repo-mirror/docs/inventory-autodeduction-plan.md) |
+| `CAP-MANAGER-OPERATIONS` | Manager action queue and operational history | Review operational status and follow-up (manager) | approved | current | not-started | `CAP-IDENTITY-ROLES` | [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
+| `CAP-MIX-PLAN` | Operational make-day mix plan | Review today's mix needs (operator, manager) | approved | current | not-started | `CAP-SCHEDULE-PLANNING`, `CAP-SETUP-CATALOG`, `CAP-PREP-MIX-STOCK` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
+| `CAP-MULTIDEVICE-OFFLINE` | Shared runs and read-only offline access | Share, disconnect, and reconnect (operator, manager) | approved | current | implemented | `CAP-RUN-LIFECYCLE` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md) |
 | `CAP-NATIVE-MOBILE` | Native mobile application | Use production tooling in a native app (operator, manager) | candidate | none | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
 | `CAP-NOTIFICATION-PREFERENCES` | Proactive notification preferences | Manage notification preferences (operator, manager) | candidate | none | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
 | `CAP-OFFLINE-WRITES` | Offline write access | Write production changes offline (operator, manager) | out-of-scope | none | not-started | — | [handoff](v2/HANDOFF.md), [gaps](v2/research/gaps.md) |
-| `CAP-OPERATIONAL-DIAGNOSTICS` | Manager operational diagnostics | Review operational diagnostics (manager, administrator) | approved | current | not-started | `CAP-IDENTITY-ROLES` | [manager-plan](.local/tasks/v2-manager-operations-history.md), [handoff](v2/HANDOFF.md) |
-| `CAP-PREP-MIX-STOCK` | Preparation and premix inventory | Prepare and consume mixes (operator, warehouse, manager) | approved | current | in-progress | `CAP-INVENTORY-LEDGER` | [v1-inventory-plan](v2/research/archive/repo-mirror/docs/inventory-autodeduction-plan.md), [v1-v2](v2/research/v1-to-v2.md), [inventory-plan](.local/tasks/v2-inventory-workflows.md) |
+| `CAP-OPERATIONAL-DIAGNOSTICS` | Manager operational diagnostics | Review operational diagnostics (manager, administrator) | approved | current | not-started | `CAP-IDENTITY-ROLES` | [handoff](v2/HANDOFF.md) |
+| `CAP-PREP-MIX-STOCK` | Preparation and premix inventory | Prepare and consume mixes (operator, warehouse, manager) | approved | current | in-progress | `CAP-INVENTORY-LEDGER` | [v1-inventory-plan](v2/research/archive/repo-mirror/docs/inventory-autodeduction-plan.md), [v1-v2](v2/research/v1-to-v2.md) |
 | `CAP-PRODUCTION-RULES` | Production rule checks | Configure and evaluate production rules (manager, operator) | approved | current | implemented | `CAP-RUN-LIFECYCLE`, `CAP-SETUP-CATALOG` | [handoff](v2/HANDOFF.md), [rules-test](v2/db/0008-production-rule-enforcement.test.sql) |
 | `CAP-PRODUCTION-STATIONS` | Production station workflows | Work through the production line (operator, manager) | approved | current | implemented | `CAP-RUN-LIFECYCLE` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md), [v1-station-plan](v2/research/archive/task-records/3911.md) |
-| `CAP-QC-CHECKPOINTS` | QC checkpoints and review flags | Record a checkpoint and review a run (QC manager, supervisor, manager) | approved | current | not-started | `CAP-QC-EVIDENCE` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [qc-extension-plan](.local/tasks/v2-qc-checkpoint-extension.md) |
-| `CAP-QC-EVIDENCE` | Run-linked quality records | Record and review quality observations (operator, QC manager, manager) | approved | current | in-progress | `CAP-IDENTITY-ROLES`, `CAP-SETUP-CATALOG` | [gaps](v2/research/gaps.md), [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [qc-plan](.local/tasks/v2-qc-allergen-workflows.md), [v1-qc-bundle](_archived/v1/artifacts/run-calculator/dist/public/assets/QcWorkflowTab-DnxuPoJS.js) |
+| `CAP-QC-CHECKPOINTS` | QC checkpoints and review flags | Record a checkpoint and review a run (QC manager, supervisor, manager) | approved | current | not-started | `CAP-QC-EVIDENCE` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
+| `CAP-QC-EVIDENCE` | Run-linked quality records | Record and review quality observations (operator, QC manager, manager) | approved | current | in-progress | `CAP-IDENTITY-ROLES`, `CAP-SETUP-CATALOG` | [gaps](v2/research/gaps.md), [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
 | `CAP-RUN-CONSUMPTION` | Run consumption and inventory receipt | Complete a run and review inventory use (operator, manager, warehouse) | approved | current | implemented | `CAP-RUN-LIFECYCLE`, `CAP-INVENTORY-LEDGER` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md) |
-| `CAP-RUN-HISTORY-REPORTING` | Run history and operational reports | Review run history and reports (manager) | approved | current | not-started | `CAP-RUN-LIFECYCLE` | [manager-plan](.local/tasks/v2-manager-operations-history.md), [handoff](v2/HANDOFF.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
-| `CAP-RUN-LIFECYCLE` | Canonical production run lifecycle | Create and control a run (operator, manager) | approved | current | implemented | `CAP-IDENTITY-ROLES` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md), [v1-run-bundle](_archived/v1/artifacts/run-calculator/dist/public/assets/LiveRunContext-CGS0d3f4.js) |
+| `CAP-RUN-HISTORY-REPORTING` | Run history and operational reports | Review run history and reports (manager) | approved | current | not-started | `CAP-RUN-LIFECYCLE` | [handoff](v2/HANDOFF.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
+| `CAP-RUN-LIFECYCLE` | Canonical production run lifecycle | Create and control a run (operator, manager) | approved | current | implemented | `CAP-IDENTITY-ROLES` | [handoff](v2/HANDOFF.md), [v1-v2](v2/research/v1-to-v2.md) |
 | `CAP-SANDBOX-MODE` | Sandbox operating mode | Practice without changing live operations (manager, operator) | candidate | none | not-started | — | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
-| `CAP-SCHEDULE-IMPORT` | Reviewed schedule workbook import | Import a production schedule (manager) | approved | current | in-progress | `CAP-SCHEDULE-PLANNING` | [run-plan](.local/tasks/v2-scheduling-and-run-planning.md), [schedule-import-test](v2/core/schedule-workbook-import.test.mjs), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
-| `CAP-SCHEDULE-PLANNING` | Dated schedule and run planning | Plan a production day (manager, operator) | approved | current | in-progress | `CAP-SETUP-CATALOG`, `CAP-RUN-LIFECYCLE` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [run-plan](.local/tasks/v2-scheduling-and-run-planning.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
+| `CAP-SCHEDULE-IMPORT` | Reviewed schedule workbook import | Import a production schedule (manager) | approved | current | in-progress | `CAP-SCHEDULE-PLANNING` | [schedule-import-test](v2/core/schedule-workbook-import.test.mjs), [v1-import-plan](v2/research/archive/repo-mirror/docs/import-system-plan.md) |
+| `CAP-SCHEDULE-PLANNING` | Dated schedule and run planning | Plan a production day (manager, operator) | approved | current | in-progress | `CAP-SETUP-CATALOG`, `CAP-RUN-LIFECYCLE` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [v1-audit](v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md) |
 | `CAP-SETUP-CATALOG` | Reviewed production setup catalog | Review and apply setup data (manager) | approved | current | implemented | `CAP-IDENTITY-ROLES` | [handoff](v2/HANDOFF.md), [source-catalog](v2/research/source-catalog.md), [setup-test](v2/core/setup-catalog-csv.test.mjs) |
-| `CAP-STAFF-RECOVERY` | Staff password recovery | Request and complete password recovery (operator, manager) | approved | current | in-progress | `CAP-IDENTITY-ROLES` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [reset-plan](.local/tasks/v2-staff-password-reset.md), [handoff](v2/HANDOFF.md) |
-| `CAP-SUBSTITUTIONS` | Run substitutions | Record and use a substitution (operator, manager) | approved | current | in-progress | `CAP-INVENTORY-LEDGER`, `CAP-ALLERGEN-EVIDENCE` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [inventory-plan](.local/tasks/v2-inventory-workflows.md), [substitution-plan](.local/tasks/v2-substitution-station-visibility.md) |
+| `CAP-STAFF-RECOVERY` | Staff password recovery | Request and complete password recovery (operator, manager) | approved | current | in-progress | `CAP-IDENTITY-ROLES` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md), [handoff](v2/HANDOFF.md) |
+| `CAP-SUBSTITUTIONS` | Run substitutions | Record and use a substitution (operator, manager) | approved | current | in-progress | `CAP-INVENTORY-LEDGER`, `CAP-ALLERGEN-EVIDENCE` | [next-handoff](v2/research/NEXT-PHASE-HANDOFF.md) |
 | `CAP-V1-READONLY-ARCHIVE` | Restricted read-only V1 history archive | Review historical V1 records (owner, authorized auditor) | candidate | none | not-started | — | [v1-v2](v2/research/v1-to-v2.md), [gaps](v2/research/gaps.md) |
-| `CAP-WAREHOUSE-EXPORT` | Export warehouse records | Export warehouse records (manager, warehouse) | approved | current | not-started | `CAP-INVENTORY-LEDGER` | [handoff](v2/HANDOFF.md), [inventory-plan](.local/tasks/v2-inventory-workflows.md) |
+| `CAP-WAREHOUSE-EXPORT` | Export warehouse records | Export warehouse records (manager, warehouse) | approved | current | not-started | `CAP-INVENTORY-LEDGER` | [handoff](v2/HANDOFF.md) |
 
 ## Review notes
 
@@ -92,7 +92,7 @@ This is a bounded inventory, not proof that every V1 behavior was discovered: ed
 - **Unresolved owner decisions:** Any clearance, cross-contact, label, or blocking policy requires qualified owner approval.
 - **Implementation note:** V1 advisory status is evidenced; V2 mapping/review and operator visibility work is active.
 - **Acceptance checks:**
-  - `allergen-states`: Unknown, reviewed-empty, and known allergens remain distinguishable. — **NOT RUN (qc-plan)**
+  - `allergen-states`: Unknown, reviewed-empty, and known allergens remain distinguishable. — **no result recorded**
   - `allergen-badge`: Run/station status has accessible text plus an icon, not color alone. — **no result recorded**
 
 ### `CAP-APP-UPDATES` — Safe application updates
@@ -166,7 +166,7 @@ This is a bounded inventory, not proof that every V1 behavior was discovered: ed
 - **Unresolved owner decisions:** Correction/return semantics require the specific accepted task decision before implementing new cases.
 - **Implementation note:** V1 adjustments are evidenced in research; accepted V2 workflow is in progress.
 - **Acceptance checks:**
-  - `finished-correction-audit`: A correction records actor, reason, time, and a new ledger outcome. — **NOT RUN (inventory-plan)**
+  - `finished-correction-audit`: A correction records actor, reason, time, and a new ledger outcome. — **no result recorded**
 
 ### `CAP-FREEZER-CYCLE-COUNTS` — Freezer pulls and cycle counts
 
@@ -175,7 +175,7 @@ This is a bounded inventory, not proof that every V1 behavior was discovered: ed
 - **Unresolved owner decisions:** Any new timing, waste, or return policy remains owner-controlled.
 - **Implementation note:** V1 configuration/reminder and cycle-count surfaces are documented; V2 parity remains assigned work.
 - **Acceptance checks:**
-  - `freezer-pull-due`: A configured pull becomes visible when due and does not duplicate after refresh. — **NOT RUN (inventory-plan)**
+  - `freezer-pull-due`: A configured pull becomes visible when due and does not duplicate after refresh. — **no result recorded**
   - `cycle-count-ledger`: A reviewed cycle count creates a traceable stock movement. — **no result recorded**
 
 ### `CAP-IDENTITY-ROLES` — Staff sign-in and role-based access
@@ -335,7 +335,7 @@ This is a bounded inventory, not proof that every V1 behavior was discovered: ed
 - **Unresolved owner decisions:** Any waste, spoilage, or return rule needs explicit approval.
 - **Implementation note:** V1 prep semantics are documented; remaining complete V2 operational parity is assigned work.
 - **Acceptance checks:**
-  - `prep-stock-distinct`: Preparation movements preserve separate raw and prepared stock balances. — **NOT RUN (inventory-plan)**
+  - `prep-stock-distinct`: Preparation movements preserve separate raw and prepared stock balances. — **no result recorded**
   - `prep-repeat-safe`: A repeated preparation command does not duplicate stock changes. — **no result recorded**
 
 ### `CAP-PRODUCTION-RULES` — Production rule checks
@@ -374,7 +374,7 @@ This is a bounded inventory, not proof that every V1 behavior was discovered: ed
 - **Unresolved owner decisions:** Qualified references, tolerances, and retention changes need separate explicit approval.
 - **Implementation note:** Historical advisory behavior is documented; accepted V2 QC implementation is active.
 - **Acceptance checks:**
-  - `qc-unknown`: Missing target/reference yields not evaluated, not an assumed pass. — **NOT RUN (qc-plan)**
+  - `qc-unknown`: Missing target/reference yields not evaluated, not an assumed pass. — **no result recorded**
   - `qc-history`: Authorized corrections are attributable and visible in history. — **no result recorded**
   - `qc-nonblocking`: QC records do not silently block production or shipping. — **no result recorded**
 
@@ -452,7 +452,7 @@ This is a bounded inventory, not proof that every V1 behavior was discovered: ed
 - **Unresolved owner decisions:** No email/SMS or external identity provider is approved by this scope.
 - **Implementation note:** The V2 recovery flow is accepted and assigned; complete behavior is not yet evidenced in the handoff.
 - **Acceptance checks:**
-  - `recovery-replay`: Recovery expires and cannot be replayed after successful use. — **NOT RUN (reset-plan)**
+  - `recovery-replay`: Recovery expires and cannot be replayed after successful use. — **no result recorded**
   - `recovery-session`: Approval, denial, and password change preserve the accepted session-revocation policy. — **no result recorded**
 
 ### `CAP-SUBSTITUTIONS` — Run substitutions
@@ -462,7 +462,7 @@ This is a bounded inventory, not proof that every V1 behavior was discovered: ed
 - **Unresolved owner decisions:** Any safety or allergen interpretation remains subject to separate qualified policy approval.
 - **Implementation note:** Historical substitution behavior is documented; V2 accounting and visibility parity work is active.
 - **Acceptance checks:**
-  - `substitution-consumption`: Run receipt consumes the selected substituted inventory identity. — **NOT RUN (inventory-plan)**
+  - `substitution-consumption`: Run receipt consumes the selected substituted inventory identity. — **no result recorded**
   - `substitution-visible`: Run and affected station show accessible substitution status. — **no result recorded**
 
 ### `CAP-V1-READONLY-ARCHIVE` — Restricted read-only V1 history archive
