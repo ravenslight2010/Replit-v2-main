@@ -1761,7 +1761,7 @@ test(`manager reviews, applies, and safely undoes a setup catalog across respons
     name: "ingredients.csv", mimeType: "text/csv", buffer: Buffer.from(ingredients),
   });
   await page.getByRole("button", { name: "Validate and stage for review" }).click();
-  await page.getByText(/1 setup rows are staged/).waitFor();
+  await page.locator("#setup-catalog-status").getByText(/1 setup rows are staged/).waitFor();
   assert.equal(fixture.setupCatalogImports[0].status, "staged");
   assert.equal(await page.getByText("BROWSER-ING · Fixture Flour").count(), 1);
   await page.getByRole("button", { name: "Apply reviewed setup" }).click();

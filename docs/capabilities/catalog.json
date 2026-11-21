@@ -3,48 +3,131 @@
   "title": "Portable V1/V2 Capability Catalog",
   "evidenceBoundary": "This is a bounded inventory, not proof that every V1 behavior was discovered: editable V1 source and broad/raw discovery inventories were not retained. It preserves only claims supported by surviving source, documents, tests, or explicit owner decisions. The removed V1 production database, customer records, credentials, sessions, and runtime behavior are not recovered or implied.",
   "references": {
-    "design": { "path": "docs/superpowers/specs/2026-11-19-portable-capability-catalog-design.md", "kind": "approved-design", "note": "Owner-approved catalog structure and evidence boundary." },
-    "handoff": { "path": "v2/HANDOFF.md", "kind": "approved-scope-and-status", "note": "V2 product boundary, cutover decisions, implementation and verification limits." },
-    "research-readme": { "path": "v2/research/README.md", "kind": "research-index", "note": "Research provenance, evidence vocabulary, and exclusions." },
-    "v1-v2": { "path": "v2/research/v1-to-v2.md", "kind": "reconciliation", "note": "Selected V1 findings and V2 implementation updates." },
-    "gaps": { "path": "v2/research/gaps.md", "kind": "gap-ledger", "note": "Approved first-release scope, unresolved decisions, and evidence gaps." },
-    "roadmap": { "path": "v2/research/roadmap.md", "kind": "historical-roadmap", "note": "Recommendations and owner gates; not blanket implementation approval." },
-    "next-handoff": { "path": "v2/research/NEXT-PHASE-HANDOFF.md", "kind": "planning-handoff", "note": "Post-core V2 outcomes and explicit boundaries." },
-    "import-matrix": { "path": "v2/research/v1-import-source-matrix.md", "kind": "source-matrix", "note": "Bounded V1 workbook layouts supported by V2." },
-    "source-catalog": { "path": "v2/research/source-catalog.md", "kind": "provenance", "note": "Retained and excluded research sources; no customer rows." },
-    "v1-audit": { "path": "v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md", "kind": "historical-audit", "note": "Twelve-domain V1/V2 assessment, bounded journey results, and explicit uncertainty." },
-    "v1-coverage": { "path": "v2/research/archive/repo-mirror/docs/research-reconciliation/coverage-ledger.md", "kind": "historical-coverage", "note": "Discovery boundary and evidence coverage ledger." },
-    "v1-import-plan": { "path": "v2/research/archive/repo-mirror/docs/import-system-plan.md", "kind": "historical-plan", "note": "Seven V1 importer families and distinct recovery guarantees." },
-    "v1-inventory-plan": { "path": "v2/research/archive/repo-mirror/docs/inventory-autodeduction-plan.md", "kind": "historical-plan", "note": "V1 inventory and automatic-deduction planning evidence." },
-    "v1-run-bundle": { "path": "_archived/v1/artifacts/run-calculator/dist/public/assets/LiveRunContext-CGS0d3f4.js", "kind": "archived-build", "note": "Compiled V1 artifact; not editable source or proof of deployed behavior." },
-    "v1-inventory-bundle": { "path": "_archived/v1/artifacts/run-calculator/dist/public/assets/InventoryTab-vPffcLza.js", "kind": "archived-build", "note": "Compiled V1 inventory UI artifact; not editable source or proof of deployed behavior." },
-    "v1-warehouse-bundle": { "path": "_archived/v1/artifacts/run-calculator/dist/public/assets/WarehouseTabContent-BgYxDa1Y.js", "kind": "archived-build", "note": "Compiled V1 warehouse UI artifact; not editable source or proof of deployed behavior." },
-    "v1-qc-bundle": { "path": "_archived/v1/artifacts/run-calculator/dist/public/assets/QcWorkflowTab-DnxuPoJS.js", "kind": "archived-build", "note": "Compiled V1 QC UI artifact; policy claims require separate qualified approval." },
-    "v1-schedule-bundle": { "path": "_archived/v1/artifacts/run-calculator/dist/public/assets/ExcelImportDialog-BL7o35S4.js", "kind": "archived-build", "note": "Compiled V1 schedule-import UI artifact." },
-    "v1-manager-bundle": { "path": "_archived/v1/artifacts/run-calculator/dist/public/assets/StaffManagementSurface-DRoVU1GR.js", "kind": "archived-build", "note": "Compiled V1 staff-management UI artifact." },
-    "run-plan": { "path": ".local/tasks/v2-scheduling-and-run-planning.md", "kind": "accepted-task-plan", "note": "Accepted schedule and run-planning scope." },
-    "inventory-plan": { "path": ".local/tasks/v2-inventory-workflows.md", "kind": "accepted-task-plan", "note": "Accepted inventory workflow parity scope." },
-    "qc-plan": { "path": ".local/tasks/v2-qc-allergen-workflows.md", "kind": "accepted-task-plan", "note": "Accepted, non-blocking QC and allergen scope." },
-    "import-plan": { "path": ".local/tasks/v2-remaining-import-workflows.md", "kind": "accepted-task-plan", "note": "Accepted non-schedule importer scope." },
-    "manager-plan": { "path": ".local/tasks/v2-manager-operations-history.md", "kind": "accepted-task-plan", "note": "Accepted manager operations and history scope." },
-    "reset-plan": { "path": ".local/tasks/v2-staff-password-reset.md", "kind": "accepted-task-plan", "note": "Accepted V2 staff account recovery scope." },
-    "die-plan": { "path": ".local/tasks/v2-operational-die-defaults.md", "kind": "accepted-task-plan", "note": "Accepted reviewed die-default operations scope." },
-    "mix-plan": { "path": ".local/tasks/v2-operational-mix-plan.md", "kind": "accepted-task-plan", "note": "Accepted read-only make-day mix planning scope." },
-    "substitution-plan": { "path": ".local/tasks/v2-substitution-station-visibility.md", "kind": "accepted-task-plan", "note": "Accepted operator visibility scope for substitutions and known allergens." },
-    "qc-extension-plan": { "path": ".local/tasks/v2-qc-checkpoint-extension.md", "kind": "accepted-task-plan", "note": "Accepted additional observation/review scope; not a safety-policy authorization." },
-    "validation-plan": { "path": ".local/tasks/v2-update-operational-validation.md", "kind": "accepted-task-plan", "note": "Accepted cross-domain operational verification scope." },
-    "run-test": { "path": "v2/core/run-lifecycle.test.mjs", "kind": "test", "note": "V2 lifecycle model tests." },
-    "station-test": { "path": "v2/core/station-workflows.test.mjs", "kind": "test", "note": "V2 production station workflow tests." },
-    "worker-test": { "path": "v2/core/station-auto-track-worker.test.mjs", "kind": "test", "note": "V2 background tracking worker tests." },
-    "inventory-test": { "path": "v2/db/0006-run-inventory-linkage.test.sql", "kind": "test", "note": "Disposable-database run inventory linkage checks." },
-    "auth-test": { "path": "v2/server/auth-api.test.mjs", "kind": "test", "note": "V2 sign-in and session API tests." },
-    "setup-test": { "path": "v2/core/setup-catalog-csv.test.mjs", "kind": "test", "note": "V2 setup catalog parsing and validation tests." },
-    "schedule-test": { "path": "v2/core/schedule-planning.test.mjs", "kind": "test", "note": "V2 schedule planning tests." },
-    "schedule-import-test": { "path": "v2/core/schedule-workbook-import.test.mjs", "kind": "test", "note": "V2 schedule workbook import tests." },
-    "source-import-test": { "path": "v2/core/source-workbook-import.test.mjs", "kind": "test", "note": "V2 source workbook adapter tests." },
-    "die-test": { "path": "v2/core/die-defaults.test.mjs", "kind": "test", "note": "V2 reviewed die-default tests." },
-    "rules-test": { "path": "v2/db/0008-production-rule-enforcement.test.sql", "kind": "test", "note": "V2 production rule enforcement checks." },
-    "v1-station-plan": { "path": "v2/research/archive/task-records/3911.md", "kind": "historical-task-snapshot", "note": "Archived description of the V1-to-V2 station scope; its cancelled task status is not current approval." }
+    "design": {
+      "path": "docs/superpowers/specs/2026-11-19-portable-capability-catalog-design.md",
+      "kind": "approved-design",
+      "note": "Owner-approved catalog structure and evidence boundary."
+    },
+    "handoff": {
+      "path": "v2/HANDOFF.md",
+      "kind": "approved-scope-and-status",
+      "note": "V2 product boundary, cutover decisions, implementation and verification limits."
+    },
+    "research-readme": {
+      "path": "v2/research/README.md",
+      "kind": "research-index",
+      "note": "Research provenance, evidence vocabulary, and exclusions."
+    },
+    "v1-v2": {
+      "path": "v2/research/v1-to-v2.md",
+      "kind": "reconciliation",
+      "note": "Selected V1 findings and V2 implementation updates."
+    },
+    "gaps": {
+      "path": "v2/research/gaps.md",
+      "kind": "gap-ledger",
+      "note": "Approved first-release scope, unresolved decisions, and evidence gaps."
+    },
+    "roadmap": {
+      "path": "v2/research/roadmap.md",
+      "kind": "historical-roadmap",
+      "note": "Recommendations and owner gates; not blanket implementation approval."
+    },
+    "next-handoff": {
+      "path": "v2/research/NEXT-PHASE-HANDOFF.md",
+      "kind": "planning-handoff",
+      "note": "Post-core V2 outcomes and explicit boundaries."
+    },
+    "import-matrix": {
+      "path": "v2/research/v1-import-source-matrix.md",
+      "kind": "source-matrix",
+      "note": "Bounded V1 workbook layouts supported by V2."
+    },
+    "source-catalog": {
+      "path": "v2/research/source-catalog.md",
+      "kind": "provenance",
+      "note": "Retained and excluded research sources; no customer rows."
+    },
+    "v1-audit": {
+      "path": "v2/research/archive/repo-mirror/docs/research-reconciliation/app-wide-audit-2026-10-29.md",
+      "kind": "historical-audit",
+      "note": "Twelve-domain V1/V2 assessment, bounded journey results, and explicit uncertainty."
+    },
+    "v1-coverage": {
+      "path": "v2/research/archive/repo-mirror/docs/research-reconciliation/coverage-ledger.md",
+      "kind": "historical-coverage",
+      "note": "Discovery boundary and evidence coverage ledger."
+    },
+    "v1-import-plan": {
+      "path": "v2/research/archive/repo-mirror/docs/import-system-plan.md",
+      "kind": "historical-plan",
+      "note": "Seven V1 importer families and distinct recovery guarantees."
+    },
+    "v1-inventory-plan": {
+      "path": "v2/research/archive/repo-mirror/docs/inventory-autodeduction-plan.md",
+      "kind": "historical-plan",
+      "note": "V1 inventory and automatic-deduction planning evidence."
+    },
+    "run-test": {
+      "path": "v2/core/run-lifecycle.test.mjs",
+      "kind": "test",
+      "note": "V2 lifecycle model tests."
+    },
+    "station-test": {
+      "path": "v2/core/station-workflows.test.mjs",
+      "kind": "test",
+      "note": "V2 production station workflow tests."
+    },
+    "worker-test": {
+      "path": "v2/core/station-auto-track-worker.test.mjs",
+      "kind": "test",
+      "note": "V2 background tracking worker tests."
+    },
+    "inventory-test": {
+      "path": "v2/db/0006-run-inventory-linkage.test.sql",
+      "kind": "test",
+      "note": "Disposable-database run inventory linkage checks."
+    },
+    "auth-test": {
+      "path": "v2/server/auth-api.test.mjs",
+      "kind": "test",
+      "note": "V2 sign-in and session API tests."
+    },
+    "setup-test": {
+      "path": "v2/core/setup-catalog-csv.test.mjs",
+      "kind": "test",
+      "note": "V2 setup catalog parsing and validation tests."
+    },
+    "schedule-test": {
+      "path": "v2/core/schedule-planning.test.mjs",
+      "kind": "test",
+      "note": "V2 schedule planning tests."
+    },
+    "schedule-import-test": {
+      "path": "v2/core/schedule-workbook-import.test.mjs",
+      "kind": "test",
+      "note": "V2 schedule workbook import tests."
+    },
+    "source-import-test": {
+      "path": "v2/core/source-workbook-import.test.mjs",
+      "kind": "test",
+      "note": "V2 source workbook adapter tests."
+    },
+    "die-test": {
+      "path": "v2/core/die-defaults.test.mjs",
+      "kind": "test",
+      "note": "V2 reviewed die-default tests."
+    },
+    "rules-test": {
+      "path": "v2/db/0008-production-rule-enforcement.test.sql",
+      "kind": "test",
+      "note": "V2 production rule enforcement checks."
+    },
+    "v1-station-plan": {
+      "path": "v2/research/archive/task-records/3911.md",
+      "kind": "historical-task-snapshot",
+      "note": "Archived description of the V1-to-V2 station scope; its cancelled task status is not current approval."
+    }
   },
   "capabilities": [
     {
@@ -52,277 +135,1262 @@
       "name": "Staff sign-in and role-based access",
       "category": "Access",
       "purpose": "Staff sign in to the production tool and receive only the actions allowed by their server-verified role.",
-      "workflow": { "name": "Sign in, act, and sign out", "roles": ["operator", "manager", "administrator"] },
-      "decision": {
-        "state": "approved", "releaseScope": "current",
-        "rationale": "V2 uses fresh V2-owned credentials and verified server identity; V1 credentials, sessions, and reset tokens are not transferred.",
-        "approvedBehavior": ["Authorization derives from verified server identity, not browser-supplied actor or facility values.", "V2 sessions are separate from V1 sessions."],
-        "unresolvedOwnerDecisions": ["Any future account/role transfer needs an explicit mapping and separate rehearsal approval."]
+      "workflow": {
+        "name": "Sign in, act, and sign out",
+        "roles": [
+          "operator",
+          "manager",
+          "administrator"
+        ]
       },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 sign-in, session handling, and capability checks exist; full security certification is not claimed." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "V2-owned authentication and server-derived permissions." }, { "reference": "v1-v2", "claim": "V1 auth and role implementation is only partially verified by focused source/tests." }, { "reference": "v1-manager-bundle", "claim": "A compiled V1 staff-management surface survives." }],
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "V2 uses fresh V2-owned credentials and verified server identity; V1 credentials, sessions, and reset tokens are not transferred.",
+        "approvedBehavior": [
+          "Authorization derives from verified server identity, not browser-supplied actor or facility values.",
+          "V2 sessions are separate from V1 sessions."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Any future account/role transfer needs an explicit mapping and separate rehearsal approval."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 sign-in, session handling, and capability checks exist; full security certification is not claimed."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "V2-owned authentication and server-derived permissions."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "V1 auth and role implementation is only partially verified by focused source/tests."
+        }
+      ],
       "dependencies": [],
-      "acceptanceChecks": [{ "id": "auth-role-gate", "criterion": "A staff session can use permitted routes while unauthorized roles are denied server-side." }, { "id": "auth-fresh-session", "criterion": "A V2 session does not reuse V1 session material." }],
-      "verificationEvidence": [{ "checkId": "auth-role-gate", "reference": "auth-test", "outcome": "PASS", "detail": "V2 authentication API tests cover sign-in/session behavior; route authorization is additionally bounded in the handoff." }, { "checkId": "auth-fresh-session", "reference": "handoff", "outcome": "PASS", "detail": "Handoff records V2-owned sign-in and no V1 credential/session transfer; no cutover was run." }]
+      "acceptanceChecks": [
+        {
+          "id": "auth-role-gate",
+          "criterion": "A staff session can use permitted routes while unauthorized roles are denied server-side."
+        },
+        {
+          "id": "auth-fresh-session",
+          "criterion": "A V2 session does not reuse V1 session material."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "auth-role-gate",
+          "reference": "auth-test",
+          "outcome": "PASS",
+          "detail": "V2 authentication API tests cover sign-in/session behavior; route authorization is additionally bounded in the handoff."
+        },
+        {
+          "checkId": "auth-fresh-session",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "Handoff records V2-owned sign-in and no V1 credential/session transfer; no cutover was run."
+        }
+      ]
     },
     {
       "id": "CAP-RUN-LIFECYCLE",
       "name": "Canonical production run lifecycle",
       "category": "Production",
       "purpose": "Operators create, start, pause, resume, and complete a run with server-confirmed state.",
-      "workflow": { "name": "Create and control a run", "roles": ["operator", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Run control is an explicit V2 first-release outcome.", "approvedBehavior": ["The server owns canonical lifecycle state, revisions, receipts, and timestamps.", "A retry of an accepted command does not duplicate its effect."], "unresolvedOwnerDecisions": [] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 server-owned lifecycle and command services are implemented; broad floor certification remains separate." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "V2 lifecycle and atomic command boundary." }, { "reference": "v1-v2", "claim": "V1 lifecycle source and focused tests provide bounded historical evidence." }, { "reference": "v1-run-bundle", "claim": "Compiled V1 live-run artifact survives." }],
-      "dependencies": ["CAP-IDENTITY-ROLES"],
-      "acceptanceChecks": [{ "id": "run-transition", "criterion": "Allowed lifecycle transitions persist canonical state and reject stale revisions." }, { "id": "run-retry", "criterion": "Exact retries return the prior outcome without a second transition." }],
-      "verificationEvidence": [{ "checkId": "run-transition", "reference": "run-test", "outcome": "PASS", "detail": "The V2 lifecycle unit suite covers transitions and invalid/stale commands." }, { "checkId": "run-retry", "reference": "handoff", "outcome": "PASS", "detail": "Disposable PostgreSQL and API evidence is recorded in the V2 handoff; not production evidence." }]
+      "workflow": {
+        "name": "Create and control a run",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Run control is an explicit V2 first-release outcome.",
+        "approvedBehavior": [
+          "The server owns canonical lifecycle state, revisions, receipts, and timestamps.",
+          "A retry of an accepted command does not duplicate its effect."
+        ],
+        "unresolvedOwnerDecisions": []
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 server-owned lifecycle and command services are implemented; broad floor certification remains separate."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "V2 lifecycle and atomic command boundary."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "V1 lifecycle source and focused tests provide bounded historical evidence."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "run-transition",
+          "criterion": "Allowed lifecycle transitions persist canonical state and reject stale revisions."
+        },
+        {
+          "id": "run-retry",
+          "criterion": "Exact retries return the prior outcome without a second transition."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "run-transition",
+          "reference": "run-test",
+          "outcome": "PASS",
+          "detail": "The V2 lifecycle unit suite covers transitions and invalid/stale commands."
+        },
+        {
+          "checkId": "run-retry",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "Disposable PostgreSQL and API evidence is recorded in the V2 handoff; not production evidence."
+        }
+      ]
     },
     {
       "id": "CAP-PRODUCTION-STATIONS",
       "name": "Production station workflows",
       "category": "Production",
       "purpose": "Operators record production progress for the approved line and finishing stations.",
-      "workflow": { "name": "Work through the production line", "roles": ["operator", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Every production station is included in the V2 first usable release.", "approvedBehavior": ["Station changes are validated against canonical run revisions.", "Station-specific calculations and units must remain distinguishable."], "unresolvedOwnerDecisions": ["Owner-approved floor examples remain needed for operational calculation verification."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 includes Line, Dough, Cheese, Pepperoni, Sauce, Frontline, and Packaging workflows; physical device/floor evidence is not claimed." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "Seven V2 station workflows and server-confirmed updates." }, { "reference": "v1-v2", "claim": "V1 station-specific source and selected tests were inspected, with coverage limits." }, { "reference": "v1-station-plan", "claim": "Archived historical task snapshot describes station scope; cancelled proposal is not the source of current approval." }],
-      "dependencies": ["CAP-RUN-LIFECYCLE"],
-      "acceptanceChecks": [{ "id": "station-canonical-write", "criterion": "Station edits and progress are validated and reflected in the canonical run." }, { "id": "station-floor-math", "criterion": "Station values agree with owner-approved floor examples." }],
-      "verificationEvidence": [{ "checkId": "station-canonical-write", "reference": "station-test", "outcome": "PASS", "detail": "V2 station workflow tests cover server-facing calculations/state contracts." }, { "checkId": "station-floor-math", "reference": "handoff", "outcome": "NOT RUN", "detail": "Handoff lists owner-approved operational verification and physical devices as outstanding." }]
+      "workflow": {
+        "name": "Work through the production line",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Every production station is included in the V2 first usable release.",
+        "approvedBehavior": [
+          "Station changes are validated against canonical run revisions.",
+          "Station-specific calculations and units must remain distinguishable."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Owner-approved floor examples remain needed for operational calculation verification."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 includes Line, Dough, Cheese, Pepperoni, Sauce, Frontline, and Packaging workflows; physical device/floor evidence is not claimed."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "Seven V2 station workflows and server-confirmed updates."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "V1 station-specific source and selected tests were inspected, with coverage limits."
+        },
+        {
+          "reference": "v1-station-plan",
+          "claim": "Archived historical task snapshot describes station scope; cancelled proposal is not the source of current approval."
+        }
+      ],
+      "dependencies": [
+        "CAP-RUN-LIFECYCLE"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "station-canonical-write",
+          "criterion": "Station edits and progress are validated and reflected in the canonical run."
+        },
+        {
+          "id": "station-floor-math",
+          "criterion": "Station values agree with owner-approved floor examples."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "station-canonical-write",
+          "reference": "station-test",
+          "outcome": "PASS",
+          "detail": "V2 station workflow tests cover server-facing calculations/state contracts."
+        },
+        {
+          "checkId": "station-floor-math",
+          "reference": "handoff",
+          "outcome": "NOT RUN",
+          "detail": "Handoff lists owner-approved operational verification and physical devices as outstanding."
+        }
+      ]
     },
     {
       "id": "CAP-AUTOMATIC-TRACKING",
       "name": "Automatic station progress",
       "category": "Production",
       "purpose": "Due station counters advance without requiring an open browser, while pause, retry, and worker recovery remain safe.",
-      "workflow": { "name": "Advance station progress in the background", "roles": ["operator", "manager", "system worker"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Automatic tracking is an explicit first-release behavior and the server owns progress.", "approvedBehavior": ["A leased server worker advances due progress; browsers do not submit progress ticks.", "Retries and worker restarts cannot duplicate accepted progress."], "unresolvedOwnerDecisions": ["Production supervision and measured load remain unverified."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 worker, leases, pause-aware tracking, and restart checks exist; production operation is not proven." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "Server worker and lease/restart evidence." }, { "reference": "v1-v2", "claim": "V1 tick/coordination tests provide limited contract evidence." }],
-      "dependencies": ["CAP-PRODUCTION-STATIONS"],
-      "acceptanceChecks": [{ "id": "track-due-once", "criterion": "A due station action advances once and respects pause and target limits." }, { "id": "worker-recovery", "criterion": "Worker restart or stale lease does not duplicate committed progress." }],
-      "verificationEvidence": [{ "checkId": "track-due-once", "reference": "worker-test", "outcome": "PASS", "detail": "V2 worker tests cover due-action coordination and recovery contracts." }, { "checkId": "worker-recovery", "reference": "handoff", "outcome": "PASS", "detail": "Restart recovery was exercised in development; production supervision remains not run." }]
+      "workflow": {
+        "name": "Advance station progress in the background",
+        "roles": [
+          "operator",
+          "manager",
+          "system worker"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Automatic tracking is an explicit first-release behavior and the server owns progress.",
+        "approvedBehavior": [
+          "A leased server worker advances due progress; browsers do not submit progress ticks.",
+          "Retries and worker restarts cannot duplicate accepted progress."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Production supervision and measured load remain unverified."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 worker, leases, pause-aware tracking, and restart checks exist; production operation is not proven."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "Server worker and lease/restart evidence."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "V1 tick/coordination tests provide limited contract evidence."
+        }
+      ],
+      "dependencies": [
+        "CAP-PRODUCTION-STATIONS"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "track-due-once",
+          "criterion": "A due station action advances once and respects pause and target limits."
+        },
+        {
+          "id": "worker-recovery",
+          "criterion": "Worker restart or stale lease does not duplicate committed progress."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "track-due-once",
+          "reference": "worker-test",
+          "outcome": "PASS",
+          "detail": "V2 worker tests cover due-action coordination and recovery contracts."
+        },
+        {
+          "checkId": "worker-recovery",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "Restart recovery was exercised in development; production supervision remains not run."
+        }
+      ]
     },
     {
       "id": "CAP-MULTIDEVICE-OFFLINE",
       "name": "Shared runs and read-only offline access",
       "category": "Reliability",
       "purpose": "Multiple signed-in devices share the same run, and disconnected users can inspect cached state without writing.",
-      "workflow": { "name": "Share, disconnect, and reconnect", "roles": ["operator", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Multi-device operation and read-only offline access are explicit V2 first-release requirements.", "approvedBehavior": ["The server remains canonical across devices.", "Disconnected state is read-only and reconnect adopts confirmed server state."], "unresolvedOwnerDecisions": ["Physical Android/iOS wake and device handoff remain unverified."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 emulated-browser tests cover offline reload, reconnect, and two-session conflicts; physical devices remain unverified." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "V2 cached read-only offline behavior and browser checks." }, { "reference": "v1-v2", "claim": "V1 sync source and tests are bounded; physical behavior is not inferred." }, { "reference": "validation-plan", "claim": "Accepted operational verification plan separates emulation from physical devices." }],
-      "dependencies": ["CAP-RUN-LIFECYCLE"],
-      "acceptanceChecks": [{ "id": "peer-convergence", "criterion": "Two signed-in sessions converge on the canonical run after accepted changes." }, { "id": "offline-read-only", "criterion": "Offline cached views clearly remain read-only until canonical reconnect." }],
-      "verificationEvidence": [{ "checkId": "peer-convergence", "reference": "handoff", "outcome": "PASS", "detail": "Two-session emulated Chromium coverage is recorded; simultaneous physical devices are not claimed." }, { "checkId": "offline-read-only", "reference": "handoff", "outcome": "PASS", "detail": "Offline reload and reconnect behavior are covered in emulated Chromium." }]
+      "workflow": {
+        "name": "Share, disconnect, and reconnect",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Multi-device operation and read-only offline access are explicit V2 first-release requirements.",
+        "approvedBehavior": [
+          "The server remains canonical across devices.",
+          "Disconnected state is read-only and reconnect adopts confirmed server state."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Physical Android/iOS wake and device handoff remain unverified."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 emulated-browser tests cover offline reload, reconnect, and two-session conflicts; physical devices remain unverified."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "V2 cached read-only offline behavior and browser checks."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "V1 sync source and tests are bounded; physical behavior is not inferred."
+        }
+      ],
+      "dependencies": [
+        "CAP-RUN-LIFECYCLE"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "peer-convergence",
+          "criterion": "Two signed-in sessions converge on the canonical run after accepted changes."
+        },
+        {
+          "id": "offline-read-only",
+          "criterion": "Offline cached views clearly remain read-only until canonical reconnect."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "peer-convergence",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "Two-session emulated Chromium coverage is recorded; simultaneous physical devices are not claimed."
+        },
+        {
+          "checkId": "offline-read-only",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "Offline reload and reconnect behavior are covered in emulated Chromium."
+        }
+      ]
     },
     {
       "id": "CAP-INVENTORY-LEDGER",
       "name": "Warehouse inventory and opening counts",
       "category": "Inventory",
       "purpose": "Managers track facility inventory across warehouses through reviewed opening counts and an auditable movement ledger.",
-      "workflow": { "name": "Count, transfer, and reconcile stock", "roles": ["warehouse", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Full inventory and a fresh physical opening count are approved V2 outcomes; V1 balances/history are excluded.", "approvedBehavior": ["V2 stock starts from a reviewed physical count.", "Stock changes are represented by server-owned movements and do not create negative balances."], "unresolvedOwnerDecisions": ["Actual cutover count and any new waste/return policy need separate owner approval."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 ledger, multi-warehouse stock, opening counts, and run linkage exist; full manager journey and physical quantities remain unverified." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "V2 warehouse ledger and opening-count boundary." }, { "reference": "v1-v2", "claim": "V1 accounting code and math have bounded tests, not physical-count certification." }, { "reference": "v1-inventory-plan", "claim": "Historical V1 inventory plan, not current authorization." }, { "reference": "inventory-plan", "claim": "Accepted V2 parity work covers verified gaps." }],
-      "dependencies": ["CAP-IDENTITY-ROLES"],
-      "acceptanceChecks": [{ "id": "inventory-ledger-balance", "criterion": "Accepted stock movements and on-hand balances reconcile atomically." }, { "id": "inventory-opening-count", "criterion": "Movement is gated until each warehouse has an applied opening count." }],
-      "verificationEvidence": [{ "checkId": "inventory-ledger-balance", "reference": "inventory-test", "outcome": "PASS", "detail": "Disposable PostgreSQL checks cover run consumption, exact-once behavior, and nonnegative stock." }, { "checkId": "inventory-opening-count", "reference": "handoff", "outcome": "PASS", "detail": "Opening-count gating is implemented and tested on disposable data; no real opening count was performed." }]
+      "workflow": {
+        "name": "Count, transfer, and reconcile stock",
+        "roles": [
+          "warehouse",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Full inventory and a fresh physical opening count are approved V2 outcomes; V1 balances/history are excluded.",
+        "approvedBehavior": [
+          "V2 stock starts from a reviewed physical count.",
+          "Stock changes are represented by server-owned movements and do not create negative balances."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Actual cutover count and any new waste/return policy need separate owner approval."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 ledger, multi-warehouse stock, opening counts, and run linkage exist; full manager journey and physical quantities remain unverified."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "V2 warehouse ledger and opening-count boundary."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "V1 accounting code and math have bounded tests, not physical-count certification."
+        },
+        {
+          "reference": "v1-inventory-plan",
+          "claim": "Historical V1 inventory plan, not current authorization."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "inventory-ledger-balance",
+          "criterion": "Accepted stock movements and on-hand balances reconcile atomically."
+        },
+        {
+          "id": "inventory-opening-count",
+          "criterion": "Movement is gated until each warehouse has an applied opening count."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "inventory-ledger-balance",
+          "reference": "inventory-test",
+          "outcome": "PASS",
+          "detail": "Disposable PostgreSQL checks cover run consumption, exact-once behavior, and nonnegative stock."
+        },
+        {
+          "checkId": "inventory-opening-count",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "Opening-count gating is implemented and tested on disposable data; no real opening count was performed."
+        }
+      ]
     },
     {
       "id": "CAP-PREP-MIX-STOCK",
       "name": "Preparation and premix inventory",
       "category": "Inventory",
       "purpose": "Staff prepare mixes and distinguish prepared stock from raw ingredients and production demand.",
-      "workflow": { "name": "Prepare and consume mixes", "roles": ["operator", "warehouse", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Preparation and premix accounting are included in accepted V2 inventory parity work.", "approvedBehavior": ["Prepared and raw inventory remain distinct.", "Unknown quantities and units remain visible rather than inferred."], "unresolvedOwnerDecisions": ["Any waste, spoilage, or return rule needs explicit approval."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "V1 prep semantics are documented; remaining complete V2 operational parity is assigned work." },
-      "sourceEvidence": [{ "reference": "v1-inventory-plan", "claim": "Historical inventory/preparation planning." }, { "reference": "v1-v2", "claim": "V1 prepared-mix handoff and inventory contracts." }, { "reference": "inventory-plan", "claim": "Accepted V2 task defines prepared/raw and movement boundaries." }],
-      "dependencies": ["CAP-INVENTORY-LEDGER"],
-      "acceptanceChecks": [{ "id": "prep-stock-distinct", "criterion": "Preparation movements preserve separate raw and prepared stock balances." }, { "id": "prep-repeat-safe", "criterion": "A repeated preparation command does not duplicate stock changes." }],
-      "verificationEvidence": [{ "checkId": "prep-stock-distinct", "reference": "inventory-plan", "outcome": "NOT RUN", "detail": "The accepted parity work owns complete operational verification." }]
+      "workflow": {
+        "name": "Prepare and consume mixes",
+        "roles": [
+          "operator",
+          "warehouse",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Preparation and premix accounting are included in accepted V2 inventory parity work.",
+        "approvedBehavior": [
+          "Prepared and raw inventory remain distinct.",
+          "Unknown quantities and units remain visible rather than inferred."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Any waste, spoilage, or return rule needs explicit approval."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "V1 prep semantics are documented; remaining complete V2 operational parity is assigned work."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "v1-inventory-plan",
+          "claim": "Historical inventory/preparation planning."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "V1 prepared-mix handoff and inventory contracts."
+        }
+      ],
+      "dependencies": [
+        "CAP-INVENTORY-LEDGER"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "prep-stock-distinct",
+          "criterion": "Preparation movements preserve separate raw and prepared stock balances."
+        },
+        {
+          "id": "prep-repeat-safe",
+          "criterion": "A repeated preparation command does not duplicate stock changes."
+        }
+      ],
+      "verificationEvidence": []
     },
     {
       "id": "CAP-FREEZER-CYCLE-COUNTS",
       "name": "Freezer pulls and cycle counts",
       "category": "Inventory",
       "purpose": "Managers define count/pull needs and staff can identify due inventory actions with recorded outcomes.",
-      "workflow": { "name": "Plan freezer pulls and count inventory", "roles": ["warehouse", "operator", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted V2 inventory parity work explicitly owns freezer pulls and cycle-count gaps.", "approvedBehavior": ["Due status must be traceable to saved configuration and operational dates.", "Count discrepancies are recorded, not silently adjusted."], "unresolvedOwnerDecisions": ["Any new timing, waste, or return policy remains owner-controlled."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "V1 configuration/reminder and cycle-count surfaces are documented; V2 parity remains assigned work." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "V1 freezer-pull and cycle-count workflows and their gaps." }, { "reference": "inventory-plan", "claim": "Accepted V2 freezer-pull and cycle-count scope." }],
-      "dependencies": ["CAP-INVENTORY-LEDGER"],
-      "acceptanceChecks": [{ "id": "freezer-pull-due", "criterion": "A configured pull becomes visible when due and does not duplicate after refresh." }, { "id": "cycle-count-ledger", "criterion": "A reviewed cycle count creates a traceable stock movement." }],
-      "verificationEvidence": [{ "checkId": "freezer-pull-due", "reference": "inventory-plan", "outcome": "NOT RUN", "detail": "V2 operational parity journey is still assigned." }]
+      "workflow": {
+        "name": "Plan freezer pulls and count inventory",
+        "roles": [
+          "warehouse",
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted V2 inventory parity work explicitly owns freezer pulls and cycle-count gaps.",
+        "approvedBehavior": [
+          "Due status must be traceable to saved configuration and operational dates.",
+          "Count discrepancies are recorded, not silently adjusted."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Any new timing, waste, or return policy remains owner-controlled."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "V1 configuration/reminder and cycle-count surfaces are documented; V2 parity remains assigned work."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "V1 freezer-pull and cycle-count workflows and their gaps."
+        }
+      ],
+      "dependencies": [
+        "CAP-INVENTORY-LEDGER"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "freezer-pull-due",
+          "criterion": "A configured pull becomes visible when due and does not duplicate after refresh."
+        },
+        {
+          "id": "cycle-count-ledger",
+          "criterion": "A reviewed cycle count creates a traceable stock movement."
+        }
+      ],
+      "verificationEvidence": []
     },
     {
       "id": "CAP-RUN-CONSUMPTION",
       "name": "Run consumption and inventory receipt",
       "category": "Inventory",
       "purpose": "Completing a run records actual material use against the selected warehouse and preserves a receipt.",
-      "workflow": { "name": "Complete a run and review inventory use", "roles": ["operator", "manager", "warehouse"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Run-linked inventory accounting and exact-once completion are explicit V2 behavior.", "approvedBehavior": ["Run completion and stock movements commit atomically.", "Shortages are recorded without negative on-hand stock or blocking completion."], "unresolvedOwnerDecisions": [] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 freezes setup/warehouse on runs and records exact-once inventory deductions and shortage receipts." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "Frozen run plan and atomic inventory receipt." }, { "reference": "v1-v2", "claim": "V1 run-consumption contracts and inventory-math test evidence." }],
-      "dependencies": ["CAP-RUN-LIFECYCLE", "CAP-INVENTORY-LEDGER"],
-      "acceptanceChecks": [{ "id": "consumption-atomic", "criterion": "Accepted run completion and inventory movements commit together." }, { "id": "consumption-retry", "criterion": "Retrying completion does not deduct stock twice." }],
-      "verificationEvidence": [{ "checkId": "consumption-atomic", "reference": "inventory-test", "outcome": "PASS", "detail": "Disposable PostgreSQL checks cover frozen plans, demand, shortages, and nonnegative balances." }, { "checkId": "consumption-retry", "reference": "handoff", "outcome": "PASS", "detail": "Exact-once completion is recorded in V2 disposable-database tests." }]
+      "workflow": {
+        "name": "Complete a run and review inventory use",
+        "roles": [
+          "operator",
+          "manager",
+          "warehouse"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Run-linked inventory accounting and exact-once completion are explicit V2 behavior.",
+        "approvedBehavior": [
+          "Run completion and stock movements commit atomically.",
+          "Shortages are recorded without negative on-hand stock or blocking completion."
+        ],
+        "unresolvedOwnerDecisions": []
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 freezes setup/warehouse on runs and records exact-once inventory deductions and shortage receipts."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "Frozen run plan and atomic inventory receipt."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "V1 run-consumption contracts and inventory-math test evidence."
+        }
+      ],
+      "dependencies": [
+        "CAP-RUN-LIFECYCLE",
+        "CAP-INVENTORY-LEDGER"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "consumption-atomic",
+          "criterion": "Accepted run completion and inventory movements commit together."
+        },
+        {
+          "id": "consumption-retry",
+          "criterion": "Retrying completion does not deduct stock twice."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "consumption-atomic",
+          "reference": "inventory-test",
+          "outcome": "PASS",
+          "detail": "Disposable PostgreSQL checks cover frozen plans, demand, shortages, and nonnegative balances."
+        },
+        {
+          "checkId": "consumption-retry",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "Exact-once completion is recorded in V2 disposable-database tests."
+        }
+      ]
     },
     {
       "id": "CAP-SUBSTITUTIONS",
       "name": "Run substitutions",
       "category": "Inventory",
       "purpose": "Authorized staff record a run-specific substitution and inventory use follows the substituted ingredient identity.",
-      "workflow": { "name": "Record and use a substitution", "roles": ["operator", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Substitution accounting and operator visibility have accepted V2 task scope.", "approvedBehavior": ["Substitutions remain attached to the run and affect inventory consumption.", "A substitution does not imply allergen clearance or product safety."], "unresolvedOwnerDecisions": ["Any safety or allergen interpretation remains subject to separate qualified policy approval."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "Historical substitution behavior is documented; V2 accounting and visibility parity work is active." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "V1 substitution and allergen badge handoff." }, { "reference": "inventory-plan", "claim": "Accepted substitution accounting scope." }, { "reference": "substitution-plan", "claim": "Accepted operator visibility and non-safety-claim boundary." }],
-      "dependencies": ["CAP-INVENTORY-LEDGER", "CAP-ALLERGEN-EVIDENCE"],
-      "acceptanceChecks": [{ "id": "substitution-consumption", "criterion": "Run receipt consumes the selected substituted inventory identity." }, { "id": "substitution-visible", "criterion": "Run and affected station show accessible substitution status." }],
-      "verificationEvidence": [{ "checkId": "substitution-consumption", "reference": "inventory-plan", "outcome": "NOT RUN", "detail": "Accepted V2 inventory parity work owns accounting verification." }]
+      "workflow": {
+        "name": "Record and use a substitution",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Substitution accounting and operator visibility have accepted V2 task scope.",
+        "approvedBehavior": [
+          "Substitutions remain attached to the run and affect inventory consumption.",
+          "A substitution does not imply allergen clearance or product safety."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Any safety or allergen interpretation remains subject to separate qualified policy approval."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "Historical substitution behavior is documented; V2 accounting and visibility parity work is active."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "V1 substitution and allergen badge handoff."
+        }
+      ],
+      "dependencies": [
+        "CAP-INVENTORY-LEDGER",
+        "CAP-ALLERGEN-EVIDENCE"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "substitution-consumption",
+          "criterion": "Run receipt consumes the selected substituted inventory identity."
+        },
+        {
+          "id": "substitution-visible",
+          "criterion": "Run and affected station show accessible substitution status."
+        }
+      ],
+      "verificationEvidence": []
     },
     {
       "id": "CAP-FINISHED-GOODS",
       "name": "Finished-case corrections",
       "category": "Inventory",
       "purpose": "Authorized staff record reviewed changes to finished-case quantities with attributed history.",
-      "workflow": { "name": "Correct finished-case records", "roles": ["warehouse", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted V2 parity work covers finished-case adjustments; exact correction policy remains explicit.", "approvedBehavior": ["Corrections are attributable and do not silently rewrite prior movements."], "unresolvedOwnerDecisions": ["Correction/return semantics require the specific accepted task decision before implementing new cases."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "V1 adjustments are evidenced in research; accepted V2 workflow is in progress." },
-      "sourceEvidence": [{ "reference": "v1-v2", "claim": "V1 schema/source includes finished-case adjustments." }, { "reference": "inventory-plan", "claim": "Accepted V2 parity scope and policy boundary." }],
-      "dependencies": ["CAP-INVENTORY-LEDGER"],
-      "acceptanceChecks": [{ "id": "finished-correction-audit", "criterion": "A correction records actor, reason, time, and a new ledger outcome." }],
-      "verificationEvidence": [{ "checkId": "finished-correction-audit", "reference": "inventory-plan", "outcome": "NOT RUN", "detail": "Complete V2 correction workflow verification remains with the accepted task." }]
+      "workflow": {
+        "name": "Correct finished-case records",
+        "roles": [
+          "warehouse",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted V2 parity work covers finished-case adjustments; exact correction policy remains explicit.",
+        "approvedBehavior": [
+          "Corrections are attributable and do not silently rewrite prior movements."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Correction/return semantics require the specific accepted task decision before implementing new cases."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "V1 adjustments are evidenced in research; accepted V2 workflow is in progress."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "v1-v2",
+          "claim": "V1 schema/source includes finished-case adjustments."
+        }
+      ],
+      "dependencies": [
+        "CAP-INVENTORY-LEDGER"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "finished-correction-audit",
+          "criterion": "A correction records actor, reason, time, and a new ledger outcome."
+        }
+      ],
+      "verificationEvidence": []
     },
     {
       "id": "CAP-SETUP-CATALOG",
       "name": "Reviewed production setup catalog",
       "category": "Setup",
       "purpose": "Managers maintain facility production setup and master data through validated, reviewable imports.",
-      "workflow": { "name": "Review and apply setup data", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Approved setup/master-data preparation is in V2 scope; row-level source transfer still requires separate authorization.", "approvedBehavior": ["Imported mappings remain reviewable and unknown links are not guessed.", "V2 setup data remains isolated from V1 schemas and production records."], "unresolvedOwnerDecisions": ["Actual row-level cutover requires approved mappings and separate source/destination authorization."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 has manager-only setup catalog families, templates, staging, review, Apply, history, and guarded Undo." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "V2 setup catalog and manager import lifecycle." }, { "reference": "source-catalog", "claim": "Customer-source inventory was excluded from portability package." }, { "reference": "setup-test", "claim": "V2 setup parser and catalog checks." }],
-      "dependencies": ["CAP-IDENTITY-ROLES"],
-      "acceptanceChecks": [{ "id": "setup-review-apply", "criterion": "Manager can stage, review, apply, and inspect setup import history." }, { "id": "setup-no-guess", "criterion": "Unknown identities and unsupported fields remain unresolved rather than guessed." }],
-      "verificationEvidence": [{ "checkId": "setup-review-apply", "reference": "setup-test", "outcome": "PASS", "detail": "V2 setup catalog parser tests cover validated family templates and values." }, { "checkId": "setup-no-guess", "reference": "handoff", "outcome": "PASS", "detail": "Manager flow leaves unscoped flavors and unresolved ingredient links unlinked." }]
+      "workflow": {
+        "name": "Review and apply setup data",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Approved setup/master-data preparation is in V2 scope; row-level source transfer still requires separate authorization.",
+        "approvedBehavior": [
+          "Imported mappings remain reviewable and unknown links are not guessed.",
+          "V2 setup data remains isolated from V1 schemas and production records."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Actual row-level cutover requires approved mappings and separate source/destination authorization."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 has manager-only setup catalog families, templates, staging, review, Apply, history, and guarded Undo."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "V2 setup catalog and manager import lifecycle."
+        },
+        {
+          "reference": "source-catalog",
+          "claim": "Customer-source inventory was excluded from portability package."
+        },
+        {
+          "reference": "setup-test",
+          "claim": "V2 setup parser and catalog checks."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "setup-review-apply",
+          "criterion": "Manager can stage, review, apply, and inspect setup import history."
+        },
+        {
+          "id": "setup-no-guess",
+          "criterion": "Unknown identities and unsupported fields remain unresolved rather than guessed."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "setup-review-apply",
+          "reference": "setup-test",
+          "outcome": "PASS",
+          "detail": "V2 setup catalog parser tests cover validated family templates and values."
+        },
+        {
+          "checkId": "setup-no-guess",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "Manager flow leaves unscoped flavors and unresolved ingredient links unlinked."
+        }
+      ]
     },
     {
       "id": "CAP-IMPORT-SPEC",
       "name": "Specification workbook import",
       "category": "Imports",
       "purpose": "Managers review supported product specification tables and correct unresolved recipe or setup mappings.",
-      "workflow": { "name": "Review and apply product specifications", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The accepted V2 source-family adapter work includes bounded spec-sheet imports.", "approvedBehavior": ["Only the documented Brand/Flavor table layout is applied.", "Unsupported populated columns, formulas, and ambiguous links remain unresolved.", "Uploaded workbook bytes are not retained."], "unresolvedOwnerDecisions": ["Broader AI layouts, photographs, and OCR require separate approval."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 supports a bounded deterministic spec-sheet subset; it does not claim full fidelity to all V1 workbooks." },
-      "sourceEvidence": [{ "reference": "import-matrix", "claim": "Supported spec-sheet layout, values, and unresolved cases." }, { "reference": "v1-import-plan", "claim": "Historical spec import and review boundaries." }, { "reference": "import-plan", "claim": "Accepted V2 source-family implementation work." }],
-      "dependencies": ["CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "spec-import-layout", "criterion": "The supported table maps its explicitly named fields, while unsupported fields remain review-only." }],
-      "verificationEvidence": [{ "checkId": "spec-import-layout", "reference": "source-import-test", "outcome": "PASS", "detail": "V2 deterministic parser tests use synthetic source data and bounded layouts." }]
+      "workflow": {
+        "name": "Review and apply product specifications",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The accepted V2 source-family adapter work includes bounded spec-sheet imports.",
+        "approvedBehavior": [
+          "Only the documented Brand/Flavor table layout is applied.",
+          "Unsupported populated columns, formulas, and ambiguous links remain unresolved.",
+          "Uploaded workbook bytes are not retained."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Broader AI layouts, photographs, and OCR require separate approval."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 supports a bounded deterministic spec-sheet subset; it does not claim full fidelity to all V1 workbooks."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "import-matrix",
+          "claim": "Supported spec-sheet layout, values, and unresolved cases."
+        },
+        {
+          "reference": "v1-import-plan",
+          "claim": "Historical spec import and review boundaries."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "spec-import-layout",
+          "criterion": "The supported table maps its explicitly named fields, while unsupported fields remain review-only."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "spec-import-layout",
+          "reference": "source-import-test",
+          "outcome": "PASS",
+          "detail": "V2 deterministic parser tests use synthetic source data and bounded layouts."
+        }
+      ]
     },
     {
       "id": "CAP-IMPORT-PREMIX",
       "name": "Premix workbook import",
       "category": "Imports",
       "purpose": "Managers import premix formulas while keeping per-pizza ounces and per-batch pounds distinct.",
-      "workflow": { "name": "Review and apply premix formulas", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The accepted V2 source-family adapter work includes premix imports.", "approvedBehavior": ["Source quantity bases remain distinct and blank amounts remain unknown.", "Formula quantities and duplicate or ambiguous targets require review.", "Uploaded workbook bytes are not retained."], "unresolvedOwnerDecisions": ["Brand, flavor, enabled, and prep values are not inferred from workbook omissions."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 supports a bounded deterministic premix layout; complete real-source fidelity is not claimed." },
-      "sourceEvidence": [{ "reference": "import-matrix", "claim": "Premix block structure, quantity bases, and unresolved cases." }, { "reference": "v1-import-plan", "claim": "Historical premix Apply and recovery boundary." }, { "reference": "import-plan", "claim": "Accepted V2 source-family implementation work." }],
-      "dependencies": ["CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "premix-units", "criterion": "Per-pizza ounces and per-batch pounds persist independently; unknown amounts are not converted or guessed." }],
-      "verificationEvidence": [{ "checkId": "premix-units", "reference": "source-import-test", "outcome": "PASS", "detail": "V2 deterministic parser tests cover supported quantity fields with synthetic inputs." }]
+      "workflow": {
+        "name": "Review and apply premix formulas",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The accepted V2 source-family adapter work includes premix imports.",
+        "approvedBehavior": [
+          "Source quantity bases remain distinct and blank amounts remain unknown.",
+          "Formula quantities and duplicate or ambiguous targets require review.",
+          "Uploaded workbook bytes are not retained."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Brand, flavor, enabled, and prep values are not inferred from workbook omissions."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 supports a bounded deterministic premix layout; complete real-source fidelity is not claimed."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "import-matrix",
+          "claim": "Premix block structure, quantity bases, and unresolved cases."
+        },
+        {
+          "reference": "v1-import-plan",
+          "claim": "Historical premix Apply and recovery boundary."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "premix-units",
+          "criterion": "Per-pizza ounces and per-batch pounds persist independently; unknown amounts are not converted or guessed."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "premix-units",
+          "reference": "source-import-test",
+          "outcome": "PASS",
+          "detail": "V2 deterministic parser tests cover supported quantity fields with synthetic inputs."
+        }
+      ]
     },
     {
       "id": "CAP-IMPORT-CHEESE",
       "name": "Cheese mix specification import",
       "category": "Imports",
       "purpose": "Managers review cheese recipe components and explicitly map them to supported applicator slots.",
-      "workflow": { "name": "Review and link cheese specifications", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The accepted V2 source-family adapter work includes cheese mix specifications.", "approvedBehavior": ["Only explicit brand/flavor and applicator assignments are linked.", "Missing/conflicting slots and formula amounts remain unresolved.", "Uploaded workbook bytes are not retained."], "unresolvedOwnerDecisions": ["V2 does not create a separate cheese-recipe catalog in this flow."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 supports bounded assignment and slot layouts; ambiguous rows require manager correction." },
-      "sourceEvidence": [{ "reference": "import-matrix", "claim": "Cheese tab, recipe block, and explicit applicator slot contract." }, { "reference": "v1-import-plan", "claim": "Historical cheese importer and guarded recovery semantics." }, { "reference": "import-plan", "claim": "Accepted V2 source-family implementation work." }],
-      "dependencies": ["CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "cheese-slot-explicit", "criterion": "A candidate cannot be applied without a valid explicit cheese applicator target." }],
-      "verificationEvidence": [{ "checkId": "cheese-slot-explicit", "reference": "source-import-test", "outcome": "PASS", "detail": "V2 source import tests use synthetic fixtures and require explicit targets." }]
+      "workflow": {
+        "name": "Review and link cheese specifications",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The accepted V2 source-family adapter work includes cheese mix specifications.",
+        "approvedBehavior": [
+          "Only explicit brand/flavor and applicator assignments are linked.",
+          "Missing/conflicting slots and formula amounts remain unresolved.",
+          "Uploaded workbook bytes are not retained."
+        ],
+        "unresolvedOwnerDecisions": [
+          "V2 does not create a separate cheese-recipe catalog in this flow."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 supports bounded assignment and slot layouts; ambiguous rows require manager correction."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "import-matrix",
+          "claim": "Cheese tab, recipe block, and explicit applicator slot contract."
+        },
+        {
+          "reference": "v1-import-plan",
+          "claim": "Historical cheese importer and guarded recovery semantics."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "cheese-slot-explicit",
+          "criterion": "A candidate cannot be applied without a valid explicit cheese applicator target."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "cheese-slot-explicit",
+          "reference": "source-import-test",
+          "outcome": "PASS",
+          "detail": "V2 source import tests use synthetic fixtures and require explicit targets."
+        }
+      ]
     },
     {
       "id": "CAP-IMPORT-SHIPPING",
       "name": "Shipping guide import",
       "category": "Imports",
       "purpose": "Managers review supported shipping-guide packaging values without fuzzy product identity or guessed fields.",
-      "workflow": { "name": "Review packaging guide mappings", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The accepted V2 source-family adapter work includes bounded shipping guides.", "approvedBehavior": ["Supported packaging values retain source meaning.", "Unknown values, formulas, and unsupported columns remain unresolved.", "The existing capacity importer remains separate."], "unresolvedOwnerDecisions": ["Unrecognized packaging codes require explicit correction."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 supports a bounded shipping-guide layout; product labels are not fuzzy-linked." },
-      "sourceEvidence": [{ "reference": "import-matrix", "claim": "Shipping headers, recognized values, and unresolved fields." }, { "reference": "v1-import-plan", "claim": "Historical shipping guide import family." }, { "reference": "import-plan", "claim": "Accepted V2 source-family implementation work." }],
-      "dependencies": ["CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "shipping-unknown", "criterion": "Unsupported shipping values remain unresolved and are not silently mapped." }],
-      "verificationEvidence": [{ "checkId": "shipping-unknown", "reference": "source-import-test", "outcome": "PASS", "detail": "V2 synthetic parser cases preserve unsupported values for review." }]
+      "workflow": {
+        "name": "Review packaging guide mappings",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The accepted V2 source-family adapter work includes bounded shipping guides.",
+        "approvedBehavior": [
+          "Supported packaging values retain source meaning.",
+          "Unknown values, formulas, and unsupported columns remain unresolved.",
+          "The existing capacity importer remains separate."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Unrecognized packaging codes require explicit correction."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 supports a bounded shipping-guide layout; product labels are not fuzzy-linked."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "import-matrix",
+          "claim": "Shipping headers, recognized values, and unresolved fields."
+        },
+        {
+          "reference": "v1-import-plan",
+          "claim": "Historical shipping guide import family."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "shipping-unknown",
+          "criterion": "Unsupported shipping values remain unresolved and are not silently mapped."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "shipping-unknown",
+          "reference": "source-import-test",
+          "outcome": "PASS",
+          "detail": "V2 synthetic parser cases preserve unsupported values for review."
+        }
+      ]
     },
     {
       "id": "CAP-IMPORT-SAUCE",
       "name": "Sauce guide import",
       "category": "Imports",
       "purpose": "Managers review explicit sauce recipe assignments and amounts for named product varieties.",
-      "workflow": { "name": "Review sauce guide assignments", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The accepted V2 source-family adapter work includes bounded sauce guides.", "approvedBehavior": ["Only supported sentence or row layouts and explicit amounts are applied.", "Ambiguous flavor splits, missing amounts, and unsupported DOCX layouts remain unresolved.", "Uploaded source content is not retained."], "unresolvedOwnerDecisions": ["Unknown sauce identities are not guessed or linked fuzzily."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 supports bounded deterministic sauce guide layouts; unsupported layouts remain review-only." },
-      "sourceEvidence": [{ "reference": "import-matrix", "claim": "Supported sauce sentence/paragraph forms and unresolved cases." }, { "reference": "v1-import-plan", "claim": "Historical sauce guide import family." }, { "reference": "import-plan", "claim": "Accepted V2 source-family implementation work." }],
-      "dependencies": ["CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "sauce-guide-explicit", "criterion": "Only explicit positive amounts and unambiguous brand/flavor assignments are applied." }],
-      "verificationEvidence": [{ "checkId": "sauce-guide-explicit", "reference": "source-import-test", "outcome": "PASS", "detail": "V2 source import tests use synthetic deterministic parser fixtures." }]
+      "workflow": {
+        "name": "Review sauce guide assignments",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The accepted V2 source-family adapter work includes bounded sauce guides.",
+        "approvedBehavior": [
+          "Only supported sentence or row layouts and explicit amounts are applied.",
+          "Ambiguous flavor splits, missing amounts, and unsupported DOCX layouts remain unresolved.",
+          "Uploaded source content is not retained."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Unknown sauce identities are not guessed or linked fuzzily."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 supports bounded deterministic sauce guide layouts; unsupported layouts remain review-only."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "import-matrix",
+          "claim": "Supported sauce sentence/paragraph forms and unresolved cases."
+        },
+        {
+          "reference": "v1-import-plan",
+          "claim": "Historical sauce guide import family."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "sauce-guide-explicit",
+          "criterion": "Only explicit positive amounts and unambiguous brand/flavor assignments are applied."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "sauce-guide-explicit",
+          "reference": "source-import-test",
+          "outcome": "PASS",
+          "detail": "V2 source import tests use synthetic deterministic parser fixtures."
+        }
+      ]
     },
     {
       "id": "CAP-IMPORT-DOUGH",
       "name": "Dough guide import",
       "category": "Imports",
       "purpose": "Managers review explicit brand/flavor-to-dough-recipe assignments from supported guide rows.",
-      "workflow": { "name": "Review dough guide assignments", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The accepted V2 source-family adapter work includes bounded dough guides.", "approvedBehavior": ["Only explicit supported row assignments are linked.", "Malformed, formula, duplicate, or ambiguous rows are unresolved or skipped, not guessed.", "Uploaded source content is not retained."], "unresolvedOwnerDecisions": ["No fuzzy brand/flavor link is made."] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 supports deterministic column-A assignment rows; other workbook columns are ignored as documented." },
-      "sourceEvidence": [{ "reference": "import-matrix", "claim": "Dough guide row syntax and supported scope." }, { "reference": "v1-import-plan", "claim": "Historical dough guide import family." }, { "reference": "import-plan", "claim": "Accepted V2 source-family implementation work." }],
-      "dependencies": ["CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "dough-guide-explicit", "criterion": "Only explicit supported brand/flavor mappings are applied and duplicate targets remain unresolved." }],
-      "verificationEvidence": [{ "checkId": "dough-guide-explicit", "reference": "source-import-test", "outcome": "PASS", "detail": "V2 source import tests use synthetic deterministic parser fixtures." }]
+      "workflow": {
+        "name": "Review dough guide assignments",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The accepted V2 source-family adapter work includes bounded dough guides.",
+        "approvedBehavior": [
+          "Only explicit supported row assignments are linked.",
+          "Malformed, formula, duplicate, or ambiguous rows are unresolved or skipped, not guessed.",
+          "Uploaded source content is not retained."
+        ],
+        "unresolvedOwnerDecisions": [
+          "No fuzzy brand/flavor link is made."
+        ]
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 supports deterministic column-A assignment rows; other workbook columns are ignored as documented."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "import-matrix",
+          "claim": "Dough guide row syntax and supported scope."
+        },
+        {
+          "reference": "v1-import-plan",
+          "claim": "Historical dough guide import family."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "dough-guide-explicit",
+          "criterion": "Only explicit supported brand/flavor mappings are applied and duplicate targets remain unresolved."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "dough-guide-explicit",
+          "reference": "source-import-test",
+          "outcome": "PASS",
+          "detail": "V2 source import tests use synthetic deterministic parser fixtures."
+        }
+      ]
     },
     {
       "id": "CAP-SCHEDULE-PLANNING",
       "name": "Dated schedule and run planning",
       "category": "Planning",
       "purpose": "Managers order planned runs and breaks without conflating planned work with live run state.",
-      "workflow": { "name": "Plan a production day", "roles": ["manager", "operator"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Schedule and run planning is accepted V2 work.", "approvedBehavior": ["Planned runs remain distinct from live lifecycle records.", "Unknown durations remain unknown rather than receiving invented estimates.", "Stale and lost-reply writes preserve canonical plans."], "unresolvedOwnerDecisions": ["Ask the owner only if an unsupported time basis or duration changes production meaning."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "V2 planning schema/core is present; complete manager workflow and two-device verification remain assigned." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Historical schedule importer and planning handoff." }, { "reference": "run-plan", "claim": "Accepted schedule planning outcomes and failure matrix." }, { "reference": "v1-audit", "claim": "Bounded V1 schedule, move, break, and timeline evidence." }],
-      "dependencies": ["CAP-SETUP-CATALOG", "CAP-RUN-LIFECYCLE"],
-      "acceptanceChecks": [{ "id": "schedule-live-separation", "criterion": "Editing a plan does not start, stop, or rewrite a live run." }, { "id": "schedule-convergence", "criterion": "Authorized edits are revision-checked and converge after reload/reconnect." }],
-      "verificationEvidence": [{ "checkId": "schedule-live-separation", "reference": "schedule-test", "outcome": "PASS", "detail": "V2 schedule planning unit tests cover planning contracts; full manager journey remains part of accepted work." }]
+      "workflow": {
+        "name": "Plan a production day",
+        "roles": [
+          "manager",
+          "operator"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Schedule and run planning is accepted V2 work.",
+        "approvedBehavior": [
+          "Planned runs remain distinct from live lifecycle records.",
+          "Unknown durations remain unknown rather than receiving invented estimates.",
+          "Stale and lost-reply writes preserve canonical plans."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Ask the owner only if an unsupported time basis or duration changes production meaning."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 planning schema/core is present; complete manager workflow and two-device verification remain assigned."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Historical schedule importer and planning handoff."
+        },
+        {
+          "reference": "v1-audit",
+          "claim": "Bounded V1 schedule, move, break, and timeline evidence."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG",
+        "CAP-RUN-LIFECYCLE"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "schedule-live-separation",
+          "criterion": "Editing a plan does not start, stop, or rewrite a live run."
+        },
+        {
+          "id": "schedule-convergence",
+          "criterion": "Authorized edits are revision-checked and converge after reload/reconnect."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "schedule-live-separation",
+          "reference": "schedule-test",
+          "outcome": "PASS",
+          "detail": "V2 schedule planning unit tests cover planning contracts; full manager journey remains part of accepted work."
+        }
+      ]
     },
     {
       "id": "CAP-SCHEDULE-IMPORT",
       "name": "Reviewed schedule workbook import",
       "category": "Imports",
       "purpose": "Managers review schedule workbook days and rows before applying each planned day.",
-      "workflow": { "name": "Import a production schedule", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Schedule import is specifically included in accepted V2 scheduling work.", "approvedBehavior": ["Import never starts a live run.", "Ambiguous or skipped rows and per-day outcomes are visible.", "A lost reply does not duplicate or delete planned runs."], "unresolvedOwnerDecisions": [] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "V2 parser and tests exist; accepted manager review/apply and full recovery journey remain assigned." },
-      "sourceEvidence": [{ "reference": "run-plan", "claim": "Accepted schedule workbook import scope." }, { "reference": "schedule-import-test", "claim": "V2 schedule workbook parser tests." }, { "reference": "v1-import-plan", "claim": "Historical schedule importer and recovery boundary." }],
-      "dependencies": ["CAP-SCHEDULE-PLANNING"],
-      "acceptanceChecks": [{ "id": "schedule-import-never-starts", "criterion": "Applying an imported schedule changes only planned data." }, { "id": "schedule-import-retry", "criterion": "Per-day retry after an uncertain response preserves one canonical plan." }],
-      "verificationEvidence": [{ "checkId": "schedule-import-never-starts", "reference": "schedule-import-test", "outcome": "PASS", "detail": "Parser contract tests cover proposed schedule records; no claim of complete UI journey." }]
+      "workflow": {
+        "name": "Import a production schedule",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Schedule import is specifically included in accepted V2 scheduling work.",
+        "approvedBehavior": [
+          "Import never starts a live run.",
+          "Ambiguous or skipped rows and per-day outcomes are visible.",
+          "A lost reply does not duplicate or delete planned runs."
+        ],
+        "unresolvedOwnerDecisions": []
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 parser and tests exist; accepted manager review/apply and full recovery journey remain assigned."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "schedule-import-test",
+          "claim": "V2 schedule workbook parser tests."
+        },
+        {
+          "reference": "v1-import-plan",
+          "claim": "Historical schedule importer and recovery boundary."
+        }
+      ],
+      "dependencies": [
+        "CAP-SCHEDULE-PLANNING"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "schedule-import-never-starts",
+          "criterion": "Applying an imported schedule changes only planned data."
+        },
+        {
+          "id": "schedule-import-retry",
+          "criterion": "Per-day retry after an uncertain response preserves one canonical plan."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "schedule-import-never-starts",
+          "reference": "schedule-import-test",
+          "outcome": "PASS",
+          "detail": "Parser contract tests cover proposed schedule records; no claim of complete UI journey."
+        }
+      ]
     },
     {
       "id": "CAP-MIX-PLAN",
       "name": "Operational make-day mix plan",
       "category": "Planning",
       "purpose": "Operators see read-only mix preparation needs derived from scheduled and active runs.",
-      "workflow": { "name": "Review today's mix needs", "roles": ["operator", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "A distinct read-only Mix Plan is accepted V2 work.", "approvedBehavior": ["Planning view is distinct from Mix Recipes master data.", "Missing amounts and incomplete mixes are warnings, not guessed quantities."], "unresolvedOwnerDecisions": ["Make-day quantity/date semantics must follow documented sources; genuinely ambiguous production meaning is owner-controlled."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "V1 planning view is documented; V2 operational plan implementation is accepted but not reflected in current handoff as delivered." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Distinct operational Mix Plan described in next-phase handoff." }, { "reference": "mix-plan", "claim": "Accepted V2 read-only make-day plan scope." }],
-      "dependencies": ["CAP-SCHEDULE-PLANNING", "CAP-SETUP-CATALOG", "CAP-PREP-MIX-STOCK"],
-      "acceptanceChecks": [{ "id": "mix-plan-current", "criterion": "Plan reflects canonical planned/active runs and shows each source quantity and unit." }, { "id": "mix-plan-unknown", "criterion": "Missing recipe values produce explicit warnings without invented quantities." }],
+      "workflow": {
+        "name": "Review today's mix needs",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "A distinct read-only Mix Plan is accepted V2 work.",
+        "approvedBehavior": [
+          "Planning view is distinct from Mix Recipes master data.",
+          "Missing amounts and incomplete mixes are warnings, not guessed quantities."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Make-day quantity/date semantics must follow documented sources; genuinely ambiguous production meaning is owner-controlled."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "V1 planning view is documented; V2 operational plan implementation is accepted but not reflected in current handoff as delivered."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Distinct operational Mix Plan described in next-phase handoff."
+        }
+      ],
+      "dependencies": [
+        "CAP-SCHEDULE-PLANNING",
+        "CAP-SETUP-CATALOG",
+        "CAP-PREP-MIX-STOCK"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "mix-plan-current",
+          "criterion": "Plan reflects canonical planned/active runs and shows each source quantity and unit."
+        },
+        {
+          "id": "mix-plan-unknown",
+          "criterion": "Missing recipe values produce explicit warnings without invented quantities."
+        }
+      ],
       "verificationEvidence": []
     },
     {
@@ -330,64 +1398,286 @@
       "name": "Reviewed die and line defaults",
       "category": "Setup",
       "purpose": "Managers review die defaults and run setup applies active values without overwriting explicit operator choices.",
-      "workflow": { "name": "Review defaults and configure a run", "roles": ["manager", "operator"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The V2 handoff and accepted operational task include reviewed die defaults.", "approvedBehavior": ["Imported values remain suggestions until reviewed.", "Defaults fill only eligible blanks and do not alter active-run snapshots.", "Bought crust setups do not acquire a die."], "unresolvedOwnerDecisions": [] },
-      "implementation": { "status": "implemented", "historicalV1": "evidenced", "detail": "V2 reviewed, revisioned defaults are connected to run setup; browser/physical-device limits remain in the handoff." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Delivered die-default behavior and evidence limits." }, { "reference": "die-plan", "claim": "Accepted operational die-default task." }, { "reference": "die-test", "claim": "V2 default selection unit tests." }],
-      "dependencies": ["CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "die-review", "criterion": "Unreviewed values are not used as active defaults." }, { "id": "die-snapshot", "criterion": "Default changes do not mutate existing run snapshots." }],
-      "verificationEvidence": [{ "checkId": "die-review", "reference": "die-test", "outcome": "PASS", "detail": "V2 die-default tests cover reviewed state and switching behavior." }, { "checkId": "die-snapshot", "reference": "next-handoff", "outcome": "PASS", "detail": "Handoff records disposable database and emulated-browser snapshot checks." }]
+      "workflow": {
+        "name": "Review defaults and configure a run",
+        "roles": [
+          "manager",
+          "operator"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The V2 handoff and accepted operational task include reviewed die defaults.",
+        "approvedBehavior": [
+          "Imported values remain suggestions until reviewed.",
+          "Defaults fill only eligible blanks and do not alter active-run snapshots.",
+          "Bought crust setups do not acquire a die."
+        ],
+        "unresolvedOwnerDecisions": []
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "evidenced",
+        "detail": "V2 reviewed, revisioned defaults are connected to run setup; browser/physical-device limits remain in the handoff."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Delivered die-default behavior and evidence limits."
+        },
+        {
+          "reference": "die-test",
+          "claim": "V2 default selection unit tests."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "die-review",
+          "criterion": "Unreviewed values are not used as active defaults."
+        },
+        {
+          "id": "die-snapshot",
+          "criterion": "Default changes do not mutate existing run snapshots."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "die-review",
+          "reference": "die-test",
+          "outcome": "PASS",
+          "detail": "V2 die-default tests cover reviewed state and switching behavior."
+        },
+        {
+          "checkId": "die-snapshot",
+          "reference": "next-handoff",
+          "outcome": "PASS",
+          "detail": "Handoff records disposable database and emulated-browser snapshot checks."
+        }
+      ]
     },
     {
       "id": "CAP-PRODUCTION-RULES",
       "name": "Production rule checks",
       "category": "Production",
       "purpose": "Managers define production rules that warn or block run start according to the approved rule mode.",
-      "workflow": { "name": "Configure and evaluate production rules", "roles": ["manager", "operator"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "V2 handoff records production rules as imported manager data with explicit behavior.", "approvedBehavior": ["Flexible rules warn while strict rules block Start.", "Rules do not run merely because imported or previewed."], "unresolvedOwnerDecisions": [] },
-      "implementation": { "status": "implemented", "historicalV1": "partially-evidenced", "detail": "V2 server-enforced production rule checks are implemented and disposable database tested." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "V2 production rule catalog and execution boundary." }, { "reference": "rules-test", "claim": "Disposable PostgreSQL enforcement checks." }],
-      "dependencies": ["CAP-RUN-LIFECYCLE", "CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "rule-mode", "criterion": "Strict rules block invalid Start and flexible rules report a warning." }],
-      "verificationEvidence": [{ "checkId": "rule-mode", "reference": "rules-test", "outcome": "PASS", "detail": "The V2 production-rule enforcement SQL test covers strict/flexible behavior." }]
+      "workflow": {
+        "name": "Configure and evaluate production rules",
+        "roles": [
+          "manager",
+          "operator"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "V2 handoff records production rules as imported manager data with explicit behavior.",
+        "approvedBehavior": [
+          "Flexible rules warn while strict rules block Start.",
+          "Rules do not run merely because imported or previewed."
+        ],
+        "unresolvedOwnerDecisions": []
+      },
+      "implementation": {
+        "status": "implemented",
+        "historicalV1": "partially-evidenced",
+        "detail": "V2 server-enforced production rule checks are implemented and disposable database tested."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "V2 production rule catalog and execution boundary."
+        },
+        {
+          "reference": "rules-test",
+          "claim": "Disposable PostgreSQL enforcement checks."
+        }
+      ],
+      "dependencies": [
+        "CAP-RUN-LIFECYCLE",
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "rule-mode",
+          "criterion": "Strict rules block invalid Start and flexible rules report a warning."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "rule-mode",
+          "reference": "rules-test",
+          "outcome": "PASS",
+          "detail": "The V2 production-rule enforcement SQL test covers strict/flexible behavior."
+        }
+      ]
     },
     {
       "id": "CAP-QC-EVIDENCE",
       "name": "Run-linked quality records",
       "category": "Quality",
       "purpose": "Authorized staff record bounded quality observations and managers review history without implying certification.",
-      "workflow": { "name": "Record and review quality observations", "roles": ["operator", "QC manager", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Separate V2 work accepts record-first, non-blocking QC; historical V1 safety thresholds do not authorize V2 policy.", "approvedBehavior": ["Unknown or unevaluated stays distinct from pass.", "QC observations do not block production/shipping or claim regulatory compliance.", "Corrections and review history remain attributed."], "unresolvedOwnerDecisions": ["Qualified references, tolerances, and retention changes need separate explicit approval."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "Historical advisory behavior is documented; accepted V2 QC implementation is active." },
-      "sourceEvidence": [{ "reference": "gaps", "claim": "QC policy not included in original V2 first release without qualified approval." }, { "reference": "next-handoff", "claim": "Historical QC and Brix feature proposals are not authority for safety thresholds." }, { "reference": "qc-plan", "claim": "Accepted non-blocking V2 record-first scope." }, { "reference": "v1-qc-bundle", "claim": "Compiled historical QC UI artifact." }],
-      "dependencies": ["CAP-IDENTITY-ROLES", "CAP-SETUP-CATALOG"],
-      "acceptanceChecks": [{ "id": "qc-unknown", "criterion": "Missing target/reference yields not evaluated, not an assumed pass." }, { "id": "qc-history", "criterion": "Authorized corrections are attributable and visible in history." }, { "id": "qc-nonblocking", "criterion": "QC records do not silently block production or shipping." }],
-      "verificationEvidence": [{ "checkId": "qc-unknown", "reference": "qc-plan", "outcome": "NOT RUN", "detail": "Accepted V2 implementation and disposable verification are still active." }]
+      "workflow": {
+        "name": "Record and review quality observations",
+        "roles": [
+          "operator",
+          "QC manager",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Separate V2 work accepts record-first, non-blocking QC; historical V1 safety thresholds do not authorize V2 policy.",
+        "approvedBehavior": [
+          "Unknown or unevaluated stays distinct from pass.",
+          "QC observations do not block production/shipping or claim regulatory compliance.",
+          "Corrections and review history remain attributed."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Qualified references, tolerances, and retention changes need separate explicit approval."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "Historical advisory behavior is documented; accepted V2 QC implementation is active."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "gaps",
+          "claim": "QC policy not included in original V2 first release without qualified approval."
+        },
+        {
+          "reference": "next-handoff",
+          "claim": "Historical QC and Brix feature proposals are not authority for safety thresholds."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES",
+        "CAP-SETUP-CATALOG"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "qc-unknown",
+          "criterion": "Missing target/reference yields not evaluated, not an assumed pass."
+        },
+        {
+          "id": "qc-history",
+          "criterion": "Authorized corrections are attributable and visible in history."
+        },
+        {
+          "id": "qc-nonblocking",
+          "criterion": "QC records do not silently block production or shipping."
+        }
+      ],
+      "verificationEvidence": []
     },
     {
       "id": "CAP-ALLERGEN-EVIDENCE",
       "name": "Allergen review and run visibility",
       "category": "Quality",
       "purpose": "Staff review ingredient allergen mappings and distinguish known, reviewed-empty, and unknown run states.",
-      "workflow": { "name": "Review allergen mappings and run status", "roles": ["operator", "QC manager", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted V2 QC/allergen task defines bounded status semantics; it does not authorize a safety or label claim.", "approvedBehavior": ["Missing/unreviewed mapping is unknown; reviewed-empty is distinct.", "Derived allergen status remains distinct from any manual run label.", "Badges use text/icon and do not rely on color alone."], "unresolvedOwnerDecisions": ["Any clearance, cross-contact, label, or blocking policy requires qualified owner approval."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "V1 advisory status is evidenced; V2 mapping/review and operator visibility work is active." },
-      "sourceEvidence": [{ "reference": "qc-plan", "claim": "Accepted reviewed-empty/unknown and manual-field separation." }, { "reference": "substitution-plan", "claim": "Accepted accessible station visibility without safety inference." }, { "reference": "v1-v2", "claim": "V1 allergen badges and workflow are only partially evidenced." }],
-      "dependencies": ["CAP-SETUP-CATALOG", "CAP-QC-EVIDENCE"],
-      "acceptanceChecks": [{ "id": "allergen-states", "criterion": "Unknown, reviewed-empty, and known allergens remain distinguishable." }, { "id": "allergen-badge", "criterion": "Run/station status has accessible text plus an icon, not color alone." }],
-      "verificationEvidence": [{ "checkId": "allergen-states", "reference": "qc-plan", "outcome": "NOT RUN", "detail": "V2 allergen workflow verification is assigned and active." }]
+      "workflow": {
+        "name": "Review allergen mappings and run status",
+        "roles": [
+          "operator",
+          "QC manager",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted V2 QC/allergen task defines bounded status semantics; it does not authorize a safety or label claim.",
+        "approvedBehavior": [
+          "Missing/unreviewed mapping is unknown; reviewed-empty is distinct.",
+          "Derived allergen status remains distinct from any manual run label.",
+          "Badges use text/icon and do not rely on color alone."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Any clearance, cross-contact, label, or blocking policy requires qualified owner approval."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "V1 advisory status is evidenced; V2 mapping/review and operator visibility work is active."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "v1-v2",
+          "claim": "V1 allergen badges and workflow are only partially evidenced."
+        }
+      ],
+      "dependencies": [
+        "CAP-SETUP-CATALOG",
+        "CAP-QC-EVIDENCE"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "allergen-states",
+          "criterion": "Unknown, reviewed-empty, and known allergens remain distinguishable."
+        },
+        {
+          "id": "allergen-badge",
+          "criterion": "Run/station status has accessible text plus an icon, not color alone."
+        }
+      ],
+      "verificationEvidence": []
     },
     {
       "id": "CAP-QC-CHECKPOINTS",
       "name": "QC checkpoints and review flags",
       "category": "Quality",
       "purpose": "Authorized QC staff record source-bounded checkpoint observations and managers mark records for review.",
-      "workflow": { "name": "Record a checkpoint and review a run", "roles": ["QC manager", "supervisor", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted extension task allows observational QC checkpoints while preserving advisory behavior.", "approvedBehavior": ["A review flag means needs review, not a production/shipping hold.", "No threshold or compliance result is inferred without an approved reference."], "unresolvedOwnerDecisions": ["Any evaluated limit, retention change, or enforcement requires qualified policy approval."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "The next-phase handoff identifies V1 HACCP/Brix history proposals; separate V2 checkpoint expansion is accepted but dependent on QC foundation." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Historical HACCP-style observations and manager history proposal." }, { "reference": "qc-extension-plan", "claim": "Accepted observational V2 checkpoint scope and explicit limits." }],
-      "dependencies": ["CAP-QC-EVIDENCE"],
-      "acceptanceChecks": [{ "id": "checkpoint-audit", "criterion": "Checkpoint observations and corrections preserve actor, server time, and history." }, { "id": "checkpoint-review", "criterion": "Review flags communicate review-needed state without blocking production." }],
+      "workflow": {
+        "name": "Record a checkpoint and review a run",
+        "roles": [
+          "QC manager",
+          "supervisor",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted extension task allows observational QC checkpoints while preserving advisory behavior.",
+        "approvedBehavior": [
+          "A review flag means needs review, not a production/shipping hold.",
+          "No threshold or compliance result is inferred without an approved reference."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Any evaluated limit, retention change, or enforcement requires qualified policy approval."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "The next-phase handoff identifies V1 HACCP/Brix history proposals; separate V2 checkpoint expansion is accepted but dependent on QC foundation."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Historical HACCP-style observations and manager history proposal."
+        }
+      ],
+      "dependencies": [
+        "CAP-QC-EVIDENCE"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "checkpoint-audit",
+          "criterion": "Checkpoint observations and corrections preserve actor, server time, and history."
+        },
+        {
+          "id": "checkpoint-review",
+          "criterion": "Review flags communicate review-needed state without blocking production."
+        }
+      ],
       "verificationEvidence": []
     },
     {
@@ -395,12 +1685,52 @@
       "name": "Run history and operational reports",
       "category": "Management",
       "purpose": "Managers review completed-run summaries, event history, shift handoffs, and bounded operational trends.",
-      "workflow": { "name": "Review run history and reports", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted V2 manager operations work explicitly includes run summaries, history, handoff, and reports.", "approvedBehavior": ["History is based on canonical V2 records with visible date/source coverage.", "V1 production history is not imported."], "unresolvedOwnerDecisions": ["Retention and external notification delivery remain owner-controlled."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "V1 reporting surfaces are documented; the complete V2 cross-run history/report workspace is not evidenced as delivered." },
-      "sourceEvidence": [{ "reference": "manager-plan", "claim": "Accepted V2 run summary, shift handoff, reports, insights, and trends." }, { "reference": "handoff", "claim": "No historical production runs are carried into V2." }, { "reference": "v1-audit", "claim": "Historical V1 report and schedule evidence remains bounded." }],
-      "dependencies": ["CAP-RUN-LIFECYCLE"],
-      "acceptanceChecks": [{ "id": "history-source-coverage", "criterion": "A manager can inspect V2 run history with explicit date range and incomplete-source notices." }, { "id": "history-no-v1-data", "criterion": "The V2 history view does not imply that V1 production records were recovered." }],
+      "workflow": {
+        "name": "Review run history and reports",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted V2 manager operations work explicitly includes run summaries, history, handoff, and reports.",
+        "approvedBehavior": [
+          "History is based on canonical V2 records with visible date/source coverage.",
+          "V1 production history is not imported."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Retention and external notification delivery remain owner-controlled."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "V1 reporting surfaces are documented; the complete V2 cross-run history/report workspace is not evidenced as delivered."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "No historical production runs are carried into V2."
+        },
+        {
+          "reference": "v1-audit",
+          "claim": "Historical V1 report and schedule evidence remains bounded."
+        }
+      ],
+      "dependencies": [
+        "CAP-RUN-LIFECYCLE"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "history-source-coverage",
+          "criterion": "A manager can inspect V2 run history with explicit date range and incomplete-source notices."
+        },
+        {
+          "id": "history-no-v1-data",
+          "criterion": "The V2 history view does not imply that V1 production records were recovered."
+        }
+      ],
       "verificationEvidence": []
     },
     {
@@ -408,12 +1738,49 @@
       "name": "Manager action queue and operational history",
       "category": "Management",
       "purpose": "Managers review bounded action queues, data-health findings, incidents, and attributed follow-up actions.",
-      "workflow": { "name": "Review operational status and follow-up", "roles": ["manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted V2 manager operations task scopes cross-domain summaries while preserving each domain's write ownership.", "approvedBehavior": ["Incomplete evidence is labeled explicitly.", "Domain-specific inventory, import, schedule, and QC actions remain in their owning workflows.", "Manager actions are authorized and attributed."], "unresolvedOwnerDecisions": ["Retention period and external notification delivery remain owner-controlled."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "V1 manager panels are described in accepted plans and historical audit; the V2 action queue and cross-domain workspace are not evidenced as delivered." },
-      "sourceEvidence": [{ "reference": "manager-plan", "claim": "Accepted V2 action queue and history scope." }, { "reference": "v1-audit", "claim": "Historical manager reports and operational domains have bounded evidence." }],
-      "dependencies": ["CAP-IDENTITY-ROLES"],
-      "acceptanceChecks": [{ "id": "manager-role", "criterion": "Only authorized managers can review or change manager action state." }, { "id": "manager-coverage", "criterion": "Reports show their date/source coverage and incomplete evidence." }],
+      "workflow": {
+        "name": "Review operational status and follow-up",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted V2 manager operations task scopes cross-domain summaries while preserving each domain's write ownership.",
+        "approvedBehavior": [
+          "Incomplete evidence is labeled explicitly.",
+          "Domain-specific inventory, import, schedule, and QC actions remain in their owning workflows.",
+          "Manager actions are authorized and attributed."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Retention period and external notification delivery remain owner-controlled."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "V1 manager panels are described in accepted plans and historical audit; the V2 action queue and cross-domain workspace are not evidenced as delivered."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "v1-audit",
+          "claim": "Historical manager reports and operational domains have bounded evidence."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "manager-role",
+          "criterion": "Only authorized managers can review or change manager action state."
+        },
+        {
+          "id": "manager-coverage",
+          "criterion": "Reports show their date/source coverage and incomplete evidence."
+        }
+      ],
       "verificationEvidence": []
     },
     {
@@ -421,25 +1788,103 @@
       "name": "Staff password recovery",
       "category": "Access",
       "purpose": "Staff request account recovery and managers approve or deny it without exposing recovery secrets.",
-      "workflow": { "name": "Request and complete password recovery", "roles": ["operator", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted V2 work restores recovery without transferring V1 credentials or using unapproved external delivery.", "approvedBehavior": ["Requests do not reveal arbitrary username existence.", "Recovery is short-lived, single-use, and revokes old sessions as defined.", "Recovery codes never appear in logs or ordinary history."], "unresolvedOwnerDecisions": ["No email/SMS or external identity provider is approved by this scope."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "The V2 recovery flow is accepted and assigned; complete behavior is not yet evidenced in the handoff." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Historical manager-approved password reset workflow." }, { "reference": "reset-plan", "claim": "Accepted V2 request/approve/deny and secret-handling scope." }, { "reference": "handoff", "claim": "No V1 sessions or reset tokens are transferred." }],
-      "dependencies": ["CAP-IDENTITY-ROLES"],
-      "acceptanceChecks": [{ "id": "recovery-replay", "criterion": "Recovery expires and cannot be replayed after successful use." }, { "id": "recovery-session", "criterion": "Approval, denial, and password change preserve the accepted session-revocation policy." }],
-      "verificationEvidence": [{ "checkId": "recovery-replay", "reference": "reset-plan", "outcome": "NOT RUN", "detail": "The accepted V2 recovery implementation is active." }]
+      "workflow": {
+        "name": "Request and complete password recovery",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted V2 work restores recovery without transferring V1 credentials or using unapproved external delivery.",
+        "approvedBehavior": [
+          "Requests do not reveal arbitrary username existence.",
+          "Recovery is short-lived, single-use, and revokes old sessions as defined.",
+          "Recovery codes never appear in logs or ordinary history."
+        ],
+        "unresolvedOwnerDecisions": [
+          "No email/SMS or external identity provider is approved by this scope."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "The V2 recovery flow is accepted and assigned; complete behavior is not yet evidenced in the handoff."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Historical manager-approved password reset workflow."
+        },
+        {
+          "reference": "handoff",
+          "claim": "No V1 sessions or reset tokens are transferred."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "recovery-replay",
+          "criterion": "Recovery expires and cannot be replayed after successful use."
+        },
+        {
+          "id": "recovery-session",
+          "criterion": "Approval, denial, and password change preserve the accepted session-revocation policy."
+        }
+      ],
+      "verificationEvidence": []
     },
     {
       "id": "CAP-APP-UPDATES",
       "name": "Safe application updates",
       "category": "Reliability",
       "purpose": "Staff can identify and apply non-critical web/PWA updates without losing active work.",
-      "workflow": { "name": "Check and apply an app update", "roles": ["operator", "manager"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted V2 operational-validation plan includes safe PWA updates and fallback behavior.", "approvedBehavior": ["An update does not force reload during active production work.", "Unavailable update checks have a clear fallback.", "Unsaved or unconfirmed work is preserved."], "unresolvedOwnerDecisions": ["Physical installed-PWA behavior remains separate evidence."] },
-      "implementation": { "status": "not-started", "historicalV1": "evidenced", "detail": "Historical V1 update control is documented; accepted V2 update behavior is not yet shown as delivered in handoff." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Historical V1 app-update control and desired accessibility behavior." }, { "reference": "validation-plan", "claim": "Accepted V2 safe update validation scope." }],
+      "workflow": {
+        "name": "Check and apply an app update",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted V2 operational-validation plan includes safe PWA updates and fallback behavior.",
+        "approvedBehavior": [
+          "An update does not force reload during active production work.",
+          "Unavailable update checks have a clear fallback.",
+          "Unsaved or unconfirmed work is preserved."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Physical installed-PWA behavior remains separate evidence."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "evidenced",
+        "detail": "Historical V1 update control is documented; accepted V2 update behavior is not yet shown as delivered in handoff."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Historical V1 app-update control and desired accessibility behavior."
+        }
+      ],
       "dependencies": [],
-      "acceptanceChecks": [{ "id": "update-no-loss", "criterion": "An available update does not discard active or pending work." }, { "id": "update-fallback", "criterion": "Unavailable or failed checks leave production controls usable." }],
+      "acceptanceChecks": [
+        {
+          "id": "update-no-loss",
+          "criterion": "An available update does not discard active or pending work."
+        },
+        {
+          "id": "update-fallback",
+          "criterion": "Unavailable or failed checks leave production controls usable."
+        }
+      ],
       "verificationEvidence": []
     },
     {
@@ -447,38 +1892,180 @@
       "name": "Safe V1-to-V2 cutover boundary",
       "category": "Data and operations",
       "purpose": "V2 begins with approved setup/identity decisions and a fresh physical count, without implying historical data recovery.",
-      "workflow": { "name": "Prepare and review a future cutover", "roles": ["owner", "manager", "administrator"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The documented V2 cutover boundary approves setup/master data and staff roles subject to review, while excluding historical runs, V1 stock, and sessions.", "approvedBehavior": ["Fresh sign-in is required.", "Opening inventory comes from a new physical count.", "No V1 production history or credential/session material is imported by this catalog task."], "unresolvedOwnerDecisions": ["Actual transfer mappings, source/destination authorization, archive retention, and cutover timing are not decided here."] },
-      "implementation": { "status": "blocked", "historicalV1": "evidenced", "detail": "Boundary and synthetic rehearsal are documented; actual row-level transfer and cutover are not run." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "Approved cutover inclusions/exclusions and separate rehearsal boundary." }, { "reference": "gaps", "claim": "Cutover execution remains not run and human-owned." }, { "reference": "research-readme", "claim": "Production records, credentials, and raw captures are excluded from research package." }],
-      "dependencies": ["CAP-IDENTITY-ROLES", "CAP-SETUP-CATALOG", "CAP-INVENTORY-LEDGER"],
-      "acceptanceChecks": [{ "id": "cutover-fresh-count", "criterion": "Any authorized cutover uses a reviewed new physical count rather than V1 balances." }, { "id": "cutover-exclusions", "criterion": "No V1 run history, sessions, or reset tokens enter V2." }],
-      "verificationEvidence": [{ "checkId": "cutover-fresh-count", "reference": "handoff", "outcome": "NOT RUN", "detail": "Actual transfer/cutover has not been run." }]
+      "workflow": {
+        "name": "Prepare and review a future cutover",
+        "roles": [
+          "owner",
+          "manager",
+          "administrator"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The documented V2 cutover boundary approves setup/master data and staff roles subject to review, while excluding historical runs, V1 stock, and sessions.",
+        "approvedBehavior": [
+          "Fresh sign-in is required.",
+          "Opening inventory comes from a new physical count.",
+          "No V1 production history or credential/session material is imported by this catalog task."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Actual transfer mappings, source/destination authorization, archive retention, and cutover timing are not decided here."
+        ]
+      },
+      "implementation": {
+        "status": "blocked",
+        "historicalV1": "evidenced",
+        "detail": "Boundary and synthetic rehearsal are documented; actual row-level transfer and cutover are not run."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "Approved cutover inclusions/exclusions and separate rehearsal boundary."
+        },
+        {
+          "reference": "gaps",
+          "claim": "Cutover execution remains not run and human-owned."
+        },
+        {
+          "reference": "research-readme",
+          "claim": "Production records, credentials, and raw captures are excluded from research package."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES",
+        "CAP-SETUP-CATALOG",
+        "CAP-INVENTORY-LEDGER"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "cutover-fresh-count",
+          "criterion": "Any authorized cutover uses a reviewed new physical count rather than V1 balances."
+        },
+        {
+          "id": "cutover-exclusions",
+          "criterion": "No V1 run history, sessions, or reset tokens enter V2."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "cutover-fresh-count",
+          "reference": "handoff",
+          "outcome": "NOT RUN",
+          "detail": "Actual transfer/cutover has not been run."
+        }
+      ]
     },
     {
       "id": "CAP-DEPLOYMENT-BOUNDARY",
       "name": "Isolated V2 deployment and worker",
       "category": "Operations",
       "purpose": "V2 API and background worker run within an isolated, reviewed deployment and database boundary.",
-      "workflow": { "name": "Provision and verify a V2 deployment", "roles": ["owner", "administrator"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "The V2 architecture approves an isolated deployment boundary; publish and production DB steps remain gated.", "approvedBehavior": ["V2 must not connect to V1 production.", "API and worker are separately supervised and use least-privilege access.", "No publish occurs until database objects and runtime access are reviewed."], "unresolvedOwnerDecisions": ["Separate project/database provisioning and production privilege review remain outstanding."] },
-      "implementation": { "status": "blocked", "historicalV1": "unknown", "detail": "V2 private preview exists; production deployment and publish are intentionally not complete." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "Deployment topology and explicit no-publish boundary." }, { "reference": "gaps", "claim": "Separate project and deployment proof are not run." }, { "reference": "v1-v2", "claim": "Documented Replit fit is not executed deployment evidence." }],
-      "dependencies": ["CAP-IDENTITY-ROLES"],
-      "acceptanceChecks": [{ "id": "deploy-isolation", "criterion": "V2 runtime uses only its authorized isolated database and identity boundary." }, { "id": "deploy-worker", "criterion": "API/worker health, restart behavior, and aggregate connection budget are verified before release." }],
-      "verificationEvidence": [{ "checkId": "deploy-worker", "reference": "handoff", "outcome": "BLOCKED", "detail": "Production database grants, least-privilege runtime review, and isolated deployment proof remain future work." }]
+      "workflow": {
+        "name": "Provision and verify a V2 deployment",
+        "roles": [
+          "owner",
+          "administrator"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "The V2 architecture approves an isolated deployment boundary; publish and production DB steps remain gated.",
+        "approvedBehavior": [
+          "V2 must not connect to V1 production.",
+          "API and worker are separately supervised and use least-privilege access.",
+          "No publish occurs until database objects and runtime access are reviewed."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Separate project/database provisioning and production privilege review remain outstanding."
+        ]
+      },
+      "implementation": {
+        "status": "blocked",
+        "historicalV1": "unknown",
+        "detail": "V2 private preview exists; production deployment and publish are intentionally not complete."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "Deployment topology and explicit no-publish boundary."
+        },
+        {
+          "reference": "gaps",
+          "claim": "Separate project and deployment proof are not run."
+        },
+        {
+          "reference": "v1-v2",
+          "claim": "Documented Replit fit is not executed deployment evidence."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "deploy-isolation",
+          "criterion": "V2 runtime uses only its authorized isolated database and identity boundary."
+        },
+        {
+          "id": "deploy-worker",
+          "criterion": "API/worker health, restart behavior, and aggregate connection budget are verified before release."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "deploy-worker",
+          "reference": "handoff",
+          "outcome": "BLOCKED",
+          "detail": "Production database grants, least-privilege runtime review, and isolated deployment proof remain future work."
+        }
+      ]
     },
     {
       "id": "CAP-WAREHOUSE-EXPORT",
       "name": "Export warehouse records",
       "category": "Inventory",
       "purpose": "Authorized managers export warehouse records in a portable, reviewable format.",
-      "workflow": { "name": "Export warehouse records", "roles": ["manager", "warehouse"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "An accepted V2 task explicitly owns warehouse record export.", "approvedBehavior": ["Export includes only approved warehouse records and preserves source/coverage limitations.", "Export does not imply V1 production records are available."], "unresolvedOwnerDecisions": ["Any additional export fields or retention behavior require explicit review."] },
-      "implementation": { "status": "not-started", "historicalV1": "unknown", "detail": "Accepted export work is pending; no completed V2 export behavior is evidenced in the supplied handoff." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "V2 warehouse records are server-owned." }, { "reference": "inventory-plan", "claim": "Accepted V2 inventory parity context." }],
-      "dependencies": ["CAP-INVENTORY-LEDGER"],
-      "acceptanceChecks": [{ "id": "warehouse-export-scope", "criterion": "A manager can export the approved warehouse records and review the output for scope and completeness." }],
+      "workflow": {
+        "name": "Export warehouse records",
+        "roles": [
+          "manager",
+          "warehouse"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "An accepted V2 task explicitly owns warehouse record export.",
+        "approvedBehavior": [
+          "Export includes only approved warehouse records and preserves source/coverage limitations.",
+          "Export does not imply V1 production records are available."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Any additional export fields or retention behavior require explicit review."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "unknown",
+        "detail": "Accepted export work is pending; no completed V2 export behavior is evidenced in the supplied handoff."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "V2 warehouse records are server-owned."
+        }
+      ],
+      "dependencies": [
+        "CAP-INVENTORY-LEDGER"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "warehouse-export-scope",
+          "criterion": "A manager can export the approved warehouse records and review the output for scope and completeness."
+        }
+      ],
       "verificationEvidence": []
     },
     {
@@ -486,12 +2073,43 @@
       "name": "Manager operational diagnostics",
       "category": "Management",
       "purpose": "Managers inspect bounded system and workflow health without seeing credentials or raw operational payloads.",
-      "workflow": { "name": "Review operational diagnostics", "roles": ["manager", "administrator"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "Accepted manager diagnostics work is distinct from a product-wide release certification.", "approvedBehavior": ["Diagnostics use bounded, privacy-safe evidence.", "A warning is not represented as proof of data corruption."], "unresolvedOwnerDecisions": [] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "V1 diagnostic surfaces are documented; the accepted V2 diagnostics task remains pending." },
-      "sourceEvidence": [{ "reference": "manager-plan", "claim": "Accepted manager health and incident review scope." }, { "reference": "handoff", "claim": "V2 startup health and safe request logging." }],
-      "dependencies": ["CAP-IDENTITY-ROLES"],
-      "acceptanceChecks": [{ "id": "diagnostics-privacy", "criterion": "Manager diagnostics show bounded status and never expose secrets or request/recipe payloads." }],
+      "workflow": {
+        "name": "Review operational diagnostics",
+        "roles": [
+          "manager",
+          "administrator"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "Accepted manager diagnostics work is distinct from a product-wide release certification.",
+        "approvedBehavior": [
+          "Diagnostics use bounded, privacy-safe evidence.",
+          "A warning is not represented as proof of data corruption."
+        ],
+        "unresolvedOwnerDecisions": []
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "V1 diagnostic surfaces are documented; the accepted V2 diagnostics task remains pending."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "V2 startup health and safe request logging."
+        }
+      ],
+      "dependencies": [
+        "CAP-IDENTITY-ROLES"
+      ],
+      "acceptanceChecks": [
+        {
+          "id": "diagnostics-privacy",
+          "criterion": "Manager diagnostics show bounded status and never expose secrets or request/recipe payloads."
+        }
+      ],
       "verificationEvidence": []
     },
     {
@@ -499,10 +2117,36 @@
       "name": "Recipe and specification export",
       "category": "Setup",
       "purpose": "Managers export supported recipe/setup information for review or portability.",
-      "workflow": { "name": "Export specification data", "roles": ["manager"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "Surviving research documents V1 specification export behavior, but the supplied V2 scope does not approve a V2/V3 export feature.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Decide whether manager-facing specification export belongs in a future version and what data it may include."] },
-      "implementation": { "status": "not-started", "historicalV1": "evidenced", "detail": "Historical V1 deterministic library export behavior is evidenced; no V2/V3 export requirement is approved here." },
-      "sourceEvidence": [{ "reference": "v1-audit", "claim": "Bounded deterministic export library test coverage." }, { "reference": "v1-import-plan", "claim": "V1 import/export families and semantics." }],
+      "workflow": {
+        "name": "Export specification data",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "Surviving research documents V1 specification export behavior, but the supplied V2 scope does not approve a V2/V3 export feature.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Decide whether manager-facing specification export belongs in a future version and what data it may include."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "evidenced",
+        "detail": "Historical V1 deterministic library export behavior is evidenced; no V2/V3 export requirement is approved here."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "v1-audit",
+          "claim": "Bounded deterministic export library test coverage."
+        },
+        {
+          "reference": "v1-import-plan",
+          "claim": "V1 import/export families and semantics."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -512,36 +2156,152 @@
       "name": "Accessible responsive operations",
       "category": "Experience",
       "purpose": "Production and manager controls remain operable across supported web viewport sizes and assistive interaction needs.",
-      "workflow": { "name": "Use operational screens on web devices", "roles": ["operator", "manager", "QC manager", "warehouse"] },
-      "decision": { "state": "approved", "releaseScope": "current", "rationale": "V2 is a responsive web/PWA tool; accepted operational validation requires responsive browser coverage and separates physical evidence.", "approvedBehavior": ["Status is not conveyed by color alone.", "Responsive emulation is not labeled as physical-device or screen-reader proof."], "unresolvedOwnerDecisions": ["Physical Android/iOS and screen-reader verification remain unrun where noted."] },
-      "implementation": { "status": "in-progress", "historicalV1": "partially-evidenced", "detail": "Some V2 emulated viewport journeys exist; cross-domain and assistive technology coverage remains incomplete." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "Responsive web/PWA first boundary and browser verification limits." }, { "reference": "validation-plan", "claim": "Accepted desktop/phone/tablet and Chromium/WebKit verification matrix." }, { "reference": "v1-audit", "claim": "Historical emulated viewport evidence and physical-device limits." }],
+      "workflow": {
+        "name": "Use operational screens on web devices",
+        "roles": [
+          "operator",
+          "manager",
+          "QC manager",
+          "warehouse"
+        ]
+      },
+      "decision": {
+        "state": "approved",
+        "releaseScope": "current",
+        "rationale": "V2 is a responsive web/PWA tool; accepted operational validation requires responsive browser coverage and separates physical evidence.",
+        "approvedBehavior": [
+          "Status is not conveyed by color alone.",
+          "Responsive emulation is not labeled as physical-device or screen-reader proof."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Physical Android/iOS and screen-reader verification remain unrun where noted."
+        ]
+      },
+      "implementation": {
+        "status": "in-progress",
+        "historicalV1": "partially-evidenced",
+        "detail": "Some V2 emulated viewport journeys exist; cross-domain and assistive technology coverage remains incomplete."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "Responsive web/PWA first boundary and browser verification limits."
+        },
+        {
+          "reference": "v1-audit",
+          "claim": "Historical emulated viewport evidence and physical-device limits."
+        }
+      ],
       "dependencies": [],
-      "acceptanceChecks": [{ "id": "responsive-workflow", "criterion": "Key workflows remain reachable at desktop, phone, and tablet viewport sizes." }, { "id": "device-evidence-label", "criterion": "Browser emulation is not reported as physical device evidence." }],
-      "verificationEvidence": [{ "checkId": "device-evidence-label", "reference": "handoff", "outcome": "PASS", "detail": "V2 handoff explicitly distinguishes emulated browser tests from physical-device coverage." }]
+      "acceptanceChecks": [
+        {
+          "id": "responsive-workflow",
+          "criterion": "Key workflows remain reachable at desktop, phone, and tablet viewport sizes."
+        },
+        {
+          "id": "device-evidence-label",
+          "criterion": "Browser emulation is not reported as physical device evidence."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "device-evidence-label",
+          "reference": "handoff",
+          "outcome": "PASS",
+          "detail": "V2 handoff explicitly distinguishes emulated browser tests from physical-device coverage."
+        }
+      ]
     },
     {
       "id": "CAP-OFFLINE-WRITES",
       "name": "Offline write access",
       "category": "Reliability",
       "purpose": "Allow users to submit production changes while disconnected from the canonical server.",
-      "workflow": { "name": "Write production changes offline", "roles": ["operator", "manager"] },
-      "decision": { "state": "out-of-scope", "releaseScope": "none", "rationale": "The approved V2 boundary is read-only offline operation; disconnected writes are explicitly unavailable.", "approvedBehavior": ["Cached offline state is read-only until reconnect and server confirmation."], "unresolvedOwnerDecisions": ["Reconsider only after an explicit owner scope change and conflict/safety review."] },
-      "implementation": { "status": "not-started", "historicalV1": "unknown", "detail": "Not an approved V2 capability; no offline-write behavior is being added." },
-      "sourceEvidence": [{ "reference": "handoff", "claim": "Read-only offline operation is approved; writes resume after reconnect." }, { "reference": "gaps", "claim": "Disconnected writes remain intentionally unavailable." }],
+      "workflow": {
+        "name": "Write production changes offline",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "out-of-scope",
+        "releaseScope": "none",
+        "rationale": "The approved V2 boundary is read-only offline operation; disconnected writes are explicitly unavailable.",
+        "approvedBehavior": [
+          "Cached offline state is read-only until reconnect and server confirmation."
+        ],
+        "unresolvedOwnerDecisions": [
+          "Reconsider only after an explicit owner scope change and conflict/safety review."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "unknown",
+        "detail": "Not an approved V2 capability; no offline-write behavior is being added."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "handoff",
+          "claim": "Read-only offline operation is approved; writes resume after reconnect."
+        },
+        {
+          "reference": "gaps",
+          "claim": "Disconnected writes remain intentionally unavailable."
+        }
+      ],
       "dependencies": [],
-      "acceptanceChecks": [{ "id": "offline-no-write", "criterion": "Disconnected sessions cannot commit production changes." }],
-      "verificationEvidence": [{ "checkId": "offline-no-write", "reference": "gaps", "outcome": "NOT RUN", "detail": "Scope excludes offline writes; this record does not assert a separate implementation or test of write rejection." }]
+      "acceptanceChecks": [
+        {
+          "id": "offline-no-write",
+          "criterion": "Disconnected sessions cannot commit production changes."
+        }
+      ],
+      "verificationEvidence": [
+        {
+          "checkId": "offline-no-write",
+          "reference": "gaps",
+          "outcome": "NOT RUN",
+          "detail": "Scope excludes offline writes; this record does not assert a separate implementation or test of write rejection."
+        }
+      ]
     },
     {
       "id": "CAP-V1-READONLY-ARCHIVE",
       "name": "Restricted read-only V1 history archive",
       "category": "Data and operations",
       "purpose": "Explore whether an authorized, restricted read-only archive should preserve access to V1 history after cutover.",
-      "workflow": { "name": "Review historical V1 records", "roles": ["owner", "authorized auditor"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "Research recommends considering a separate archive, but retention period, access policy, and archive creation are not approved.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Decide whether an archive is needed, who may access it, and how long it may be retained."] },
-      "implementation": { "status": "not-started", "historicalV1": "unknown", "detail": "No V1 production records or archive were created or recovered by this work." },
-      "sourceEvidence": [{ "reference": "v1-v2", "claim": "A restricted V1 archive is a recommendation, not an existing archive or approval." }, { "reference": "gaps", "claim": "Archive retention/access policy and creation remain undecided." }],
+      "workflow": {
+        "name": "Review historical V1 records",
+        "roles": [
+          "owner",
+          "authorized auditor"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "Research recommends considering a separate archive, but retention period, access policy, and archive creation are not approved.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Decide whether an archive is needed, who may access it, and how long it may be retained."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "unknown",
+        "detail": "No V1 production records or archive were created or recovered by this work."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "v1-v2",
+          "claim": "A restricted V1 archive is a recommendation, not an existing archive or approval."
+        },
+        {
+          "reference": "gaps",
+          "claim": "Archive retention/access policy and creation remain undecided."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -551,10 +2311,32 @@
       "name": "Reported issue and incident queue",
       "category": "Future candidate",
       "purpose": "Explore a manager workflow for reviewing and tracking reported operational issues.",
-      "workflow": { "name": "Review reported issues", "roles": ["manager"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "The next-phase handoff lists an incidents/reported-issues queue as outside current scope unless added later.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Decide whether to add the queue and define visibility, retention, and action ownership."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "Historical incident-pattern surfaces are documented; this candidate does not claim an approved V2 queue." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Incidents/reported-issues queue is listed outside the handoff scope." }, { "reference": "manager-plan", "claim": "Accepted manager operations scope does not authorize a separate issue queue." }],
+      "workflow": {
+        "name": "Review reported issues",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "The next-phase handoff lists an incidents/reported-issues queue as outside current scope unless added later.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Decide whether to add the queue and define visibility, retention, and action ownership."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "Historical incident-pattern surfaces are documented; this candidate does not claim an approved V2 queue."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Incidents/reported-issues queue is listed outside the handoff scope."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -564,10 +2346,37 @@
       "name": "Proactive notification preferences",
       "category": "Future candidate",
       "purpose": "Explore user-controlled preferences for optional proactive browser notifications.",
-      "workflow": { "name": "Manage notification preferences", "roles": ["operator", "manager"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "Proactive browser-notification preferences are outside the current next-phase handoff.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Decide which notification types are useful and how permissions, privacy, and delivery are handled."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "Historical preferences and alerts are evidence for discovery, not approval of a V2/V3 notification policy." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Proactive browser-notification preferences are listed outside the handoff scope." }, { "reference": "v1-audit", "claim": "Historical notification behavior has bounded verification and delivery limitations." }],
+      "workflow": {
+        "name": "Manage notification preferences",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "Proactive browser-notification preferences are outside the current next-phase handoff.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Decide which notification types are useful and how permissions, privacy, and delivery are handled."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "Historical preferences and alerts are evidence for discovery, not approval of a V2/V3 notification policy."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Proactive browser-notification preferences are listed outside the handoff scope."
+        },
+        {
+          "reference": "v1-audit",
+          "claim": "Historical notification behavior has bounded verification and delivery limitations."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -577,10 +2386,37 @@
       "name": "Sandbox operating mode",
       "category": "Future candidate",
       "purpose": "Explore a separated practice mode that prevents synthetic work from changing live operational records.",
-      "workflow": { "name": "Practice without changing live operations", "roles": ["manager", "operator"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "Sandbox mode is named as outside the next-phase handoff; its future scope is not approved here.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Decide whether practice mode is needed and define isolation, identity, and data-retention boundaries."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "Historical sandbox-related code/research is not treated as a new V2/V3 requirement." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Sandbox mode is listed outside the handoff scope." }, { "reference": "v1-audit", "claim": "Historical sandbox boundaries and limits were assessed." }],
+      "workflow": {
+        "name": "Practice without changing live operations",
+        "roles": [
+          "manager",
+          "operator"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "Sandbox mode is named as outside the next-phase handoff; its future scope is not approved here.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Decide whether practice mode is needed and define isolation, identity, and data-retention boundaries."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "Historical sandbox-related code/research is not treated as a new V2/V3 requirement."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Sandbox mode is listed outside the handoff scope."
+        },
+        {
+          "reference": "v1-audit",
+          "claim": "Historical sandbox boundaries and limits were assessed."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -590,10 +2426,36 @@
       "name": "AI-assisted import matching",
       "category": "Future candidate",
       "purpose": "Explore optional suggestions for linking imported names to known production setup records.",
-      "workflow": { "name": "Review import match suggestions", "roles": ["manager"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "Historical V1 import plans describe assisted matching, while current V2 import adapters are deterministic and no new AI matching scope is approved.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Decide whether suggestions are valuable and define privacy, source authorization, evaluation, and no-auto-apply boundaries."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "Historical matching behavior is a discovery lead, not evidence that suggestions are safe or approved for future versions." },
-      "sourceEvidence": [{ "reference": "v1-import-plan", "claim": "Historical V1 importer plan describes AI-assisted matching and review." }, { "reference": "import-matrix", "claim": "Current V2 source adapters use bounded deterministic parsing and do not auto-apply AI/OCR suggestions." }],
+      "workflow": {
+        "name": "Review import match suggestions",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "Historical V1 import plans describe assisted matching, while current V2 import adapters are deterministic and no new AI matching scope is approved.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Decide whether suggestions are valuable and define privacy, source authorization, evaluation, and no-auto-apply boundaries."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "Historical matching behavior is a discovery lead, not evidence that suggestions are safe or approved for future versions."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "v1-import-plan",
+          "claim": "Historical V1 importer plan describes AI-assisted matching and review."
+        },
+        {
+          "reference": "import-matrix",
+          "claim": "Current V2 source adapters use bounded deterministic parsing and do not auto-apply AI/OCR suggestions."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -603,10 +2465,33 @@
       "name": "Native mobile application",
       "category": "Future candidate",
       "purpose": "Explore a separately installed native application for production operations.",
-      "workflow": { "name": "Use production tooling in a native app", "roles": ["operator", "manager"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "The next-phase handoff lists native mobile as unapproved; responsive web remains the current product boundary.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Whether there is a user need and whether native mobile belongs in a later release."] },
-      "implementation": { "status": "not-started", "historicalV1": "unknown", "detail": "No native app scope is approved or implemented in this catalog." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Native mobile is listed outside the handoff scope." }],
+      "workflow": {
+        "name": "Use production tooling in a native app",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "The next-phase handoff lists native mobile as unapproved; responsive web remains the current product boundary.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Whether there is a user need and whether native mobile belongs in a later release."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "unknown",
+        "detail": "No native app scope is approved or implemented in this catalog."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Native mobile is listed outside the handoff scope."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -616,10 +2501,33 @@
       "name": "Cast production status to screens",
       "category": "Future candidate",
       "purpose": "Explore a separate read-only floor display for production status.",
-      "workflow": { "name": "View production status on a shared screen", "roles": ["operator", "manager"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "Cast-to-screens/Floor Mode is named as outside the current handoff scope, not approved for V2.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Whether a shared display is needed and what information it may show."] },
-      "implementation": { "status": "not-started", "historicalV1": "unknown", "detail": "Candidate only; no product requirement or verification is asserted." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "Cast-to-screens/Floor Mode is listed as out of scope for the handoff." }],
+      "workflow": {
+        "name": "View production status on a shared screen",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "Cast-to-screens/Floor Mode is named as outside the current handoff scope, not approved for V2.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Whether a shared display is needed and what information it may show."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "unknown",
+        "detail": "Candidate only; no product requirement or verification is asserted."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "Cast-to-screens/Floor Mode is listed as out of scope for the handoff."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -629,10 +2537,37 @@
       "name": "AI operational assistance",
       "category": "Future candidate",
       "purpose": "Explore whether AI-generated operational advice, anomaly detection, or insights should be offered.",
-      "workflow": { "name": "Review optional AI assistance", "roles": ["operator", "manager"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "AI features are explicitly excluded from the next-phase handoff; no production decision or policy is approved here.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Define user value, source authorization, privacy/retention, evaluation, and whether advice can affect production decisions."] },
-      "implementation": { "status": "not-started", "historicalV1": "partially-evidenced", "detail": "Historical experiments and tooling are not an approved user-facing capability or evidence of safe production quality." },
-      "sourceEvidence": [{ "reference": "next-handoff", "claim": "AI features are listed outside the handoff scope." }, { "reference": "v1-audit", "claim": "Historical local AI evaluation has explicit synthetic/source-approval limits." }],
+      "workflow": {
+        "name": "Review optional AI assistance",
+        "roles": [
+          "operator",
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "AI features are explicitly excluded from the next-phase handoff; no production decision or policy is approved here.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Define user value, source authorization, privacy/retention, evaluation, and whether advice can affect production decisions."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "partially-evidenced",
+        "detail": "Historical experiments and tooling are not an approved user-facing capability or evidence of safe production quality."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "next-handoff",
+          "claim": "AI features are listed outside the handoff scope."
+        },
+        {
+          "reference": "v1-audit",
+          "claim": "Historical local AI evaluation has explicit synthetic/source-approval limits."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
@@ -642,10 +2577,32 @@
       "name": "Scheduled recurring imports",
       "category": "Future candidate",
       "purpose": "Explore applying a recurring source on a schedule after a recurring source and safe workflow are established.",
-      "workflow": { "name": "Schedule a future import", "roles": ["manager"] },
-      "decision": { "state": "candidate", "releaseScope": "none", "rationale": "The historical importer plan explicitly defers scheduling unless a recurring source and approved workflow exist.", "approvedBehavior": [], "unresolvedOwnerDecisions": ["Confirm a recurring source, asynchronous authorization model, and recovery requirements before approving scope."] },
-      "implementation": { "status": "not-started", "historicalV1": "unknown", "detail": "No recurring auto-apply behavior is approved or evidenced." },
-      "sourceEvidence": [{ "reference": "v1-import-plan", "claim": "Import scheduling is deferred pending recurring source and owner-approved workflow." }],
+      "workflow": {
+        "name": "Schedule a future import",
+        "roles": [
+          "manager"
+        ]
+      },
+      "decision": {
+        "state": "candidate",
+        "releaseScope": "none",
+        "rationale": "The historical importer plan explicitly defers scheduling unless a recurring source and approved workflow exist.",
+        "approvedBehavior": [],
+        "unresolvedOwnerDecisions": [
+          "Confirm a recurring source, asynchronous authorization model, and recovery requirements before approving scope."
+        ]
+      },
+      "implementation": {
+        "status": "not-started",
+        "historicalV1": "unknown",
+        "detail": "No recurring auto-apply behavior is approved or evidenced."
+      },
+      "sourceEvidence": [
+        {
+          "reference": "v1-import-plan",
+          "claim": "Import scheduling is deferred pending recurring source and owner-approved workflow."
+        }
+      ],
       "dependencies": [],
       "acceptanceChecks": [],
       "verificationEvidence": []
