@@ -423,7 +423,9 @@ function premixRows(result, sheet) {
       continue;
     }
     const components = [];
+    const componentSources = [];
     let batchSizeLbs = null;
+    let batchSizeSource = null;
     let blockRows = 0;
     let cursor = headerIndex + 1;
     for (; cursor < sheet.rows.length; cursor += 1) {
@@ -431,6 +433,7 @@ function premixRows(result, sheet) {
       const ingredient = text(row[ingredientColumn]).replace(/\s+/gu, " ").split("\n")[0].trim();
       if (/^total\b/iu.test(ingredient)) {
         batchSizeLbs = numeric(row[batchColumn]);
+        batchSizeSource = sourceRef(sheet.name, cursor);
         result.skippedRows += 1;
         break;
       }
@@ -460,6 +463,11 @@ function premixRows(result, sheet) {
         continue;
       }
       components.push({ ingredientName: ingredient, perPizzaOz, perBatchLbs });
+      componentSources.push({
+        source: sourceRef(sheet.name, cursor),
+        perPizzaUnit: "oz/pizza",
+        perBatchUnit: "lbs/batch",
+      });
     }
     if (blockRows === 0 || components.length === 0) {
       unresolved(result, sourceRef(sheet.name, headerIndex), "The premix block has no readable ingredient quantities.");
@@ -474,7 +482,11 @@ function premixRows(result, sheet) {
       isPrep: prepSetting,
       enabled: null,
       components,
-    }, sourceRef(sheet.name, headerIndex));
+    }, sourceRef(sheet.name, headerIndex), {
+      batchSizeSource,
+      batchSizeUnit: "lbs/batch",
+      components: componentSources,
+    });
   }
 }
 
@@ -520,6 +532,7 @@ function cheeseRows(result, sheet) {
         "4th": 4, fourth: 4, "1": 1, "2": 2, "3": 3, "4": 4,
       })[slotMatch[1].toLocaleLowerCase("en-US")] : null;
       const components = [];
+      const componentSources = [];
       const issues = [];
       let cursor = lbsRow + 1;
       for (; cursor < sheet.rows.length; cursor += 1) {
@@ -536,6 +549,10 @@ function cheeseRows(result, sheet) {
           issues.push(`${sourceRef(sheet.name, cursor)}: ingredient batch pounds are missing or not numeric`);
         } else {
           components.push({ ingredient: componentName, lbs: amount });
+          componentSources.push({
+            source: sourceRef(sheet.name, cursor),
+            amountUnit: "lbs/batch",
+          });
         }
       }
       blocks.push({
@@ -543,6 +560,7 @@ function cheeseRows(result, sheet) {
         rowIndex,
         slot,
         components,
+        componentSources,
         issues,
       });
       rowIndex = Math.max(cursor + 1, rowIndex + 1);
@@ -610,6 +628,7 @@ function cheeseRows(result, sheet) {
         recipeName: block.recipeName,
         batchUnit: "lbs",
         components: block.components,
+        componentSources: block.componentSources,
         explicitApplicatorSlot: block.slot,
         source: sourceRef(sheet.name, block.rowIndex),
       })),

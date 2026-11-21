@@ -6,10 +6,11 @@ const MAX_WORKBOOK_BYTES = 5 * 1024 * 1024;
 const MAX_ZIP_ENTRIES = 256;
 const MAX_ENTRY_BYTES = 2 * 1024 * 1024;
 const MAX_TOTAL_EXPANDED_BYTES = 10 * 1024 * 1024;
-const MAX_SHEETS = 32;
+const MAX_SHEETS = 64;
 const MAX_ROWS = 2000;
 const MAX_COLUMNS = 256;
 const MAX_CELLS = 100_000;
+const MAX_TOTAL_CELLS = 100_000;
 const MAX_NAME_LENGTH = 180;
 const MAX_NUMERIC_VALUE = 1_000_000;
 const NUMERIC_TEXT = /^(?:0|[1-9]\d*|(?:\d{1,3}(?:,\d{3})+))(?:\.\d+)?$/u;
@@ -124,32 +125,38 @@ function readWorkbook(buffer, fileName) {
   }
   if (!Array.isArray(workbook.SheetNames) || workbook.SheetNames.length < 1
     || workbook.SheetNames.length > MAX_SHEETS) {
-    fail("The workbook must contain between one and 32 sheets.");
+    fail("The workbook must contain between one and 64 sheets.");
   }
-  return { workbook, fileName };
+  const sheetRanges = new Map();
+  let totalCells = 0;
+  for (const name of workbook.SheetNames) {
+    const metadata = storedCellRange(workbook.Sheets[name]);
+    sheetRanges.set(name, metadata);
+    if (!metadata.range) continue;
+    const rowCount = metadata.range.e.r + 1;
+    const columnCount = metadata.range.e.c + 1;
+    const cells = rowCount * columnCount;
+    if (rowCount > MAX_ROWS + 100 || columnCount > MAX_COLUMNS || cells > MAX_CELLS) {
+      fail("The workbook sheet is too large to review safely.");
+    }
+    totalCells += cells;
+    if (totalCells > MAX_TOTAL_CELLS) {
+      fail("The workbook contains more than 100,000 review cells.");
+    }
+  }
+  return { workbook, fileName, sheetRanges };
 }
 
 export function readWorkbookSheets(buffer, fileName) {
   const parsedFileName = safeFileName(fileName);
-  const { workbook } = readWorkbook(buffer, parsedFileName);
+  const { workbook, sheetRanges } = readWorkbook(buffer, parsedFileName);
   const sheets = workbook.SheetNames.map((name) => {
-    const sheet = workbook.Sheets[name];
-    const formulas = [];
-    if (sheet && typeof sheet["!ref"] === "string") {
-      let range;
-      try {
-        range = XLSX.utils.decode_range(sheet["!ref"]);
-      } catch {
-        fail("The workbook contains an invalid sheet range.");
-      }
-      for (let row = range.s.r; row <= range.e.r; row += 1) {
-        for (let column = range.s.c; column <= range.e.c; column += 1) {
-          const cell = sheet[XLSX.utils.encode_cell({ r: row, c: column })];
-          if (typeof cell?.f === "string" && cell.f) formulas.push({ row, column });
-        }
-      }
-    }
-    return { name, rows: sheetRows(sheet, name), formulas };
+    const metadata = sheetRanges.get(name);
+    return {
+      name,
+      rows: sheetRows(workbook.Sheets[name], metadata),
+      formulas: metadata.formulas,
+    };
   });
   return {
     fileName: parsedFileName,
@@ -158,14 +165,62 @@ export function readWorkbookSheets(buffer, fileName) {
   };
 }
 
-function sheetRows(sheet, sheetName) {
-  if (!sheet || typeof sheet["!ref"] !== "string") return [];
-  let range;
-  try {
-    range = XLSX.utils.decode_range(sheet["!ref"]);
-  } catch {
-    fail("The workbook contains an invalid sheet range.");
+function hasStoredCellValue(cell) {
+  return typeof cell?.f === "string" && cell.f.length > 0
+    || cell?.v !== undefined && cell.v !== null
+      && (typeof cell.v !== "string" || cell.v.length > 0);
+}
+
+function storedCellRange(sheet) {
+  if (!sheet || typeof sheet !== "object") return { range: null, formulas: [] };
+  if (sheet["!ref"] !== undefined) {
+    if (typeof sheet["!ref"] !== "string") {
+      fail("The workbook contains an invalid sheet range.");
+    }
+    try {
+      XLSX.utils.decode_range(sheet["!ref"]);
+    } catch {
+      fail("The workbook contains an invalid sheet range.");
+    }
   }
+
+  let startRow = Number.POSITIVE_INFINITY;
+  let startColumn = Number.POSITIVE_INFINITY;
+  let endRow = -1;
+  let endColumn = -1;
+  const formulas = [];
+  for (const address of Object.keys(sheet)) {
+    if (!/^[A-Z]{1,3}[1-9]\d*$/u.test(address)) continue;
+    const cell = sheet[address];
+    if (!hasStoredCellValue(cell)) continue;
+    let position;
+    try {
+      position = XLSX.utils.decode_cell(address);
+    } catch {
+      fail("The workbook contains an invalid cell address.");
+    }
+    startRow = Math.min(startRow, position.r);
+    startColumn = Math.min(startColumn, position.c);
+    endRow = Math.max(endRow, position.r);
+    endColumn = Math.max(endColumn, position.c);
+    if (typeof cell.f === "string" && cell.f) {
+      formulas.push({ row: position.r, column: position.c });
+    }
+  }
+  if (endRow < 0 || endColumn < 0) return { range: null, formulas };
+  return {
+    range: {
+      s: { r: startRow, c: startColumn },
+      e: { r: endRow, c: endColumn },
+    },
+    formulas,
+  };
+}
+
+function sheetRows(sheet, metadata) {
+  if (!sheet || !metadata?.range) return [];
+  const { range } = metadata;
+  if (!range) return [];
   const rowCount = range.e.r + 1;
   const columnCount = range.e.c + 1;
   if (rowCount * columnCount > MAX_CELLS || rowCount > MAX_ROWS + 100 || columnCount > MAX_COLUMNS) {
@@ -310,11 +365,11 @@ function mapRowsToProducts(rows, products, priorLinks, managerLinks = []) {
   });
 }
 
-function doughRowsFromWorkbook(workbook, fileName) {
+function doughRowsFromWorkbook(workbook, fileName, sheetRanges) {
   const output = [];
   const occurrences = new Map();
   for (const sheetName of workbook.SheetNames) {
-    const rows = sheetRows(workbook.Sheets[sheetName], sheetName);
+    const rows = sheetRows(workbook.Sheets[sheetName], sheetRanges.get(sheetName));
     const header = matchingDoughHeader(rows);
     if (!header) continue;
     let blankRows = 0;
@@ -382,10 +437,10 @@ function parsePizzasPerCase(value) {
   return count !== null && count <= 100 ? count : null;
 }
 
-function shippingRowsFromWorkbook(workbook, fileName) {
+function shippingRowsFromWorkbook(workbook, fileName, sheetRanges) {
   const output = [];
   for (const sheetName of workbook.SheetNames) {
-    const rows = sheetRows(workbook.Sheets[sheetName], sheetName);
+    const rows = sheetRows(workbook.Sheets[sheetName], sheetRanges.get(sheetName));
     let headerIndex = -1;
     let nameColumn = -1;
     let pizzasColumn = -1;
@@ -442,8 +497,8 @@ function shippingRowsFromWorkbook(workbook, fileName) {
 
 export function parseDoughCapacityWorkbook(buffer, fileName) {
   const parsedFileName = safeFileName(fileName);
-  const { workbook } = readWorkbook(buffer, parsedFileName);
-  const rows = doughRowsFromWorkbook(workbook, parsedFileName);
+  const { workbook, sheetRanges } = readWorkbook(buffer, parsedFileName);
+  const rows = doughRowsFromWorkbook(workbook, parsedFileName, sheetRanges);
   if (rows.length === 0) {
     fail("No doughball yield table was found. Upload a dough mixing procedure with OZ, YIELD, and PER TRAY columns.");
   }
@@ -456,8 +511,8 @@ export function parseDoughCapacityWorkbook(buffer, fileName) {
 
 export function parseShippingCapacityWorkbook(buffer, fileName) {
   const parsedFileName = safeFileName(fileName);
-  const { workbook } = readWorkbook(buffer, parsedFileName);
-  const rows = shippingRowsFromWorkbook(workbook, parsedFileName);
+  const { workbook, sheetRanges } = readWorkbook(buffer, parsedFileName);
+  const rows = shippingRowsFromWorkbook(workbook, parsedFileName, sheetRanges);
   if (rows.length === 0) {
     fail("No shipping guide rows were found. Upload a guide with a PIZZA and PIZZAS/CS column.");
   }
@@ -536,5 +591,8 @@ export function analyzeWorkbookCapacityDuplicates(rows, products, priorLinks = [
 
 export const workbookCapacityImportLimits = Object.freeze({
   maxBytes: MAX_WORKBOOK_BYTES,
+  maxSheets: MAX_SHEETS,
   maxRows: MAX_ROWS,
+  maxCellsPerSheet: MAX_CELLS,
+  maxTotalCells: MAX_TOTAL_CELLS,
 });

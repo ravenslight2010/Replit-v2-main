@@ -6,11 +6,25 @@ import {
   parseSourceWorkbook,
   SourceWorkbookImportError,
 } from "./source-workbook-import.mjs";
+import { readWorkbookSheets } from "./workbook-capacity-import.mjs";
 
 function makeWorkbook(sheets) {
   const workbook = XLSX.utils.book_new();
   for (const [name, rows] of sheets) {
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), name);
+  }
+  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+}
+
+function makeSparseWorkbook(entries) {
+  const workbook = XLSX.utils.book_new();
+  for (const { name, endCell } of entries) {
+    const sheet = {
+      A1: { t: "s", v: "start" },
+      [endCell]: { t: "s", v: "end" },
+      "!ref": `A1:${endCell}`,
+    };
+    XLSX.utils.book_append_sheet(workbook, sheet, name);
   }
   return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 }
@@ -96,6 +110,15 @@ test("parses side-by-side premix blocks, preserves blanks, and stays idempotent 
   assert.deepEqual(parsed.records[0].record.data.components, [{
     ingredientName: "Flour", perPizzaOz: 0.5, perBatchLbs: 10,
   }]);
+  assert.deepEqual(parsed.records[0].sourceDetails, {
+    batchSizeSource: "Mixes!row 4",
+    batchSizeUnit: "lbs/batch",
+    components: [{
+      source: "Mixes!row 3",
+      perPizzaUnit: "oz/pizza",
+      perBatchUnit: "lbs/batch",
+    }],
+  });
   assert.deepEqual(parsed.records[1].record.data.components, [{
     ingredientName: "Oil", perPizzaOz: null, perBatchLbs: 2,
   }]);
@@ -118,6 +141,42 @@ test("parses side-by-side premix blocks, preserves blanks, and stays idempotent 
   );
 });
 
+test("parses a 51-sheet premix workbook within the bounded sheet and cell limits", () => {
+  const sheets = Array.from({ length: 51 }, (_, index) => {
+    const name = `Mix ${index + 1}`;
+    return [name, [
+      [name],
+      ["Ingredient", "Per Pizza", "Per Batch"],
+      ["Flour", 0.5, 10],
+    ]];
+  });
+  const parsed = parseSourceWorkbook("premix-sheets", makeWorkbook(sheets), "premix.xlsx");
+  assert.equal(parsed.records.length, 51);
+  assert.equal(parsed.unresolvedRows.length, 0);
+  assert.equal(parsed.records[50].record.data.components[0].perPizzaOz, 0.5);
+  assert.equal(parsed.records[50].record.data.components[0].perBatchLbs, 10);
+});
+
+test("rejects workbooks beyond the sheet count and aggregate review-cell bounds", () => {
+  const tooManySheets = makeWorkbook(Array.from({ length: 65 }, (_, index) => [
+    `Sheet ${index + 1}`,
+    [["No supported profile table"]],
+  ]));
+  assert.throws(
+    () => readWorkbookSheets(tooManySheets, "too-many-sheets.xlsx"),
+    /between one and 64 sheets/u,
+  );
+
+  const overCellBudget = makeSparseWorkbook([
+    { name: "One", endCell: "GR300" },
+    { name: "Two", endCell: "GR300" },
+  ]);
+  assert.throws(
+    () => readWorkbookSheets(overCellBudget, "too-many-cells.xlsx"),
+    /more than 100,000 review cells/u,
+  );
+});
+
 test("combines explicit cheese slots into one reviewed profile and blocks guesses", () => {
   const parsed = parseSourceWorkbook("cheese-mix-specs", makeWorkbook([["Acme", [
     ["Acme Cheese Specs"],
@@ -134,6 +193,10 @@ test("combines explicit cheese slots into one reviewed profile and blocks guesse
     app1CheeseRecipeName: "Standard Cheese Mix",
     app1CheeseRecipe: [{ ingredient: "Mozzarella", lbs: 20 }],
   });
+  assert.deepEqual(parsed.records[0].sourceDetails.recipes[0].componentSources, [{
+    source: "Acme!row 6",
+    amountUnit: "lbs/batch",
+  }]);
   assert.equal(parsed.unresolvedRows.length, 0);
 
   const ambiguous = parseSourceWorkbook("cheese-mix-specs", makeWorkbook([["Acme", [
@@ -142,6 +205,31 @@ test("combines explicit cheese slots into one reviewed profile and blocks guesse
   assert.equal(ambiguous.records.length, 1);
   assert.deepEqual(ambiguous.records[0].record.data.values, {});
   assert.equal(ambiguous.unresolvedRows.length, 2);
+});
+
+test("ignores formatting-only XFD extents when deriving cheese content bounds", () => {
+  const workbook = XLSX.utils.book_new();
+  const sheet = XLSX.utils.aoa_to_sheet([
+    ["Acme Cheese Specs"],
+    ["All Varieties: Standard Cheese Mix"],
+    ["Standard Cheese Mix"],
+    ["For 1st Cheese Applicator"],
+    ["", "LBS"],
+    ["Mozzarella", 20],
+    ["Total", 20],
+  ]);
+  sheet["!ref"] = "A1:XFD44";
+  XLSX.utils.book_append_sheet(workbook, sheet, "Acme");
+  const parsed = parseSourceWorkbook(
+    "cheese-mix-specs",
+    XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }),
+    "cheese.xlsx",
+  );
+  assert.equal(parsed.records.length, 1);
+  assert.deepEqual(parsed.records[0].record.data.values.app1CheeseRecipe, [
+    { ingredient: "Mozzarella", lbs: 20 },
+  ]);
+  assert.equal(parsed.unresolvedRows.length, 0);
 });
 
 test("maps explicit shipping values but preserves unknown and non-target columns for review", () => {
@@ -214,4 +302,22 @@ test("formula and cached values, duplicate identities, unsupported files, and si
     () => parseSourceWorkbook("sauce-guides", Buffer.alloc(5 * 1024 * 1024 + 1), "large.docx"),
     SourceWorkbookImportError,
   );
+});
+
+test("formula cells without cached values remain unresolved", () => {
+  const workbook = XLSX.utils.book_new();
+  const sheet = XLSX.utils.aoa_to_sheet([
+    ["Brand", "Flavor", "Sauce oz/pizza"],
+    ["Acme", "Classic", ""],
+  ]);
+  sheet.C2 = { t: "n", f: "1+2" };
+  XLSX.utils.book_append_sheet(workbook, sheet, "Profiles");
+  const parsed = parseSourceWorkbook(
+    "spec-sheets",
+    XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }),
+    "formula-no-cache.xlsx",
+  );
+  assert.equal(parsed.records.length, 0);
+  assert.equal(parsed.unresolvedRows.length, 1);
+  assert.match(parsed.unresolvedRows[0].reason, /Formula or cached/u);
 });

@@ -262,18 +262,109 @@ physical Android Chrome or iOS Safari/PWA behavior.
 
 ## Blocker and owner-controlled next steps
 
-**Current blocker:** a limited aggregate source review was authorized and
-completed on 2026-11-17, but no row-level mapping or import batch is approved.
-No repeatable read-only path for a future row-level review is currently
-identified. The owner chose to build equivalent V2 roles before transferring
-the two custom-role accounts. Those role definitions now exist in V2
-development; QC and incident behavior must still be implemented by Tasks #3964
-and #3965 before the `qc-manager` account is usable. Do not map either account
-to the broader manager role. Other blockers include legacy product keys,
-ingredient and setup/profile code/link mappings, and packaging products absent
-from the V1 inventory-item catalog. The 94 unmatched component references and
-recipe component issues remain quarantined. Approved setup families now have
-typed V2 targets, but no source rows have been staged or imported.
+### Retained source-library inventory and approval check (2026-11-20)
+
+The retained `attached_assets/source-library` was inventoried by directory and
+file metadata before any workbook was opened. After the owner authorized
+parsing, the six deterministic V2 source-workbook adapters were run against 50
+retained workbook files:
+
+| Source family | Files | V2 adapter |
+| --- | ---: | --- |
+| Spec sheets | 19 | Supported, manager review required |
+| Premix sheets | 1 | Supported, manager review required |
+| Cheese mix specs | 1 | Supported, manager review required |
+| Shipping guides | 1 | Supported, manager review required |
+| Sauce guides | 15 | Supported, manager review required |
+| Dough guides | 13 | Supported, manager review required |
+| **Supported total** | **50** | **Parsed; none staged** |
+| Schedule workbook | 1 | No adapter in the V1 source-workbook importer |
+
+#### Authorized deterministic preview results (2026-11-20)
+
+After the owner authorized parsing all six source-library families, each of the
+50 unique workbooks was previewed through its matching deterministic V2 adapter.
+The earlier pass used the 32-sheet limit and sent dough mixing procedures to the
+assignment-guide parser; the results below supersede that pass. No workbook
+bytes or parsed customer records were retained in this report.
+
+The setup-family preview reports meaningful source rows, proposed V2 records,
+skipped rows, and unresolved review entries. These values are not additive:
+records can group multiple source rows, a row can produce a candidate and
+unresolved issue, and multiple issues can refer to one row.
+
+| Setup-family preview | Files parsed / errors | Source rows | Proposed records | Skipped | Unresolved entries |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Spec sheets | 19 / 0 | 19 | 0 | 0 | 19 |
+| Premix sheets | 1 / 0 | 177 | 12 | 44 | 205 |
+| Cheese mix specs | 1 / 0 | 374 | 91 | 0 | 147 |
+| Shipping setup profiles | 1 / 0 | 20 | 20 | 0 | 20 |
+| Sauce guides | 15 / 0 | 383 | 0 | 1 | 382 |
+| **Total setup-family pass** | **37 / 0** | **973** | **123** | **45** | **773** |
+
+The 19 spec workbooks still have no supported Brand/Flavor profile table. The
+premix and cheese workbooks now pass bounded parsing: the 51-sheet premix file
+produces 12 candidate mix records, with formulas and other unresolved values
+left for review; the cheese workbook produces 91 candidate setup records, with
+147 review issues retained. Sauce rows remain unresolved unless they match the
+explicit supported sauce-assignment format. The shipping setup preview keeps
+its 20 candidate records and flags unsupported packaging values rather than
+guessing.
+
+The separate capacity-workbook preview parsed the correct layouts for the
+procedure and shipping sources:
+
+| Capacity preview | Files parsed / errors | Rows | Missing source values |
+| --- | ---: | ---: | ---: |
+| Dough mixing procedures | 13 / 0 | 29 | 0 missing doughball weight, yield, or per-tray count |
+| Shipping guide | 1 / 0 | 20 | 0 missing pizzas-per-case values |
+
+Doughball weight remains ounces, yield remains doughballs per batch, and tray
+count remains doughballs per tray. Shipping counts remain pizzas per case.
+These rows still need manager product-link review; this preview did not query or
+write product links. The shipping capacity preview is distinct from the
+shipping setup-profile preview; do not stage duplicate/conflicting values from
+both paths without owner review.
+
+On 2026-11-21, after owner approval, the guarded V2 development-schema
+activation completed against the reviewed `heliumdb` target and schema
+fingerprint. All migration source hashes matched; the transaction verified the
+expected 34 tables, 69 functions, and 11 triggers and confirmed existing V2
+rows were unchanged. This enabled the setup-import review flow only. The
+production database was not touched, and no workbook rows were staged or
+applied.
+
+The V2 source-review UI requires a manager to inspect each included candidate
+and resolve, acknowledge, or skip every unresolved entry before staging.
+Capacity rows also require exact, remembered, or manager-selected
+active-product links. No authenticated manager session was available to verify
+the signed-in UI or manager receipts. All previewed data therefore remains
+unapplied.
+
+The directory also contains 11 audit files and three root-level metadata files;
+they are not customer-workbook imports. The 2026-08-26 cheese approval receipt
+is bound to the hash-identified workbook and 58 exact links for a matching V1
+cheese re-import. It approves no V2 opening-setup transfer and no other workbook
+use. The 2026-11-17 V1 production-source authorization covered only an
+aggregate, read-only allowlist review; it did not authorize row-level extraction
+from that database. On 2026-11-20 the owner authorized parsing and review-only
+staging for these 50 supported source-library workbooks. That authorization does
+not approve Apply or any production write. Any eventual application remains a
+separate manager-review decision.
+
+**Current blocker:** parsing is authorized and complete for the 50 retained
+workbooks, and the development review flow is now available, but no rows have
+been staged. The 123 source-family candidates and 49 capacity rows require
+manager review; product-linked capacity rows also need manager confirmation of
+product links and duplicate-source warnings. Unsupported spec/sauce layouts,
+formula-backed quantities, and unmapped packaging values remain visible and
+unresolved. Do not stage the shipping capacity and shipping profile values
+twice. The owner plans to review candidate values in the V2 manager UI, resolve,
+acknowledge, or skip unresolved entries, and decide which reviewed records to
+stage. Staff accounts must be created through V2 account controls, and opening
+inventory must come from a fresh physical count. No V1 run history, inventory
+balances or movements, sessions, password hashes, or credentials are
+transferred.
 
 Before any real row-level extraction, the owner must separately authorize a
 specific read-only V1 source and limited field projection through an approved
