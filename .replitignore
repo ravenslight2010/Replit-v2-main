@@ -1,6 +1,19 @@
 # The format of this file is identical to `.dockerignore`.
 # It is used to reduce the size of deployed images to make the process of publishing faster.
 
+# Workspace caches and machine-specific tools are not needed in the deployed image.
+.cache/
+.config/
+
+# V1 is retained for reference only; V2 runs from the active v2 workspace.
+_archived/
+
+# These uploaded workbooks and screenshots are used by local tests/audits, not the runtime.
+attached_assets/
+
+# Git history is not needed at runtime; Replit records the published revision separately.
+.git/
+
 # No need to store the pnpm store twice.
 .local
 /generated-artifacts/
