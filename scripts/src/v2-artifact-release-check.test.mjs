@@ -7,6 +7,7 @@ import {
   assertStaticAssetResponse,
   runV2ArtifactReleaseCheck,
   validateV2ArtifactManifest,
+  validateV2WebAppInstallContract,
 } from "./v2-artifact-release-check.mjs";
 
 const rootDir = resolve(fileURLToPath(new URL("../../", import.meta.url)));
@@ -116,5 +117,52 @@ assert.throws(
   "A nested client route must return an HTML content type",
 );
 
+const [webManifestSource, v2IndexHtml, v2Icon] = await Promise.all([
+  readFile(resolve(rootDir, "v2/web/manifest.webmanifest"), "utf8"),
+  readFile(resolve(rootDir, "v2/web/index.html"), "utf8"),
+  readFile(resolve(rootDir, "v2/web/favicon.svg"), "utf8"),
+]);
+const webManifest = JSON.parse(webManifestSource);
+assert.doesNotThrow(
+  () => validateV2WebAppInstallContract(webManifestSource, v2IndexHtml),
+  "The V2 install contract should match the root-served app",
+);
+
+for (const [label, mutate, expectedError] of [
+  ["install name", (manifest) => { manifest.name = "Unrelated app"; }, /install name/],
+  ["short install name", (manifest) => { manifest.short_name = "Floor"; }, /short install name/],
+  ["start URL", (manifest) => { manifest.start_url = "/login"; }, /start at the root/],
+  ["scope", (manifest) => { manifest.scope = "/other/"; }, /scope must cover/],
+  ["display mode", (manifest) => { manifest.display = "browser"; }, /display mode/],
+  ["theme color", (manifest) => { manifest.theme_color = "#000000"; }, /theme color/],
+  ["icon type", (manifest) => { manifest.icons[0].type = "image/png"; }, /unsupported type/],
+  ["icon path", (manifest) => { manifest.icons[0].src = "https://example.test/icon.svg"; }, /root-served asset path/],
+  ["icon sizes", (manifest) => { manifest.icons[0].sizes = "large"; }, /valid sizes/],
+  ["icon purpose", (manifest) => { manifest.icons[0].purpose = "download"; }, /unsupported purpose/],
+]) {
+  const invalidManifest = structuredClone(webManifest);
+  mutate(invalidManifest);
+  assert.throws(
+    () => validateV2WebAppInstallContract(JSON.stringify(invalidManifest), v2IndexHtml),
+    expectedError,
+    `The install contract should reject an invalid ${label}`,
+  );
+}
+
+assert.doesNotThrow(
+  () => assertStaticAssetResponse("/v2/web/favicon.svg", 200, "image/svg+xml; charset=utf-8", v2Icon),
+  "A declared SVG icon should be served with its supported image type",
+);
+assert.throws(
+  () => assertStaticAssetResponse("/v2/web/favicon.svg", 200, "text/html", "<!doctype html><html></html>"),
+  /incorrect content type/,
+  "A rewrite fallback must not pass as an install icon",
+);
+assert.throws(
+  () => assertStaticAssetResponse("/v2/web/favicon.svg", 200, "image/svg+xml", "<not-svg />"),
+  /valid SVG icon/,
+  "A non-SVG body must not pass as a valid install icon",
+);
+
 await runV2ArtifactReleaseCheck(rootDir);
-console.log("V2 artifact manifest, bundle, and static HTTP contract tests passed.");
+console.log("V2 artifact manifests, install metadata, bundle, and static HTTP contract tests passed.");

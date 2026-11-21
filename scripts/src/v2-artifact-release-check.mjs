@@ -136,6 +136,9 @@ const STATIC_MIME_TYPES = {
   ".svg": ["image/svg+xml"],
   ".webmanifest": ["application/manifest+json", "application/json"],
 };
+const SUPPORTED_ICON_TYPES = new Map([
+  [".svg", "image/svg+xml"],
+]);
 const ARTIFACT_ASSET_PREFIXES = ["/v2/web/", "/v2/core/"];
 
 function artifactPathFromReference(reference, base = "http://artifact/") {
@@ -155,6 +158,88 @@ function artifactPathFromReference(reference, base = "http://artifact/") {
     return null;
   }
   return null;
+}
+
+function getLinkTag(html, rel) {
+  return [...html.matchAll(/<link\b[^>]*>/gi)]
+    .map(([tag]) => tag)
+    .find((tag) => new RegExp(`\\brel=["']${rel}["']`, "i").test(tag));
+}
+
+function getTagAttribute(tag, attribute) {
+  return tag?.match(new RegExp(`\\b${attribute}=["']([^"']+)["']`, "i"))?.[1];
+}
+
+export function validateV2WebAppInstallContract(manifestSource, indexHtml) {
+  let manifest;
+  try {
+    manifest = JSON.parse(manifestSource);
+  } catch (error) {
+    throw new Error(`Invalid V2 web manifest: ${error.message}`);
+  }
+
+  assert.equal(manifest.name, "Fieldline Production Floor", "The install name must identify the Fieldline production floor");
+  assert.equal(manifest.short_name, "Fieldline", "The short install name must match the Fieldline wordmark");
+  assert.equal(manifest.start_url, "/", "The installed app must start at the root-served V2 app");
+  assert.equal(manifest.scope, "/", "The installed app scope must cover the root-served V2 app");
+  assert.equal(manifest.display, "standalone", "The installed app must use standalone display mode");
+
+  const title = indexHtml.match(/<title>([^<]+)<\/title>/i)?.[1];
+  assert.ok(title, "The root-served V2 app must declare a title");
+  assert.match(title, /Fieldline/i, "The install name must match the root-served app brand");
+  assert.match(indexHtml, />\s*FIELDLINE\s*</i, "The short install name must match the root-served wordmark");
+  assert.match(indexHtml, />\s*PRODUCTION FLOOR\s*</i, "The install name must match the root-served app purpose");
+
+  const manifestLink = getLinkTag(indexHtml, "manifest");
+  assert.equal(
+    getTagAttribute(manifestLink, "href"),
+    "/manifest.webmanifest",
+    "The root-served app must link to the root-served web manifest",
+  );
+  const themeColorTag = indexHtml.match(/<meta\b(?=[^>]*\bname=["']theme-color["'])[^>]*>/i)?.[0];
+  const pageThemeColor = getTagAttribute(themeColorTag, "content");
+  assert.ok(pageThemeColor, "The root-served app must declare a theme color");
+  assert.equal(
+    manifest.theme_color?.toLowerCase(),
+    pageThemeColor.toLowerCase(),
+    "The install theme color must match the root-served app",
+  );
+
+  assert.ok(Array.isArray(manifest.icons) && manifest.icons.length > 0, "The web manifest must declare at least one icon");
+  const rootIconLink = getLinkTag(indexHtml, "icon");
+  const rootIconPath = getTagAttribute(rootIconLink, "href");
+  const rootIconType = getTagAttribute(rootIconLink, "type");
+  assert.ok(rootIconPath, "The root-served app must declare its icon path");
+
+  for (const [index, icon] of manifest.icons.entries()) {
+    assert.ok(icon && typeof icon === "object", `Manifest icon ${index + 1} must be an object`);
+    const assetPath = artifactPathFromReference(icon.src);
+    assert.ok(
+      assetPath && assetPath === icon.src,
+      `Manifest icon ${index + 1} must use a supported root-served asset path`,
+    );
+    const extension = assetPath.slice(assetPath.lastIndexOf(".")).toLowerCase();
+    assert.equal(
+      SUPPORTED_ICON_TYPES.get(extension),
+      icon.type,
+      `Manifest icon ${index + 1} has an unsupported type for ${assetPath}`,
+    );
+    assert.ok(
+      icon.sizes === "any" || (typeof icon.sizes === "string" && /^\d+x\d+(?:\s+\d+x\d+)*$/.test(icon.sizes)),
+      `Manifest icon ${index + 1} must declare valid sizes`,
+    );
+    if (icon.purpose !== undefined) {
+      assert.ok(
+        typeof icon.purpose === "string"
+          && icon.purpose.split(/\s+/).every((purpose) => ["any", "maskable", "monochrome"].includes(purpose)),
+        `Manifest icon ${index + 1} has an unsupported purpose`,
+      );
+    }
+  }
+  assert.ok(
+    manifest.icons.some((icon) => icon.src === rootIconPath && icon.type === rootIconType),
+    "A declared install icon must match the root-served app icon",
+  );
 }
 
 function moduleReferences(source) {
@@ -290,12 +375,15 @@ export function assertStaticAssetResponse(pathname, status, contentType, body) {
     expectedTypes?.includes(mediaType),
     `Static artifact ${pathname} has incorrect content type ${contentType ?? "(missing)"}`,
   );
-  if (extension === ".js" || extension === ".mjs" || extension === ".css") {
+  if (extension === ".js" || extension === ".mjs" || extension === ".css" || extension === ".svg") {
     assert.doesNotMatch(
       body.trimStart(),
       /^<(?:!doctype\s+html|html)\b/i,
       `Static artifact ${pathname} returned fallback HTML instead of its asset`,
     );
+  }
+  if (extension === ".svg") {
+    assert.match(body.trimStart(), /^<svg\b/i, `Static artifact ${pathname} did not return a valid SVG icon`);
   }
 }
 
@@ -316,6 +404,11 @@ async function validateV2StaticArtifactHttp(root) {
   const rewrite = webArtifact.service.sections["services.production.rewrites"];
   assert.equal(productionService.serve, "static");
   const publicDir = join(root, productionService.publicDir);
+  const [manifestSource, indexHtml] = await Promise.all([
+    readFile(join(publicDir, "manifest.webmanifest"), "utf8"),
+    readFile(join(publicDir, "index.html"), "utf8"),
+  ]);
+  validateV2WebAppInstallContract(manifestSource, indexHtml);
   const paths = await collectReferencedArtifactPaths(publicDir);
   const { server, origin } = await startStaticArtifactServer(publicDir, rewrite);
   try {
