@@ -1076,7 +1076,7 @@ async function main() {
     await recoveryPage.goto(baseUrl);
     await recoveryPage.locator("#auth-form:not([hidden])").waitFor();
     await recoveryPage.locator("#auth-username").fill("V2RecoveryOperator");
-    await recoveryPage.locator("#auth-password").fill("v2-test-browser-recovery-password");
+    await recoveryPage.locator("#auth-password").fill("v2-test-webkit-recovery-password");
     await recoveryPage.locator("#auth-submit").click();
     await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor({ timeout: 20000 }).catch(async () => {
       const diag = {
