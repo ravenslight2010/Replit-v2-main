@@ -2,6 +2,7 @@ import { execFile, spawn } from "node:child_process";
 import {
   access,
   appendFile,
+  copyFile,
   lstat,
   mkdir,
   readFile,
@@ -185,6 +186,19 @@ const v2BrowserJunitReportPath = resolve(
   tmpdir(),
   `v2-browser-${process.pid}-${fullRun ? "full" : "standard"}.xml`,
 );
+const v2BrowserScreenshotTempDir = resolve(
+  tmpdir(),
+  `v2-browser-failure-screenshots-${process.pid}`,
+);
+const v2BrowserScreenshotEvidenceDir = resolve(
+  rootDir,
+  releaseEvidenceDir,
+  "v2-browser-failures",
+);
+const v2BrowserScreenshotManifestPath = resolve(
+  v2BrowserScreenshotTempDir,
+  "manifest.jsonl",
+);
 export const RELEASE_EVIDENCE_ALLOWLIST = [
   "release-check-report.md",
   "release-check-checkpoint.md",
@@ -196,6 +210,7 @@ export const RELEASE_EVIDENCE_ALLOWLIST = [
   "clean-start/startup-mockup.log",
   "browser-full/FINAL-REPORT.md",
   "v2-browser-failures.json",
+  "v2-browser-failures/*.png",
   "release-check.log",
   "release-check-state.json",
 ] as const;
@@ -205,6 +220,7 @@ export type V2BrowserFailure = {
   test: string;
   message: string;
   trace: string;
+  screenshots?: string[];
 };
 
 export type V2BrowserFileSummary = {
@@ -329,9 +345,23 @@ export function isV2BrowserFailureEvidence(
         typeof failure === "object" &&
         typeof failure.test === "string" &&
         typeof failure.message === "string" &&
-        typeof failure.trace === "string",
+        typeof failure.trace === "string" &&
+        (failure.screenshots === undefined ||
+          (Array.isArray(failure.screenshots) &&
+            failure.screenshots.every(isV2BrowserScreenshotPath))),
     );
   }) && evidence.files.some((file) => file.failed > 0);
+}
+
+function isV2BrowserScreenshotPath(value: unknown): value is string {
+  return typeof value === "string" &&
+    /^v2-browser-failures\/[a-z0-9][a-z0-9-]*\.png$/.test(value);
+}
+
+function isAllowlistedEvidencePath(path: string): boolean {
+  return RELEASE_EVIDENCE_ALLOWLIST.includes(
+    path as (typeof RELEASE_EVIDENCE_ALLOWLIST)[number],
+  ) || isV2BrowserScreenshotPath(path);
 }
 
 function reportGateStatus(report: string, label: string): string | undefined {
@@ -633,7 +663,11 @@ const steps: ReleaseStep[] = [
       "e2e/station-sync.browser.test.mjs",
       "e2e/qc-workflow.browser.test.mjs",
     ],
-    env: { V2_SKIP_WEBKIT: "true" },
+    env: {
+      V2_SKIP_WEBKIT: "true",
+      QC_BROWSER: "chromium",
+      V2_BROWSER_FAILURE_SCREENSHOT_DIR: v2BrowserScreenshotTempDir,
+    },
     stage: "v2-browser",
     concurrencyLimit: 1,
   },
@@ -816,7 +850,11 @@ export async function verifyReleaseEvidence(
   for (const file of files) {
     const filePath = resolve(evidenceRoot, file);
     const stats = await lstat(filePath);
-    if (stats.isSymbolicLink() || !stats.isFile() || !expected.has(file)) {
+    if (
+      stats.isSymbolicLink() ||
+      !stats.isFile() ||
+      (!expected.has(file) && !isAllowlistedEvidencePath(file))
+    ) {
       unexpected.push(file);
     }
   }
@@ -941,6 +979,37 @@ export async function verifyReleaseEvidence(
         "Release report is missing its V2 Chromium failure evidence link.",
       );
     }
+    const referencedScreenshots = new Set(
+      failureEvidence.files.flatMap((file) =>
+        file.failures.flatMap((failure) => failure.screenshots ?? []),
+      ),
+    );
+    const retainedScreenshots = files.filter((file) =>
+      isV2BrowserScreenshotPath(file),
+    );
+    if (
+      retainedScreenshots.some((file) => !referencedScreenshots.has(file)) ||
+      [...referencedScreenshots].some((file) => !retainedScreenshots.includes(file))
+    ) {
+      throw new Error(
+        "V2 Chromium failure screenshots do not match the failure evidence.",
+      );
+    }
+    for (const screenshot of referencedScreenshots) {
+      const bytes = await readFile(resolve(evidenceRoot, screenshot));
+      if (
+        bytes.length < 8 ||
+        !bytes.subarray(0, 8).equals(
+          Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+        )
+      ) {
+        throw new Error(`V2 Chromium failure screenshot is invalid: ${screenshot}`);
+      }
+    }
+  } else if (files.some((file) => isV2BrowserScreenshotPath(file))) {
+    throw new Error(
+      "V2 Chromium failure screenshots are present without failure evidence.",
+    );
   }
   if (
     evidenceMode === "full" &&
@@ -1552,10 +1621,15 @@ export function formatReleaseReport(
           "",
         ]
       : [
-          ...metadata.v2BrowserFailures.map(
-            (file) =>
-              `- \`${file.file}\`: ${file.tests} test(s), ${file.passed} passed, ${file.skipped} skipped, ${file.failed} failed`,
-          ),
+          ...metadata.v2BrowserFailures.flatMap((file) => [
+            `- \`${file.file}\`: ${file.tests} test(s), ${file.passed} passed, ${file.skipped} skipped, ${file.failed} failed`,
+            ...file.failures.flatMap((failure) =>
+              (failure.screenshots ?? []).map(
+                (screenshot) =>
+                  `  - \`${failure.test}\`: [failure screenshot](${screenshot})`,
+              ),
+            ),
+          ]),
           evidenceLink(
             "v2-browser-failures.json",
             "Failure traces and per-file results",
@@ -1690,6 +1764,10 @@ async function writeReleaseReport(
         ?.status !== "FAIL"
     ) {
       await rm(v2BrowserFailureEvidencePath, { force: true });
+      await rm(v2BrowserScreenshotEvidenceDir, {
+        recursive: true,
+        force: true,
+      });
     } else {
       v2BrowserFailures = failureEvidence.files;
       availableEvidenceFiles.add("v2-browser-failures.json");
@@ -1852,6 +1930,65 @@ async function retainV2BrowserFailureEvidence(
   try {
     const junitReport = await readFile(v2BrowserJunitReportPath, "utf8");
     const files = parseV2BrowserJUnit(junitReport);
+    const screenshotsByFailure = new Map<string, string[]>();
+    const manifest = await readFile(v2BrowserScreenshotManifestPath, "utf8")
+      .catch((error) => {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return "";
+        throw error;
+      });
+    for (const line of manifest.split("\n").filter(Boolean)) {
+      const screenshot = JSON.parse(line) as {
+        suite?: unknown;
+        test?: unknown;
+        file?: unknown;
+      };
+      if (
+        typeof screenshot.suite !== "string" ||
+        typeof screenshot.test !== "string" ||
+        typeof screenshot.file !== "string" ||
+        !/^[a-z0-9][a-z0-9-]*\.png$/.test(screenshot.file)
+      ) {
+        throw new Error("V2 Chromium failure screenshot manifest is malformed.");
+      }
+      const suiteName = screenshot.suite as string;
+      const testName = screenshot.test as string;
+      const suite = V2_BROWSER_TEST_FILES.find((file) =>
+        suiteName.endsWith(file),
+      );
+      const summary = files.find((file) => file.file === suite);
+      if (!summary?.failures.some((failure) => failure.test === testName)) {
+        continue;
+      }
+      const sourcePath = resolve(v2BrowserScreenshotTempDir, screenshot.file);
+      const screenshotBytes = await readFile(sourcePath);
+      if (
+        screenshotBytes.length < 8 ||
+        !screenshotBytes.subarray(0, 8).equals(
+          Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+        )
+      ) {
+        continue;
+      }
+      const relativePath = `v2-browser-failures/${screenshot.file}`;
+      const failureKey = `${suite}\n${testName}`;
+      screenshotsByFailure.set(failureKey, [
+        ...(screenshotsByFailure.get(failureKey) ?? []),
+        relativePath,
+      ]);
+      await mkdir(v2BrowserScreenshotEvidenceDir, { recursive: true });
+      await copyFile(
+        sourcePath,
+        resolve(v2BrowserScreenshotEvidenceDir, screenshot.file),
+      );
+    }
+    for (const file of files) {
+      for (const failure of file.failures) {
+        const screenshots = screenshotsByFailure.get(
+          `${file.file}\n${failure.test}`,
+        );
+        if (screenshots?.length) failure.screenshots = screenshots;
+      }
+    }
     const evidence: V2BrowserFailureEvidence = {
       schemaVersion: 1,
       revision,
@@ -1864,6 +2001,7 @@ async function retainV2BrowserFailureEvidence(
       !isV2BrowserFailureEvidence(evidence)
     ) {
       await rm(v2BrowserFailureEvidencePath, { force: true });
+      await rm(v2BrowserScreenshotEvidenceDir, { recursive: true, force: true });
       return;
     }
     await writeFile(
@@ -1876,8 +2014,10 @@ async function retainV2BrowserFailureEvidence(
     console.warn(
       "V2 Chromium JUnit results were not available; failure details remain in the release log only.",
     );
+    await rm(v2BrowserScreenshotEvidenceDir, { recursive: true, force: true });
   } finally {
     await rm(v2BrowserJunitReportPath, { force: true });
+    await rm(v2BrowserScreenshotTempDir, { recursive: true, force: true });
   }
 }
 
@@ -1961,6 +2101,7 @@ async function main(): Promise<void> {
   } else {
     await rm(checkpointReportPath, { force: true });
     await rm(v2BrowserFailureEvidencePath, { force: true });
+    await rm(v2BrowserScreenshotEvidenceDir, { recursive: true, force: true });
     await writeFile(
       logPath,
       `Release check ${new Date().toISOString()} revision ${revision} mode ${
@@ -2083,6 +2224,15 @@ async function main(): Promise<void> {
               if (step.label === V2_CHROMIUM_GATE_LABEL) {
                 await rm(v2BrowserJunitReportPath, { force: true });
                 await rm(v2BrowserFailureEvidencePath, { force: true });
+                await rm(v2BrowserScreenshotEvidenceDir, {
+                  recursive: true,
+                  force: true,
+                });
+                await rm(v2BrowserScreenshotTempDir, {
+                  recursive: true,
+                  force: true,
+                });
+                await mkdir(v2BrowserScreenshotTempDir, { recursive: true });
               }
               const { exitCode, elapsedMs, status, output } = await runStep(
                 effectiveStep,
@@ -2111,6 +2261,14 @@ async function main(): Promise<void> {
               if (step.label === V2_CHROMIUM_GATE_LABEL) {
                 await rm(v2BrowserJunitReportPath, { force: true });
                 await rm(v2BrowserFailureEvidencePath, { force: true });
+                await rm(v2BrowserScreenshotEvidenceDir, {
+                  recursive: true,
+                  force: true,
+                });
+                await rm(v2BrowserScreenshotTempDir, {
+                  recursive: true,
+                  force: true,
+                });
               }
               result = {
                 label: step.label,

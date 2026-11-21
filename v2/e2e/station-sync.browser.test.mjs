@@ -3,10 +3,9 @@ import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { access, readFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import test from "node:test";
 import { chromium, webkit as pinnedWebkit } from "../../node_modules/.pnpm/node_modules/playwright/index.mjs";
+import { captureFailureScreenshots } from "./browser-failure-screenshot.mjs";
 import * as XLSX from "xlsx";
 import { parseOpeningCountCsv, parseSetupImportCsv } from "../core/import-csv.mjs";
 import {
@@ -342,7 +341,14 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   let browser;
+  const failureScreenshotPages = [];
   t.after(async () => {
+    await captureFailureScreenshots({
+      testContext: t,
+      browserType: browserEngine,
+      suiteFile: "e2e/station-sync.browser.test.mjs",
+      pages: failureScreenshotPages,
+    });
     try {
       await browser?.close();
     } finally {
@@ -1048,6 +1054,7 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
     };
     await context.route("**/api/v2/**", routeApi);
     const page = await context.newPage();
+    failureScreenshotPages.push(page);
     page.on("pageerror", (error) => fixture.pageErrors.push(error.message));
     page.on("console", (message) => {
       if (message.type() !== "error" || message.text().includes("TLS support is not available")) return;
@@ -1352,13 +1359,6 @@ test(`operators can review the read-only Mix Plan across roles, reload, and resp
     assert.equal(await page.locator("#mix-plan-inventory-link").isVisible(), true);
     assert.equal(await page.locator("#mix-plan form").count(), 0, "the plan surface has no recipe or stock editing form");
     assert.ok(browserState.fixture.mixPlanCalls.length >= 1);
-    if (browserEngine === chromium) {
-      await page.screenshot({
-        path: join(tmpdir(), `v2-mix-plan-${browserEngine.name()}-desktop.png`),
-        caret: "initial",
-      });
-    }
-
     const mixPlanCallsBeforeScheduleEdit = browserState.fixture.mixPlanCalls.length;
     await page.locator("#schedule-nav-link").click();
     await page.locator("#schedule-tools:not([hidden])").waitFor();
@@ -1394,13 +1394,6 @@ test(`operators can review the read-only Mix Plan across roles, reload, and resp
       }));
       assert.ok(bounds.scrollWidth <= bounds.width, `Mix Plan does not overflow at ${viewport.width}×${viewport.height}`);
     }
-    if (browserEngine === chromium) {
-      await page.screenshot({
-        path: join(tmpdir(), `v2-mix-plan-${browserEngine.name()}-phone.png`),
-        caret: "initial",
-      });
-    }
-
     await context.setOffline(true);
     await page.getByText(/Offline · showing the last server-confirmed plan/u).waitFor();
     assert.equal(await page.locator("#mix-plan-refresh").isDisabled(), true);
@@ -1469,8 +1462,6 @@ test("two live sessions preserve a manual edit when another device wins first", 
   await deviceB.page.getByTestId("button-save-station").click();
   await deviceB.page.getByText(/Another device changed the run/).waitFor();
   assert.equal(await deviceB.page.locator('[data-station-field="casesProduced"]').inputValue(), "7");
-  await deviceB.page.screenshot({ path: join(tmpdir(), "v2-station-conflict-review.png") });
-
   await deviceB.page.getByTestId("button-save-station").click();
   await deviceB.page.getByText("Saved to the shared run.").waitFor();
   assert.equal(fixture.run.stationProgress.line.progress.casesProduced, 7);
@@ -1523,10 +1514,6 @@ test("dough capacity is derived from the selected product and has no editable ov
       await page.evaluate(() => document.documentElement.scrollWidth) <= viewport.width,
       `dough help fits ${viewport.width}×${viewport.height}`,
     );
-    await page.screenshot({
-      path: join(tmpdir(), `v2-dough-help-${viewport.width}.png`),
-      fullPage: true,
-    });
   }
   assert.deepEqual(fixture.pageErrors, []);
   assert.deepEqual(fixture.consoleErrors, []);
@@ -1684,7 +1671,6 @@ test("offline reload stays read-only and wakes into the latest server state", as
   assert.equal(await page.getByTestId("status-run").textContent(), "paused");
   assert.equal(await page.getByTestId("button-save-station").isDisabled(), true);
   assert.equal(await page.locator('[data-station-field="casesProduced"]').isDisabled(), true);
-  await page.screenshot({ path: join(tmpdir(), "v2-station-offline-readonly.png") });
 
   await otherDevice.page.getByTestId("button-resume").click();
   await otherDevice.page.getByTestId("status-run").getByText("running").waitFor();

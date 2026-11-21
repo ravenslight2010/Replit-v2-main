@@ -6,6 +6,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { chromium, webkit as localWebkit } from "../../node_modules/.pnpm/node_modules/playwright/index.mjs";
+import { captureFailureScreenshots } from "./browser-failure-screenshot.mjs";
 
 const webkit = process.env.V2_WEBKIT_PLAYWRIGHT_MODULE
   ? createRequire(import.meta.url)(process.env.V2_WEBKIT_PLAYWRIGHT_MODULE).webkit
@@ -406,6 +407,7 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
   );
   Object.assign(process.env, browserEnvOverrides);
   let browser;
+  const failureScreenshotPages = [];
   try {
     browser = await browserType.launch(launchOptions);
   } finally {
@@ -414,9 +416,18 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
       else process.env[key] = previousValue;
     }
   }
-  t.after(() => browser.close());
+  t.after(async () => {
+    await captureFailureScreenshots({
+      testContext: t,
+      browserType,
+      suiteFile: "e2e/qc-workflow.browser.test.mjs",
+      pages: failureScreenshotPages,
+    });
+    await browser.close();
+  });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
   const page = await context.newPage();
+  failureScreenshotPages.push(page);
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
@@ -622,6 +633,7 @@ test("QC manager and operator screens preserve advisory states and fit phone/tab
   await page.getByText("A prior record was redacted: Source reference withdrawn").waitFor();
 
   const secondDevice = await context.newPage();
+  failureScreenshotPages.push(secondDevice);
   await secondDevice.goto(`http://127.0.0.1:${server.address().port}/`);
   await secondDevice.waitForFunction(() => typeof window.setQcContext === "function");
   await secondDevice.evaluate(({ operator, runData }) => {

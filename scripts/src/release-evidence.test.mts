@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   rm,
   symlink,
@@ -9,6 +10,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { captureFailureScreenshots } from "../../v2/e2e/browser-failure-screenshot.mjs";
 import {
   RELEASE_EVIDENCE_ALLOWLIST,
   RELEASE_CHECKPOINT_REPORT,
@@ -30,7 +32,7 @@ import {
 } from "./release-check.mts";
 
 const baseEvidenceAllowlist = RELEASE_EVIDENCE_ALLOWLIST.filter(
-  (file) => file !== "v2-browser-failures.json",
+  (file) => file !== "v2-browser-failures.json" && !file.includes("*"),
 );
 
 async function fixture(
@@ -66,6 +68,77 @@ async function run(): Promise<void> {
     releaseGateLabelsForMode("standard").includes("spec import tests"),
     "the bounded release gate must explicitly cover spec-import",
   );
+  const screenshotDir = await mkdtemp(
+    join(tmpdir(), "v2-browser-screenshot-unit-"),
+  );
+  const previousScreenshotDir =
+    process.env.V2_BROWSER_FAILURE_SCREENSHOT_DIR;
+  process.env.V2_BROWSER_FAILURE_SCREENSHOT_DIR = screenshotDir;
+  const screenshotTestContext = {
+    error: null as Error | null,
+    fullName: "failed Chromium scenario",
+    name: "failed Chromium scenario",
+    diagnostics: [] as string[],
+    diagnostic(message: string) {
+      this.diagnostics.push(message);
+    },
+  };
+  const chromiumType = { name: () => "chromium" };
+  const screenshotPage = {
+    isClosed: () => false,
+    async screenshot({ path }: { path: string }) {
+      await writeFile(
+        path,
+        Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+      );
+    },
+  };
+  try {
+    await captureFailureScreenshots({
+      testContext: screenshotTestContext,
+      browserType: chromiumType,
+      suiteFile: "e2e/station-sync.browser.test.mjs",
+      pages: [screenshotPage],
+    });
+    assert.deepEqual(
+      await readdir(screenshotDir),
+      [],
+      "passing Chromium scenarios must not leave screenshots",
+    );
+    screenshotTestContext.error = new Error("expected test failure");
+    await captureFailureScreenshots({
+      testContext: screenshotTestContext,
+      browserType: { name: () => "webkit" },
+      suiteFile: "e2e/station-sync.browser.test.mjs",
+      pages: [screenshotPage],
+    });
+    assert.deepEqual(
+      await readdir(screenshotDir),
+      [],
+      "failed non-Chromium scenarios must not leave screenshots",
+    );
+    await captureFailureScreenshots({
+      testContext: screenshotTestContext,
+      browserType: chromiumType,
+      suiteFile: "e2e/station-sync.browser.test.mjs",
+      pages: [screenshotPage],
+    });
+    const screenshotFiles = await readdir(screenshotDir);
+    assert.equal(screenshotFiles.length, 2);
+    assert.ok(screenshotFiles.some((file) => file.endsWith(".png")));
+    const screenshotManifest = await readFile(
+      join(screenshotDir, "manifest.jsonl"),
+      "utf8",
+    );
+    assert.match(screenshotManifest, /failed Chromium scenario/u);
+  } finally {
+    if (previousScreenshotDir === undefined) {
+      delete process.env.V2_BROWSER_FAILURE_SCREENSHOT_DIR;
+    } else {
+      process.env.V2_BROWSER_FAILURE_SCREENSHOT_DIR = previousScreenshotDir;
+    }
+    await rm(screenshotDir, { recursive: true, force: true });
+  }
   assert.ok(
     releaseGateLabelsForMode("standard").includes("onboarding bypass guard"),
     "standard release checks must include the onboarding bypass guard",
@@ -316,13 +389,40 @@ async function run(): Promise<void> {
     /station-sync\.browser\.test\.mjs:12:3/,
   );
   const v2BrowserGate = "V2 critical Chromium workflows";
+  const screenshotPath =
+    "v2-browser-failures/station-sync-test-failure-page-1.png";
+  const failureSummaries = junitSummary.map((file) => ({
+    ...file,
+    failures: file.failures.map((failure) => ({
+      ...failure,
+      ...(file.file === "e2e/station-sync.browser.test.mjs"
+        ? { screenshots: [screenshotPath] }
+        : {}),
+    })),
+  }));
   const failureEvidence = {
     schemaVersion: 1 as const,
     revision: "current-revision",
     gate: v2BrowserGate,
-    files: junitSummary,
+    files: failureSummaries,
   };
   assert.equal(isV2BrowserFailureEvidence(failureEvidence), true);
+  assert.equal(
+    isV2BrowserFailureEvidence({
+      ...failureEvidence,
+      files: failureSummaries.map((file) => ({
+        ...file,
+        failures: file.failures.map((failure) => ({
+          ...failure,
+          ...(failure.screenshots
+            ? { screenshots: ["v2-browser-failures/../../outside.png"] }
+            : {}),
+        })),
+      })),
+    }),
+    false,
+    "failure screenshots must stay inside their allowlisted evidence folder",
+  );
   const v2FailureReport = formatReleaseReport(
     [{ label: v2BrowserGate, status: "FAIL", elapsedMs: 100 }],
     "standard",
@@ -332,7 +432,7 @@ async function run(): Promise<void> {
       environment: "disposable release test",
       decision: "NO-GO",
       expectedLabels: [v2BrowserGate],
-      v2BrowserFailures: junitSummary,
+      v2BrowserFailures: failureSummaries,
     },
   );
   assert.match(v2FailureReport, /\| V2 critical Chromium workflows \| FAIL \|/);
@@ -342,11 +442,18 @@ async function run(): Promise<void> {
     "the failed V2 gate should link directly to its retained traces",
   );
   assert.match(v2FailureReport, /e2e\/station-sync\.browser\.test\.mjs.*1 failed/);
+  assert.match(
+    v2FailureReport,
+    /\[failure screenshot\]\(v2-browser-failures\/station-sync-test-failure-page-1\.png\)/,
+    "failed scenarios should link their retained Chromium screenshot",
+  );
   const v2FailureRoot = await fixture(
-    ["release-check-report.md", "v2-browser-failures.json"],
+    ["release-check-report.md", "v2-browser-failures.json", screenshotPath],
     v2FailureReport,
   );
   try {
+    const pngHeader = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    await writeFile(join(v2FailureRoot, screenshotPath), pngHeader);
     await writeFile(
       join(v2FailureRoot, "v2-browser-failures.json"),
       `${JSON.stringify(failureEvidence, null, 2)}\n`,
@@ -360,6 +467,28 @@ async function run(): Promise<void> {
       }),
       "current-revision failure evidence linked from its failed gate should verify",
     );
+    await writeFile(join(v2FailureRoot, "v2-browser-failures/orphan.png"), pngHeader);
+    await assert.rejects(
+      verifyReleaseEvidence(v2FailureRoot, {
+        currentRevision: "current-revision",
+        expectedMode: "standard",
+        expectedLabels: [v2BrowserGate],
+      }),
+      /failure screenshots do not match/,
+      "unreferenced Chromium screenshots must not be retained",
+    );
+    await rm(join(v2FailureRoot, "v2-browser-failures/orphan.png"));
+    await rm(join(v2FailureRoot, screenshotPath));
+    await assert.rejects(
+      verifyReleaseEvidence(v2FailureRoot, {
+        currentRevision: "current-revision",
+        expectedMode: "standard",
+        expectedLabels: [v2BrowserGate],
+      }),
+      /failure screenshots do not match/,
+      "failure evidence must not reference a missing screenshot",
+    );
+    await writeFile(join(v2FailureRoot, screenshotPath), pngHeader);
     await writeFile(
       join(v2FailureRoot, "v2-browser-failures.json"),
       `${JSON.stringify({
