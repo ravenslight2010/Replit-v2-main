@@ -103,7 +103,7 @@ function safeRouteName(url) {
   if (url.pathname === "/v2/web/qc.js") return "web.qc";
   if (url.pathname === "/v2/web/write-gate.mjs") return "web.write-gate";
   if (url.pathname === "/v2/web/styles.css") return "web.styles";
-  if (url.pathname === "/healthz") return "health";
+  if (url.pathname === "/healthz" || url.pathname === "/api" || url.pathname === "/api/healthz") return "health";
   if (url.pathname === "/api/v2/auth/sign-in") return "auth.sign_in";
   if (url.pathname === "/api/v2/agent-test-preview/credentials") return "agent_preview.credentials";
   if (url.pathname === "/api/v2/auth/session") return "auth.session";
@@ -250,7 +250,7 @@ export function createV2Api({
 
     try {
       if (await serveWebAsset(request, response, parsedUrl.pathname)) return;
-      if (parsedUrl.pathname === "/healthz") {
+      if (parsedUrl.pathname === "/healthz" || parsedUrl.pathname === "/api" || parsedUrl.pathname === "/api/healthz") {
         if (request.method !== "GET") {
           sendJson(response, 405, { error: "This method is not allowed for health checks." }, { Allow: "GET" });
           return;

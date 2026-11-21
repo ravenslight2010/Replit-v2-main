@@ -103,6 +103,26 @@ test("health endpoint performs a bounded database probe and emits request identi
   assert.equal("url" in logs[0], false);
 });
 
+test("artifact API health route is an alias of the V2 health endpoint", async () => {
+  const paths = [];
+  const handler = createV2Api({
+    pool: { async query() { return { rows: [{ "?column?": 1 }] }; } },
+    authAdapter: fakeAuthAdapter(),
+    getClientKey: () => "test-client",
+    logger: (entry) => paths.push(entry.route),
+  });
+
+  await withServer(handler, async (baseUrl) => {
+    for (const path of ["/healthz", "/api", "/api/healthz"]) {
+      const response = await fetch(`${baseUrl}${path}`);
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { status: "ok" });
+    }
+  });
+
+  assert.deepEqual(paths, ["health", "health", "health"]);
+});
+
 test("health endpoint reports a healthy station worker without leaking worker identifiers", async () => {
   const workerHealth = {
     status: "active",

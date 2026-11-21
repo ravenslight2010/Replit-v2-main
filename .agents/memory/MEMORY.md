@@ -169,3 +169,4 @@
 - [Version capability catalog](version-capability-catalog.md) — future major versions start from a portable, evidence-linked feature inventory; unapproved candidates remain distinct from requirements.
 - [V2 layer-based ingredient demand](v2-layer-demand.md) — owner confirmed frozen cases-per-layer applies to Sauce, Cheese, Frontline, and Pepperoni; never infer Pepperoni sticks or batch size.
 - [V2 browser test concurrency](v2-browser-test-concurrency.md) — Run Node browser suites serially on the Replit host; parallel WebKit migration tests can time out despite passing alone.
+- [Registered artifact manifests](registered-artifact-manifests.md) — replace via platform validation; direct edits are rejected.

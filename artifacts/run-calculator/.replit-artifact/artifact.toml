@@ -11,14 +11,14 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/" ]
+paths = ["/"]
 localPort = 26038
 
 [services.development]
 run = "pnpm --filter @workspace/run-calculator run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/run-calculator", "run", "build" ]
+build = ["bash", "scripts/build-v2-artifact-static.sh"]
 publicDir = "artifacts/run-calculator/dist/public"
 serve = "static"
 
