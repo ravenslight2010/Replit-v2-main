@@ -1,104 +1,78 @@
-# Production Run Calculator
+# Lucia's Production Assistant (V2)
 
-[![CI](https://github.com/ravenslight2010/Production-run-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/ravenslight2010/Production-run-calculator/actions/workflows/ci.yml)
+Web/PWA-first production operations for one pizza-production facility, with
+support for multiple inventory warehouses. V2 is the active application in this
+repository; the retained V1 code and research are historical references, not the
+current runtime.
 
-Pizza production planning, scheduling, and inventory for floor staff — available as a web app and a mobile app.
+## What V2 does
 
-The system plans a day's pizza production line (runs, dough, sauce, cheese, ingredients), tracks inventory consumption, schedules staff-facing work, and pairs the operational data with AI-assisted issue diagnosis and manager alerts.
+- Coordinates shared production runs across devices. The server owns run state,
+  station progress, and automatic timers.
+- Provides station workflows for Line, Dough, Cheese, Pepperoni, Sauce,
+  Frontline, and Packaging.
+- Supports production scheduling and planning, manager-reviewed setup imports,
+  warehouse inventory, and QC observations.
+- Keeps a cached, read-only view available while disconnected; writes resume
+  after reconnecting and refreshing canonical server state.
 
-## Stack
+V2 is not a copy of V1's production database. Do not assume V1 run history,
+inventory balances, credentials, or sessions are present in V2. See the
+[V1-to-V2 data-transfer record](v2/CUTOVER-DATA-TRANSFER.md) for the approved
+data boundaries.
 
-- pnpm workspaces · Node.js 24 · TypeScript 5.9
-- Web: React 19 + Vite (Tailwind v4)
-- Mobile: Expo / React Native (Expo Router)
-- API: Express 5, validated with Zod (`zod/v4` + `drizzle-zod`)
-- DB: PostgreSQL + Drizzle ORM
-- API contract: OpenAPI spec — regenerated hooks (`@workspace/api-client-react`) and Zod schemas (`@workspace/api-zod`)
+## Start and verify V2
 
-## Repository layout
+In Replit, start the **V2 Production Assistant** workflow for the normal
+development preview. For a disposable, synthetic-data browser session, use
+**V2 Agent Test Preview** instead. The test preview uses a temporary database;
+its data is discarded when the workflow stops. See the
+[Replit runbook](replit.md) before using either workflow.
 
-| Path | What it is |
-| --- | --- |
-| `artifacts/run-calculator` | Web app (React + Vite). Most UI/logic lives in `src/pages/home.tsx`. |
-| `artifacts/run-calculator-mobile` | Mobile app (Expo / React Native), local-only state in `app/RunContext.tsx`. |
-| `artifacts/api-server` | Express 5 API server; routes in `src/routes/*` (~70 files, `ai*` prefixes are AI endpoints). |
-| `artifacts/mockup-sandbox` | Development-only mockup sandbox (not production). |
-| `lib/api-spec` | OpenAPI contract (source of truth) + codegen. |
-| `lib/db` | Drizzle schema (source of truth) + migrations/push. |
-| `lib/*` | Shared pure logic packages (inventory math, spec import, recipe apply, production rules, allergen, voice commands, merge suggest, …). |
-| `attached_assets/source-library` | Customer's complete source workbooks (specs, dough/sauce procedures, cheese/premix/shipping/schedule) + audit reports. |
-| `.agents/memory` | Institutional knowledge: sharp edges, sync semantics, auth boundaries, schema rules, etc. Read before touching an unfamiliar area. |
+From the repository root, the focused V2 checks are:
 
-## Quick start (Docker)
-
-```bash
-cp .env.docker.example .env   # fill in secrets (DB password, sign-up code, AI key)
-docker compose up --build
-```
-
-- Web is served by Caddy on `:80`/`:443` (auto-HTTPS via `SITE_ADDRESS`).
-- API runs on port `5000`; schema is applied by the one-shot `migrate` service (`db push-force`).
-
-## Local development
-
-Prerequisites: Node.js 24, pnpm, a PostgreSQL 16 database.
-
-```bash
+```sh
 pnpm install
-
-# API server (port 5000)
-pnpm --filter @workspace/api-server run dev
-
-# Web app (Vite dev server)
-pnpm --filter @workspace/run-calculator run dev
-
-# Regenerate API hooks + Zod schemas from the OpenAPI spec
-pnpm --filter @workspace/api-spec run codegen
-
-# Push DB schema changes (dev only)
-pnpm --filter @workspace/db run push
+pnpm run build:v2
+pnpm run test:v2
+pnpm --filter @workspace/lucia-v2 run test:browser
+pnpm --filter @workspace/lucia-v2 run test:db
+pnpm --filter @workspace/lucia-v2 run test:agent-preview
 ```
 
-Required env for the API: `DATABASE_URL`. Security-relevant env: `STAFF_SIGNUP_CODE` (gates public sign-up, fails closed), `INITIAL_MANAGER_USERNAME` + `INITIAL_MANAGER_ACCESS_CODE` (bootstrap the first manager, fails closed).
+The database and agent-preview checks create disposable test environments.
+Never point them at production or a shared operational database.
 
-## Verification
+## Repository map
 
-```bash
-pnpm run typecheck        # full typecheck across all packages
-pnpm run build            # typecheck + build all packages
-```
+| Path | Purpose |
+| --- | --- |
+| `v2/` | Active V2 application, server, worker, browser client, database SQL, and tests |
+| `v2/README.md` | Detailed V2 architecture, setup, data-safety, and validation guide |
+| `v2/HANDOFF.md` | V2 scope and implementation handoff |
+| `v2/CUTOVER-DATA-TRANSFER.md` | Approved V1-to-V2 transfer boundaries and source evidence |
+| `scripts/start-v2.sh` | V2 Replit launcher |
+| `replit.md` | Replit workflows, test preview, and agent operating guidance |
+| `artifacts/`, `lib/` | Retained V1 code and shared libraries for historical reference |
+| `_archived/v1/` | Archived V1 source snapshot |
+| `docs/capabilities/` | Cross-version capability catalog and its evidence rules |
 
-- Verify with `typecheck`, not `build` — `build` needs workflow-provided `PORT`/`BASE_PATH` and can fail from a plain shell even when the code is fine.
-- Tests run via configured workflows (`test`, `test:client`, `test:rules`, `test:inventory-math`, `test:corpus`); the corpus harness re-runs deterministic parses of the full source library against checked-in snapshots after importer changes.
-- CI (GitHub Actions): typecheck, unit tests, API tests with a Postgres service, web/API builds, and a non-blocking security audit.
-- Dependabot keeps npm dependencies patched; the pinned Expo (mobile) toolchain is excluded from auto-updates.
+V2 uses a Node.js API and station worker, PostgreSQL, and a browser PWA. Its
+database objects are kept in the isolated `v2` schema; V2 must not connect to
+V1 schemas or sessions.
 
-### Skill catalog maintenance
+## Project decisions
 
-Run `pnpm run check:skill-catalog` to inventory the editable and managed skill
-roots. The catalog contract treats `.agents/skills` and
-`.local/custom_skills` as editable, and `.local/skills` and
-`.local/secondary_skills` as platform-managed. Editable skills must have valid
-kebab-case metadata, complete local references, and stay within the 500-line
-guidance; managed-root findings are reported as warnings because those files
-are platform-owned. The checker only follows local Markdown link targets in a
-skill folder (`SKILL.md`, `./`, `../`, `references/`, `scripts/`, or `assets/`)
-and ignores URLs, anchors, and other prose. Intentional cross-root duplicates
-belong in `skill-catalog-allowlist.json` with an explicit routing target.
+- One production facility; warehouses represent separate inventory locations
+  within that facility.
+- Web/PWA first. A native mobile app is not the active V2 application.
+- Production data and timers are server-owned; disconnected clients are
+  read-only until they reconnect.
+- QC records observations and evidence. It does not invent pass/fail limits or
+  product-hold policy that has not been approved.
 
-## Product
-
-- Pizza production line planning, scheduling, and inventory for floor staff (web + mobile).
-- AI issue diagnosis & manager alerts: any signed-in user can report an issue and get an immediate plain-language AI diagnosis plus a safe workaround; uncaught crashes are auto-captured and become server-side incidents with AI diagnosis.
-
-## Document map
-
-- `replit.md` — operational runbook (Replit workflows, reset flow, corpus harness, gotchas).
-- `threat_model.md` — security threat model and trust boundaries.
-- `.agents/memory/` — deep institutional knowledge (215+ notes on sync semantics, auth, imports, schema rules).
-- `docker-compose.yml` / `Dockerfile` — containerized deployment.
-
-## User preferences (current)
-
-- **Web-only focus — mobile parity paused** (as of 2026-07-06). Do not do web+mobile parity work unless explicitly asked. When parity resumes, every behavior change must land in both apps with formulas matching exactly (most logic lives in `lib/*` for this reason).
-# Replit-v2-main
+Additional implementation notes and recorded checks are in the
+[V2 handoff](v2/HANDOFF.md) and the
+[V2 validation record](v2/research/validation.md). Treat dated status notes as
+snapshots and verify them against the current workflows before making
+operational decisions.
