@@ -163,7 +163,9 @@
 - [V2 product boundaries](v2-product-boundaries.md) — upgraded successor, one facility with multiple warehouses, server-owned shared state, offline read-only, and fresh V2 sessions.
 - [V2 inventory preparation](v2-inventory-preparation.md) — prep quantities use the saved linked mix formula, with separate raw/prepared stock and explicit product-unit mappings.
 - [QC-approved substitutions](qc-approved-substitutions.md) — QC approval posts the exact replacement amount atomically; prevent a second deduction at run completion.
+- [V2 manager browser fixture order](v2-manager-browser-fixture-order.md) — manager screens load QC history as selected runs change; browser fixtures need QC migrations and role grants first.
 - [Configuration recovery scope](configuration-recovery-scope.md) — environment recovery can replace current startup wiring; verify its scope and the installer's chosen Nix representation.
 - [Schedule timezone](schedule-timezone.md) — production schedule dates and estimates use America/Chicago, independent of the viewer's device timezone.
 - [Version capability catalog](version-capability-catalog.md) — future major versions start from a portable, evidence-linked feature inventory; unapproved candidates remain distinct from requirements.
 - [V2 layer-based ingredient demand](v2-layer-demand.md) — owner confirmed frozen cases-per-layer applies to Sauce, Cheese, Frontline, and Pepperoni; never infer Pepperoni sticks or batch size.
+- [V2 browser test concurrency](v2-browser-test-concurrency.md) — Run Node browser suites serially on the Replit host; parallel WebKit migration tests can time out despite passing alone.

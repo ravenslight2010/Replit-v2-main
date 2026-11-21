@@ -6,6 +6,7 @@ import { updateMixPlanContext } from "./mix-plan.js";
 import { updateScheduleContext } from "./schedule.js";
 import { initializeManagerOperations, updateManagerOperationsContext } from "./manager-operations.js";
 import { initializeQc } from "./qc.js";
+import { initializeUpdateControls } from "./update-manager.mjs";
 
 const API = "/api/v2/runs";
 const AUTH_API = "/api/v2/auth";
@@ -26,6 +27,14 @@ const OFFLINE_CACHE_KEY = "fieldline:v2:last-confirmed-state";
 const RUN_STATUSES = new Set(["planned", "running", "paused", "completed"]);
 const COMMANDS = new Set(["start", "pause", "resume", "complete"]);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UNCONFIRMED_WORK_SELECTORS = [
+  "#import-actions:not([hidden])",
+  "#setup-catalog-actions:not([hidden])",
+  "#source-workbook-actions:not([hidden])",
+  "#opening-count-actions:not([hidden])",
+  "#cycle-count-actions:not([hidden])",
+  "#schedule-import-preview:not([hidden])",
+];
 
 const el = {
   authPanel: document.querySelector("#auth-panel"),
@@ -3242,6 +3251,30 @@ if (pendingCreate) {
 
 initializeInventory();
 initializeManagerOperations();
+initializeUpdateControls({
+  getReloadBlockReason: () => {
+    if (runs.some((run) => run.status === "running" || run.status === "paused")) {
+      return "Finish the run or safely hand it off before reloading for an update.";
+    }
+    if (createInFlight || commandInFlight || stationActionInFlight || runSupplyBusy) {
+      return "A server change is still being confirmed. Wait for its result before reloading.";
+    }
+    try {
+      if (pendingCreate || Object.keys(localStorage).some((key) =>
+        key.startsWith(PENDING_PREFIX) || key.startsWith(PENDING_STATION_PREFIX)
+          || key === PENDING_CREATE_KEY || key.includes(":inventory-pending")
+          || key.includes(":run-supply-pending"))) {
+        return "A saved request still needs server confirmation. Retry it or refresh the run state first.";
+      }
+    } catch {
+      return "Saved request status could not be checked. Keep working and reload only after a fresh server check.";
+    }
+    if (UNCONFIRMED_WORK_SELECTORS.some((selector) => document.querySelector(selector))) {
+      return "A reviewed import, count, or schedule change is still awaiting confirmation. Finish or discard it first.";
+    }
+    return "";
+  },
+});
 el.runSupplyForm.addEventListener("submit", (event) => { void submitRunStagedSupply(event); });
 el.runSupplyRetry.addEventListener("click", (event) => { void submitRunStagedSupply(event, true); });
 el.runSupplyPlanned.addEventListener("change", () => {

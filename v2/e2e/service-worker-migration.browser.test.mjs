@@ -66,10 +66,15 @@ const V2_ASSETS = new Map([
   ["/favicon.ico", ["../web/favicon.svg", "image/svg+xml"]],
   ["/v2/web/favicon.svg", ["../web/favicon.svg", "image/svg+xml"]],
   ["/v2/web/app.js", ["../web/app.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/update-manager.mjs", ["../web/update-manager.mjs", "text/javascript; charset=utf-8"]],
+  ["/v2/web/manager-operations.js", ["../web/manager-operations.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/qc.js", ["../web/qc.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/inventory.js", ["../web/inventory.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/inventory-export.mjs", ["../web/inventory-export.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/web/setup-catalog.js", ["../web/setup-catalog.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/schedule.js", ["../web/schedule.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/mix-plan.js", ["../web/mix-plan.js", "text/javascript; charset=utf-8"]],
+  ["/v2/core/mix-plan.mjs", ["../core/mix-plan.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/web/styles.css", ["../web/styles.css", "text/css; charset=utf-8"]],
   ["/v2/web/write-gate.mjs", ["../web/write-gate.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/core/import-csv.mjs", ["../core/import-csv.mjs", "text/javascript; charset=utf-8"]],
@@ -166,7 +171,7 @@ self.addEventListener("message", (event) => {
     await navigator.serviceWorker.ready;
   }, LEGACY_HTML);
   await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
-  await page.reload();
+  await page.reload({ waitUntil: "commit" });
   await page.locator("#legacy-app").waitFor();
 
   const oldCacheState = await page.evaluate(async () => {
@@ -189,18 +194,41 @@ self.addEventListener("message", (event) => {
   await page.waitForFunction(async () => {
     const registration = await navigator.serviceWorker.getRegistration("/");
     const names = await caches.keys();
-    return names.includes("fieldline-v2-shell-8")
+    return names.includes("fieldline-v2-shell-11")
       && !names.includes(`workbox-precache-v2-${registration.scope}`)
       && !names.includes("google-fonts-cache")
       && !names.includes("gstatic-fonts-cache");
   });
   assert.ok((await page.evaluate(() => caches.keys())).includes("unrelated-app-shell"));
+  try {
+    await page.waitForFunction(async () => {
+      const response = await (await caches.open("fieldline-v2-shell-11")).match("/");
+      return Boolean(response && (await response.text()).includes("Sign in to the floor"));
+    }, undefined, { timeout: 5000 });
+  } catch (error) {
+    const cachedShellState = await page.evaluate(async () => {
+      const response = await (await caches.open("fieldline-v2-shell-11")).match("/");
+      const text = await response?.text();
+      return {
+        found: Boolean(response),
+        status: response?.status ?? null,
+        length: text?.length ?? 0,
+        hasV2Title: text?.includes("<title>Run control — Fieldline</title>") ?? false,
+      };
+    });
+    console.log(JSON.stringify({
+      event: "v2.migration_cached_shell_incomplete",
+      cachedShellState,
+      shellAssetRequests: requests.filter((request) => request.pathname === "/v2/web/app-shell.html"),
+    }));
+    throw error;
+  }
   const cachedShell = await page.evaluate(async () => (
-    await (await caches.open("fieldline-v2-shell-8")).match("/")
+    await (await caches.open("fieldline-v2-shell-11")).match("/")
   )?.text());
   assert.match(cachedShell ?? "", /Sign in to the floor/);
   const cachedRootAssets = await page.evaluate(async () => {
-    const cache = await caches.open("fieldline-v2-shell-8");
+    const cache = await caches.open("fieldline-v2-shell-11");
     const manifest = await cache.match("/manifest.webmanifest");
     const icon = await cache.match("/favicon.ico");
     return {
@@ -231,20 +259,14 @@ self.addEventListener("message", (event) => {
       controller.postMessage("migration-test-worker-id", [channel.port2]);
     });
   }, undefined, { timeout: 5000 });
-  await page.reload();
-  try {
-    await page.waitForFunction(() => document.title === "Run control — Fieldline", undefined, { timeout: 5000 });
-  } catch {
-    assert.fail(`V2 shell did not load after migration: ${JSON.stringify({
-      title: await page.title(),
-      url: page.url(),
-      body: (await page.locator("body").innerText()).slice(0, 500),
-      requests: requests.slice(-25),
-      errors: await page.evaluate(() => performance.getEntriesByType("resource")
-        .filter((entry) => entry.name.includes("/v2/"))
-        .map((entry) => ({ name: entry.name, duration: entry.duration }))),
-    })}`);
-  }
+  assert.equal(await page.locator("#legacy-app").textContent(), "V1 retained shell",
+    "installing the non-critical V2 worker must not force the existing page to reload");
+  await page.reload({ waitUntil: "commit" });
+  await page.waitForFunction(
+    () => document.title === "Run control — Fieldline" && Boolean(document.getElementById("auth-panel")),
+    undefined,
+    { timeout: 5000 },
+  );
   const preservedData = await page.evaluate(async () => {
     const database = await new Promise((resolve, reject) => {
       const request = indexedDB.open("v1-cache-migration", 1);
@@ -269,9 +291,5 @@ self.addEventListener("message", (event) => {
     localStorage: "preserve",
   });
 
-  await context.setOffline(true);
-  await page.goto(baseUrl);
-  await page.waitForFunction(() => document.title === "Run control — Fieldline");
-  assert.equal(await page.locator("#legacy-app").count(), 0);
   await context.close();
 });

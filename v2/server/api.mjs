@@ -29,6 +29,7 @@ const WEB_ASSETS = new Map([
   ["/favicon.ico", { file: new URL("../web/favicon.svg", import.meta.url), type: "image/svg+xml" }],
   ["/v2/web/favicon.svg", { file: new URL("../web/favicon.svg", import.meta.url), type: "image/svg+xml" }],
   ["/v2/web/app.js", { file: new URL("../web/app.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
+  ["/v2/web/update-manager.mjs", { file: new URL("../web/update-manager.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/core/die-defaults.mjs", { file: new URL("../core/die-defaults.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/core/station-workflows.mjs", { file: new URL("../core/station-workflows.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/core/import-csv-templates.mjs", { file: new URL("../core/import-csv-templates.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
@@ -85,6 +86,7 @@ function safeRouteName(url) {
   if (url.pathname === "/v2/web/manifest.webmanifest") return "web.manifest_alias";
   if (url.pathname === "/service-worker.js") return "web.service_worker";
   if (url.pathname === "/v2/web/app.js") return "web.app";
+  if (url.pathname === "/v2/web/update-manager.mjs") return "web.update_manager";
   if (url.pathname === "/v2/core/die-defaults.mjs") return "web.die_defaults";
   if (url.pathname === "/v2/core/station-workflows.mjs") return "web.station_workflows";
   if (url.pathname === "/v2/core/import-csv-templates.mjs") return "web.import_csv_templates";

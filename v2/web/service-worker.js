@@ -1,4 +1,4 @@
-const CACHE_NAME = "fieldline-v2-shell-9";
+const CACHE_NAME = "fieldline-v2-shell-11";
 const SHELL_ASSETS = [
   // V1's active Workbox worker can intercept shared root URLs during install.
   // Fetch V2-only aliases, then store them under the canonical app URLs.
@@ -8,8 +8,10 @@ const SHELL_ASSETS = [
   ["/v2/web/styles.css", "/v2/web/styles.css"],
   ["/v2/web/write-gate.mjs", "/v2/web/write-gate.mjs"],
   ["/v2/web/app.js", "/v2/web/app.js"],
+  ["/v2/web/update-manager.mjs", "/v2/web/update-manager.mjs"],
   ["/v2/core/die-defaults.mjs", "/v2/core/die-defaults.mjs"],
   ["/v2/web/inventory.js", "/v2/web/inventory.js"],
+  ["/v2/web/inventory-export.mjs", "/v2/web/inventory-export.mjs"],
   ["/v2/web/setup-catalog.js", "/v2/web/setup-catalog.js"],
   ["/v2/web/schedule.js", "/v2/web/schedule.js"],
   ["/v2/web/mix-plan.js", "/v2/web/mix-plan.js"],
@@ -63,7 +65,7 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(async () => (
+    event.respondWith(fetch(request, { cache: "reload" }).catch(async () => (
       (await (await caches.open(CACHE_NAME)).match("/")) || Response.error()
     )));
     return;

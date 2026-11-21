@@ -12,7 +12,7 @@
     "start:worker": "node server/worker-main.mjs",
     "build": "for file in server/*.mjs web/*.js; do node --check \"$file\" || exit; done",
     "test": "node --test core/*.test.mjs server/*.test.mjs web/*.test.mjs",
-    "test:browser": "node --test e2e/*.test.mjs",
+    "test:browser": "node --test --test-concurrency=1 e2e/*.test.mjs",
     "test:agent-preview": "node --test server/agent-preview.test.mjs && node server/agent-preview.browser.integration.mjs",
     "test:db": "bash db/run-local-tests.sh",
     "test:db:webkit": "bash ../scripts/src/run-v2-webkit-db-tests.sh"

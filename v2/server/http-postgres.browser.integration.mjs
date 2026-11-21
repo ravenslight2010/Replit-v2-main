@@ -78,6 +78,20 @@ async function main() {
 
   const errors = [];
   const failedResponses = [];
+  async function waitForSetupReview(page, family) {
+    try {
+      await page.locator("#setup-catalog-preview")
+        .getByText("Validated setup · review before applying").waitFor();
+    } catch (error) {
+      console.log(JSON.stringify({
+        event: "v2.setup_catalog_browser_stage_failed",
+        family,
+        status: (await page.locator("#setup-catalog-status").textContent())?.slice(0, 200) ?? "",
+        failedResponses: failedResponses.slice(-8),
+      }));
+      throw error;
+    }
+  }
   let offlineCheckActive = false;
   let expectedManagerForbidden = false;
   let managerForbiddenSeen = false;
@@ -475,7 +489,25 @@ async function main() {
       ),
     });
     await page.getByRole("button", { name: "Validate and review" }).click();
-    await page.locator("#import-preview").getByText(`Staged · products`).waitFor();
+    try {
+      await page.locator("#import-preview").getByText("Staged · products").waitFor();
+    } catch (error) {
+      const state = await page.evaluate(() => {
+        const preview = document.querySelector("#import-preview");
+        const managerError = document.querySelector("#manager-error");
+        return {
+          previewHidden: preview?.hidden ?? null,
+          previewText: preview?.textContent?.slice(0, 300) ?? "",
+          importActionsHidden: document.querySelector("#import-actions")?.hidden ?? null,
+          retryHidden: document.querySelector("#import-retry-button")?.hidden ?? null,
+          managerErrorVisible: managerError instanceof HTMLElement && !managerError.hidden,
+          managerErrorKind: managerError?.dataset.kind ?? "",
+          managerErrorText: managerError?.textContent?.slice(0, 300) ?? "",
+        };
+      });
+      console.log(JSON.stringify({ event: "v2.setup_import_preview_wait_failed", ...state }));
+      throw error;
+    }
     await page.locator("#import-preview").getByText(productCode, { exact: true }).waitFor();
     await page.getByRole("button", { name: "Apply reviewed import" }).click();
     await page.locator("#import-history").getByText("products · applied").first().waitFor();
@@ -492,7 +524,7 @@ async function main() {
       ),
     });
     await page.getByRole("button", { name: "Validate and stage for review" }).click();
-    await page.locator("#setup-catalog-preview").getByText("Validated setup · review before applying").waitFor();
+    await waitForSetupReview(page, "ingredients");
     await page.getByRole("button", { name: "Apply reviewed setup" }).click();
     await page.locator("#setup-catalog-history").getByText("ingredients · 1 rows · applied").first().waitFor();
 
@@ -511,7 +543,7 @@ async function main() {
       ),
     });
     await page.getByRole("button", { name: "Validate and stage for review" }).click();
-    await page.locator("#setup-catalog-preview").getByText("Validated setup · review before applying").waitFor();
+    await waitForSetupReview(page, "dough");
     await page.getByRole("button", { name: "Apply reviewed setup" }).click();
     await page.locator("#setup-catalog-history").getByText("mixes · 1 rows · applied").first().waitFor();
 
@@ -736,6 +768,29 @@ async function main() {
       }));
     });
 
+    await page.getByTestId("button-start").click();
+    await page.getByTestId("status-run").getByText("running").waitFor();
+    await page.locator('[data-station-field="casesProduced"]').fill("1");
+    await page.getByTestId("button-save-station").click();
+    await page.getByText("Saved to the shared run.").waitFor();
+    await page.reload();
+    await page.getByTestId("status-run").getByText("running").waitFor();
+    assert.equal(await page.locator('[data-station-field="casesProduced"]').inputValue(), "1",
+      "server-owned station progress must survive a browser reload");
+
+    await page.getByTestId("button-complete").click();
+    await page.getByTestId("status-run").getByText("completed").waitFor();
+    await page.locator(".inventory-receipt").getByText("Inventory receipt").waitFor();
+    const completedRunId = await page.locator("#runs-list [aria-current='true']").getAttribute("data-run-id");
+    assert.ok(completedRunId, "the completed run remains selectable before reload");
+    await page.reload();
+    await page.getByTestId(`button-select-run-${completedRunId}`).waitFor();
+    await page.getByTestId(`button-select-run-${completedRunId}`).click();
+    await page.getByTestId("status-run").getByText("completed").waitFor();
+    await page.locator(".inventory-receipt").getByText("Inventory receipt").waitFor();
+    assert.equal(await page.getByTestId("button-complete").count(), 0,
+      "a completed run cannot be completed again from the manager screen");
+
     await page.locator("#transfer-from").selectOption({ label: firstWarehouse });
     await page.locator("#transfer-to").selectOption({ label: secondWarehouse });
     await page.locator("#transfer-product").selectOption(productCode);
@@ -787,6 +842,8 @@ async function main() {
     await page.locator("#manager-operations-nav-link").click();
     await page.locator("#manager-operations:not([hidden])").waitFor();
     await page.locator("#manager-operations-refresh").click();
+    await page.waitForFunction(() => document.querySelector("#manager-operations-status")
+      ?.textContent?.startsWith("Report refreshed at") === true);
     const actionRow = page.locator("#manager-operations-actions .ops-action")
       .filter({ hasText: "Review paused run" }).first();
     await actionRow.waitFor();
@@ -895,6 +952,13 @@ async function main() {
     assert.equal(await secondPage.locator('.schedule-run [data-field="targetCases"]').inputValue(), "20");
     await secondContext.close();
 
+    if (errors.length) {
+      console.log(JSON.stringify({
+        event: "v2.browser_test_console_errors",
+        errors: errors.slice(0, 10).map((message) => message.slice(0, 240)),
+        failedResponses: failedResponses.slice(0, 20),
+      }));
+    }
     assert.deepEqual(errors, [], "manager recovery, inventory, die-default, and schedule journeys should have no browser or server errors");
     assert.ok(
       failedResponses.length > 0 && failedResponses.every((response) => response === "401 /api/v2/auth/session"),
@@ -916,7 +980,6 @@ async function main() {
       );
       await page.screenshot({
         path: join(evidenceDir, `chromium-inventory-${viewport.width}x${viewport.height}.png`),
-        fullPage: true,
       });
     }
 
@@ -935,7 +998,6 @@ async function main() {
         );
         await webkitManagerPage.screenshot({
           path: join(evidenceDir, `webkit-inventory-${viewport.width}x${viewport.height}.png`),
-          fullPage: true,
         });
       }
       console.log("V2 authenticated WebKit inventory layout passed at phone, tablet, and landscape sizes.");
@@ -955,6 +1017,57 @@ async function main() {
             pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
           };
         });
+        if (!layout.panelVisible || layout.panelOverflow || layout.pageOverflow) {
+          const diagnostics = await webkitManagerPage.evaluate(() => ({
+            pageSize: {
+              clientWidth: document.documentElement.clientWidth,
+              scrollWidth: document.documentElement.scrollWidth,
+              pageScrollLeft: document.documentElement.scrollLeft,
+              bodyScrollLeft: document.body.scrollLeft,
+            },
+            containerSizes: [".page", "#authenticated-app", ".operations-nav", ".station-tabs",
+              ".workspace", ".primary-column", ".station-panel"].map((selector) => {
+              const element = document.querySelector(selector);
+              if (!(element instanceof HTMLElement)) return { selector, missing: true };
+              const rect = element.getBoundingClientRect();
+              const style = getComputedStyle(element);
+              return {
+                selector,
+                left: Math.round(rect.left),
+                right: Math.round(rect.right),
+                width: Math.round(rect.width),
+                clientWidth: element.clientWidth,
+                scrollWidth: element.scrollWidth,
+                scrollLeft: element.scrollLeft,
+                overflowX: style.overflowX,
+                minWidth: style.minWidth,
+                maxWidth: style.maxWidth,
+              };
+            }),
+            overflowingElements: Array.from(document.body.querySelectorAll("*"))
+              .map((element) => {
+                const rect = element.getBoundingClientRect();
+                return {
+                  tag: element.tagName.toLowerCase(),
+                  id: element.id,
+                  className: typeof element.className === "string" ? element.className : "",
+                  left: Math.round(rect.left),
+                  right: Math.round(rect.right),
+                  width: Math.round(rect.width),
+                  scrollWidth: element.scrollWidth,
+                  clientWidth: element.clientWidth,
+                };
+              })
+              .filter((element) => element.width > 0 && (element.left < -1 || element.right > document.documentElement.clientWidth + 1))
+              .slice(0, 8),
+          }));
+          console.log(JSON.stringify({
+            event: "v2.manager_operations_layout_overflow",
+            viewport: viewport.name,
+            ...layout,
+            ...diagnostics,
+          }));
+        }
         assert.deepEqual(layout, { panelVisible: true, panelOverflow: false, pageOverflow: false },
           `WebKit manager operations must fit ${viewport.name}`);
       }

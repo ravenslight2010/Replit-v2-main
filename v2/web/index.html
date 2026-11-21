@@ -30,6 +30,12 @@
           <span class="connection-dot" aria-hidden="true"></span>
           <span id="connection-label">Connecting</span>
         </div>
+        <details class="more-menu" id="more-menu">
+          <summary aria-label="More options">More</summary>
+          <div class="more-menu-content">
+            <button class="text-button" id="check-updates-button" type="button">Check for updates</button>
+          </div>
+        </details>
         <div class="account-controls" id="account-controls" hidden>
           <span class="staff-label" id="staff-label" data-testid="text-current-staff"></span>
           <button class="text-button sign-out-button" id="sign-out-button" type="button" data-testid="button-sign-out">Sign out</button>
@@ -968,6 +974,18 @@
         </div>
       </main>
     </div>
+    <dialog class="update-dialog" id="update-dialog" aria-labelledby="update-heading" aria-describedby="update-status">
+      <div class="update-dialog-content">
+        <p class="eyebrow">APP STATUS</p>
+        <h2 id="update-heading">App updates</h2>
+        <p id="update-status" role="status" aria-live="polite">Check whether a newer app version is available.</p>
+        <div class="update-dialog-actions">
+          <button class="button button-secondary" id="update-check-again" type="button">Check again</button>
+          <button class="button button-primary" id="update-reload" type="button" hidden disabled>Reload page</button>
+          <button class="text-button" id="update-close" type="button">Close</button>
+        </div>
+      </div>
+    </dialog>
     <div id="live-announcer" class="visually-hidden" aria-live="assertive" aria-atomic="true"></div>
   </body>
 </html>

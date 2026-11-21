@@ -185,6 +185,11 @@ test("serves the V2 sign-in page and local assets with restrictive browser heade
     assert.match(appScript.headers.get("content-type"), /javascript/);
     assert.match(await appScript.text(), /\/api\/v2\/auth/);
 
+    const updateManager = await fetch(`${baseUrl}/v2/web/update-manager.mjs`);
+    assert.equal(updateManager.status, 200);
+    assert.match(updateManager.headers.get("content-type"), /javascript/);
+    assert.match(await updateManager.text(), /updatefound/);
+
     const dieDefaults = await fetch(`${baseUrl}/v2/core/die-defaults.mjs`);
     assert.equal(dieDefaults.status, 200);
     assert.match(dieDefaults.headers.get("content-type"), /javascript/);

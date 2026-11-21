@@ -73,6 +73,8 @@ const WEB_ASSETS = new Map([
   ["/favicon.ico", ["../web/favicon.svg", "image/svg+xml"]],
   ["/v2/web/favicon.svg", ["../web/favicon.svg", "image/svg+xml"]],
   ["/v2/web/app.js", ["../web/app.js", "text/javascript; charset=utf-8"]],
+  ["/v2/web/update-manager.mjs", ["../web/update-manager.mjs", "text/javascript; charset=utf-8"]],
+  ["/v2/web/manager-operations.js", ["../web/manager-operations.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/inventory.js", ["../web/inventory.js", "text/javascript; charset=utf-8"]],
   ["/v2/web/inventory-export.mjs", ["../web/inventory-export.mjs", "text/javascript; charset=utf-8"]],
   ["/v2/web/setup-catalog.js", ["../web/setup-catalog.js", "text/javascript; charset=utf-8"]],
@@ -314,11 +316,12 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
   });
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
-  async function openDevice(deviceViewport = viewport, { canApprove = manager, withQc = false } = {}) {
+  async function openDevice(deviceViewport = viewport, { canApprove = manager, withQc = false, initScript } = {}) {
     const context = await browser.newContext({
       viewport: deviceViewport,
       ...(browserEngine === webkit ? { serviceWorkers: "block" } : {}),
     });
+    if (initScript) await context.addInitScript(initScript);
     const routeApi = async (route) => {
       const request = route.request();
       const url = new URL(request.url());
@@ -1026,6 +1029,119 @@ async function waitForState(predicate, timeoutMs = 7000) {
   assert.fail("Timed out waiting for shared test state.");
 }
 
+test("More update check is accessible, distinguishes outcomes, and never reloads active work", async (t) => {
+  const initScript = `
+    (() => {
+      let mode = "current";
+      const listeners = new Map();
+      const activeWorker = { state: "activated", addEventListener() {} };
+      const registration = new EventTarget();
+      registration.active = activeWorker;
+      registration.waiting = null;
+      registration.installing = null;
+      registration.update = async () => {
+        if (mode === "fail") throw new Error("synthetic update check failure");
+        if (mode !== "available") return;
+        const worker = new EventTarget();
+        worker.state = "installing";
+        registration.installing = worker;
+        registration.dispatchEvent(new Event("updatefound"));
+        queueMicrotask(() => {
+          worker.state = "activated";
+          registration.active = worker;
+          registration.installing = null;
+          worker.dispatchEvent(new Event("statechange"));
+        });
+      };
+      const serviceWorker = {
+        register: async () => registration,
+        getRegistration: async () => mode === "unavailable" ? null : registration,
+        addEventListener(type, callback) {
+          listeners.set(type, callback);
+        },
+      };
+      Object.defineProperty(Navigator.prototype, "serviceWorker", {
+        configurable: true,
+        value: serviceWorker,
+      });
+      window.setV2UpdateMode = (nextMode) => { mode = nextMode; };
+    })();
+  `;
+  const { fixture, openDevice } = await createFixture(t, { width: 1280, height: 900 }, { manager: true });
+  const { page } = await openDevice(undefined, { initScript });
+  await page.locator("#authenticated-app:not([hidden])").waitFor();
+  await page.getByTestId("status-run").getByText("running").waitFor();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
+  const topbarMenu = page.locator("#more-menu");
+  await page.getByText("More", { exact: true }).click();
+  await page.getByRole("button", { name: "Check for updates" }).click();
+  const dialog = page.getByRole("dialog", { name: "App updates" });
+  await dialog.waitFor();
+  await dialog.getByRole("status").getByText("No new app version is available.").waitFor();
+  const reloadButton = dialog.getByRole("button", { name: "Reload page" });
+  assert.equal(await reloadButton.isDisabled(), true, "an active run must never be reloaded for a non-critical update");
+  assert.match(await dialog.getByRole("status").textContent(), /Finish the run/u);
+
+  await dialog.locator("#update-check-again").focus();
+  await page.keyboard.press("Shift+Tab");
+  assert.equal(await dialog.locator("#update-close").evaluate((element) => element === document.activeElement),
+    true, "Shift+Tab wraps from the first dialog control to the last");
+  await page.keyboard.press("Tab");
+  assert.equal(await dialog.locator("#update-check-again").evaluate((element) => element === document.activeElement),
+    true, "Tab wraps inside the open modal");
+  const reducedTransition = await dialog.locator("#update-check-again").evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).transitionDuration));
+  assert.ok(reducedTransition <= 0.001, `reduced motion transition must be near-zero, got ${reducedTransition}`);
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => !document.querySelector("#update-dialog").open);
+  assert.equal(await page.locator("#more-menu summary").evaluate((element) => element === document.activeElement),
+    true, "closing the dialog returns focus to the More menu control");
+  assert.equal(await topbarMenu.getAttribute("open"), null);
+
+  await page.evaluate(() => window.setV2UpdateMode("available"));
+  await page.locator("#more-menu summary").click();
+  await page.locator("#check-updates-button").click();
+  await page.getByRole("status").getByText("An app update is ready.").waitFor();
+  assert.equal(await page.locator("#update-reload").isDisabled(), true);
+  assert.equal(fixture.run.status, "running");
+
+  await page.evaluate(() => window.setV2UpdateMode("fail"));
+  await page.locator("#update-check-again").click();
+  await page.getByRole("status").getByText("The update check failed.").waitFor();
+  assert.equal(await page.getByRole("status").getByText("An app update is ready.").count(), 0,
+    "a failed check must not be reported as an available update");
+  assert.equal(await page.locator("#update-reload").isDisabled(), true);
+
+  await page.evaluate(() => window.setV2UpdateMode("unavailable"));
+  await page.locator("#update-check-again").click();
+  await page.getByRole("status").getByText("The app update service is not ready.").waitFor();
+  assert.equal(await page.locator("#update-reload").isDisabled(), true);
+
+  await page.keyboard.press("Escape");
+  fixture.run.status = "completed";
+  fixture.run.completedAt = new Date().toISOString();
+  await page.reload();
+  await page.getByTestId("status-run").getByText("completed").waitFor();
+  await page.evaluate(() => window.setV2UpdateMode("available"));
+  await page.locator("#more-menu summary").click();
+  await page.locator("#check-updates-button").click();
+  await page.getByRole("status").getByText("An app update is ready.").waitFor();
+  assert.equal(await page.getByRole("button", { name: "Reload to update" }).isEnabled(), true,
+    "a ready update can be applied when there is no active run or pending edit");
+
+  await page.keyboard.press("Escape");
+  await page.locator("#setup-label").fill("Unsaved update-safety draft");
+  await page.locator("#more-menu summary").click();
+  await page.locator("#check-updates-button").click();
+  await page.getByRole("status").getByText("An app update is ready.").waitFor();
+  assert.equal(await page.getByRole("button", { name: "Reload to update" }).isDisabled(), true,
+    "unsaved form edits block an update reload");
+  assert.match(await page.locator("#update-status").textContent(), /unsaved edits/u);
+  assert.deepEqual(fixture.pageErrors, []);
+  assert.deepEqual(fixture.consoleErrors, []);
+});
+
 for (const browserEngine of [chromium, webkit]) {
 test(`run substitution and allergen status stays run-bound and readable in ${browserEngine.name()}`,
   { skip: browserEngine === webkit && !webkitInstalled ? "Playwright WebKit is not installed on this host." : false },
@@ -1486,7 +1602,8 @@ test("offline reload stays read-only and wakes into the latest server state", as
   fixture.run.pausedAt = pausedAt;
   fixture.run.pauseIntervals = [{ startedAt: pausedAt, endedAt: null }];
   fixture.run.stationProgress.line = stationSnapshot({ progress: { casesProduced: 12 } });
-  const { context, page, routeApi } = await openDevice();
+  const { context, page, routeApi } = await openDevice({ width: 390, height: 844 });
+  const otherDevice = await openDevice({ width: 1280, height: 900 });
   await page.evaluate(() => navigator.serviceWorker.ready);
   assert.equal(await page.getByTestId("status-run").textContent(), "paused");
   assert.equal(await page.getByTestId("button-resume").isDisabled(), false);
@@ -1501,16 +1618,17 @@ test("offline reload stays read-only and wakes into the latest server state", as
   assert.equal(await page.locator('[data-station-field="casesProduced"]').isDisabled(), true);
   await page.screenshot({ path: join(tmpdir(), "v2-station-offline-readonly.png") });
 
-  fixture.run.stationProgress.line.progress.casesProduced = 20;
-  fixture.run.pauseIntervals[0].endedAt = new Date().toISOString();
-  fixture.run.status = "running";
-  fixture.run.pausedAt = null;
-  fixture.run.resumedAt = fixture.run.pauseIntervals[0].endedAt;
-  fixture.run.revision += 1;
-  fixture.run.updatedAt = fixture.run.resumedAt;
-  fixture.run.serverNow = fixture.run.resumedAt;
+  await otherDevice.page.getByTestId("button-resume").click();
+  await otherDevice.page.getByTestId("status-run").getByText("running").waitFor();
+  await otherDevice.page.locator('[data-station-field="casesProduced"]').fill("20");
+  await otherDevice.page.getByTestId("button-save-station").click();
+  await otherDevice.page.getByText("Saved to the shared run.").waitFor();
+  assert.equal(fixture.run.stationProgress.line.progress.casesProduced, 20);
+  assert.equal(fixture.run.revision, 3, "the connected session owns the latest run revision");
+
   await context.route("**/api/v2/**", routeApi);
   await context.setOffline(false);
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await page.waitForFunction(() => (
     document.querySelector('[data-station-field="casesProduced"]')?.value === "20"
   ), null, { timeout: 7000 });
@@ -1819,6 +1937,8 @@ for (const browserEngine of [chromium, webkit]) {
     { skip: browserEngine === webkit && !webkitInstalled ? "Playwright WebKit is not installed on this host." : false },
     async (t) => {
       const { fixture, openDevice } = await createFixture(t, undefined, { manager: true, browserEngine });
+      fixture.run.status = "completed";
+      fixture.run.completedAt = new Date().toISOString();
       const { page } = await openDevice();
       await page.locator("#setup-catalog-panel:not([hidden])").waitFor();
       await page.locator("#source-workbook-family").selectOption("sauce-guides");
@@ -1843,13 +1963,48 @@ for (const browserEngine of [chromium, webkit]) {
           consoleErrors: fixture.consoleErrors,
         })}`);
       }
+      if (browserEngine === chromium) {
+        await page.evaluate(async () => navigator.serviceWorker.ready);
+      }
+      await page.locator("#more-menu summary").click();
+      await page.locator("#check-updates-button").click();
+      await page.waitForFunction(() => {
+        const status = document.querySelector("#update-status")?.textContent || "";
+        return status.includes("No new app version is available.")
+          || status.includes("cannot check for app updates")
+          || status.includes("app update service is not ready");
+      });
+      assert.equal(await page.locator("#update-reload").isDisabled(), true,
+        "an unconfirmed workbook preview must block even a manual update reload");
+      assert.match(await page.locator("#update-status").textContent(), /awaiting confirmation/u);
+      await page.keyboard.press("Escape");
       assert.equal(await page.locator("#source-workbook-preview").isVisible(), true);
       await page.getByText(/Sauce guide: Acme · Classic/u).click();
       await page.getByText("I reviewed and confirmed this mapping", { exact: true }).click();
       await page.getByRole("button", { name: "Stage reviewed rows" }).click();
-      await page.locator("#setup-catalog-status")
-        .getByText("1 sauce guide rows are staged; 0 skipped and 0 remain review-only.")
-        .waitFor();
+      try {
+        await page.locator("#setup-catalog-status")
+          .getByText("1 sauce guide rows are staged; 0 skipped and 0 remain review-only.")
+          .waitFor({ timeout: 10000 });
+      } catch (error) {
+        console.log(JSON.stringify({
+          event: "v2.sauce_import_stage_wait_failed",
+          status: await page.locator("#setup-catalog-status").innerText(),
+          statusKind: await page.locator("#setup-catalog-status").getAttribute("data-kind"),
+          previewText: (await page.locator("#source-workbook-preview").innerText()).slice(0, 500),
+          stagedImports: fixture.setupCatalogImports.map((item) => ({
+            family: item.family,
+            status: item.status,
+            rowCount: item.rowCount,
+            sourceFamily: item.sourceSummary?.sourceFamily ?? null,
+            importedRows: item.sourceSummary?.importedRows ?? null,
+          })),
+          pageErrors: fixture.pageErrors,
+          consoleErrors: fixture.consoleErrors.slice(-5),
+          notFoundRoutes: fixture.notFoundRoutes.slice(-5),
+        }));
+        throw error;
+      }
 
       const staged = fixture.setupCatalogImports[0];
       assert.equal(staged.family, "run-templates");
@@ -1908,6 +2063,9 @@ test("installed shell serves schedule and setup-import modules offline and after
   const { fixture, openDevice } = await createFixture(t, { width: 1440, height: 900 }, { manager: true });
   const { context, page } = await openDevice();
   const modules = [
+    "/v2/web/update-manager.mjs",
+    "/v2/web/manager-operations.js",
+    "/v2/web/inventory-export.mjs",
     "/v2/web/schedule.js",
     "/v2/core/schedule-planning.mjs",
     "/v2/web/setup-catalog.js",
@@ -1930,7 +2088,7 @@ test("installed shell serves schedule and setup-import modules offline and after
     }
   });
   const cached = await page.evaluate(async (paths) => {
-    const cache = await caches.open("fieldline-v2-shell-7");
+    const cache = await caches.open("fieldline-v2-shell-11");
     return Promise.all(paths.map(async (path) => ({
       path,
       present: Boolean(await cache.match(path)),
@@ -1965,10 +2123,10 @@ test("installed shell serves schedule and setup-import modules offline and after
     assert.ok(module.body.length > 0, `${module.path} has module contents after reconnect`);
   }
   assert.deepEqual(fixture.pageErrors, []);
-  assert.ok(
-    fixture.consoleErrors.every((message) => message === "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"),
-    `only expected offline resource errors should appear: ${JSON.stringify(fixture.consoleErrors)}`,
-  );
+  const unexpectedOfflineErrors = fixture.consoleErrors.filter((message) =>
+    !message.includes("https://fonts.googleapis.com/css2?family="));
+  assert.deepEqual(unexpectedOfflineErrors, [],
+    `only the optional remote font stylesheet may fail offline: ${JSON.stringify(fixture.consoleErrors)}`);
   assert.ok(
     failedRequests.every(({ url, error }) => (
       error === "net::ERR_INTERNET_DISCONNECTED"
