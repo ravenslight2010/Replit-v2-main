@@ -246,6 +246,7 @@ function startStaticArtifactServer(publicDir, rewrite) {
       return;
     }
     const requestedPath = pathname === "/" ? "/index.html" : pathname;
+    let servedPath = requestedPath;
     let diskPath = resolve(publicRoot, `.${requestedPath}`);
     if (!diskPath.startsWith(`${publicRoot}/`)) {
       response.writeHead(403).end("Forbidden");
@@ -258,12 +259,13 @@ function startStaticArtifactServer(publicDir, rewrite) {
         response.writeHead(404).end("Not Found");
         return;
       }
-      diskPath = join(publicRoot, "index.html");
+      servedPath = rewrite.to;
+      diskPath = resolve(publicRoot, `.${servedPath}`);
     }
     try {
       const body = await readFile(diskPath);
       response.writeHead(200, {
-        "content-type": `${contentTypeForPath(requestedPath)}; charset=utf-8`,
+        "content-type": `${contentTypeForPath(servedPath)}; charset=utf-8`,
         "content-length": body.length,
       }).end(body);
     } catch {
@@ -297,6 +299,17 @@ export function assertStaticAssetResponse(pathname, status, contentType, body) {
   }
 }
 
+export function assertClientRouteResponse(pathname, status, contentType, body, appShell) {
+  assert.equal(status, 200, `V2 client route failed for ${pathname}: HTTP ${status}`);
+  const mediaType = contentType?.split(";")[0]?.trim().toLowerCase();
+  assert.equal(
+    mediaType,
+    "text/html",
+    `V2 client route ${pathname} has incorrect content type ${contentType ?? "(missing)"}`,
+  );
+  assert.equal(body, appShell, `V2 client route ${pathname} did not return the app shell`);
+}
+
 async function validateV2StaticArtifactHttp(root) {
   const webArtifact = ARTIFACTS.find((artifact) => artifact.kind === "web");
   const productionService = webArtifact.service.sections["services.production"];
@@ -316,6 +329,18 @@ async function validateV2StaticArtifactHttp(root) {
         body,
       );
     }
+
+    const nestedRoute = "/setup/profiles";
+    const routeResponse = await fetch(new URL(nestedRoute, origin));
+    const routeBody = await routeResponse.text();
+    const appShell = await readFile(join(publicDir, "index.html"), "utf8");
+    assertClientRouteResponse(
+      nestedRoute,
+      routeResponse.status,
+      routeResponse.headers.get("content-type"),
+      routeBody,
+      appShell,
+    );
   } finally {
     await new Promise((resolveClose, rejectClose) => {
       server.close((error) => (error ? rejectClose(error) : resolveClose()));
