@@ -325,6 +325,10 @@ async function createFixture(t, viewport = { width: 1440, height: 900 }, { manag
     const routeApi = async (route) => {
       const request = route.request();
       const url = new URL(request.url());
+      if (url.pathname === "/api/v2/agent-test-preview/credentials") {
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ enabled: false }) });
+        return;
+      }
       if (url.pathname === "/api/v2/auth/session" && request.method() === "GET") {
         await route.fulfill({
           status: 200,
