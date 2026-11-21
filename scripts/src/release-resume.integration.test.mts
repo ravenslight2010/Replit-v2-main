@@ -1211,6 +1211,207 @@ async function runV2BrowserFailureEvidenceLifecycleScenario(): Promise<void> {
   }
 }
 
+async function runInterruptedV2BrowserGateScenario(): Promise<void> {
+  const fixtureRoot = await mkdtemp(
+    join(tmpdir(), "release-v2-browser-interrupted-"),
+  );
+  const standardDir = join(fixtureRoot, "release-evidence");
+  const fullDir = join(fixtureRoot, "release-evidence-full");
+  const pngHeader = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  const interruptedScript = [
+    "const fs = require('node:fs');",
+    "const os = require('node:os');",
+    "const path = require('node:path');",
+    "const runnerPid = process.ppid;",
+    "const mode = process.env.RELEASE_V2_FIXTURE_MODE;",
+    "const junitPath = path.join(os.tmpdir(), `v2-browser-${runnerPid}-${mode}.xml`);",
+    "const screenshotDir = path.join(os.tmpdir(), `v2-browser-failure-screenshots-${runnerPid}`);",
+    "fs.writeFileSync(process.env.RELEASE_V2_FIXTURE_RUNNER_PID, String(runnerPid));",
+    "fs.mkdirSync(screenshotDir, { recursive: true });",
+    "fs.writeFileSync(path.join(screenshotDir, 'partial.png'), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));",
+    "fs.writeFileSync(path.join(screenshotDir, 'manifest.jsonl'), JSON.stringify({ suite: 'e2e/station-sync.browser.test.mjs', test: 'interrupted station test', file: 'partial.png' }) + '\\n');",
+    "fs.writeFileSync(junitPath, '<?xml version=\"1.0\"?><testsuites><testcase name=\"interrupted station test\" file=\"e2e/station-sync.browser.test.mjs\"><failure message=\"partial test failure\">partial stack</failure></testcase></testsuites>');",
+    "console.log('V2 browser fixture wrote partial JUnit and screenshot evidence; waiting for timeout');",
+    "setTimeout(() => {}, 10_000);",
+  ].join("");
+  const runnerPidPaths = {
+    standard: join(fixtureRoot, "standard-runner-pid"),
+    full: join(fixtureRoot, "full-runner-pid"),
+  };
+
+  const seedModeEvidence = async (
+    evidenceDir: string,
+    mode: "standard" | "full",
+  ): Promise<{ retainedReport: string; staleFailure: string }> => {
+    const retainedReport = `# Prior retained ${mode} release report\nDecision: GO\n`;
+    const staleFailure = JSON.stringify({
+      schemaVersion: 1,
+      revision: "stale-revision",
+      gate: "V2 critical Chromium workflows",
+      files: [],
+    });
+    await mkdir(join(evidenceDir, "v2-browser-failures"), {
+      recursive: true,
+    });
+    await writeFile(
+      join(evidenceDir, "release-check-report.md"),
+      retainedReport,
+      "utf8",
+    );
+    await writeFile(
+      join(evidenceDir, "v2-browser-failures.json"),
+      staleFailure,
+      "utf8",
+    );
+    await writeFile(
+      join(evidenceDir, "v2-browser-failures", "stale.png"),
+      pngHeader,
+    );
+    return { retainedReport, staleFailure };
+  };
+
+  const runInterruptedMode = async (
+    mode: "standard" | "full",
+    evidenceDir: string,
+    expectedRetainedReport: string,
+  ): Promise<string> => {
+    const runnerPidPath = runnerPidPaths[mode];
+    const steps: FixtureStep[] = [
+      {
+        label: "V2 critical Chromium workflows",
+        command: process.execPath,
+        args: ["-e", interruptedScript],
+        timeoutMs: 750,
+        env: {
+          RELEASE_V2_FIXTURE_MODE: mode,
+          RELEASE_V2_FIXTURE_RUNNER_PID: runnerPidPath,
+        },
+        stage: "v2-browser",
+      },
+    ];
+    const args = mode === "full" ? ["--full"] : [];
+    const result = await runReleaseCheck(evidenceDir, steps, args);
+    assert.equal(result.code, 1, result.output);
+    assert.match(
+      result.output,
+      /V2 critical Chromium workflows exceeded its \d+ minute timeout/,
+      `${mode} mode must classify this as a timeout`,
+    );
+    assert.match(
+      result.output,
+      /Release checkpoint \(INCOMPLETE \/ NO-GO; not retained evidence\)/,
+      `${mode} mode must write an incomplete checkpoint`,
+    );
+
+    const checkpointPath = join(evidenceDir, "release-check-checkpoint.md");
+    const checkpoint = await readFile(checkpointPath, "utf8");
+    assert.match(checkpoint, new RegExp(`^Mode: ${mode}$`, "m"));
+    assert.match(checkpoint, /^Report status: INCOMPLETE CHECKPOINT$/m);
+    assert.match(
+      checkpoint,
+      /\| V2 critical Chromium workflows \| INFRASTRUCTURE TIMEOUT \|/,
+      "an interrupted V2 browser gate must not be reported as a product failure",
+    );
+    assert.doesNotMatch(
+      checkpoint,
+      /\| V2 critical Chromium workflows \| (?:PASS|FAIL) \|/,
+      "the interrupted gate must not be reported as a pass or product failure",
+    );
+    assert.doesNotMatch(
+      checkpoint,
+      /\[failure details\]\(v2-browser-failures\.json\)/,
+      "partial failure output must not be linked as retained browser evidence",
+    );
+    assert.match(
+      checkpoint,
+      mode === "full"
+        ? /^Resume: pnpm run release:check:full -- --resume$/m
+        : /^Resume: pnpm run release:check -- --resume$/m,
+      "the checkpoint must provide the correct mode-specific resume command",
+    );
+
+    const retainedReport = await readFile(
+      join(evidenceDir, "release-check-report.md"),
+      "utf8",
+    );
+    assert.equal(
+      retainedReport,
+      expectedRetainedReport,
+      "an interrupted run must leave the prior retained report unchanged",
+    );
+    const runnerPid = (await readFile(runnerPidPath, "utf8")).trim();
+    const junitPath = join(
+      tmpdir(),
+      `v2-browser-${runnerPid}-${mode}.xml`,
+    );
+    const screenshotTempDir = join(
+      tmpdir(),
+      `v2-browser-failure-screenshots-${runnerPid}`,
+    );
+    await assert.rejects(
+      readFile(junitPath, "utf8"),
+      "temporary JUnit output must be removed after an interrupted V2 gate",
+    );
+    await assert.rejects(
+      readdir(screenshotTempDir),
+      "temporary screenshot evidence must be removed after an interrupted V2 gate",
+    );
+    await assert.rejects(
+      readFile(join(evidenceDir, "v2-browser-failures.json"), "utf8"),
+      "stale or partial V2 failure summaries must not survive an interruption",
+    );
+    await assert.rejects(
+      readdir(join(evidenceDir, "v2-browser-failures")),
+      "stale or partial screenshots must not survive an interruption",
+    );
+    return checkpoint;
+  };
+
+  try {
+    const seededStandard = await seedModeEvidence(standardDir, "standard");
+    const seededFull = await seedModeEvidence(fullDir, "full");
+
+    const standardCheckpoint = await runInterruptedMode(
+      "standard",
+      standardDir,
+      seededStandard.retainedReport,
+    );
+    assert.equal(
+      await readFile(join(fullDir, "release-check-report.md"), "utf8"),
+      seededFull.retainedReport,
+      "a standard run must not overwrite the full retained report",
+    );
+    assert.equal(
+      await readFile(join(fullDir, "v2-browser-failures.json"), "utf8"),
+      seededFull.staleFailure,
+      "a standard run must not clean or alter full-mode failure evidence",
+    );
+    assert.deepEqual(
+      await readdir(join(fullDir, "v2-browser-failures")),
+      ["stale.png"],
+      "a standard run must not clean full-mode screenshots",
+    );
+
+    await runInterruptedMode("full", fullDir, seededFull.retainedReport);
+    assert.equal(
+      await readFile(join(standardDir, "release-check-checkpoint.md"), "utf8"),
+      standardCheckpoint,
+      "a full run must not overwrite the standard checkpoint",
+    );
+    assert.equal(
+      await readFile(join(standardDir, "release-check-report.md"), "utf8"),
+      seededStandard.retainedReport,
+      "a full run must not overwrite the standard retained report",
+    );
+
+    console.log(
+      "Interrupted V2 browser gate cleanup passed (standard/full isolation, checkpoint recovery, and partial-evidence removal).",
+    );
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
 async function runApiShardConcurrencyScenario(): Promise<void> {
   const evidenceDir = await mkdtemp(join(tmpdir(), "release-resume-api-cap-"));
   const markerDir = await mkdtemp(
@@ -1581,6 +1782,7 @@ if (process.env.RELEASE_STOPPED_SUMMARY_ONLY === "1") {
   await runOnboardingGuardStopScenario();
   await runLegacyCoverageDecisionScenario();
   await runV2BrowserFailureEvidenceLifecycleScenario();
+  await runInterruptedV2BrowserGateScenario();
   await runParallelStageScenario();
   await runApiShardConcurrencyScenario();
   await runParallelResumeScenario();
