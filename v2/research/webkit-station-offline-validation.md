@@ -144,3 +144,43 @@ returned exit code `1` in `809.340357ms`, rather than hanging:
 The failure is injected runner-cleanup evidence, not a product or Nix WebKit
 failure. Fixture teardown is now registered before browser launch, so a launch
 error still closes the local HTTP server and lets the serial test process exit.
+
+## Real iOS access checked
+
+**Date:** 2026-11-21
+
+Checked whether a no-cost route can provide the required installed-iPhone
+evidence:
+
+- Replit's cloud iOS Simulator is for native mobile artifacts and is hidden for
+  web-only projects. V2 is a web/PWA project, so that preview cannot run this
+  check.
+- BrowserStack Live documents manually adding a PWA to an iOS device's Home
+  Screen from Safari, and documents true offline mode on real iPhones running
+  iOS 15 or later. Live Local Testing can route a real device to a private or
+  staging V2 site. This is the closest match to the requested check.
+- BrowserStack's published free trial currently includes 30 minutes of Live
+  testing, limited to one minute per device. Its network-simulation feature,
+  including Offline, is listed for Team, Team Pro, and Enterprise plans. The
+  free trial therefore does not establish that the required offline control is
+  available without a paid plan.
+- Apple's iOS Simulator requires Xcode on macOS. It can inspect Home Screen web
+  apps, but it is simulated hardware and cannot be recorded as physical-device
+  evidence.
+- No BrowserStack account or device session is connected to this workspace.
+  No account was created and no paid service was enabled.
+
+References:
+
+- [Replit native mobile preview and simulator scope](https://docs.replit.com/features/artifact-types/building-mobile-apps)
+- [BrowserStack PWA scenarios in Live](https://www.browserstack.com/support/faq/live/features-live/how-can-i-progressive-web-app-pwa-specific-scenarios-on-devices-in-live)
+- [BrowserStack iOS offline mode](https://www.browserstack.com/docs/live/network/network-simulation/offline-mode/offline-mode-ios)
+- [BrowserStack Live Local Testing](https://www.browserstack.com/docs/live/local-testing)
+- [BrowserStack free-trial limits](https://www.browserstack.com/support/faq/plans-pricing/plans/what-do-i-get-with-a-free-trial)
+- [BrowserStack Live network-simulation plan availability](https://www.browserstack.com/docs/live/network)
+- [Apple iOS Simulator setup](https://developer.apple.com/documentation/safari-developer-tools/installing-xcode-and-simulators)
+
+**Outcome:** no free route available in this workspace completes the required
+real-iPhone offline reload test. The physical-device result remains unverified;
+do not substitute the free-trial browser session, an iOS simulator, or headless
+WebKit for that evidence.
