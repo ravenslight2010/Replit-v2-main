@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { createAuthApi } from "./auth-api.mjs";
 import { createInventoryApi } from "./inventory-api.mjs";
 import { createMixPlanApi } from "./mix-plan-api.mjs";
+import { createManagerOperationsApi } from "./manager-operations-api.mjs";
 import { createQcApi } from "./qc-api.mjs";
 import { createRunApiForDatabase } from "./run-api.mjs";
 import { createScheduleApi } from "./schedule-api.mjs";
@@ -36,6 +37,7 @@ const WEB_ASSETS = new Map([
   ["/v2/web/setup-catalog.js", { file: new URL("../web/setup-catalog.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/schedule.js", { file: new URL("../web/schedule.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/mix-plan.js", { file: new URL("../web/mix-plan.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
+  ["/v2/web/manager-operations.js", { file: new URL("../web/manager-operations.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/core/mix-plan.mjs", { file: new URL("../core/mix-plan.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/core/schedule-planning.mjs", { file: new URL("../core/schedule-planning.mjs", import.meta.url), type: "text/javascript; charset=utf-8" }],
   ["/v2/web/qc.js", { file: new URL("../web/qc.js", import.meta.url), type: "text/javascript; charset=utf-8" }],
@@ -91,6 +93,7 @@ function safeRouteName(url) {
   if (url.pathname === "/v2/web/setup-catalog.js") return "web.setup_catalog";
   if (url.pathname === "/v2/web/schedule.js") return "web.schedule";
   if (url.pathname === "/v2/web/mix-plan.js") return "web.mix_plan";
+  if (url.pathname === "/v2/web/manager-operations.js") return "web.manager_operations";
   if (url.pathname === "/v2/core/mix-plan.mjs") return "web.mix_plan_core";
   if (url.pathname === "/v2/core/schedule-planning.mjs") return "web.schedule_planning";
   if (url.pathname === "/v2/web/qc.js") return "web.qc";
@@ -116,6 +119,9 @@ function safeRouteName(url) {
   if (/^\/api\/v2\/runs\/[^/]+$/.test(url.pathname)) return "runs.detail";
   if (url.pathname === "/api/v2/schedules") return "schedules.date";
   if (url.pathname === "/api/v2/mix-plan") return "mix_plan.read";
+  if (url.pathname === "/api/v2/manager-operations" || url.pathname.startsWith("/api/v2/manager-operations/")) {
+    return "manager_operations";
+  }
   if (url.pathname === "/api/v2/schedules/catalog") return "schedules.catalog";
   if (url.pathname === "/api/v2/schedules/commands") return "schedules.command";
   if (url.pathname === "/api/v2/schedules/import-preview") return "schedules.import_preview";
@@ -178,6 +184,12 @@ export function createV2Api({
   const mixPlanApi = createMixPlanApi({
     pool,
     authenticate: (request) => authAdapter.authenticate(request),
+    logger,
+  });
+  const managerOperationsApi = createManagerOperationsApi({
+    pool,
+    authenticate: (request) => authAdapter.authenticate(request),
+    verifyCsrf: (request, auth) => authAdapter.verifyCsrf(request, auth),
     logger,
   });
   const scheduleApi = createScheduleApi({
@@ -256,6 +268,7 @@ export function createV2Api({
 
       if (await authApi(request, response)) return;
       if (await mixPlanApi(request, response)) return;
+      if (await managerOperationsApi(request, response)) return;
       if (await inventoryApi(request, response)) return;
       if (await scheduleApi(request, response)) return;
       if (await qcApi(request, response)) return;

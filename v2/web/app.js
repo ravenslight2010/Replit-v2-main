@@ -4,6 +4,7 @@ import { DIE_DEFAULT_FIELDS, isDieLineSettings, resolveDieLineDefaults, resolveD
 import { initializeInventory, updateInventoryContext } from "./inventory.js";
 import { updateMixPlanContext } from "./mix-plan.js";
 import { updateScheduleContext } from "./schedule.js";
+import { initializeManagerOperations, updateManagerOperationsContext } from "./manager-operations.js";
 import { initializeQc } from "./qc.js";
 
 const API = "/api/v2/runs";
@@ -586,6 +587,7 @@ function showSignIn(message = null, { title = "Sign-in needed", retry = false } 
   updateInventoryContext(null, false);
   updateScheduleContext(null, false);
   updateMixPlanContext(null, false);
+  updateManagerOperationsContext(null);
   el.authPanel.hidden = false;
   el.authForm.hidden = false;
   el.passwordRecoveryLinks.hidden = false;
@@ -624,6 +626,7 @@ function showAuthenticated(staff) {
   updateInventoryContext(currentStaff, false);
   updateScheduleContext(currentStaff, false);
   updateMixPlanContext(currentStaff, serverStateConfirmed);
+  updateManagerOperationsContext(currentStaff);
   el.authPanel.hidden = true;
   el.passwordRecoveryLinks.hidden = true;
   el.passwordResetRequestForm.hidden = true;
@@ -2881,6 +2884,7 @@ if (pendingCreate) {
 }
 
 initializeInventory();
+initializeManagerOperations();
 el.runSupplyForm.addEventListener("submit", (event) => { void submitRunStagedSupply(event); });
 el.runSupplyRetry.addEventListener("click", (event) => { void submitRunStagedSupply(event, true); });
 el.runSupplyPlanned.addEventListener("change", () => {
@@ -2909,6 +2913,19 @@ el.passwordResetQueue.addEventListener("click", handlePasswordResetAction);
 el.passwordResetRefresh.addEventListener("click", () => void loadPasswordResetQueue());
 el.authRetry.addEventListener("click", checkSession);
 el.signOut.addEventListener("click", signOut);
+window.addEventListener("v2:select-run", async (event) => {
+  const runId = event.detail?.runId;
+  if (!currentStaff || !UUID.test(runId || "")) return;
+  try {
+    const run = runs.find((item) => item.id === runId) || await fetchOneRun(runId);
+    selectedRunId = run.id;
+    lastKnownRun = run;
+    render();
+    document.querySelector("#workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (error) {
+    showError(error instanceof Error ? error.message : "The selected run could not be loaded.", "Run unavailable");
+  }
+});
 window.addEventListener("offline", enterOfflineMode);
 window.addEventListener("online", () => {
   if (currentStaff) void fetchRuns({ quiet: true });

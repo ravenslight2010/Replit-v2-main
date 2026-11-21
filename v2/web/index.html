@@ -133,6 +133,7 @@
           <a href="#mix-plan">Mix Plan</a>
           <a href="#schedule-tools" id="schedule-nav-link" hidden>Production schedule</a>
           <a href="#manager-tools" id="setup-nav-link" hidden>Setup and inventory</a>
+          <a href="#manager-operations" id="manager-operations-nav-link" hidden>Operations & history</a>
         </nav>
 
         <section class="staff-panel" id="staff-panel" aria-labelledby="staff-heading" hidden>
@@ -858,6 +859,81 @@
               </div>
               <h4 class="manager-subheading">Recent physical counts</h4>
               <ul class="manager-list" id="opening-count-history" aria-live="polite"></ul>
+            </section>
+          </div>
+        </section>
+        <section class="manager-tools manager-operations" id="manager-operations" aria-labelledby="manager-operations-heading" hidden>
+          <div class="manager-tools-heading">
+            <div>
+              <p class="eyebrow intro-kicker">FACILITY OVERVIEW <span class="intro-rule"></span> V2</p>
+              <h2 id="manager-operations-heading">Operations & history</h2>
+              <p class="manager-tools-copy">Review canonical V2 activity and recorded follow-ups. Status notes do not change run or source records.</p>
+            </div>
+          </div>
+          <p class="ops-status" id="manager-operations-status" role="status" aria-live="polite"></p>
+          <p class="ops-alert" id="manager-operations-alert" role="alert" hidden></p>
+          <form class="ops-toolbar" id="manager-operations-filter">
+            <label class="field" for="manager-operations-from"><span>From · Central time</span><input id="manager-operations-from" type="date" required /></label>
+            <label class="field" for="manager-operations-to"><span>Through · Central time</span><input id="manager-operations-to" type="date" required /></label>
+            <button class="button button-primary" id="manager-operations-refresh" type="submit">Refresh report</button>
+            <button class="button button-secondary" id="manager-operations-export" type="button" disabled>Download summary CSV</button>
+          </form>
+          <p class="ops-coverage-note" id="manager-operations-range-note"></p>
+          <div class="ops-grid">
+            <section class="ops-card ops-card-wide" aria-labelledby="ops-actions-heading">
+              <p class="eyebrow">PRIORITIZED · ATTRIBUTED</p>
+              <h3 id="ops-actions-heading">Action queue</h3>
+              <p class="manager-help">Pending items appear first. A status change records who acted, when, and why; it never changes source data.</p>
+              <ol class="ops-action-list" id="manager-operations-actions" aria-live="polite"></ol>
+            </section>
+            <section class="ops-card" aria-labelledby="ops-handoff-heading">
+              <p class="eyebrow">CURRENT SERVER STATE</p>
+              <h3 id="ops-handoff-heading">Shift handoff</h3>
+              <ul class="ops-list" id="manager-operations-handoff" aria-live="polite"></ul>
+            </section>
+            <section class="ops-card" aria-labelledby="ops-insights-heading">
+              <p class="eyebrow">RUN INSIGHTS · REPORT</p>
+              <h3 id="ops-insights-heading">Run summary</h3>
+              <dl class="ops-metrics" id="manager-operations-metrics"></dl>
+            </section>
+            <section class="ops-card" aria-labelledby="ops-downtime-heading">
+              <p class="eyebrow">PAUSE INTERVALS · CENTRAL TIME</p>
+              <h3 id="ops-downtime-heading">Downtime trend</h3>
+              <ol class="ops-list" id="manager-operations-downtime" aria-live="polite"></ol>
+            </section>
+            <section class="ops-card" aria-labelledby="ops-health-heading">
+              <p class="eyebrow">REVIEW SIGNALS · NOT DIAGNOSES</p>
+              <h3 id="ops-health-heading">Data health & patterns</h3>
+              <ul class="ops-list" id="manager-operations-health" aria-live="polite"></ul>
+              <h4 class="manager-subheading">Recorded run event patterns</h4>
+              <ul class="ops-list" id="manager-operations-patterns" aria-live="polite"></ul>
+            </section>
+            <section class="ops-card ops-card-wide" aria-labelledby="ops-history-heading">
+              <div class="ops-card-heading">
+                <div><p class="eyebrow">CANONICAL RUN RECORDS</p><h3 id="ops-history-heading">Run history</h3></div>
+                <button class="button button-secondary button-small" id="manager-operations-more-runs" type="button" hidden>Load older runs</button>
+              </div>
+              <p class="ops-incomplete" id="manager-operations-run-coverage" hidden></p>
+              <ul class="ops-list ops-run-list" id="manager-operations-runs" aria-live="polite"></ul>
+            </section>
+            <section class="ops-card ops-card-wide" aria-labelledby="ops-events-heading">
+              <div class="ops-card-heading">
+                <div><p class="eyebrow">SANITIZED EVENT HISTORY</p><h3 id="ops-events-heading">Run events</h3></div>
+                <button class="button button-secondary button-small" id="manager-operations-all-events" type="button" hidden>Show all runs</button>
+              </div>
+              <p class="ops-incomplete" id="manager-operations-event-coverage" hidden></p>
+              <ol class="ops-list ops-event-list" id="manager-operations-events" aria-live="polite"></ol>
+              <button class="button button-secondary button-small" id="manager-operations-more-events" type="button" hidden>Load older events</button>
+            </section>
+            <section class="ops-card ops-card-wide" aria-labelledby="ops-sources-heading">
+              <p class="eyebrow">SOURCE COVERAGE</p>
+              <h3 id="ops-sources-heading">What this report can confirm</h3>
+              <ul class="ops-source-list" id="manager-operations-coverage"></ul>
+              <nav class="ops-domain-links" aria-label="Domain history pages">
+                <a href="#manager-tools" id="ops-inventory-link" hidden>Open inventory and import history</a>
+                <a href="#schedule-tools" id="ops-schedule-link" hidden>Open schedule history</a>
+                <a href="#qc-panel" id="ops-qc-link" hidden>Open QC history</a>
+              </nav>
             </section>
           </div>
         </section>

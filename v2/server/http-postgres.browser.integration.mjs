@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { access, mkdir, rm } from "node:fs/promises";
+import { access, mkdir, readFile, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -75,6 +75,8 @@ async function main() {
   const errors = [];
   const failedResponses = [];
   let offlineCheckActive = false;
+  let expectedManagerForbidden = false;
+  let managerForbiddenSeen = false;
   let serverInstance;
   let browser;
   let webkitBrowser;
@@ -132,6 +134,11 @@ async function main() {
       watchedPage.on("response", (response) => {
         if (response.status() >= 400) {
           const url = new URL(response.url());
+          if (expectedManagerForbidden && response.status() === 403
+            && url.pathname === "/api/v2/manager-operations") {
+            managerForbiddenSeen = true;
+            return;
+          }
           failedResponses.push(`${response.status()} ${url.pathname}`);
           if (response.status() === 401 && url.pathname === "/api/v2/auth/session") {
             expectedSessionChallenge = true;
@@ -733,6 +740,61 @@ async function main() {
     await page.locator("#cycle-count-history").getByText(`${secondWarehouse} · applied`).waitFor();
     await page.screenshot({ path: join(evidenceDir, "manager-inventory-after-reload.png"), fullPage: true });
 
+    await page.locator(`#runs-list [data-run-id="${createdRun.id}"]`).click();
+    await page.getByTestId("button-start").click();
+    await page.getByTestId("button-pause").click();
+    await page.locator("#manager-operations-nav-link").click();
+    await page.locator("#manager-operations:not([hidden])").waitFor();
+    await page.locator("#manager-operations-refresh").click();
+    const actionRow = page.locator("#manager-operations-actions .ops-action")
+      .filter({ hasText: "Review paused run" }).first();
+    await actionRow.waitFor();
+    await actionRow.locator('select[name="status"]').selectOption("acknowledged");
+    await actionRow.locator('input[name="note"]').fill("Reviewed the persisted pause event.");
+    await actionRow.getByRole("button", { name: "Save status" }).click();
+    await page.locator("#manager-operations-actions")
+      .getByText("Acknowledged by staff", { exact: false }).waitFor();
+    await page.locator("#manager-operations-actions")
+      .getByText("Reviewed the persisted pause event.").waitFor();
+    await page.locator("#manager-operations-coverage .ops-source-status[data-status='unavailable']").first().waitFor();
+    await page.locator("#ops-inventory-link:not([hidden])").waitFor();
+    await page.locator("#ops-schedule-link:not([hidden])").waitFor();
+    await page.locator("#ops-qc-link:not([hidden])").waitFor();
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.locator("#manager-operations-export").click();
+    const download = await downloadPromise;
+    const csvPath = join(evidenceDir, "manager-summary.csv");
+    await download.saveAs(csvPath);
+    const exportedCsv = await readFile(csvPath, "utf8");
+    assert.match(exportedCsv, /V2 manager operations summary/u);
+    assert.ok(exportedCsv.includes('"source_coverage:syncConflicts","unavailable"'));
+    assert.doesNotMatch(exportedCsv, /must not be returned|v2-test-manager-password|v2-test-browser-recovery-password|V2RecoveryOperator/i);
+
+    await page.reload();
+    await page.locator("#manager-operations-nav-link").click();
+    await page.locator("#manager-operations-actions")
+      .getByText("Reviewed the persisted pause event.").waitFor();
+    for (const viewport of [
+      { name: "phone", width: 390, height: 844 },
+      { name: "tablet portrait", width: 768, height: 1024 },
+      { name: "tablet landscape", width: 1024, height: 768 },
+      { name: "desktop", width: 1280, height: 900 },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      const layout = await page.evaluate(() => {
+        const panel = document.querySelector("#manager-operations");
+        return {
+          panelVisible: panel instanceof HTMLElement && !panel.hidden,
+          panelOverflow: panel instanceof HTMLElement && panel.scrollWidth > panel.clientWidth + 1,
+          pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+        };
+      });
+      assert.deepEqual(layout, { panelVisible: true, panelOverflow: false, pageOverflow: false },
+        `manager operations must fit ${viewport.name}`);
+    }
+    await page.screenshot({ path: join(evidenceDir, "manager-operations-phone.png"), fullPage: true });
+
     const scheduleDate = "2035-04-16";
     await page.locator("#schedule-tools:not([hidden])").waitFor();
     await page.locator("#schedule-date").fill(scheduleDate);
@@ -835,7 +897,45 @@ async function main() {
         });
       }
       console.log("V2 authenticated WebKit inventory layout passed at phone, tablet, and landscape sizes.");
+      await webkitManagerPage.locator("#manager-operations-nav-link").click();
+      await webkitManagerPage.locator("#manager-operations:not([hidden])").waitFor();
+      for (const viewport of [
+        { name: "phone", width: 390, height: 844 },
+        { name: "tablet portrait", width: 768, height: 1024 },
+        { name: "tablet landscape", width: 1024, height: 768 },
+      ]) {
+        await webkitManagerPage.setViewportSize({ width: viewport.width, height: viewport.height });
+        const layout = await webkitManagerPage.evaluate(() => {
+          const panel = document.querySelector("#manager-operations");
+          return {
+            panelVisible: panel instanceof HTMLElement && !panel.hidden,
+            panelOverflow: panel instanceof HTMLElement && panel.scrollWidth > panel.clientWidth + 1,
+            pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+          };
+        });
+        assert.deepEqual(layout, { panelVisible: true, panelOverflow: false, pageOverflow: false },
+          `WebKit manager operations must fit ${viewport.name}`);
+      }
     }
+
+    await recoveryPage.locator("#password-reset-request-cancel").click();
+    await recoveryPage.locator("#auth-form:not([hidden])").waitFor();
+    await recoveryPage.locator("#auth-username").fill("V2RecoveryOperator");
+    await recoveryPage.locator("#auth-password").fill("v2-test-browser-recovery-password");
+    await recoveryPage.locator("#auth-submit").click();
+    await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor();
+    await recoveryPage.locator("#manager-operations-nav-link").waitFor({ state: "hidden" });
+    await recoveryPage.locator("#manager-operations").waitFor({ state: "hidden" });
+    expectedManagerForbidden = true;
+    const operatorReadStatus = await recoveryPage.evaluate(async () => {
+      const response = await fetch("/api/v2/manager-operations?from=2026-01-01&to=2026-01-01", {
+        credentials: "same-origin", headers: { Accept: "application/json" },
+      });
+      return response.status;
+    });
+    expectedManagerForbidden = false;
+    assert.equal(operatorReadStatus, 403, "operator browser session must not read manager operations");
+    assert.equal(managerForbiddenSeen, true, "the authenticated operator request must be denied by the server");
     console.log("V2 authenticated Chromium inventory parity passed: receipts, formula-based preparation, staging, transfers, cycle counts, and reload persistence.");
   } finally {
     if (webkitContext) await webkitContext.close();

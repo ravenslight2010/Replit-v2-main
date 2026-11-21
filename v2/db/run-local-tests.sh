@@ -823,6 +823,7 @@ V2_TEST_ADMIN_URL="$V2_TEST_ADMIN_URL" V2_DATABASE_URL="$V2_API_URL" \
 "${PSQL[@]}" -f "$ROOT/v2/db/0009-qc-ingredient-links.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0010-qc-substitutions.sql" >/dev/null
 "${PSQL[@]}" -f "$ROOT/v2/db/0011-qc-checkpoint-review.sql" >/dev/null
+"${PSQL[@]}" -f "$ROOT/v2/db/0011-manager-operations.sql" >/dev/null
 "${PSQL[@]}" -c "
   GRANT EXECUTE ON FUNCTION v2.record_qc_event(uuid, uuid, uuid, text, text, text, jsonb) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_qc_events(uuid, uuid, uuid, integer) TO v2_api_test;
@@ -833,16 +834,21 @@ V2_TEST_ADMIN_URL="$V2_TEST_ADMIN_URL" V2_DATABASE_URL="$V2_API_URL" \
   GRANT EXECUTE ON FUNCTION v2.list_qc_component_products(uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.list_qc_run_substitutions(uuid, uuid, uuid) TO v2_api_test;
   GRANT EXECUTE ON FUNCTION v2.record_qc_substitution(uuid, uuid, uuid, text, text, text, uuid, uuid, jsonb) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.get_manager_operations_snapshot(uuid, uuid, date, date, integer, timestamptz, uuid) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.list_manager_operation_events(uuid, uuid, date, date, integer, uuid, timestamptz, uuid, bigint) TO v2_api_test;
+  GRANT EXECUTE ON FUNCTION v2.record_manager_action_status(uuid, uuid, text, bigint, text, text, text, text) TO v2_api_test;
 " >/dev/null
 assert_no_direct_table_access "v2.qc_events"
 assert_no_direct_table_access "v2.qc_ingredient_link_events"
 assert_no_direct_table_access "v2.qc_run_substitutions"
+assert_no_direct_table_access "v2.manager_action_events"
 "${PSQL[@]}" -f "$ROOT/v2/db/0008-qc-workflows.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0009-qc-ingredient-links.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0010-qc-substitutions.test.sql"
 "${PSQL[@]}" -f "$ROOT/v2/db/0011-qc-checkpoint-review.test.sql"
 V2_DATABASE_URL="$V2_API_URL" NODE_ENV=development \
   node "$ROOT/v2/server/qc-authenticated.browser.integration.mjs"
+"${PSQL[@]}" -f "$ROOT/v2/db/0011-manager-operations.test.sql"
 V2_DATABASE_URL="$V2_API_URL" NODE_ENV=development \
   node "$ROOT/v2/server/http-postgres.browser.integration.mjs"
 "${PSQL[@]}" -f "$ROOT/v2/db/cutover-transfer-rehearsal.test.sql"

@@ -269,6 +269,52 @@ target, but is not published.
 - The latest in-workspace pilot status, evidence, and remaining actions are recorded
   in [PILOT-DEPLOYMENT-RECORD.md](PILOT-DEPLOYMENT-RECORD.md).
 
+## Manager operations and history
+
+The V2 manager operations workspace is implemented in the V2 web app and uses
+facility-scoped canonical run, station, pause, inventory, import, schedule, and
+QC records. Its report range is inclusive in `America/Chicago` and bounded to
+90 days. Run/event history uses cursors, the CSV contains summary fields only,
+and status changes append an attributed manager action with a revision check;
+they do not change run or domain source data.
+
+V1 surface reconciliation:
+
+- **ManagerActionQueue — partial port.** V2 prioritizes persisted paused-run
+  follow-ups and records pending, acknowledged, resolved, or unavailable
+  evidence with a required manager note. The V1 assignee/claim controls and
+  generic incident/import/data-health action categories are not copied.
+- **IncidentPatternsPanel — blocked by source availability.** The named V1
+  component is not present in the retained source tree, and V2 has no canonical
+  incident or sync-conflict records. V2 labels incident patterns and
+  sync-conflict history unavailable rather than deriving incident counts from
+  run event volume.
+- **ProfileDataHealthCard and DataHealthWorkspace — partial read-only port.**
+  The manager report surfaces only unknown ingredient references in frozen run
+  snapshots and clearly says that unknown is not proof of corruption. Profile
+  repair, cleanup, and undo actions remain outside this cross-domain workspace.
+- **OperationalReportPanel — ported as a bounded V2 report.** Run status,
+  recorded line-station cases, pause intervals, run-event types, and source
+  coverage are derived from V2 records. The download contains aggregate
+  summaries only. Inventory, import, schedule, and QC histories remain in their
+  owner workflows and are linked rather than duplicated.
+- **ShiftHandoffDigest — partial port.** The workspace shows current active and
+  paused runs, the manager action queue, and source coverage. V2 does not retain
+  archived handoff digests, so none are invented or imported.
+- **RunInsightsCard — descriptive port only.** V2 shows recorded run totals,
+  output coverage, pause trends, and event-type counts. Suggestions that change
+  setup values are not copied into this read-only report.
+
+Staff and role administration remain in V2's existing capability-gated account
+surface. No V1 operational history is read or imported. The additive manager
+operations SQL and its grants were exercised only against the disposable local
+PostgreSQL cluster; they have not been applied to shared development or
+production databases. The Chromium browser integration passed manager
+acknowledgement/reload, operator denial, summary export privacy, and desktop,
+phone, tablet-portrait, and tablet-landscape layouts. WebKit could not run in
+this NixOS environment because compatible native browser libraries are
+unavailable; physical devices were not tested.
+
 ## Remaining V2 validation
 
 1. Verify the manager setup/catalog and inventory journeys in the live private

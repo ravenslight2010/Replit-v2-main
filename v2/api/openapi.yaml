@@ -2729,6 +2729,157 @@ paths:
           $ref: "#/components/responses/Error"
         "409":
           $ref: "#/components/responses/Error"
+  /api/v2/manager-operations:
+    get:
+      operationId: getManagerOperationsSnapshot
+      summary: Read bounded manager operations and report summaries
+      description: >
+        Requires review-incidents capability. Dates are inclusive in
+        America/Chicago and span at most 90 days. Run summaries use a cursor;
+        records not persisted by V2 are explicitly marked unavailable.
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+            maxLength: 800
+      responses:
+        "200":
+          description: Facility-scoped summaries, source coverage, and action queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagerOperationsSnapshot"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+  /api/v2/manager-operations/events:
+    get:
+      operationId: listManagerOperationEvents
+      summary: Read a bounded page of sanitized run events
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: runId
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: cursor
+          required: false
+          schema:
+            type: string
+            maxLength: 800
+      responses:
+        "200":
+          description: Sanitized run event page without raw event payloads
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagerOperationEvents"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /api/v2/manager-operations/actions/{actionKey}/status:
+    post:
+      operationId: recordManagerActionStatus
+      summary: Append an attributed manager action status
+      description: >
+        Requires review-incidents capability, a valid CSRF token, and the
+        current action revision. A status note is required. This does not
+        change the source run or its evidence.
+      parameters:
+        - in: path
+          name: actionKey
+          required: true
+          schema:
+            type: string
+            maxLength: 180
+        - in: header
+          name: X-CSRF-Token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManagerActionStatusRequest"
+      responses:
+        "201":
+          description: Manager action status appended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagerActionStatusResponse"
+        "200":
+          description: Idempotent replay of the same manager action
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagerActionStatusResponse"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          description: The action changed since it was read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   securitySchemes:
     v2Session:
@@ -6004,6 +6155,213 @@ components:
         reason:
           type: string
           maxLength: 300
+    ManagerActionStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [requestId, expectedRevision, status, note]
+      properties:
+        requestId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        expectedRevision:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum: [acknowledged, resolved, unavailable-evidence]
+        note:
+          type: string
+          minLength: 3
+          maxLength: 500
+    ManagerActionStatusResponse:
+      type: object
+      required: [replayed, event]
+      properties:
+        replayed:
+          type: boolean
+        event:
+          type: object
+          required: [id, actionKey, revision, status, actorId, note, occurredAt]
+          properties:
+            id:
+              type: string
+              format: uuid
+            actionKey:
+              type: string
+            revision:
+              type: integer
+            status:
+              type: string
+              enum: [acknowledged, resolved, unavailable-evidence]
+            actorId:
+              type: string
+              format: uuid
+            note:
+              type: string
+            occurredAt:
+              type: string
+              format: date-time
+    ManagerOperationsSnapshot:
+      type: object
+      required: [timeZone, fromDate, toDate, generatedAt, runs, summary, activeRuns, pauseTrend, eventPatterns, actions, dataHealth, coverage]
+      properties:
+        timeZone:
+          type: string
+          const: America/Chicago
+        fromDate:
+          type: string
+          format: date
+        toDate:
+          type: string
+          format: date
+        generatedAt:
+          type: string
+          format: date-time
+        runs:
+          type: object
+          required: [items, hasMore, nextCursor]
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                required: [runId, label, status, revision, targetCases, createdAt]
+                properties:
+                  runId:
+                    type: string
+                    format: uuid
+                  label:
+                    type: string
+                  status:
+                    type: string
+                    enum: [planned, running, paused, completed]
+                  revision:
+                    type: integer
+                  targetCases:
+                    type: integer
+                  productCode:
+                    type: [string, "null"]
+                  productionSetupCode:
+                    type: [string, "null"]
+                  createdAt:
+                    type: string
+                    format: date-time
+                  startedAt:
+                    type: [string, "null"]
+                    format: date-time
+                  pausedAt:
+                    type: [string, "null"]
+                    format: date-time
+                  completedAt:
+                    type: [string, "null"]
+                    format: date-time
+            hasMore:
+              type: boolean
+            nextCursor:
+              type: [string, "null"]
+        summary:
+          type: object
+          additionalProperties: true
+        activeRuns:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        pauseTrend:
+          type: array
+          items:
+            type: object
+            required: [date, pauseMinutes]
+            properties:
+              date:
+                type: string
+                format: date
+              pauseMinutes:
+                type: number
+        eventPatterns:
+          type: array
+          items:
+            type: object
+            required: [eventType, count]
+            properties:
+              eventType:
+                type: string
+              count:
+                type: integer
+        actions:
+          type: array
+          items:
+            type: object
+            required: [actionKey, runId, runLabel, title, status, revision, sourceRevision, occurredAt]
+            properties:
+              actionKey:
+                type: string
+              runId:
+                type: string
+                format: uuid
+              runLabel:
+                type: string
+              title:
+                type: string
+              status:
+                type: string
+                enum: [pending, acknowledged, resolved, unavailable-evidence]
+              revision:
+                type: integer
+              sourceRevision:
+                type: integer
+              occurredAt:
+                type: string
+                format: date-time
+              lastAction:
+                type: [object, "null"]
+                additionalProperties: true
+        dataHealth:
+          type: object
+          additionalProperties: true
+        coverage:
+          type: object
+          additionalProperties: true
+    ManagerOperationEvents:
+      type: object
+      required: [events, hasMore, nextCursor, fromDate, toDate, timeZone]
+      properties:
+        events:
+          type: array
+          items:
+            type: object
+            required: [eventId, runId, runLabel, actorId, eventType, occurredAt]
+            properties:
+              eventId:
+                type: string
+                description: Composite run ID and revision identifier
+              runId:
+                type: string
+                format: uuid
+              runLabel:
+                type: string
+              actorId:
+                type: [string, "null"]
+                format: uuid
+              eventType:
+                type: string
+              occurredAt:
+                type: string
+                format: date-time
+        hasMore:
+          type: boolean
+        nextCursor:
+          type: [string, "null"]
+        fromDate:
+          type: string
+          format: date
+        toDate:
+          type: string
+          format: date
+        timeZone:
+          type: string
+          const: America/Chicago
     Error:
       type: object
       required: [error]
