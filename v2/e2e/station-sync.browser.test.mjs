@@ -2093,7 +2093,7 @@ test("installed shell serves schedule and setup-import modules offline and after
     }
   });
   const cached = await page.evaluate(async (paths) => {
-    const cache = await caches.open("fieldline-v2-shell-11");
+    const cache = await caches.open("fieldline-v2-shell-12");
     return Promise.all(paths.map(async (path) => ({
       path,
       present: Boolean(await cache.match(path)),

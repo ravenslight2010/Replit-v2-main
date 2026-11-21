@@ -194,7 +194,7 @@ self.addEventListener("message", (event) => {
   await page.waitForFunction(async () => {
     const registration = await navigator.serviceWorker.getRegistration("/");
     const names = await caches.keys();
-    return names.includes("fieldline-v2-shell-11")
+    return names.includes("fieldline-v2-shell-12")
       && !names.includes(`workbox-precache-v2-${registration.scope}`)
       && !names.includes("google-fonts-cache")
       && !names.includes("gstatic-fonts-cache");
@@ -202,12 +202,12 @@ self.addEventListener("message", (event) => {
   assert.ok((await page.evaluate(() => caches.keys())).includes("unrelated-app-shell"));
   try {
     await page.waitForFunction(async () => {
-      const response = await (await caches.open("fieldline-v2-shell-11")).match("/");
+      const response = await (await caches.open("fieldline-v2-shell-12")).match("/");
       return Boolean(response && (await response.text()).includes("Sign in to the floor"));
     }, undefined, { timeout: 5000 });
   } catch (error) {
     const cachedShellState = await page.evaluate(async () => {
-      const response = await (await caches.open("fieldline-v2-shell-11")).match("/");
+      const response = await (await caches.open("fieldline-v2-shell-12")).match("/");
       const text = await response?.text();
       return {
         found: Boolean(response),
@@ -224,11 +224,11 @@ self.addEventListener("message", (event) => {
     throw error;
   }
   const cachedShell = await page.evaluate(async () => (
-    await (await caches.open("fieldline-v2-shell-11")).match("/")
+    await (await caches.open("fieldline-v2-shell-12")).match("/")
   )?.text());
   assert.match(cachedShell ?? "", /Sign in to the floor/);
   const cachedRootAssets = await page.evaluate(async () => {
-    const cache = await caches.open("fieldline-v2-shell-11");
+    const cache = await caches.open("fieldline-v2-shell-12");
     const manifest = await cache.match("/manifest.webmanifest");
     const icon = await cache.match("/favicon.ico");
     return {

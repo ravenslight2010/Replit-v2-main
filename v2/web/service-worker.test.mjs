@@ -9,6 +9,7 @@ test("offline shell caches manager operations and domain workflow modules", asyn
   const source = await readFile(serviceWorkerPath, "utf8");
   for (const path of [
     "/v2/web/setup-catalog.js",
+    "/v2/web/favicon.svg",
     "/v2/web/schedule.js",
     "/v2/web/mix-plan.js",
     "/v2/web/manager-operations.js",
@@ -22,6 +23,6 @@ test("offline shell caches manager operations and domain workflow modules", asyn
   ]) {
     assert.match(source, new RegExp(`["']${path.replaceAll(".", "\\.")}["']`, "u"), path);
   }
-  assert.match(source, /fieldline-v2-shell-11/u);
+  assert.match(source, /fieldline-v2-shell-12/u);
   assert.match(source, /\/v2\/core\/die-defaults\.mjs/u);
 });
