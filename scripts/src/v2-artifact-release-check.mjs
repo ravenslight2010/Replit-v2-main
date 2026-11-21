@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFile, readdir } from "node:fs/promises";
+import { createServer } from "node:http";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -126,6 +127,201 @@ const CORE_ASSETS = [
   "setup-catalog-csv.mjs",
   "station-workflows.mjs",
 ];
+const STATIC_MIME_TYPES = {
+  ".css": ["text/css"],
+  ".html": ["text/html"],
+  ".js": ["application/javascript", "text/javascript"],
+  ".json": ["application/json"],
+  ".mjs": ["application/javascript", "text/javascript"],
+  ".svg": ["image/svg+xml"],
+  ".webmanifest": ["application/manifest+json", "application/json"],
+};
+const ARTIFACT_ASSET_PREFIXES = ["/v2/web/", "/v2/core/"];
+
+function artifactPathFromReference(reference, base = "http://artifact/") {
+  try {
+    const url = new URL(reference, base);
+    if (url.origin !== "http://artifact") return null;
+    const pathname = decodeURIComponent(url.pathname);
+    if (
+      pathname === "/manifest.webmanifest"
+      || pathname === "/service-worker.js"
+      || pathname === "/favicon.ico"
+      || ARTIFACT_ASSET_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+    ) {
+      return pathname;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function moduleReferences(source) {
+  const references = [];
+  const staticImports = /\b(?:import|export)\s+(?:[^"'`]*?\s+from\s*)?["']([^"']+)["']/gs;
+  const dynamicImports = /\bimport\(\s*["']([^"']+)["']\s*\)/g;
+  for (const match of source.matchAll(staticImports)) references.push(match[1]);
+  for (const match of source.matchAll(dynamicImports)) references.push(match[1]);
+  return references;
+}
+
+async function collectReferencedArtifactPaths(publicDir) {
+  const html = await readFile(join(publicDir, "index.html"), "utf8");
+  const pending = new Set(["/"]);
+  const visited = new Set();
+  for (const [, reference] of html.matchAll(/\b(?:src|href)=["']([^"']+)["']/gi)) {
+    const path = artifactPathFromReference(reference);
+    if (path) pending.add(path);
+  }
+
+  while (pending.size > 0) {
+    const [assetPath] = pending;
+    pending.delete(assetPath);
+    if (assetPath === "/" || visited.has(assetPath)) continue;
+    visited.add(assetPath);
+
+    const diskPath = resolve(publicDir, `.${assetPath}`);
+    const publicRoot = resolve(publicDir);
+    assert.ok(
+      diskPath.startsWith(`${publicRoot}/`),
+      `Static artifact path escapes its public directory: ${assetPath}`,
+    );
+    let source;
+    try {
+      source = await readFile(diskPath, "utf8");
+    } catch (error) {
+      throw new Error(`Referenced static artifact asset is missing: ${assetPath}`, { cause: error });
+    }
+
+    const extension = assetPath.slice(assetPath.lastIndexOf("."));
+    const baseUrl = `http://artifact${assetPath}`;
+    if (extension === ".js" || extension === ".mjs") {
+      for (const reference of moduleReferences(source)) {
+        const path = artifactPathFromReference(reference, baseUrl);
+        if (path && !visited.has(path)) pending.add(path);
+      }
+    }
+    for (const [, reference] of source.matchAll(/["'`](\/(?:v2\/(?:web|core)\/|manifest\.webmanifest|service-worker\.js)[^"'`?#]*)/g)) {
+      const path = artifactPathFromReference(reference, baseUrl);
+      if (path && !visited.has(path)) pending.add(path);
+    }
+    if (extension === ".css") {
+      for (const [, reference] of source.matchAll(/url\(\s*["']?([^)"']+)["']?\s*\)/gi)) {
+        const path = artifactPathFromReference(reference, baseUrl);
+        if (path && !visited.has(path)) pending.add(path);
+      }
+    }
+    if (extension === ".webmanifest") {
+      let manifest;
+      try {
+        manifest = JSON.parse(source);
+      } catch (error) {
+        throw new Error(`Invalid web manifest at ${assetPath}: ${error.message}`);
+      }
+      for (const icon of manifest.icons ?? []) {
+        const path = artifactPathFromReference(icon.src, baseUrl);
+        if (path && !visited.has(path)) pending.add(path);
+      }
+    }
+  }
+
+  return [...visited].sort();
+}
+
+function contentTypeForPath(pathname) {
+  const extension = pathname.slice(pathname.lastIndexOf("."));
+  if (pathname === "/") return "text/html";
+  return STATIC_MIME_TYPES[extension]?.[0] ?? "application/octet-stream";
+}
+
+function startStaticArtifactServer(publicDir, rewrite) {
+  const publicRoot = resolve(publicDir);
+  const server = createServer(async (request, response) => {
+    let pathname;
+    try {
+      pathname = decodeURIComponent(new URL(request.url, "http://artifact").pathname);
+    } catch {
+      response.writeHead(400).end("Bad Request");
+      return;
+    }
+    const requestedPath = pathname === "/" ? "/index.html" : pathname;
+    let diskPath = resolve(publicRoot, `.${requestedPath}`);
+    if (!diskPath.startsWith(`${publicRoot}/`)) {
+      response.writeHead(403).end("Forbidden");
+      return;
+    }
+    try {
+      if (!(await stat(diskPath)).isFile()) throw new Error("Not a file");
+    } catch {
+      if (rewrite.from !== "/*" || rewrite.to !== "/index.html") {
+        response.writeHead(404).end("Not Found");
+        return;
+      }
+      diskPath = join(publicRoot, "index.html");
+    }
+    try {
+      const body = await readFile(diskPath);
+      response.writeHead(200, {
+        "content-type": `${contentTypeForPath(requestedPath)}; charset=utf-8`,
+        "content-length": body.length,
+      }).end(body);
+    } catch {
+      response.writeHead(404).end("Not Found");
+    }
+  });
+  return new Promise((resolveServer, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      server.removeListener("error", reject);
+      resolveServer({ server, origin: `http://127.0.0.1:${server.address().port}` });
+    });
+  });
+}
+
+export function assertStaticAssetResponse(pathname, status, contentType, body) {
+  assert.equal(status, 200, `Static artifact request failed for ${pathname}: HTTP ${status}`);
+  const mediaType = contentType?.split(";")[0]?.trim().toLowerCase();
+  const extension = pathname === "/" ? ".html" : pathname.slice(pathname.lastIndexOf("."));
+  const expectedTypes = STATIC_MIME_TYPES[extension];
+  assert.ok(
+    expectedTypes?.includes(mediaType),
+    `Static artifact ${pathname} has incorrect content type ${contentType ?? "(missing)"}`,
+  );
+  if (extension === ".js" || extension === ".mjs" || extension === ".css") {
+    assert.doesNotMatch(
+      body.trimStart(),
+      /^<(?:!doctype\s+html|html)\b/i,
+      `Static artifact ${pathname} returned fallback HTML instead of its asset`,
+    );
+  }
+}
+
+async function validateV2StaticArtifactHttp(root) {
+  const webArtifact = ARTIFACTS.find((artifact) => artifact.kind === "web");
+  const productionService = webArtifact.service.sections["services.production"];
+  const rewrite = webArtifact.service.sections["services.production.rewrites"];
+  assert.equal(productionService.serve, "static");
+  const publicDir = join(root, productionService.publicDir);
+  const paths = await collectReferencedArtifactPaths(publicDir);
+  const { server, origin } = await startStaticArtifactServer(publicDir, rewrite);
+  try {
+    for (const pathname of ["/", ...paths]) {
+      const response = await fetch(new URL(pathname, origin));
+      const body = await response.text();
+      assertStaticAssetResponse(
+        pathname,
+        response.status,
+        response.headers.get("content-type"),
+        body,
+      );
+    }
+  } finally {
+    await new Promise((resolveClose, rejectClose) => {
+      server.close((error) => (error ? rejectClose(error) : resolveClose()));
+    });
+  }
+}
 
 async function assertSameFile(sourcePath, builtPath) {
   const [source, built] = await Promise.all([
@@ -175,9 +371,10 @@ export async function runV2ArtifactReleaseCheck(root = rootDir) {
     validateV2ArtifactManifest(manifest, artifact);
   }
   await validateV2StaticBundle(root);
+  await validateV2StaticArtifactHttp(root);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   await runV2ArtifactReleaseCheck();
-  console.log("V2 artifact manifests and built static bundle passed validation.");
+  console.log("V2 artifact manifests, built static bundle, and static HTTP serving passed validation.");
 }

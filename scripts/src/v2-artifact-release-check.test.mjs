@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { validateV2ArtifactManifest } from "./v2-artifact-release-check.mjs";
+import {
+  assertStaticAssetResponse,
+  runV2ArtifactReleaseCheck,
+  validateV2ArtifactManifest,
+} from "./v2-artifact-release-check.mjs";
 
 const rootDir = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 
@@ -68,4 +72,27 @@ for (const { path, artifact } of manifests) {
   );
 }
 
-console.log("V2 artifact manifest contract tests passed.");
+assert.doesNotThrow(() => assertStaticAssetResponse(
+  "/v2/web/app.js",
+  200,
+  "application/javascript; charset=utf-8",
+  "import './write-gate.mjs';",
+));
+assert.throws(
+  () => assertStaticAssetResponse("/v2/web/app.js", 200, "text/html", "<!doctype html>"),
+  /incorrect content type/,
+  "A rewrite fallback must not pass as a JavaScript asset",
+);
+assert.throws(
+  () => assertStaticAssetResponse("/v2/web/styles.css", 404, "text/html", "<!doctype html>"),
+  /HTTP 404/,
+  "A missing static asset must fail the release check",
+);
+assert.throws(
+  () => assertStaticAssetResponse("/v2/web/styles.css", 200, "text/css", "<html>fallback</html>"),
+  /fallback HTML/,
+  "HTML content must not pass as a CSS asset even with a wrong header",
+);
+
+await runV2ArtifactReleaseCheck(rootDir);
+console.log("V2 artifact manifest, bundle, and static HTTP contract tests passed.");

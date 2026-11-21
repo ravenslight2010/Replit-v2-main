@@ -438,7 +438,7 @@ const steps: ReleaseStep[] = [
     stage: "v2-static-build",
   },
   {
-    label: "V2 artifact manifests and static bundle",
+    label: "V2 artifact manifests, static bundle, and serving",
     args: [
       "--filter",
       "@workspace/scripts",
