@@ -14,3 +14,9 @@ Keep Vite PWA's `registerType: "prompt"` and make all reloads user-controlled. F
 **Why:** A cached iOS bundle can still evaluate the legacy free `Notification` global even though current code safely probes `window.Notification`. Broad error matching or automatic recovery could interrupt unrelated active production work.
 
 **How to apply:** Keep this recovery opt-in and exact-message scoped. Embed a non-empty, deployment-specific web build ID in every web incident so stale-client reports can be distinguished from a current-code regression.
+
+**Versioned cache handoff:** Do not delete an older service-worker shell cache during activation while pages may still be controlled by that worker. A previous worker can continue handling fetches after the new worker activates; if its cache was deleted, it may recreate an empty cache and lose its offline fallback.
+
+**Why:** Worker activation and existing-client controller handoff are separate lifecycle steps. Cache-name replacement alone does not prove that no old page still depends on the previous cache.
+
+**How to apply:** Keep the current worker's versioned cache separate from older caches. Retire an older cache only when the old-worker client handoff is demonstrably complete; test the old page and the newly controlled page through online update, offline reload, and reconnect.

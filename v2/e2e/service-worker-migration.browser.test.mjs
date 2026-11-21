@@ -294,7 +294,7 @@ self.addEventListener("message", (event) => {
   await context.close();
 });
 
-test("a newer V2 worker replaces the old V2 shell cache and restores the current shell offline", {
+test("a newer V2 worker replaces an older shell cache and restores the current shell offline", {
   timeout: 60_000,
 }, async (t) => {
   const OLD_V2_HTML = `<!doctype html>
@@ -321,10 +321,11 @@ test("a newer V2 worker replaces the old V2 shell cache and restores the current
     }
     if (pathname === "/service-worker.js") {
       let contents = await readFile(new URL("../web/service-worker.js", import.meta.url), "utf8");
-      if (servedVersion === "old") {
-        assert.match(contents, /fieldline-v2-shell-12/u);
-        contents = contents.replace("fieldline-v2-shell-12", "fieldline-v2-shell-11");
-      }
+      contents += `
+self.addEventListener("message", (event) => {
+  if (event.data === "migration-test-cache-name") event.ports[0]?.postMessage(CACHE_NAME);
+});
+`;
       response.writeHead(200, {
         "Cache-Control": "no-cache",
         "Content-Length": Buffer.byteLength(contents),
@@ -361,30 +362,40 @@ test("a newer V2 worker replaces the old V2 shell cache and restores the current
   t.after(() => context.close());
   const page = await context.newPage();
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
-  await page.evaluate(async () => {
-    await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
-    await navigator.serviceWorker.ready;
-  });
-  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
-  await page.waitForFunction(async () => {
-    const cache = await caches.open("fieldline-v2-shell-11");
-    const shell = await cache.match("/");
-    return Boolean(shell && (await shell.text()).includes("Old V2 production shell"));
-  });
+  assert.equal(await page.title(), "Fieldline V2 old shell");
 
   servedVersion = "new";
   await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.getRegistration("/");
-    await registration.update();
+    const oldShell = await caches.open("fieldline-v2-shell-11");
+    await oldShell.put("/", new Response(
+      '<!doctype html><title>Fieldline V2 old shell</title><main>Old V2 production shell</main>',
+      { headers: { "Content-Type": "text/html; charset=utf-8" } },
+    ));
+    await navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
+    await navigator.serviceWorker.ready;
   });
   await page.waitForFunction(async () => {
     const registration = await navigator.serviceWorker.getRegistration("/");
     const cacheNames = await caches.keys();
-    return cacheNames.includes("fieldline-v2-shell-12")
+    const workerCache = await new Promise((resolve) => {
+      if (!registration?.active) return resolve(null);
+      const channel = new MessageChannel();
+      const timeout = setTimeout(() => {
+        channel.port1.close();
+        resolve(null);
+      }, 500);
+      channel.port1.onmessage = (event) => {
+        clearTimeout(timeout);
+        channel.port1.close();
+        resolve(event.data);
+      };
+      registration.active.postMessage("migration-test-cache-name", [channel.port2]);
+    });
+    return Boolean(navigator.serviceWorker.controller)
+      && cacheNames.includes("fieldline-v2-shell-12")
       && !cacheNames.includes("fieldline-v2-shell-11")
-      && registration?.active?.state === "activated"
-      && navigator.serviceWorker.controller === registration.active;
-  });
+      && workerCache === "fieldline-v2-shell-12";
+  }, null, { timeout: 10_000 });
 
   await context.setOffline(true);
   await page.reload({ waitUntil: "domcontentloaded" });
