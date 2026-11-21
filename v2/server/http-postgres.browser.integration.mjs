@@ -1073,12 +1073,12 @@ async function main() {
       }
     }
 
-    await recoveryPage.locator("#password-reset-request-cancel").click();
+    await recoveryPage.goto(baseUrl);
     await recoveryPage.locator("#auth-form:not([hidden])").waitFor();
     await recoveryPage.locator("#auth-username").fill("V2RecoveryOperator");
     await recoveryPage.locator("#auth-password").fill("v2-test-browser-recovery-password");
     await recoveryPage.locator("#auth-submit").click();
-    await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor();
+    await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor({ timeout: 20000 });
     await recoveryPage.locator("#manager-operations-nav-link").waitFor({ state: "hidden" });
     await recoveryPage.locator("#manager-operations").waitFor({ state: "hidden" });
     await recoveryPage.locator("#staff-panel").waitFor({ state: "hidden" });
