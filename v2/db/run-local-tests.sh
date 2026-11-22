@@ -18,6 +18,8 @@ if [[ "$(id -u)" -eq 0 ]]; then
   exit 1
 fi
 
+node --test "$ROOT/v2/db/agent-preview-schema.test.mjs"
+
 "$PG_BIN/initdb" \
   -D "$TMP_DIR/data" \
   -U "$DB_USER" \

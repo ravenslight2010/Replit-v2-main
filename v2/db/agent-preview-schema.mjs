@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-const MIGRATIONS = [
+export const MIGRATIONS = Object.freeze([
   "0001-run-control.sql",
   "0002-staff-auth.sql",
   "0003-production-stations.sql",
@@ -22,8 +22,9 @@ const MIGRATIONS = [
   "0010-workbook-link-corrections.sql",
   "0011-manager-operations.sql",
   "0011-qc-checkpoint-review.sql",
+  "0011-run-operational-substitution-status.sql",
   "0012-staff-account-history.sql",
-];
+]);
 
 const DB_DIR = fileURLToPath(new URL("./", import.meta.url));
 
