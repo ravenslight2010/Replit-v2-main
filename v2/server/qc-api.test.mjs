@@ -871,14 +871,25 @@ test("manager settings redaction appends a facility-scoped audit event", async (
 });
 
 test("QC failures return safe JSON and bounded history rejects oversized limits", async (t) => {
+  const logs = [];
   const api = await withApi(t, {
     query: async () => {
       throw Object.assign(new Error("database detail"), { code: "XX000" });
     },
+    logger: (entry) => logs.push(entry),
   });
   const failed = await send(api.baseUrl, "/api/v2/qc/history");
   assert.equal(failed.status, 500);
   assert.deepEqual(await failed.json(), { error: "The QC request could not be completed. Refresh and try again." });
+  assert.deepEqual(logs.map(({ event, operation, status, errorName, databaseCode }) => ({
+    event, operation, status, errorName, databaseCode,
+  })), [{
+    event: "v2.qc_api.error",
+    operation: "list_history",
+    status: 500,
+    errorName: "Error",
+    databaseCode: "XX000",
+  }]);
   const tooLarge = await send(api.baseUrl, "/api/v2/qc/history?limit=101");
   assert.equal(tooLarge.status, 400);
 });

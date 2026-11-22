@@ -1266,6 +1266,9 @@ export function createQcApi({ pool, authenticate, verifyCsrf, logger = () => {} 
           actorId,
           status,
           errorName: typeof error?.name === "string" ? error.name.slice(0, 80) : "UnknownError",
+          databaseCode: typeof error?.code === "string" && /^[0-9A-Z]{5}$/.test(error.code)
+            ? error.code
+            : undefined,
         });
       }
       sendJson(response, status, { error: safeMessage(error) }, Number.isSafeInteger(error?.retryAfterSeconds)

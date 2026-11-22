@@ -113,7 +113,15 @@ async function main() {
         V2_DATABASE_URL: databaseUrl,
       },
       logger: (entry) => {
-        if (entry?.level === "error") errors.push("server emitted an error");
+        if (entry?.event === "v2.qc_api.error") {
+          errors.push([
+            entry.event,
+            typeof entry.operation === "string" ? entry.operation : "unknown",
+            typeof entry.databaseCode === "string" ? entry.databaseCode : "no-database-code",
+          ].join(":"));
+        } else if (entry?.level === "error") {
+          errors.push("server emitted an error");
+        }
       },
     });
 
@@ -577,7 +585,26 @@ async function main() {
       ].join("\n") + "\n"),
     });
     await page.getByRole("button", { name: "Validate and review" }).click();
-    await page.locator("#import-preview").getByText("Staged · production-setups").waitFor();
+    try {
+      await page.locator("#import-preview").getByText("Staged · production-setups").waitFor();
+    } catch (error) {
+      const state = await page.evaluate(() => {
+        const preview = document.querySelector("#import-preview");
+        const managerError = document.querySelector("#manager-error");
+        return {
+          previewHidden: preview?.hidden ?? null,
+          importActionsHidden: document.querySelector("#import-actions")?.hidden ?? null,
+          managerErrorVisible: managerError instanceof HTMLElement && !managerError.hidden,
+          managerErrorKind: managerError?.dataset.kind ?? "",
+        };
+      });
+      console.log(JSON.stringify({
+        event: "v2.production_setup_import_preview_wait_failed",
+        ...state,
+        failedResponses: failedResponses.slice(-8),
+      }));
+      throw error;
+    }
     await page.getByRole("button", { name: "Apply reviewed import" }).click();
     await page.locator("#import-history").getByText("production-setups · applied").first().waitFor();
 
@@ -1076,7 +1103,7 @@ async function main() {
     await recoveryPage.goto(baseUrl);
     await recoveryPage.locator("#auth-form:not([hidden])").waitFor();
     await recoveryPage.locator("#auth-username").fill("V2RecoveryOperator");
-    await recoveryPage.locator("#auth-password").fill("v2-test-webkit-recovery-password");
+    await recoveryPage.locator("#auth-password").fill("v2-test-browser-recovery-password");
     await recoveryPage.locator("#auth-submit").click();
     await recoveryPage.locator("#authenticated-app:not([hidden])").waitFor({ timeout: 20000 }).catch(async () => {
       const diag = {
