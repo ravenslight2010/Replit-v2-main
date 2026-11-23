@@ -5,6 +5,7 @@ router = "application"
 deploymentTarget = "vm"
 build = ["pnpm", "--filter", "@workspace/lucia-v2", "run", "build"]
 run = ["bash", "scripts/start-v2.sh"]
+ignorePorts = false
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
