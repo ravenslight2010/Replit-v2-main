@@ -860,6 +860,24 @@ V2_DATABASE_URL="$V2_API_URL" NODE_ENV=development \
   node "$ROOT/v2/server/http-postgres.browser.integration.mjs"
 "${PSQL[@]}" -f "$ROOT/v2/db/cutover-transfer-rehearsal.test.sql"
 
+PRODUCTION_OBJECTS_TEST="$TMP_DIR/production-objects.test.sql"
+python3 - "$ROOT/v2/db/production-objects.sql" "$PRODUCTION_OBJECTS_TEST" "$DB_USER" <<'PY'
+import pathlib
+import sys
+
+source = pathlib.Path(sys.argv[1])
+target = pathlib.Path(sys.argv[2])
+db_user = sys.argv[3]
+sql = source.read_text()
+production_guard = "current_database()<>'neondb' OR current_user<>'neondb_owner'"
+test_guard = f"current_database()<>'v2_test' OR current_user<>'{db_user}'"
+if sql.count(production_guard) != 1:
+    raise SystemExit("Production-object SQL guard was not found exactly once.")
+target.write_text(sql.replace(production_guard, test_guard))
+PY
+"${PSQL[@]}" -f "$PRODUCTION_OBJECTS_TEST" >/dev/null
+"${PSQL[@]}" -f "$PRODUCTION_OBJECTS_TEST" >/dev/null
+
 printf 'Run schema and lifecycle checks passed.\n'
 printf 'Concurrent first-manager bootstrap passed: exactly one manager was created.\n'
 printf 'Restricted API role check passed: %s\n' "$API_ROLE_RESULT"
@@ -877,6 +895,7 @@ printf 'Competing station worker lease claim passed: %s\n' "$LEASE_RACE_RESULTS"
 printf 'Stored state and event counts passed: %s\n' "$FINAL_STATE"
 printf 'Concurrent stock adjustment and ledger reconciliation passed: %s\n' "$STOCK_RACE_STATE"
 printf 'V2 run-to-inventory snapshot, shortage, and retry checks passed.\n'
+printf 'Production-object repair passed twice on the disposable database.\n'
 printf 'Restricted API run/inventory command grants passed: %s\n' "$INVENTORY_COMPLETION_PRIVILEGES"
 printf 'Synthetic setup family count, identity, replay, rollback, undo, and facility-scope checks passed.\n'
 printf 'QC append-only evidence, roles, scope, cleaning verification, settings, and redaction checks passed.\n'
