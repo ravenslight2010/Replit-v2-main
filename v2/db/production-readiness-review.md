@@ -1,7 +1,7 @@
 # V2 database readiness review
 
 **Status:** Review-only; no shared database was changed.
-**Checked:** 2026-11-22
+**Checked:** 2026-11-23
 
 This document records the full V2 migration scope and the safe next steps for
 reconciling the managed development and production databases. It is not an
@@ -29,6 +29,52 @@ The missing objects span multiple features; a route-only subset is not a
 complete repair. In particular, manager operations rely on both schedule and
 QC data, the operational mix-plan reader relies on schedules and inventory,
 and the run substitution-status reader depends on QC substitutions.
+
+## November 23 catalog reconciliation
+
+A fresh read-only comparison of development and production found that both
+databases have the same V2 table and function names as the first six core SQL
+migrations: 21 tables and 49 functions. Across all 22 checked-in migrations,
+the source defines 51 distinct table names and 121 distinct function names.
+Both databases are missing 30 table names and 72 function names from that full
+set.
+
+The missing groups cover reviewed setup catalogs; inventory lots, preparation,
+transfers, and cycle counts; production rules; QC and allergens; die defaults;
+production schedules; password resets; operational mix planning; QC
+substitutions; import-link corrections; manager operations; substitution
+status; and staff-account history. The exact source files are listed below.
+
+`list_run_products(uuid)` exists, but its database definition is stale: it
+does not include the die-default data expected by the current API. This
+explains the run-products route error. Schedule, manager-operations,
+password-reset, and account-history routes also call functions absent from
+both databases. The evidence points to incomplete V2 database initialization,
+not a general inability to connect to PostgreSQL.
+
+The current aggregate-only inventory check again found zero balance rows and
+zero positive balance quantity in both environments. The inventory migration
+would therefore backfill no opening lots at this snapshot; repeat this check
+immediately before any migration because balances may change.
+
+The V2 Production Assistant workflow is healthy in development and its health
+endpoint reports the station worker active. The generic development domain
+still serves the legacy artifact shell, so V2 should be opened from the V2
+Production Assistant workflow preview. This routing distinction is separate
+from the missing production database objects.
+
+## November 23 validation
+
+- The isolated V2 Agent Test Preview applied all 22 migration sources to its
+  disposable database and passed its browser flow.
+- `pnpm --dir v2 run test:db` passed after the PostgreSQL browser integration
+  was corrected to wait for the saved station value to return after reload.
+  That test now checks server-backed persistence instead of reading the
+  page's cached form immediately after reload.
+- Chromium coverage passed. WebKit-specific coverage remains unavailable in
+  this Nix environment because its native libraries are not installed.
+- No shared database was modified. The SQL changes still need an explicitly
+  approved, reviewed application path.
 
 ## Complete numbered migration source set
 

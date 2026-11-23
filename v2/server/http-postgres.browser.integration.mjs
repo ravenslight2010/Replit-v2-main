@@ -802,8 +802,10 @@ async function main() {
     await page.getByText("Saved to the shared run.").waitFor();
     await page.reload();
     await page.getByTestId("status-run").getByText("running").waitFor();
-    const reloadedCasesProduced = await page.locator('[data-station-field="casesProduced"]').inputValue();
-    if (reloadedCasesProduced !== "1") {
+    await page.waitForFunction(() =>
+      document.querySelector('[data-station-field="casesProduced"]')?.value === "1",
+    null, { timeout: 10000 }).catch(async () => {
+      const reloadedCasesProduced = await page.locator('[data-station-field="casesProduced"]').inputValue();
       const selectedRunId = await page.locator("#runs-list [aria-current='true']").getAttribute("data-run-id");
       const persistedRun = selectedRunId
         ? await page.evaluate(async (runId) => {
@@ -811,17 +813,39 @@ async function main() {
           const body = await response.json();
           return {
             status: response.status,
-            runId: body.run?.id ?? null,
             runStatus: body.run?.status ?? null,
             stationProgress: body.run?.stationProgress ?? null,
           };
         }, selectedRunId)
         : null;
+      const persistedCasesProduced = persistedRun?.stationProgress?.line?.progress?.casesProduced ?? null;
+      const persistedStations = Object.fromEntries(
+        Object.entries(persistedRun?.stationProgress ?? {}).map(([key, state]) => [
+          key,
+          {
+            status: state.status,
+            revision: state.revision,
+            progressFields: Object.keys(state.progress ?? {}).sort(),
+          },
+        ]),
+      );
+      console.log(JSON.stringify({
+        event: "v2.station_progress_reload_mismatch",
+        reloadedCasesProduced,
+        persistedRunStatus: persistedRun?.runStatus ?? null,
+        persistedCasesProduced,
+        persistedStations,
+        selectedRunAvailable: Boolean(selectedRunId),
+        failedResponses,
+      }));
+      throw new Error("The saved station progress did not appear after the run state refreshed.");
+    });
+    const reloadedCasesProduced = await page.locator('[data-station-field="casesProduced"]').inputValue();
+    if (reloadedCasesProduced !== "1") {
       throw new Error(JSON.stringify({
         event: "v2.station_progress_reload_mismatch",
         reloadedCasesProduced,
-        selectedRunId,
-        persistedRun,
+        selectedRunAvailable: true,
       }));
     }
 
