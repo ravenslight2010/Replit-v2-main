@@ -1,15 +1,15 @@
 # V2 database readiness review
 
-**Status:** Review-only; no shared database was changed.
+**Status:** Development repaired and verified; production remains unchanged and incomplete.
 **Checked:** 2026-11-23
 
 This document records the full V2 migration scope and the safe next steps for
 reconciling the managed development and production databases. It is not an
 executable migration package.
 
-## Read-only production findings
+## Initial read-only production findings
 
-The authorized catalog check found:
+The initial authorized catalog check found:
 
 - V2 currently has 21 tables, 49 functions, and 7 non-internal triggers.
 - The `v2_runtime_access` database role is absent.
@@ -30,14 +30,13 @@ complete repair. In particular, manager operations rely on both schedule and
 QC data, the operational mix-plan reader relies on schedules and inventory,
 and the run substitution-status reader depends on QC substitutions.
 
-## November 23 catalog reconciliation
+## November 23 catalog reconciliation and development repair
 
-A fresh read-only comparison of development and production found that both
+A fresh read-only comparison before the repair found that development and production both
 databases have the same V2 table and function names as the first six core SQL
 migrations: 21 tables and 49 functions. Across all 22 checked-in migrations,
 the source defines 51 distinct table names and 121 distinct function names.
-Both databases are missing 30 table names and 72 function names from that full
-set.
+Both were missing 30 table names and 72 function names from that full set.
 
 The missing groups cover reviewed setup catalogs; inventory lots, preparation,
 transfers, and cycle counts; production rules; QC and allergens; die defaults;
@@ -52,10 +51,23 @@ password-reset, and account-history routes also call functions absent from
 both databases. The evidence points to incomplete V2 database initialization,
 not a general inability to connect to PostgreSQL.
 
-The current aggregate-only inventory check again found zero balance rows and
-zero positive balance quantity in both environments. The inventory migration
-would therefore backfill no opening lots at this snapshot; repeat this check
-immediately before any migration because balances may change.
+The development repair applied all 16 migrations after its verified core
+baseline, in source order and in per-file transactions. Post-checks found 51
+V2 tables, 122 function names, all route-facing functions, the updated
+run-products function, and the required triggers. The inventory backfill ran
+while the balances table was locked and empty, so it added zero opening lots.
+Existing stable-row hashes and existing non-seed role hashes matched; the only
+changing row was the station worker lease heartbeat.
+
+Production remains at the original 21 tables and 49 functions. Its schedules,
+password-reset functions, and inventory-lot table are still absent, and its
+run-products function is still stale. This confirms the production problem is
+separate from V2's successful PostgreSQL connection.
+
+The latest aggregate-only check before development repair found zero balance
+rows and zero positive balance quantity in both databases. The production
+inventory count should be checked again immediately before its migration
+because balances may change.
 
 The V2 Production Assistant workflow is healthy in development and its health
 endpoint reports the station worker active. The generic development domain
@@ -73,14 +85,13 @@ from the missing production database objects.
   page's cached form immediately after reload.
 - Chromium coverage passed. WebKit-specific coverage remains unavailable in
   this Nix environment because its native libraries are not installed.
-- No shared database was modified. The SQL changes still need an explicitly
-  approved, reviewed application path.
-- The first development-only execution attempt was rejected by the database
-  tool before SQL ran because the complete 16-file batch exceeded its request
-  limit. Each migration file has its own transaction, so applying them
-  sequentially is possible but is not atomic across the full set; stop at the
-  first failure and report exactly which files committed. This alternate
-  execution method requires explicit approval.
+- No production database was modified. Development changes were approved and
+  applied only after the complete migration suite passed against a disposable
+  database and the shared development baseline was rechecked.
+- The database tool rejected a combined 16-file request before SQL ran because
+  it exceeded the request-size limit. Development migrations were therefore
+  applied in source order, one transaction-wrapped file at a time; all 16
+  committed successfully.
 
 ## Complete numbered migration source set
 
@@ -144,8 +155,9 @@ Accordingly:
    execute the affected authenticated route/browser checks before relying on
    those workflows.
 
-The current review approval covered preparing this package only. It does not
-authorize database writes, direct production SQL, or changing the published
-schema. See Replit's
+The approved development change does not authorize production database
+modification or changing the published schema. Production still needs the
+supported table/constraint publish flow and a separately reviewed application
+of functions, triggers, grants, and required static role seeds. See Replit's
 [managed database change flow](https://docs.replit.com/features/data-and-storage/publish-database-changes)
 and [unsupported database objects](https://docs.replit.com/help/troubleshooting/databases).
