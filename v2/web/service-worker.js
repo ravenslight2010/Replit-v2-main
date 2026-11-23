@@ -47,6 +47,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
+      await self.clients.claim();
       const keys = await caches.keys();
       await Promise.all(
         keys.filter((key) => (
@@ -54,7 +55,6 @@ self.addEventListener("activate", (event) => {
           || LEGACY_V1_CACHE_NAMES.has(key)
         )).map((key) => caches.delete(key)),
       );
-      await self.clients.claim();
     })(),
   );
 });
