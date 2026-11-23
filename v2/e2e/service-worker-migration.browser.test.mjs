@@ -262,7 +262,7 @@ self.addEventListener("message", (event) => {
   assert.equal(await page.locator("#legacy-app").textContent(), "V1 retained shell",
     "installing the non-critical V2 worker must not force the existing page to reload");
   try {
-    await page.goto(`${baseUrl}?migration-reload=v2`, { waitUntil: "domcontentloaded" });
+    await page.reload({ waitUntil: "commit" });
   } catch (error) {
     console.log(JSON.stringify({
       event: "v2.migration_reload_failed",
