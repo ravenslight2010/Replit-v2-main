@@ -117,6 +117,7 @@ async function main() {
           errors.push([
             entry.event,
             typeof entry.operation === "string" ? entry.operation : "unknown",
+            typeof entry.errorName === "string" ? entry.errorName : "UnknownError",
             typeof entry.databaseCode === "string" ? entry.databaseCode : "no-database-code",
           ].join(":"));
         } else if (entry?.level === "error") {

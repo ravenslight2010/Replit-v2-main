@@ -79,15 +79,22 @@ from the missing production database objects.
 
 - The isolated V2 Agent Test Preview applied all 22 migration sources to its
   disposable database and passed its browser flow.
-- `pnpm --dir v2 run test:db` passed after the PostgreSQL browser integration
-  was corrected to wait for the saved station value to return after reload.
-  That test now checks server-backed persistence instead of reading the
-  page's cached form immediately after reload.
+- A previous `pnpm --dir v2 run test:db` run passed after the PostgreSQL browser
+  integration was corrected to wait for the saved station value after reload.
+  The latest two runs stopped earlier in separate browser-integration steps:
+  one timed out waiting for an imported product to appear; another reported
+  HTTP 500s from authenticated inventory-lot and QC ingredient-link reads.
+  Those browser failures are not yet diagnosed, and the new production-script
+  runner step was not reached.
+- Independently, the production-object script succeeded twice against a fresh,
+  disposable PostgreSQL database after applying all 22 migrations. It verified
+  122 V2 function names, 24 triggers, and the three reviewed static roles.
+  `bash -n v2/db/run-local-tests.sh` and `git diff --check` passed.
 - Chromium coverage passed. WebKit-specific coverage remains unavailable in
   this Nix environment because its native libraries are not installed.
 - No production database was modified. Development changes were approved and
-  applied only after the complete migration suite passed against a disposable
-  database and the shared development baseline was rechecked.
+  applied only after the migration sources and shared development baseline
+  were rechecked.
 - The database tool rejected a combined 16-file request before SQL ran because
   it exceeded the request-size limit. Development migrations were therefore
   applied in source order, one transaction-wrapped file at a time; all 16
@@ -149,8 +156,12 @@ Accordingly:
 2. Use the supported managed-schema flow for objects it can represent. Review
    its proposed changes for destructive drops or unintended renames.
 3. Treat functions, triggers, roles, and grants as a separate, explicitly
-   reviewed operation. They require the database owner's separate approval
-   and handling; this document does not provide SQL to paste into production.
+   reviewed operation. The prepared object-only script is
+   `v2/db/production-objects.sql`; it is guarded for the production database
+   and owner role, checks that all 51 V2 tables exist, and installs only
+   functions, triggers, permissions, and the three reviewed static role seeds.
+   It has not been applied and must not be run before the supported schema
+   publish.
 4. After any approved application, verify the exact required objects and
    execute the affected authenticated route/browser checks before relying on
    those workflows.
@@ -158,6 +169,8 @@ Accordingly:
 The approved development change does not authorize production database
 modification or changing the published schema. Production still needs the
 supported table/constraint publish flow and a separately reviewed application
-of functions, triggers, grants, and required static role seeds. See Replit's
+of functions, triggers, grants, and required static role seeds. The prepared
+script does not perform the opening-inventory backfill or copy staff accounts.
+See Replit's
 [managed database change flow](https://docs.replit.com/features/data-and-storage/publish-database-changes)
 and [unsupported database objects](https://docs.replit.com/help/troubleshooting/databases).
