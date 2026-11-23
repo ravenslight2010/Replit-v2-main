@@ -261,12 +261,50 @@ self.addEventListener("message", (event) => {
   }, undefined, { timeout: 5000 });
   assert.equal(await page.locator("#legacy-app").textContent(), "V1 retained shell",
     "installing the non-critical V2 worker must not force the existing page to reload");
-  await page.reload({ waitUntil: "commit" });
+  try {
+    await page.goto(`${baseUrl}?migration-reload=v2`, { waitUntil: "domcontentloaded" });
+  } catch (error) {
+    console.log(JSON.stringify({
+      event: "v2.migration_reload_failed",
+      url: page.url(),
+      requests: requests.slice(-20),
+      rootRequests: requests.filter(({ pathname }) => pathname === "/"),
+      worker: await page.evaluate(async () => {
+        const registration = await navigator.serviceWorker.getRegistration("/");
+        return {
+          title: document.title,
+          controllerScript: registration?.active?.scriptURL ?? null,
+          controllerState: registration?.active?.state ?? null,
+          controlledByActive: navigator.serviceWorker.controller === registration?.active,
+        };
+      }).catch(() => null),
+    }));
+    throw error;
+  }
   await page.waitForFunction(
     () => document.title === "Run control — Fieldline" && Boolean(document.getElementById("auth-panel")),
     undefined,
     { timeout: 5000 },
-  );
+  ).catch(async (error) => {
+    console.log(JSON.stringify({
+      event: "v2.migration_shell_reload_incomplete",
+      url: page.url(),
+      requests: requests.slice(-20),
+      rootRequests: requests.filter(({ pathname }) => pathname === "/"),
+      page: await page.evaluate(async () => {
+        const registration = await navigator.serviceWorker.getRegistration("/");
+        return {
+          title: document.title,
+          legacyShell: document.getElementById("legacy-app")?.textContent ?? null,
+          authPanel: Boolean(document.getElementById("auth-panel")),
+          controllerScript: registration?.active?.scriptURL ?? null,
+          controllerState: registration?.active?.state ?? null,
+          controlledByActive: navigator.serviceWorker.controller === registration?.active,
+        };
+      }).catch(() => null),
+    }));
+    throw error;
+  });
   const preservedData = await page.evaluate(async () => {
     const database = await new Promise((resolve, reject) => {
       const request = indexedDB.open("v1-cache-migration", 1);

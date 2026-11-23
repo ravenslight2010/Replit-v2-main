@@ -802,8 +802,28 @@ async function main() {
     await page.getByText("Saved to the shared run.").waitFor();
     await page.reload();
     await page.getByTestId("status-run").getByText("running").waitFor();
-    assert.equal(await page.locator('[data-station-field="casesProduced"]').inputValue(), "1",
-      "server-owned station progress must survive a browser reload");
+    const reloadedCasesProduced = await page.locator('[data-station-field="casesProduced"]').inputValue();
+    if (reloadedCasesProduced !== "1") {
+      const selectedRunId = await page.locator("#runs-list [aria-current='true']").getAttribute("data-run-id");
+      const persistedRun = selectedRunId
+        ? await page.evaluate(async (runId) => {
+          const response = await fetch(`/api/v2/runs/${encodeURIComponent(runId)}`);
+          const body = await response.json();
+          return {
+            status: response.status,
+            runId: body.run?.id ?? null,
+            runStatus: body.run?.status ?? null,
+            stationProgress: body.run?.stationProgress ?? null,
+          };
+        }, selectedRunId)
+        : null;
+      throw new Error(JSON.stringify({
+        event: "v2.station_progress_reload_mismatch",
+        reloadedCasesProduced,
+        selectedRunId,
+        persistedRun,
+      }));
+    }
 
     await page.getByTestId("button-complete").click();
     await page.getByTestId("status-run").getByText("completed").waitFor();
