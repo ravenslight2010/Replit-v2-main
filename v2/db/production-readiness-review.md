@@ -75,6 +75,12 @@ from the missing production database objects.
   this Nix environment because its native libraries are not installed.
 - No shared database was modified. The SQL changes still need an explicitly
   approved, reviewed application path.
+- The first development-only execution attempt was rejected by the database
+  tool before SQL ran because the complete 16-file batch exceeded its request
+  limit. Each migration file has its own transaction, so applying them
+  sequentially is possible but is not atomic across the full set; stop at the
+  first failure and report exactly which files committed. This alternate
+  execution method requires explicit approval.
 
 ## Complete numbered migration source set
 
