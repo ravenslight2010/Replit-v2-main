@@ -15,7 +15,7 @@ paths = ["/"]
 localPort = 26038
 
 [services.development]
-run = "pnpm --filter @workspace/run-calculator run dev"
+run = "node ../../scripts/v2-preview-proxy.mjs"
 
 [services.production]
 build = ["bash", "scripts/build-v2-artifact-static.sh"]
