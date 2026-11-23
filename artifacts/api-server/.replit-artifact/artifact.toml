@@ -10,7 +10,7 @@ name = "API Server"
 paths = ["/api"]
 
 [services.development]
-run = "pnpm --filter @workspace/api-server run dev"
+run = "node ../../scripts/v2-preview-proxy.mjs"
 
 [services.env]
 PORT = "8080"
