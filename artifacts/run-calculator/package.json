@@ -30,7 +30,7 @@
     "test:pwa-handoff": "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=${PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH:-$(command -v chromium)} playwright test --config playwright.pwa.config.ts"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.13.0",
+    "@axe-core/playwright": "^4.14.0",
     "@hookform/resolvers": "^7.0.7",
     "@playwright/test": "^1.61.1",
     "@radix-ui/react-accordion": "^1.2.4",
