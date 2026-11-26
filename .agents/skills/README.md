@@ -46,6 +46,8 @@ changes to secondary or platform-managed content.
 - `import-bug-investigation` and `spec-import-guard` diagnose import pipeline
   failures. `data-heal-playbook` is added only after incorrect values are
   confirmed to be persisted.
+- `v3-importer-transfer` routes V3 importer work to the source-pinned guide,
+  V3's deterministic import rules, and its own parser-test map.
 
 When maintaining skills, preserve these boundaries and existing safety
 requirements. Do not rewrite descriptions based on unavailable model

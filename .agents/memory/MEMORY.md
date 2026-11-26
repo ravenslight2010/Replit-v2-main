@@ -38,6 +38,7 @@
 - [Orval query coerce quirk](orval-query-coerce-quirk.md) — generated *QueryParams use zod.coerce.string(), so a MISSING required param becomes "undefined" and never 400s; guard presence explicitly in the route.
 - [AI merge suggestions + learned aliases](merge-suggest.md) — AI dedupe assist + factory-wide learned merge memory; cost-guard must sanitize body (blank padding bypasses count cap); web+mobile parity.
 - [Spec-sheet Excel importer](spec-import.md) + [scale harness](spec-import-scale-harness.md) — AI-parsed .xlsx → profiles+recipes w/ learned aliases; sauce rows ground to FRONTLINE pool; run BOTH real-AI harnesses after model changes; prompt cells wrap under PROMPT_MAX_CELL_CHARS.
+- [V3 importer transfer](v3-importer-transfer.md) — preserve V1 importer lessons in V3 without overriding its deterministic no-AI design or private-data boundary.
 - [Spec/recipe/mix Excel export](spec-export.md) — mirror of the importers; TWO workbooks (AI spec vs deterministic premix, never combine); pure @workspace/spec-export; pep-B slots omitted; web-only (parity paused).
 - [Learned-memory pattern](learned-memory-pattern.md) + [import aliases](learned-import-aliases.md) — server-persisted correction memory (ci-upsert, best-effort); aliases auto-apply, priority alias>AI>fuzzy.
 - [AI reviewer + corrections memory](ai-reviewer-and-corrections.md) + [full coverage](ai-corrections-full-coverage.md) — reviewer is advisory/fail-safe; every AI path and rename/merge shares the corrections pool, including recipe names.
