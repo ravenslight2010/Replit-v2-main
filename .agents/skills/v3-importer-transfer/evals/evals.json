@@ -1,0 +1,38 @@
+{
+  "skill_name": "v3-importer-transfer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "V1's learned fuzzy aliases made spec imports fast. Port that to V3 so near matches silently attach. Before editing, inspect the approved V3 import design and explain what you would preserve or reject.",
+      "expected_output": "The agent checks current V3 guidance, keeps the no-AI policy, permits only deterministic unique exact linking, and treats near matches as review-only. It does not implement silent fuzzy linking.",
+      "files": [],
+      "expectations": [
+        "Rejects silent fuzzy or learned auto-linking.",
+        "Distinguishes unique exact/normalized links from near-match suggestions and ambiguity.",
+        "Uses current V3 authority or clearly states when it could not inspect it."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The V3 dough workbook has a formula in the yield cell and Excel shows a cached result. Can we import that number? Explain the safe behavior before changing anything.",
+      "expected_output": "The agent leaves formula-derived values unresolved unless the approved V3 design explicitly supports them, avoids trusting cached workbook values, and points to the relevant importer tests.",
+      "files": [],
+      "expectations": [
+        "Does not import or trust a cached formula result.",
+        "Checks the V3 dough-capacity parser path rather than relying on a different import family's formula test.",
+        "Identifies whether a formula-plus-cached yield regression is covered and proposes a test if it is not."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A V1 spec import in this workspace skipped two ingredient rows. Trace the failure and fix the saved profiles if needed. Tell me which investigation and safety guidance applies.",
+      "expected_output": "The agent routes to the existing V1 import investigation and spec-import guard, traces source through persisted results, and only adds a data heal if incorrect values are confirmed stored. It does not apply V3-only rules blindly.",
+      "files": [],
+      "expectations": [
+        "Routes the V1 regression to the existing import investigation and spec-import guard.",
+        "Traces source, saved parse, linking/Apply, and landed values to find the first divergence.",
+        "Defers any data heal until incorrect persisted values are confirmed and avoids unauthorized writes."
+      ]
+    }
+  ]
+}
